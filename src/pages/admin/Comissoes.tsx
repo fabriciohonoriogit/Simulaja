@@ -20,7 +20,9 @@ import {
   Eye,
   EyeOff,
   Coins,
-  BarChart3
+  BarChart3,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, BarChart } from "recharts";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
@@ -565,8 +567,9 @@ export default function Comissoes() {
   const idsPagosNesteMes = currentFechamento?.comissoes_ids || [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="flex-1 flex flex-col min-h-0 relative group/main-scroll overflow-hidden">
+      <div id="comissoes-main-container" className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black flex items-center gap-2">
             <DollarSign className="h-6 w-6 text-emerald-500" /> Comissionamento
@@ -1061,6 +1064,33 @@ export default function Comissoes() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
+
+      {/* Vertical Scroll Controls */}
+      <div className="hidden lg:flex absolute right-4 bottom-4 flex flex-col gap-2 opacity-0 group-hover/main-scroll:opacity-100 transition-opacity z-20">
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-10 w-10 rounded-full shadow-2xl bg-white/95 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all"
+          onClick={() => {
+            const container = document.getElementById('comissoes-main-container');
+            container?.scrollBy({ top: -400, behavior: 'smooth' });
+          }}
+        >
+          <ChevronUp className="h-6 w-6" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-10 w-10 rounded-full shadow-2xl bg-white/95 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all"
+          onClick={() => {
+            const container = document.getElementById('comissoes-main-container');
+            container?.scrollBy({ top: 400, behavior: 'smooth' });
+          }}
+        >
+          <ChevronDown className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   );
 }
