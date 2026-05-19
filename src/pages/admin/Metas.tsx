@@ -450,6 +450,10 @@ export default function Metas() {
         const dateToCheck = l.status_updated_at || l.created_at || "";
         return dateToCheck.startsWith(mesStr);
     }).reduce((a, l) => a + Number(l.valor_credito || 0), 0);
+    const vendasMesCount = fechados.filter(l => {
+        const dateToCheck = l.status_updated_at || l.created_at || "";
+        return dateToCheck.startsWith(mesStr);
+    }).length;
     const realizadoAno = fechados.filter(l => {
         const dateToCheck = l.status_updated_at || l.created_at || "";
         return dateToCheck.startsWith(String(currentYear));
@@ -824,11 +828,12 @@ export default function Metas() {
             </div>
 
             {/* KPI Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {(() => {
                     const faltaMetaMesColor = progressoMes >= 99 ? "text-green-600" : progressoMes >= 70 ? "text-amber-500" : "text-red-500";
                     const faltaMetaMesBg = progressoMes >= 99 ? "bg-green-50 border-green-200" : progressoMes >= 70 ? "bg-amber-50 border-amber-200" : "bg-red-50 border-red-200";
                     const items = [
+                        { icon: CheckCircle2, color: "text-emerald-500", val: vendasMesCount, label: "Vendas no Mês", cardClass: "" },
                         { icon: DollarSign, color: "text-blue-500", val: formatCurrency(ticketMedio), label: "Ticket Médio", cardClass: "" },
                         { icon: TrendingUp, color: "text-green-500", val: `${taxaConversao.toFixed(1)}%`, label: "Conversão", cardClass: "" },
                         { icon: Users, color: "text-orange-500", val: leadsNecessarios, label: "Leads Necessários", cardClass: "" },
