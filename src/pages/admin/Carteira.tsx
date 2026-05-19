@@ -49,6 +49,7 @@ import { format, differenceInMonths, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { HistoricoModal } from "@/components/admin/funil/HistoricoModal";
 import { Lead } from "@/types/funil";
+import { WhatsAppIcon } from "@/components/SocialIcons";
 import confetti from "canvas-confetti";
 
 interface Cliente {
@@ -926,6 +927,21 @@ export default function Carteira() {
                 {loadingClientTratativas === c.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <NotebookPen className="h-3 w-3" />}
                 {c.lead_id && leadsComLance.has(c.lead_id) ? "Lance" : "Tratativas"}
               </Button>
+              {c.celular && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0 text-emerald-500 hover:bg-emerald-50 rounded-lg shrink-0" 
+                  onClick={() => {
+                    const digits = c.celular?.replace(/\D/g, "") || "";
+                    const formattedPhone = digits.startsWith("55") ? digits : `55${digits}`;
+                    window.open(`https://wa.me/${formattedPhone}`, "_blank");
+                  }} 
+                  title="WhatsApp"
+                >
+                  <WhatsAppIcon className="h-4 w-4" />
+                </Button>
+              )}
               {c.boleto_url && <Button variant="ghost" size="sm" className="h-8 text-[9px] font-black uppercase bg-blue-50 text-blue-600" onClick={() => window.open(c.boleto_url!, '_blank')}><FileText className="h-3 w-3" /></Button>}
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-rose-500 hover:bg-rose-50 rounded-lg shrink-0" onClick={() => handleMarkAsInadimplente(c)} title="Inadimplente"><ShieldAlert className="h-4 w-4" /></Button>
               {!c.cota_contemplada && <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-amber-500 hover:bg-amber-50 rounded-lg shrink-0" onClick={() => handleManualContemplationAction(c)} title="Contemplar"><Trophy className="h-4 w-4" /></Button>}
