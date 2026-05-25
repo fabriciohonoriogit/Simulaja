@@ -42,10 +42,10 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-bold">Acompanhe nas Redes</h3>
             <div className="flex gap-3">
-              <a href="#" aria-label="Facebook" className="w-11 h-11 rounded-full bg-background/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300">
+              <a href="https://www.facebook.com/profile.php?id=61587719436474" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-11 h-11 rounded-full bg-background/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" aria-label="Instagram" className="w-11 h-11 rounded-full bg-background/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300">
+              <a href="https://www.instagram.com/fabricioespecialistaconsorcio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-11 h-11 rounded-full bg-background/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300">
                 <Instagram className="w-5 h-5" />
               </a>
               <a href="#" aria-label="LinkedIn" className="w-11 h-11 rounded-full bg-background/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300">

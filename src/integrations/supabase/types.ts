@@ -145,6 +145,38 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          lead_id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comissoes: {
         Row: {
           administradora: string | null
@@ -425,6 +457,60 @@ export type Database = {
           },
         ]
       }
+      fechamentos_mensais: {
+        Row: {
+          ano: number
+          comissoes_ids: string[] | null
+          contagem_vendas: number
+          created_at: string
+          data_fechamento: string
+          id: string
+          mes: number
+          organizacao_id: string | null
+          usuario_id: string | null
+          valor_total: number
+        }
+        Insert: {
+          ano: number
+          comissoes_ids?: string[] | null
+          contagem_vendas?: number
+          created_at?: string
+          data_fechamento?: string
+          id?: string
+          mes: number
+          organizacao_id?: string | null
+          usuario_id?: string | null
+          valor_total?: number
+        }
+        Update: {
+          ano?: number
+          comissoes_ids?: string[] | null
+          contagem_vendas?: number
+          created_at?: string
+          data_fechamento?: string
+          id?: string
+          mes?: number
+          organizacao_id?: string | null
+          usuario_id?: string | null
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fechamentos_mensais_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fechamentos_mensais_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historico_contatos: {
         Row: {
           created_at: string | null
@@ -606,6 +692,7 @@ export type Database = {
       leads: {
         Row: {
           administradora: string | null
+          atendimento_ia: boolean | null
           celular: string | null
           cidade: string | null
           cota: string | null
@@ -636,6 +723,7 @@ export type Database = {
         }
         Insert: {
           administradora?: string | null
+          atendimento_ia?: boolean | null
           celular?: string | null
           cidade?: string | null
           cota?: string | null
@@ -666,6 +754,7 @@ export type Database = {
         }
         Update: {
           administradora?: string | null
+          atendimento_ia?: boolean | null
           celular?: string | null
           cidade?: string | null
           cota?: string | null
