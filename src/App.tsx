@@ -30,6 +30,8 @@ import AIChatbot from "./components/AIChatbot";
 import { useLocation } from "react-router-dom";
 
 import WhatsAppInbox from "./pages/admin/WhatsAppInbox";
+import { Refine } from "@refinedev/core";
+import { refineDataProvider, refineResources } from "./lib/refineConfig";
 
 const AppContent = () => {
   const location = useLocation();
@@ -84,7 +86,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
-        <AppContent />
+        <Refine dataProvider={refineDataProvider} resources={refineResources}>
+          <AppContent />
+        </Refine>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
