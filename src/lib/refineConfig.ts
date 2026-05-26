@@ -1,4 +1,4 @@
-import dataProvider from "@refinedev/supabase";
+import { dataProvider } from "@refinedev/supabase";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
