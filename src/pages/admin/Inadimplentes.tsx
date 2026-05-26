@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { useList, useCreate, useUpdate, useDelete } from "@refinedev/core";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { createPortal } from "react-dom";
 import { 
@@ -110,6 +111,22 @@ export default function Inadimplentes() {
   const kanbanRef = useRef<HTMLDivElement>(null);
   const isDraggingCardRef = useRef(false);
 
+  const { data: listResult, isLoading: isRefineLoading } = useList({
+    resource: "inadimplentes",
+    pagination: { mode: "off" }
+  });
+
+  const { mutateAsync: createInadimplente } = useCreate();
+  const { mutateAsync: updateInadimplente } = useUpdate();
+  const { mutateAsync: deleteInadimplente } = useDelete();
+
+  useEffect(() => {
+    if (listResult?.data) {
+      setData(listResult.data as Inadimplente[]);
+      setLoading(false);
+    }
+  }, [listResult?.data]);
+
   useEffect(() => {
     localStorage.setItem("inadimplentes_wide_view", String(isWideView));
   }, [isWideView]);
@@ -157,28 +174,7 @@ export default function Inadimplentes() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const fetchData = async () => {
-    if (!profile?.organizacao_id) return;
-    try {
-      setLoading(true);
-      const { data: rows, error } = await supabase
-        .from("inadimplentes")
-        .select("*")
-        .eq("organizacao_id", profile.organizacao_id);
-      
-      if (error) throw error;
-      setData(rows || []);
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao carregar dados");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { 
-    if (profile?.organizacao_id) fetchData(); 
-  }, [profile?.organizacao_id]);
+  // Fetch inicial gerenciado pelo useList do Refine
 
   const getColumnItems = (colId: string) => {
     return data.filter((d) => {
@@ -249,16 +245,22 @@ export default function Inadimplentes() {
     };
 
     try {
-      const { error } = editingItem 
-        ? await supabase.from("inadimplentes").update(payload).eq("id", editingItem.id)
-        : await supabase.from("inadimplentes").insert([payload]);
+      if (editingItem) {
+        await updateInadimplente({
+          resource: "inadimplentes",
+          id: editingItem.id,
+          values: payload
+        });
+      } else {
+        await createInadimplente({
+          resource: "inadimplentes",
+          values: payload
+        });
+      }
 
-      if (error) throw error;
-      
       toast.success(editingItem ? "Atualizado!" : "Adicionado!");
       setShowAdd(false);
       setEditingItem(null);
-      fetchData();
     } catch (e) {
       toast.error("Erro ao salvar");
     } finally {
@@ -285,10 +287,12 @@ export default function Inadimplentes() {
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm("Excluir este registro?")) return;
-    const { error } = await supabase.from("inadimplentes").delete().eq("id", id);
-    if (error) { toast.error("Erro ao excluir"); return; }
-    toast.success("Excluído!");
-    fetchData();
+    try {
+      await deleteInadimplente({ resource: "inadimplentes", id });
+      toast.success("Excluído!");
+    } catch (error) {
+      toast.error("Erro ao excluir");
+    }
   };
 
   const handleGenerateReport = () => {

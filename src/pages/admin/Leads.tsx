@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useFunil } from "@/hooks/useFunil";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
+import { useDelete, useCreate, useUpdate } from "@refinedev/core";
 import {
   Filter,
   Search,
@@ -62,6 +63,10 @@ export default function Leads() {
   const [historyLead, setHistoryLead] = useState<Lead | null>(null);
   const [viewingFichaLead, setViewingFichaLead] = useState<Lead | null>(null);
 
+  const { mutateAsync: deleteLead } = useDelete();
+  const { mutateAsync: createLead } = useCreate();
+  const { mutateAsync: updateLead } = useUpdate();
+
   const filtered = leads.filter(l => {
     const nomeSearch = (l.nome || "").toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -84,8 +89,7 @@ export default function Leads() {
   const handleDeleteLead = async (id: string) => {
     if (!confirm("Excluir este lead permanentemente?")) return;
     try {
-      const { error } = await supabase.from("leads").delete().eq("id", id);
-      if (error) throw error;
+      await deleteLead({ resource: "leads", id });
       toast.success("Lead excluído");
       setLeads(prev => prev.filter(l => l.id !== id));
     } catch (e) {
@@ -146,11 +150,11 @@ export default function Leads() {
         if (isClosedStatus && !["venda_fechada", "fechado"].includes(editingLead.status)) {
           updatePayload.status_updated_at = new Date().toISOString();
         }
-        const { error } = await supabase
-          .from("leads")
-          .update(updatePayload)
-          .eq("id", editingLead.id);
-        if (error) throw new Error(error.message || "Erro ao atualizar lead");
+        await updateLead({
+          resource: "leads",
+          id: editingLead.id,
+          values: updatePayload,
+        });
 
         setLeads((prev) =>
           prev.map((l) => (l.id === editingLead.id ? { ...l, ...updatePayload } : l))
@@ -196,11 +200,14 @@ export default function Leads() {
         toast.success("Lead atualizado com sucesso!");
       } else {
         const insertPayload = { ...updatePayload, organizacao_id: profile?.organizacao_id };
-        const { data: newLeads, error } = await supabase.from("leads").insert([insertPayload]).select();
-        if (error) throw new Error(error.message || "Erro ao criar lead");
+        const response = await createLead({
+          resource: "leads",
+          values: insertPayload,
+        });
+        
+        const nl = response?.data as unknown as Lead;
 
-        if (isClosedStatus && newLeads && newLeads.length > 0) {
-          const nl = newLeads[0];
+        if (isClosedStatus && nl) {
           await supabase.from("carteira").insert([{
             lead_id: nl.id,
             nome: nl.nome,
