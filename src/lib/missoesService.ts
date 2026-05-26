@@ -202,7 +202,7 @@ export const calcularMissoes = async (
   
   const { data: allLeads } = await supabase
     .from("leads")
-    .select("valor_credito, status_updated_at, created_at, updated_at, status, responsavel_id, origem, dados_cadastro")
+    .select("valor_credito, status_updated_at, created_at, updated_at, status, responsavel_id, dados_cadastro")
     .eq("organizacao_id", orgId);
 
   let vendas = (allLeads || []).filter(l => {
@@ -444,7 +444,7 @@ export const getLeadsForMissao = async (
 
     const { data: allLeads } = await (supabase as any)
       .from("leads")
-      .select("id, nome, status, valor_credito, status_updated_at, created_at, updated_at, responsavel_id, origem, dados_cadastro")
+      .select("id, nome, status, valor_credito, status_updated_at, created_at, updated_at, responsavel_id, dados_cadastro")
       .eq("organizacao_id", orgId);
 
     const filtered = (allLeads || []).filter((l: any) => {
