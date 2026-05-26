@@ -202,15 +202,17 @@ export const calcularMissoes = async (
   
   const { data: allLeads } = await supabase
     .from("leads")
-    .select("valor_credito, status_updated_at, created_at, updated_at, status")
+    .select("valor_credito, status_updated_at, created_at, updated_at, status, responsavel_id, origem, dados_cadastro")
     .eq("organizacao_id", orgId);
 
   let vendas = (allLeads || []).filter(l => {
     const s = (l.status || "").toLowerCase().replace("_", " ");
     const isClosed = s === "fechado" || s === "venda fechada";
-    const dateToCheck = l.status_updated_at || l.updated_at || "";
+    const dateToCheck = l.status_updated_at || l.created_at || "";
     const isInMonth = dateToCheck.startsWith(inicioMesAtual.substring(0, 7));
-    return isClosed && isInMonth;
+    const isShadow = (l as any).origem === "carteira_shadow";
+    const isRetroativo = (l as any).dados_cadastro?.is_retroativo === true;
+    return isClosed && isInMonth && !isShadow && !isRetroativo;
   });
 
   if (isVendedor) {
@@ -442,16 +444,18 @@ export const getLeadsForMissao = async (
 
     const { data: allLeads } = await (supabase as any)
       .from("leads")
-      .select("id, nome, status, valor_credito, status_updated_at, created_at, updated_at, responsavel_id")
+      .select("id, nome, status, valor_credito, status_updated_at, created_at, updated_at, responsavel_id, origem, dados_cadastro")
       .eq("organizacao_id", orgId);
 
     const filtered = (allLeads || []).filter((l: any) => {
       const s = (l.status || "").toLowerCase().replace("_", " ");
       const isClosed = s === "fechado" || s === "venda fechada";
-      const dateToCheck = l.status_updated_at || l.updated_at || "";
+      const dateToCheck = l.status_updated_at || l.created_at || "";
       const isInMonth = dateToCheck.startsWith(currentMonthStr);
       const isMine = !isVendedor || l.responsavel_id === userId;
-      return isClosed && isInMonth && isMine;
+      const isShadow = (l as any).origem === "carteira_shadow";
+      const isRetroativo = (l as any).dados_cadastro?.is_retroativo === true;
+      return isClosed && isInMonth && isMine && !isShadow && !isRetroativo;
     });
 
     return filtered.map((d: any) => ({
