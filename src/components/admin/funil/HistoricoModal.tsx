@@ -173,7 +173,7 @@ export function HistoricoModal({
             </TabsList>
           </div>
 
-          <div className="flex-1 p-6 overflow-hidden">
+          <div className="flex-1 min-h-0 p-6 overflow-hidden">
             <TabsContent 
               value="chat" 
               className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col overflow-hidden"
@@ -183,9 +183,9 @@ export function HistoricoModal({
 
             <TabsContent 
               value="history" 
-              className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col gap-6 overflow-hidden"
+              className="m-0 h-full min-h-0 data-[state=active]:flex data-[state=active]:flex-col gap-4 overflow-hidden"
             >
-              <div className="space-y-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-inner">
+              <div className="shrink-0 space-y-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-inner">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nova Nota Interna</p>
 
                 <div className="flex gap-2 flex-wrap">
@@ -235,7 +235,7 @@ export function HistoricoModal({
                 </div>
               </div>
 
-              <div className="flex-1 relative group/history-scroll overflow-hidden">
+              <div className="flex-1 min-h-0 relative overflow-hidden">
                 <div 
                   id="history-list-container"
                   className="h-full overflow-y-auto space-y-4 pr-2 custom-scrollbar"
