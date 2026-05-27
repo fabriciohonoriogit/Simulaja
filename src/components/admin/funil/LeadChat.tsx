@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Send, Bot, User, MessageSquare } from "lucide-react";
+import { RefreshCw, Send, Bot, User, MessageSquare, ChevronUp, ChevronDown } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Lead } from "@/types/funil";
@@ -130,52 +130,86 @@ export function LeadChat({ lead }: { lead: Lead }) {
       </div>
 
       {/* Área de Mensagens */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 p-4 overflow-y-auto custom-scrollbar bg-slate-50/50"
-      >
-        <div className="space-y-4">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400 text-center">
-              <MessageSquare className="h-12 w-12 opacity-10 mb-2" />
-              <p className="text-xs font-medium">Nenhuma mensagem no histórico do WhatsApp.</p>
-            </div>
-          ) : (
-            messages.map((msg) => (
-              <div 
-                key={msg.id} 
-                className={`flex flex-col ${msg.sender === 'client' ? 'items-start' : 'items-end'}`}
-              >
-                <div className={`flex items-center gap-1.5 mb-1 ${msg.sender === 'client' ? 'flex-row' : 'flex-row-reverse'}`}>
-                  {msg.sender === 'ai' ? <Bot className="h-3 w-3 text-indigo-500" /> : <User className="h-3 w-3 text-slate-400" />}
-                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
-                    {msg.sender === 'client' ? 'Cliente' : msg.sender === 'ai' ? 'Jarvis AI' : 'Consultor'}
-                  </span>
-                  <span className="text-[8px] text-slate-300">
-                    {(() => {
-                      if (!msg.created_at) return "";
-                      try {
-                        const date = parseISO(msg.created_at);
-                        return isValid(date) ? format(date, "HH:mm") : "";
-                      } catch (e) {
-                        return "";
-                      }
-                    })()}
-                  </span>
-                </div>
-                <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${
-                  msg.sender === 'client' 
-                    ? 'bg-white text-slate-800 rounded-tl-none border border-slate-100' 
-                    : msg.sender === 'ai'
-                    ? 'bg-indigo-600 text-white rounded-tr-none'
-                    : 'bg-emerald-600 text-white rounded-tr-none'
-                }`}>
-                  {msg.content}
-                </div>
+      <div className="flex-1 relative overflow-hidden">
+        <div 
+          ref={scrollRef}
+          className="h-full p-4 overflow-y-auto custom-scrollbar bg-slate-50/50"
+        >
+          <div className="space-y-4">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-400 text-center">
+                <MessageSquare className="h-12 w-12 opacity-10 mb-2" />
+                <p className="text-xs font-medium">Nenhuma mensagem no histórico do WhatsApp.</p>
               </div>
-            ))
-          )}
+            ) : (
+              messages.map((msg) => (
+                <div 
+                  key={msg.id} 
+                  className={`flex flex-col ${msg.sender === 'client' ? 'items-start' : 'items-end'}`}
+                >
+                  <div className={`flex items-center gap-1.5 mb-1 ${msg.sender === 'client' ? 'flex-row' : 'flex-row-reverse'}`}>
+                    {msg.sender === 'ai' ? <Bot className="h-3 w-3 text-indigo-500" /> : <User className="h-3 w-3 text-slate-400" />}
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
+                      {msg.sender === 'client' ? 'Cliente' : msg.sender === 'ai' ? 'Jarvis AI' : 'Consultor'}
+                    </span>
+                    <span className="text-[8px] text-slate-300">
+                      {(() => {
+                        if (!msg.created_at) return "";
+                        try {
+                          const date = parseISO(msg.created_at);
+                          return isValid(date) ? format(date, "HH:mm") : "";
+                        } catch (e) {
+                          return "";
+                        }
+                      })()}
+                    </span>
+                  </div>
+                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${
+                    msg.sender === 'client' 
+                      ? 'bg-white text-slate-800 rounded-tl-none border border-slate-100' 
+                      : msg.sender === 'ai'
+                      ? 'bg-indigo-600 text-white rounded-tr-none'
+                      : 'bg-emerald-600 text-white rounded-tr-none'
+                  }`}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
+
+        {/* Vertical Scroll Controls */}
+        {messages.length > 0 && (
+          <div className="absolute right-4 bottom-4 flex flex-col gap-1.5 z-20">
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="h-8 w-8 rounded-full shadow-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all hover:scale-105 active:scale-95"
+              onClick={() => {
+                if (scrollRef.current) {
+                  scrollRef.current.scrollBy({ top: -200, behavior: 'smooth' });
+                }
+              }}
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="h-8 w-8 rounded-full shadow-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all hover:scale-105 active:scale-95"
+              onClick={() => {
+                if (scrollRef.current) {
+                  scrollRef.current.scrollBy({ top: 200, behavior: 'smooth' });
+                }
+              }}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Input de Mensagem */}

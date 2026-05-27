@@ -1184,7 +1184,7 @@ export default function Carteira() {
       </div>
 
       {/* Vertical Scroll Controls - Facilitated Methodology (Desktop Only) */}
-      <div className="hidden lg:flex absolute right-4 bottom-4 flex flex-col gap-2 opacity-0 group-hover/main-scroll:opacity-100 transition-opacity z-20">
+      <div className="hidden lg:flex absolute right-4 bottom-4 flex flex-col gap-2 opacity-70 hover:opacity-100 transition-opacity z-20">
         <Button
           variant="secondary"
           size="icon"

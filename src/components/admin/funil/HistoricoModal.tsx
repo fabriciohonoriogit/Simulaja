@@ -277,11 +277,12 @@ export function HistoricoModal({
                 </div>
 
                 {/* Vertical Scroll Controls */}
-                <div className="absolute right-4 bottom-4 flex flex-col gap-1 opacity-0 group-hover/history-scroll:opacity-100 transition-opacity z-20">
+                <div className="absolute right-4 bottom-4 flex flex-col gap-2 z-20">
                   <Button
+                    type="button"
                     variant="secondary"
                     size="icon"
-                    className="h-8 w-8 rounded-full shadow-lg bg-white/90 hover:bg-white border border-slate-200"
+                    className="h-8 w-8 rounded-full shadow-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all hover:scale-105 active:scale-95"
                     onClick={() => {
                       const container = document.getElementById('history-list-container');
                       container?.scrollBy({ top: -200, behavior: 'smooth' });
@@ -290,9 +291,10 @@ export function HistoricoModal({
                     <ChevronUp className="h-4 w-4" />
                   </Button>
                   <Button
+                    type="button"
                     variant="secondary"
                     size="icon"
-                    className="h-8 w-8 rounded-full shadow-lg bg-white/90 hover:bg-white border border-slate-200"
+                    className="h-8 w-8 rounded-full shadow-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all hover:scale-105 active:scale-95"
                     onClick={() => {
                       const container = document.getElementById('history-list-container');
                       container?.scrollBy({ top: 200, behavior: 'smooth' });
