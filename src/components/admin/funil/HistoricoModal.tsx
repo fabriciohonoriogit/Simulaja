@@ -174,11 +174,17 @@ export function HistoricoModal({
           </div>
 
           <div className="flex-1 p-6 overflow-hidden">
-            <TabsContent value="chat" className="m-0 h-full">
+            <TabsContent 
+              value="chat" 
+              className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col overflow-hidden"
+            >
               {lead && <LeadChat lead={lead} />}
             </TabsContent>
 
-            <TabsContent value="history" className="m-0 h-full flex flex-col gap-6">
+            <TabsContent 
+              value="history" 
+              className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col gap-6 overflow-hidden"
+            >
               <div className="space-y-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-inner">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nova Nota Interna</p>
 
