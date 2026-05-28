@@ -44,7 +44,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
       const matchQuick =
         quickFilter === 'todos' ? true :
         quickFilter === 'atrasados' ? dias > 14 :
-        quickFilter === 'sem_tratativa' ? !(l as any).ultima_tratativa :
+        quickFilter === 'sem_tratativa' ? !ultimasTratativas[l.id] :
         quickFilter === 'hoje' ? (l.data_vencimento ? new Date(l.data_vencimento).toDateString() === today.toDateString() : false) :
         true;
       return matchSearch && matchQuick;

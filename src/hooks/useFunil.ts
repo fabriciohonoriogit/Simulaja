@@ -173,7 +173,11 @@ export function useFunil() {
     setLoading(false);
 
     const now = new Date();
-    fetchedLeads.forEach(async (lead: Lead) => {
+    const leadsToUpdate: any[] = [];
+    const localUpdatedLeads = [...fetchedLeads];
+    let stateChanged = false;
+
+    fetchedLeads.forEach((lead: Lead) => {
       const finalStatuses = ["fechado", "perdido", "morto"];
       if (finalStatuses.includes(lead.status || "")) return;
 
@@ -217,23 +221,43 @@ export function useFunil() {
       const newReason = reasons.join(" + ");
 
       if (newTemp !== lead.lead_temperatura || newStatus !== lead.status || newScore !== lead.propensity_score) {
-        await supabase.from("leads").update({
+        leadsToUpdate.push({
+          id: lead.id,
+          organizacao_id: profile.organizacao_id,
           lead_temperatura: newTemp,
           status: newStatus,
           status_updated_at: newStatus !== lead.status ? now.toISOString() : lead.status_updated_at,
           propensity_score: newScore,
           propensity_reason: newReason,
-        }).eq("id", lead.id).eq("organizacao_id", profile.organizacao_id);
+        });
 
-        setLeads((prev) =>
-          prev.map((l) =>
-            l.id === lead.id
-              ? { ...l, lead_temperatura: newTemp, status: newStatus, propensity_score: newScore, propensity_reason: newReason }
-              : l
-          )
-        );
+        const idx = localUpdatedLeads.findIndex((l) => l.id === lead.id);
+        if (idx !== -1) {
+          localUpdatedLeads[idx] = {
+            ...localUpdatedLeads[idx],
+            lead_temperatura: newTemp,
+            status: newStatus,
+            status_updated_at: newStatus !== lead.status ? now.toISOString() : lead.status_updated_at,
+            propensity_score: newScore,
+            propensity_reason: newReason,
+          };
+          stateChanged = true;
+        }
       }
     });
+
+    if (stateChanged) {
+      setLeads(localUpdatedLeads);
+    }
+
+    if (leadsToUpdate.length > 0) {
+      const { error } = await supabase
+        .from("leads")
+        .upsert(leadsToUpdate, { onConflict: "id" });
+      if (error) {
+        console.error("Erro ao atualizar leads em lote:", error);
+      }
+    }
   }, [profile?.organizacao_id]);
 
   // refetch público para uso em outras páginas (ex: Leads.tsx)
@@ -273,19 +297,47 @@ export function useFunil() {
                 });
               });
           } else if (payload.eventType === 'UPDATE') {
-            // Para UPDATE também buscamos o lead completo para garantir dados_cadastro atualizado
             const updatedId = (payload.new as Lead).id;
-            supabase.from("leads").select("*").eq("id", updatedId).maybeSingle()
-              .then(({ data: fullLead }) => {
-                if (!fullLead) return;
-                setLeads((prev) =>
-                  prev.map((l) =>
-                    l.id === fullLead.id
-                      ? { ...l, ...fullLead, nome: fullLead.nome || 'Lead Sem Nome', status: normalizeStatus(fullLead.status) }
-                      : l
-                  )
-                );
-              });
+
+            // Check if local state already has the matching values to prevent redundant SELECT calls
+            setLeads((prev) => {
+              const existingLead = prev.find((l) => l.id === updatedId);
+              if (existingLead) {
+                const matches =
+                  existingLead.lead_temperatura === payload.new.lead_temperatura &&
+                  existingLead.status === payload.new.status &&
+                  existingLead.propensity_score === payload.new.propensity_score &&
+                  existingLead.last_interaction_at === payload.new.last_interaction_at &&
+                  existingLead.nome === payload.new.nome &&
+                  existingLead.email === payload.new.email &&
+                  existingLead.celular === payload.new.celular &&
+                  existingLead.cidade === payload.new.cidade &&
+                  existingLead.valor_credito === payload.new.valor_credito &&
+                  existingLead.prazo_meses === payload.new.prazo_meses &&
+                  existingLead.administradora === payload.new.administradora &&
+                  existingLead.grupo === payload.new.grupo &&
+                  existingLead.cota === payload.new.cota;
+
+                if (matches) {
+                  return prev; // Skip DB fetch if already updated locally
+                }
+              }
+
+              // Otherwise fetch the complete lead to ensure updated JSONB or foreign modifications
+              supabase.from("leads").select("*").eq("id", updatedId).maybeSingle()
+                .then(({ data: fullLead }) => {
+                  if (!fullLead) return;
+                  setLeads((current) =>
+                    current.map((l) =>
+                      l.id === fullLead.id
+                        ? { ...l, ...fullLead, nome: fullLead.nome || 'Lead Sem Nome', status: normalizeStatus(fullLead.status) }
+                        : l
+                    )
+                  );
+                });
+
+              return prev;
+            });
           }
 
         }
@@ -302,11 +354,11 @@ export function useFunil() {
     const leadIds = leads.map((l) => l.id);
     (supabase as any)
       .from("historico_contatos")
-      .select("*")
+      .select("id, lead_id, observacao, created_at, tipo, resultado, organizacao_id")
       .eq("organizacao_id", profile.organizacao_id)
       .in("lead_id", leadIds)
       .order("created_at", { ascending: false })
-      .then(({ data }) => {
+      .then(({ data }: { data: any }) => {
         if (!data) return;
         const map: Record<string, HistoricoContato> = {};
         (data as HistoricoContato[]).forEach((h) => {
