@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { formatToUpper } from "@/lib/formatters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { parseBirthday, isBirthdayToday, isBirthdayThisMonth } from "@/lib/birthdayUtils";
+import { parseBirthday, isBirthdayToday, isBirthdayThisMonth, extractBirthdayValue } from "@/lib/birthdayUtils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogTrigger, DialogFooter
@@ -34,6 +34,11 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+
+const getLeadBirthdayStr = (lead: Lead | undefined): string | null => {
+  if (!lead || !lead.dados_cadastro) return null;
+  return extractBirthdayValue(lead.dados_cadastro);
+};
 
 interface Lead {
   id: string;
@@ -107,11 +112,11 @@ export default function Agendamentos() {
     setAppointments((apptsData as any[]) ?? []);
 
     const birthdayLeads = allLeads.filter(l => {
-      const birth = l.dados_cadastro?.dataNascimento || l.dados_cadastro?.NASCIMENTO || l.dados_cadastro?.DATA_NASCIMENTO || l.dados_cadastro?.data_nascimento || l.dados_cadastro?.nascimento;
+      const birth = getLeadBirthdayStr(l);
       return birth && parseBirthday(birth) !== null;
     }).sort((a, b) => {
-      const birthA = a.dados_cadastro?.dataNascimento || a.dados_cadastro?.NASCIMENTO || a.dados_cadastro?.DATA_NASCIMENTO || a.dados_cadastro?.data_nascimento || a.dados_cadastro?.nascimento;
-      const birthB = b.dados_cadastro?.dataNascimento || b.dados_cadastro?.NASCIMENTO || b.dados_cadastro?.DATA_NASCIMENTO || b.dados_cadastro?.data_nascimento || b.dados_cadastro?.nascimento;
+      const birthA = getLeadBirthdayStr(a);
+      const birthB = getLeadBirthdayStr(b);
       const dateA = parseBirthday(birthA)!;
       const dateB = parseBirthday(birthB)!;
       if (dateA.getMonth() !== dateB.getMonth()) return dateA.getMonth() - dateB.getMonth();
@@ -144,7 +149,7 @@ export default function Agendamentos() {
 
   const agendamentosHoje = agendas.filter(a => isToday(parseISO(a.data_vencimento!))).length;
   const aniversariantesHoje = leadsWithBirthday.filter(l => {
-    const birth = l.dados_cadastro?.NASCIMENTO || l.dados_cadastro?.DATANASCIMENTO || l.dados_cadastro?.DATA_NASCIMENTO || l.dados_cadastro?.data_nascimento || l.dados_cadastro?.nascimento || l.dados_cadastro?.birth_date;
+    const birth = getLeadBirthdayStr(l);
     return isBirthdayToday(birth);
   }).length;
   const agendamentosAtrasados = agendas.filter(a => {
@@ -239,7 +244,7 @@ export default function Agendamentos() {
     const appts = appointments.filter(a => isSameDay(parseISO(a.data_agendada), day));
     const leads = agendas.filter(l => isSameDay(parseISO(l.data_vencimento!), day));
     const births = leadsWithBirthday.filter(l => {
-      const birth = l.dados_cadastro?.NASCIMENTO || l.dados_cadastro?.DATANASCIMENTO || l.dados_cadastro?.DATA_NASCIMENTO || l.dados_cadastro?.data_nascimento || l.dados_cadastro?.nascimento || l.dados_cadastro?.birth_date;
+      const birth = getLeadBirthdayStr(l);
       const b = parseBirthday(birth);
       return b && b.getDate() === day.getDate() && b.getMonth() === day.getMonth();
     });
@@ -328,6 +333,49 @@ export default function Agendamentos() {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Aniversariantes do Dia Alert Banner */}
+        {(() => {
+          const birthdayPeopleToday = leadsWithBirthday.filter(l => {
+            const birth = getLeadBirthdayStr(l);
+            return isBirthdayToday(birth);
+          });
+          if (birthdayPeopleToday.length === 0) return null;
+
+          return (
+            <div className="relative group overflow-hidden p-4 rounded-[24px] bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] animate-in slide-in-from-top duration-500">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-white/20 rounded-2xl animate-bounce">
+                    <PartyPopper className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-lg tracking-tight uppercase">Hoje tem Aniversariante! 🥳</h3>
+                    <p className="text-xs text-white/95 font-medium leading-relaxed mt-0.5">
+                      {birthdayPeopleToday.length === 1 ? (
+                        <>O cliente <strong>{formatToUpper(birthdayPeopleToday[0].nome)}</strong> está fazendo aniversário hoje! Envie uma mensagem de felicitações.</>
+                      ) : (
+                        <>Hoje é o aniversário de {birthdayPeopleToday.length} clientes: <strong>{birthdayPeopleToday.map(l => formatToUpper(l.nome)).join(", ")}</strong>! Envie as felicitações.</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {birthdayPeopleToday.slice(0, 3).map(l => (
+                    <Button
+                      key={`btn-alert-${l.id}`}
+                      size="sm"
+                      className="bg-white text-orange-600 hover:bg-slate-50 font-black uppercase text-[10px] tracking-wider rounded-xl gap-1.5 shadow-md h-9"
+                      onClick={() => openWhatsApp(l, true)}
+                    >
+                      <WhatsAppIcon className="h-3.5 w-3.5" /> Parabéns {formatToUpper(l.nome.split(" ")[0])}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Hero Card - padronizado */}
         <AdminHeroCard
@@ -560,7 +608,24 @@ export default function Agendamentos() {
                         </Badge>
                       </div>
                       <div className="space-y-2 mb-4">
-                        <h3 className="font-bold text-lg truncate leading-tight">{formatToUpper(lead.nome)}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-lg truncate leading-tight flex-1">{formatToUpper(lead.nome)}</h3>
+                          {(() => {
+                            const bStr = getLeadBirthdayStr(lead);
+                            if (!bStr) return null;
+                            const isHoje = isBirthdayToday(bStr);
+                            return (
+                              <span className={`flex items-center gap-1 text-[9px] font-black uppercase rounded-full px-2 py-0.5 shrink-0 ${
+                                isHoje
+                                  ? "bg-amber-100 text-amber-700 border border-amber-300 animate-pulse"
+                                  : "bg-slate-100 text-slate-500 border border-slate-200"
+                              }`}>
+                                <Gift className="h-2.5 w-2.5" />
+                                {isHoje ? "Hoje!" : (() => { const b = parseBirthday(bStr); return b ? format(b, "dd/MM") : ""})()}
+                              </span>
+                            );
+                          })()}
+                        </div>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground font-medium">
                           <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {lead.cidade || "N/Inf"}</span>
                           <span className="flex items-center gap-1 text-primary font-bold"><DollarSign className="h-3 w-3" /> {formatLeadValue(Number(lead.valor_credito))}</span>
@@ -613,7 +678,7 @@ export default function Agendamentos() {
           <TabsContent value="aniversarios" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredBirthdays.map((lead) => {
-                const birthStr = lead.dados_cadastro?.NASCIMENTO || lead.dados_cadastro?.DATANASCIMENTO || lead.dados_cadastro?.DATA_NASCIMENTO || lead.dados_cadastro?.data_nascimento || lead.dados_cadastro?.nascimento || lead.dados_cadastro?.birth_date;
+                const birthStr = getLeadBirthdayStr(lead);
                 const birthDate = parseBirthday(birthStr);
                 const hoje = isBirthdayToday(birthStr);
                 return (
