@@ -82,7 +82,6 @@ export function HistoricoModal({
 
     if (!finalOrgId) {
       toast.error("Erro: Organização não identificada.");
-      setLoadingNota(false);
       setSavingNota(false);
       return;
     }

@@ -47,7 +47,7 @@ const STATUS_FECHADOS = ["venda_fechada", "fechado"];
 /** Pega o primeiro valor não-vazio de uma lista de chaves no objeto dados_cadastro */
 function getDC(dc: Record<string, unknown> | undefined | null, keys: string[]): string {
   for (const k of keys) {
-    if (dc && dc[k]) return dc[k];
+    if (dc && dc[k]) return String(dc[k]);
   }
   return '—';
 }

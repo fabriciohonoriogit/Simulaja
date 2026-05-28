@@ -217,7 +217,7 @@ export default function Jarvis() {
                     
                     if (profile?.id && profile?.organizacao_id) {
                         try {
-                            const res = await calcularMissoes(profile.id, profile.organizacao_id, profile.tipo_acesso);
+                            const res = await calcularMissoes(profile.id, profile.organizacao_id, profile.tipo_acesso as any);
                             setMissoes(res.missoes);
                         } catch(e) {
                             console.error("Erro ao carregar missões no Jarvis:", e);
