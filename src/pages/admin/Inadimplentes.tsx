@@ -114,7 +114,7 @@ export default function Inadimplentes() {
   const { data: listResult, isLoading: isRefineLoading } = useList({
     resource: "inadimplentes",
     pagination: { mode: "off" }
-  });
+  }) as any;
 
   const { mutateAsync: createInadimplente } = useCreate();
   const { mutateAsync: updateInadimplente } = useUpdate();

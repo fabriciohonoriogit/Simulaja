@@ -61,7 +61,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
       .order("created_at", { ascending: true });
 
     if (!error && data) {
-      setMessages(data as Message[]);
+      setMessages(data as unknown as Message[]);
     }
     setLoading(false);
   };
@@ -86,7 +86,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
     if (!newMessage.trim() || sending) return;
 
     setSending(true);
-    const { error } = await supabase.from("chat_messages").insert({
+    const { error } = await (supabase.from("chat_messages") as any).insert({
       lead_id: lead.id,
       content: newMessage.trim(),
       sender: 'agent',

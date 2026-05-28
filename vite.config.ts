@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       png: { quality: 80 },
       jpeg: { quality: 75 },
       jpg: { quality: 75 },
-      webp: { lossy: true, quality: 75 },
+      webp: { quality: 75 },
       svg: {
         multipass: true,
         plugins: [

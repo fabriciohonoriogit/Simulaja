@@ -1400,7 +1400,6 @@ export type Database = {
           nome: string
           organizacao_id: string
           role: string | null
-          senha_hash: string
         }
         Insert: {
           ativo?: boolean | null
@@ -1410,7 +1409,6 @@ export type Database = {
           nome: string
           organizacao_id: string
           role?: string | null
-          senha_hash: string
         }
         Update: {
           ativo?: boolean | null
@@ -1420,7 +1418,6 @@ export type Database = {
           nome?: string
           organizacao_id?: string
           role?: string | null
-          senha_hash?: string
         }
         Relationships: [
           {
