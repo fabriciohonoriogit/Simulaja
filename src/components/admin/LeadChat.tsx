@@ -19,7 +19,7 @@ interface LeadChatProps {
 }
 
 export const LeadChat: React.FC<LeadChatProps> = ({ leadId, leadName, leadCelular }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [isAiActive, setIsAiActive] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);

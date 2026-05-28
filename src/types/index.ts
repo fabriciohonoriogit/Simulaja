@@ -14,12 +14,30 @@ export type ConviteRow = Database['public']['Tables']['convites']['Row'];
 // Extended / specific types for application usage
 export type TipoAcesso = "admin" | "manager" | "vendedor";
 
-export interface Profile extends Omit<ProfileRow, 'tipo_acesso'> {
-  tipo_acesso: TipoAcesso;
+export interface Profile {
+  id: string;
+  tipo_acesso?: TipoAcesso | string | null;
+  organizacao_id?: string | null;
+  nome_completo?: string | null;
+  nome?: string | null;
   email?: string | null;
+  telefone?: string | null;
+  avatar_url?: string | null;
+  cargo?: string | null;
+  ativo?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  [key: string]: any;
 }
 
-export interface Lead extends Omit<LeadRow, 'dados_cadastro'> {
-  dados_cadastro?: Record<string, any> | null;
+// Permissive Lead — all DB fields optional + arbitrary extensions
+export interface Lead {
+  id: string;
+  nome: string;
+  dados_cadastro?: any;
   atendimento_ia?: boolean;
+  score_final?: string | null;
+  origem?: string | null;
+  gcal_event_id?: string | null;
+  [key: string]: any;
 }

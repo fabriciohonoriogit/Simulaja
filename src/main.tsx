@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+// @ts-ignore - virtual module provided by vite-plugin-pwa
 import { registerSW } from "virtual:pwa-register";
 import { checkAndClearCache } from "./lib/cacheManager";
 

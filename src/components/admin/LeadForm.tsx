@@ -614,7 +614,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
 
       {form.id && (
         <TabsContent value="chat" className="mt-0">
-          <LeadChat leadId={form.id} leadName={form.nome} leadCelular={form.celular} />
+          <LeadChat lead={form as any} />
         </TabsContent>
       )}
     </Tabs>

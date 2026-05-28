@@ -6,6 +6,7 @@ export interface UseAuthReturn {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  profile?: any;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;

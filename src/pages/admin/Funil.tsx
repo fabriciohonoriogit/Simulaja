@@ -133,7 +133,7 @@ export default function Funil() {
         ].map(f => (
           <button
             key={f.id}
-            onClick={() => setQuickFilter(f.id as "quente" | "morno" | "frio" | "todos")}
+            onClick={() => setQuickFilter(f.id as any)}
             className={`text-[9px] font-black px-2 py-1 rounded-full border transition-all ${
               quickFilter === f.id
                 ? 'bg-primary text-white border-primary shadow-sm'

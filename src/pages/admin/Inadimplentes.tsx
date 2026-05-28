@@ -111,10 +111,10 @@ export default function Inadimplentes() {
   const kanbanRef = useRef<HTMLDivElement>(null);
   const isDraggingCardRef = useRef(false);
 
-  const { data: listResult, isLoading: isRefineLoading } = useList({
+  const { data, isLoading: isRefineLoading } = useList({
     resource: "inadimplentes",
     pagination: { mode: "off" }
-  });
+  }) as any;
 
   const { mutateAsync: createInadimplente } = useCreate();
   const { mutateAsync: updateInadimplente } = useUpdate();
