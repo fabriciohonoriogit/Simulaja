@@ -15,6 +15,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   }
 });
 
-if (typeof window !== 'undefined') {
+if (import.meta.env.DEV && typeof window !== 'undefined') {
   (window as any).supabase = supabase;
 }
