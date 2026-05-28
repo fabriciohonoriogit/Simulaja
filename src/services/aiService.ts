@@ -1,55 +1,44 @@
 /**
- * AI Service Integration (Claude / Gemini)
- * Handles lead analysis and sales script generation.
+ * AI Service — chama a edge function `jarvis-ai` (Lovable AI Gateway).
+ * Nenhuma chave de API fica exposta no frontend.
  */
-import { env } from '../config/env';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface LeadContext {
-    nome: string;
-    tipo_consorcio: string;
-    valor_credito: number;
-    cidade: string;
+  nome: string;
+  tipo_consorcio: string;
+  valor_credito: number;
+  cidade: string;
+}
+
+async function callAI(prompt: string, maxTokens = 800): Promise<{ text: string; error: any }> {
+  const { data, error } = await supabase.functions.invoke("jarvis-ai", {
+    body: { prompt, maxTokens },
+  });
+  if (error) {
+    console.error("aiService.callAI error:", error);
+    return { text: "", error };
+  }
+  if (data?.error) {
+    return { text: "", error: data.error };
+  }
+  return { text: data?.text ?? "", error: null };
 }
 
 export const aiService = {
-    /**
-     * Generates a personalized sales script for a lead.
-     */
-    async generateSalesScript(lead: LeadContext) {
-        if (!env.ai.apiKey) {
-            console.warn("AI API Key not configured. Please add VITE_AI_API_KEY to .env");
-            return { script: "Olá, bom dia! Gostaria de falar sobre o seu consórcio.", error: "AI Key missing" };
-        }
+  async generateSalesScript(lead: LeadContext) {
+    const prompt = `Você é o Jarvis, um consultor de elite em consórcios.
+O lead ${lead.nome} de ${lead.cidade} acabou de fazer uma simulação de ${lead.tipo_consorcio} no valor de R$ ${lead.valor_credito.toLocaleString("pt-BR")}.
+Crie uma primeira mensagem de WhatsApp curta, persuasiva e humana.
+Não use emojis em excesso. Chame-o pelo nome.
+Foque em como essa carta de crédito pode transformar o patrimônio dele ou gerar rentabilidade.
+Responda apenas com o texto da mensagem.`;
+    const { text, error } = await callAI(prompt, 500);
+    return { script: text || "Olá, bom dia! Gostaria de falar sobre o seu consórcio.", error };
+  },
 
-        const prompt = `Você é o Jarvis, um consultor de elite em consórcios. 
-        O lead ${lead.nome} de ${lead.cidade} acabou de fazer uma simulação de ${lead.tipo_consorcio} no valor de R$ ${lead.valor_credito.toLocaleString('pt-BR')}.
-        Crie uma primeira mensagem de WhatsApp curta, persuasiva e humana. 
-        Não use emojis em excesso. Chame-o pelo nome. 
-        Foque em como essa carta de crédito pode transformar o patrimônio dele ou gerar rentabilidade.
-        Responda apenas com o texto da mensagem.`;
-
-        try {
-            if (env.ai.provider === "claude") {
-                return await this.callClaude(prompt);
-            } else {
-                return await this.callGemini(prompt);
-            }
-        } catch (error) {
-            console.error("AI Service Error:", error);
-            return { script: "Erro ao gerar script", error };
-        }
-    },
-
-    /**
-     * Ask Jarvis a question with full CRM context
-     */
-    async askJarvis(context: string, question: string) {
-        if (!env.ai.apiKey) {
-            console.warn("AI API Key not configured.");
-            return { answer: "Estou sem minha chave de API configurada no momento. Por favor, adicione a VITE_AI_API_KEY no arquivo .env para que eu possa processar sua pergunta com inteligência artificial.", error: "AI Key missing" };
-        }
-
-        const prompt = `Você é um diretor comercial especialista em consórcio.
+  async askJarvis(context: string, question: string) {
+    const prompt = `Você é um diretor comercial especialista em consórcio.
 Seu objetivo é:
 - Aumentar conversão
 - Priorizar ações com maior impacto financeiro
@@ -63,84 +52,34 @@ DADOS FORNECIDOS (OPERAÇÃO E CRM EM TEMPO REAL):
 ${context}
 
 PERGUNTA DO USUÁRIO: "${question}"`;
+    const { text, error } = await callAI(prompt, 1200);
+    return {
+      answer: text || "Desculpe, ocorreu um erro de conexão. Tente novamente em instantes.",
+      error,
+    };
+  },
 
-        try {
-            if (env.ai.provider === "claude") {
-                const res = await this.callClaude(prompt);
-                return { answer: res.script, error: null };
-            } else {
-                const res = await this.callGemini(prompt);
-                return { answer: res.script, error: null };
-            }
-        } catch (error) {
-            console.error("AI Service Error:", error);
-            return { answer: "Desculpe, ocorreu um erro de conexão com meu núcleo de processamento neural. Tente novamente em instantes.", error };
-        }
-    },
+  async qualifyLeads(leadsContext: string) {
+    const prompt = `Você é o Jarvis, estrategista de CRM.
+Analise a lista de leads e seus históricos de interação abaixo.
+Para cada lead, determine:
+1. lead_temperatura: 'quente', 'morno', 'frio' ou 'morto'
+2. propensity_score: um número de 0 a 100 indicando a chance de fechamento
+3. propensity_reason: uma breve justificativa estratégica
 
-    /**
-     * Analyzes lead history and interactions to qualify temperature and propensity.
-     */
-    async qualifyLeads(leadsContext: string) {
-        if (!env.ai.apiKey) return { analysis: [], error: "AI Key missing" };
+Responda APENAS em formato JSON puro (array de objetos), sem markdown:
+[{"id": "uuid", "temp": "quente", "score": 85, "reason": "Justificativa..."}]
 
-        const prompt = `Você é o Jarvis, estrategista de CRM. 
-        Analise a lista de leads e seus históricos de interação abaixo.
-        Para cada lead, determine:
-        1. lead_temperatura: 'quente', 'morno', 'frio' ou 'morto'
-        2. propensity_score: um número de 0 a 100 indicando a chance de fechamento
-        3. propensity_reason: uma breve justificativa estratégica
-
-        Responda APENAS em formato JSON puro (array de objetos), sem markdown:
-        [{"id": "uuid", "temp": "quente", "score": 85, "reason": "Justificativa..."}]
-
-        LISTA DE LEADS E HISTÓRICO:
-        ${leadsContext}`;
-
-        try {
-            const res = env.ai.provider === "claude" ? await this.callClaude(prompt) : await this.callGemini(prompt);
-            return { analysis: JSON.parse(res.script.replace(/```json|```/g, "")), error: null };
-        } catch (error) {
-            console.error("Qualification Error:", error);
-            return { analysis: [], error };
-        }
-    },
-
-    /**
-     * Call Anthropic Claude API
-     */
-    async callClaude(prompt: string) {
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "x-api-key": env.ai.apiKey,
-                "anthropic-version": "2023-06-01"
-            },
-            body: JSON.stringify({
-                model: "claude-sonnet-4-5",
-                max_tokens: 500,
-                messages: [{ role: "user", content: prompt }]
-            })
-        });
-        const data = await response.json();
-        return { script: data.content[0].text, error: null };
-    },
-
-    /**
-     * Call Google Gemini API
-     */
-    async callGemini(prompt: string) {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.ai.apiKey}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
-        const data = await response.json();
-        return { script: data.candidates[0].content.parts[0].text, error: null };
+LISTA DE LEADS E HISTÓRICO:
+${leadsContext}`;
+    const { text, error } = await callAI(prompt, 2000);
+    if (error) return { analysis: [], error };
+    try {
+      const clean = text.replace(/```json|```/g, "").trim();
+      return { analysis: JSON.parse(clean), error: null };
+    } catch (e) {
+      console.error("qualifyLeads parse error:", e);
+      return { analysis: [], error: e };
     }
+  },
 };
