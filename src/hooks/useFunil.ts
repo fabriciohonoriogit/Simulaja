@@ -164,7 +164,7 @@ export function useFunil() {
       (v: Lead, i: number, a: Lead[]) => a.findIndex((t: Lead) => t.id === v.id) === i
     );
 
-    const fetchedLeads = uniqueRaw.map((lead) => ({
+    const fetchedLeads: Lead[] = uniqueRaw.map((lead) => ({
       ...lead,
       nome: lead.nome || "Lead Sem Nome",
       status: normalizeStatus(lead.status),
@@ -174,7 +174,7 @@ export function useFunil() {
 
     const now = new Date();
     const leadsToUpdate: any[] = [];
-    const localUpdatedLeads = [...fetchedLeads];
+    const localUpdatedLeads: Lead[] = [...fetchedLeads];
     let stateChanged = false;
 
     fetchedLeads.forEach((lead: Lead) => {
