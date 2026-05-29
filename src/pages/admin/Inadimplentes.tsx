@@ -1,7 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { useList, useCreate, useUpdate, useDelete } from "@refinedev/core";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { createPortal } from "react-dom";
 import { 
@@ -111,21 +110,29 @@ export default function Inadimplentes() {
   const kanbanRef = useRef<HTMLDivElement>(null);
   const isDraggingCardRef = useRef(false);
 
-  const { data: listResult, isLoading: isRefineLoading } = useList({
-    resource: "inadimplentes",
-    pagination: { mode: "off" }
-  }) as any;
-
-  const { mutateAsync: createInadimplente } = useCreate();
-  const { mutateAsync: updateInadimplente } = useUpdate();
-  const { mutateAsync: deleteInadimplente } = useDelete();
-
-  useEffect(() => {
-    if (!isRefineLoading) {
-      setData((listResult?.data || []) as Inadimplente[]);
+  const fetchData = useCallback(async () => {
+    if (!profile?.organizacao_id) return;
+    setLoading(true);
+    try {
+      const { data: rows, error } = await supabase
+        .from("inadimplentes")
+        .select("*")
+        .eq("organizacao_id", profile.organizacao_id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setData((rows || []) as Inadimplente[]);
+    } catch (e) {
+      console.error("Erro ao carregar inadimplentes:", e);
+      toast.error("Erro ao carregar dados de inadimplência");
+      setData([]);
+    } finally {
       setLoading(false);
     }
-  }, [isRefineLoading, listResult?.data]);
+  }, [profile?.organizacao_id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
     localStorage.setItem("inadimplentes_wide_view", String(isWideView));
@@ -246,22 +253,28 @@ export default function Inadimplentes() {
 
     try {
       if (editingItem) {
-        await updateInadimplente({
-          resource: "inadimplentes",
-          id: editingItem.id,
-          values: payload
-        });
+        const { error } = await supabase
+          .from("inadimplentes")
+          .update(payload)
+          .eq("id", editingItem.id);
+        if (error) throw error;
       } else {
-        await createInadimplente({
-          resource: "inadimplentes",
-          values: payload
-        });
+        const { error } = await supabase
+          .from("inadimplentes")
+          .insert([payload]);
+        if (error) throw error;
       }
 
       toast.success(editingItem ? "Atualizado!" : "Adicionado!");
       setShowAdd(false);
       setEditingItem(null);
+      setForm({
+        nome: "", celular: "", tipo_consorcio: "", valor_parcela: "",
+        parcelas_pagas: "", parcelas_atrasadas: "", grupo: "", cota: "", administradora: "",
+      });
+      fetchData();
     } catch (e) {
+      console.error("Erro ao salvar inadimplente:", e);
       toast.error("Erro ao salvar");
     } finally {
       setSaving(false);
@@ -288,9 +301,15 @@ export default function Inadimplentes() {
     e.stopPropagation();
     if (!confirm("Excluir este registro?")) return;
     try {
-      await deleteInadimplente({ resource: "inadimplentes", id });
+      const { error } = await supabase
+        .from("inadimplentes")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
       toast.success("Excluído!");
+      fetchData();
     } catch (error) {
+      console.error("Erro ao deletar inadimplente:", error);
       toast.error("Erro ao excluir");
     }
   };
