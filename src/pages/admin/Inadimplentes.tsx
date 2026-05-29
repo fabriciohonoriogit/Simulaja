@@ -338,55 +338,102 @@ export default function Inadimplentes() {
     }
   };
 
-  const totalEmAtraso = data.filter(d => d.status !== "regularizado").length;
-  const vlrAtraso = data.filter(d => d.status !== "regularizado").reduce((s, i) => s + (i.valor_parcela * i.parcelas_atrasadas), 0);
 
   if (loading) return <div className="p-20 text-center animate-pulse text-slate-400 font-bold uppercase tracking-widest">Sincronizando base de cobrança...</div>;
 
   return (
     <div className="space-y-6">
-      {/* Dynamic Header Box */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <div className="md:col-span-8 relative overflow-hidden p-6 rounded-[32px] bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-2xl">
-          <TrendingUp className="absolute -bottom-6 -right-6 h-40 w-40 opacity-5 rotate-12" />
-          <div className="relative z-10 flex flex-col h-full justify-between">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-3xl font-black text-white">Régua de Cobrança</h1>
-                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[4px] mt-1">Status da Operação</p>
-              </div>
-              <Button size="sm" onClick={() => { setShowAdd(true); setEditingItem(null); setForm({ nome: "", celular: "", tipo_consorcio: "", valor_parcela: "", parcelas_pagas: "", parcelas_atrasadas: "", grupo: "", cota: "", administradora: "" }); }} className="bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-[10px] tracking-widest rounded-xl">
-                <Plus className="mr-2 h-4 w-4" /> Novo Contato
-              </Button>
+      {/* Standard Header Row */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-black text-slate-900">Régua de Cobrança</h1>
+        <Button 
+          size="sm" 
+          onClick={() => { 
+            setShowAdd(true); 
+            setEditingItem(null); 
+            setForm({ 
+              nome: "", celular: "", tipo_consorcio: "", valor_parcela: "", 
+              parcelas_pagas: "", parcelas_atrasadas: "", grupo: "", cota: "", 
+              administradora: "" 
+            }); 
+          }} 
+          className="bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-[10px] tracking-widest rounded-xl"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Novo Contato
+        </Button>
+      </div>
+
+      {/* Grid of Compact Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Card 1: Total Atraso */}
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-lg shadow-rose-500/20 transition-all hover:scale-[1.02]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-white/20">
+              <AlertTriangle className="h-5 w-5" />
             </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-8">
-              <div>
-                <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Total Atraso</p>
-                <p className="text-xl font-black text-white">{totalEmAtraso}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Montante Ativo</p>
-                <p className="text-xl font-black text-rose-500">{formatCurrency(vlrAtraso)}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Recuperação</p>
-                <p className="text-xl font-black text-emerald-500">{data.length > 0 ? Math.round((data.filter(d => d.status === 'regularizado').length / data.length) * 100) : 0}%</p>
+            <div>
+              <p className="text-[10px] font-black uppercase opacity-80 tracking-widest leading-tight">Total Atraso</p>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <p className="text-xl font-black">{totalEmAtraso}</p>
+                <span className="text-[9px] opacity-80 font-bold uppercase tracking-tighter">clientes</span>
               </div>
             </div>
           </div>
         </div>
-        
-        <div className="md:col-span-4 grid grid-cols-2 gap-4">
-           <button onClick={() => setShowCopy(true)} className="flex flex-col items-center justify-center gap-3 p-4 rounded-[32px] bg-emerald-50 border border-emerald-100 text-emerald-600 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/10 group">
-              <WhatsAppIcon className="h-8 w-8 group-hover:animate-bounce" />
-              <span className="text-[10px] font-black uppercase tracking-widest">WhatsApp</span>
-           </button>
-           <button onClick={handleGenerateReport} className="flex flex-col items-center justify-center gap-3 p-4 rounded-[32px] bg-blue-50 border border-blue-100 text-blue-600 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/10 group">
-              <FileText className="h-8 w-8 group-hover:scale-110" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Relatório</span>
-           </button>
+
+        {/* Card 2: Montante Ativo */}
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/20 transition-all hover:scale-[1.02]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-white/20">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase opacity-80 tracking-widest leading-tight">Montante Ativo</p>
+              <p className="text-xl font-black mt-0.5">{formatCurrency(vlrAtraso)}</p>
+            </div>
+          </div>
         </div>
+
+        {/* Card 3: Recuperação */}
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-white/20">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase opacity-80 tracking-widest leading-tight">Recuperação</p>
+              <p className="text-xl font-black mt-0.5">{data.length > 0 ? Math.round((data.filter(d => d.status === 'regularizado').length / data.length) * 100) : 0}%</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: WhatsApp */}
+        <button 
+          onClick={() => setShowCopy(true)} 
+          className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20 transition-all hover:scale-[1.02] flex items-center gap-3 text-left w-full border-none group cursor-pointer"
+        >
+          <div className="p-2 rounded-xl bg-white/20 group-hover:animate-bounce">
+            <WhatsAppIcon className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase opacity-80 tracking-widest leading-tight">WhatsApp</p>
+            <p className="text-xs font-bold mt-0.5 opacity-90">Régua de Cobrança</p>
+          </div>
+        </button>
+
+        {/* Card 5: Relatório */}
+        <button 
+          onClick={handleGenerateReport} 
+          className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] flex items-center gap-3 text-left w-full border-none cursor-pointer"
+        >
+          <div className="p-2 rounded-xl bg-white/20">
+            <FileText className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase opacity-80 tracking-widest leading-tight">Relatório</p>
+            <p className="text-xs font-bold mt-0.5 opacity-90">Gerar PDF</p>
+          </div>
+        </button>
       </div>
 
       {/* Control Strip */}
