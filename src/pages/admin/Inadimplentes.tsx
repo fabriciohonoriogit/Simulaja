@@ -338,6 +338,8 @@ export default function Inadimplentes() {
     }
   };
 
+  const totalEmAtraso = data.filter(d => d.status !== "regularizado").length;
+  const vlrAtraso = data.filter(d => d.status !== "regularizado").reduce((s, i) => s + (i.valor_parcela * i.parcelas_atrasadas), 0);
 
   if (loading) return <div className="p-20 text-center animate-pulse text-slate-400 font-bold uppercase tracking-widest">Sincronizando base de cobrança...</div>;
 
