@@ -121,11 +121,11 @@ export default function Inadimplentes() {
   const { mutateAsync: deleteInadimplente } = useDelete();
 
   useEffect(() => {
-    if (listResult?.data) {
-      setData(listResult.data as Inadimplente[]);
+    if (!isRefineLoading) {
+      setData((listResult?.data || []) as Inadimplente[]);
       setLoading(false);
     }
-  }, [listResult?.data]);
+  }, [isRefineLoading, listResult?.data]);
 
   useEffect(() => {
     localStorage.setItem("inadimplentes_wide_view", String(isWideView));
@@ -336,7 +336,7 @@ export default function Inadimplentes() {
                 <h1 className="text-3xl font-black text-white">Régua de Cobrança</h1>
                 <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[4px] mt-1">Status da Operação</p>
               </div>
-              <Button size="sm" onClick={() => setShowAdd(true)} className="bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-[10px] tracking-widest rounded-xl">
+              <Button size="sm" onClick={() => { setShowAdd(true); setEditingItem(null); setForm({ nome: "", celular: "", tipo_consorcio: "", valor_parcela: "", parcelas_pagas: "", parcelas_atrasadas: "", grupo: "", cota: "", administradora: "" }); }} className="bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-[10px] tracking-widest rounded-xl">
                 <Plus className="mr-2 h-4 w-4" /> Novo Contato
               </Button>
             </div>
@@ -586,7 +586,7 @@ export default function Inadimplentes() {
                  <Input value={form.celular} onChange={e => setForm({...form, celular: e.target.value})} className="h-12 bg-slate-50 border-none rounded-xl" />
               </div>
               <div className="space-y-1.5">
-                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-1">Status Base</Label>
+                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-1">Administradora</Label>
                  <Select value={form.administradora || "none"} onValueChange={v => setForm({...form, administradora: v})}>
                     <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl">
                       <SelectValue placeholder="Administradora" />

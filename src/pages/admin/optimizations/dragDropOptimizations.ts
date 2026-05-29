@@ -22,45 +22,27 @@ export const handleKanbanDragEnd = async <T extends { id: string; status: string
   const newStatus = destination.droppableId;
   const nowIso = new Date().toISOString();
 
-  // 1. Optimistic Update with Reordering
-  const updatedData = [...data];
-  const itemIndex = updatedData.findIndex(item => item.id === draggableId);
-  
-  if (itemIndex !== -1) {
-    const [item] = updatedData.splice(itemIndex, 1);
-    const updatedItem = { 
-      ...item, 
-      status: newStatus,
-      status_updated_at: (newStatus !== item.status && tableName !== "inadimplentes") ? nowIso : (item as any).status_updated_at 
-    };
+  // 1. Optimistic Update
+  setData(prev => {
+    const next = [...prev];
+    const idx = next.findIndex(i => i.id === draggableId);
+    if (idx !== -1) {
+      const [moved] = next.splice(idx, 1);
+      // Append to end — kanban boards filter items per column, so
+      // the position within the global array is irrelevant for rendering.
+      next.push({
+        ...moved,
+        status: newStatus,
+        status_updated_at:
+          newStatus !== moved.status && tableName !== "inadimplentes"
+            ? nowIso
+            : (moved as any).status_updated_at,
+      });
+      return next;
+    }
+    return next;
+  });
 
-    // Calculate insertion index in the global array
-    // We want to insert it at destination.index among items of the SAME new status
-    const itemsInTargetStatus = updatedData.filter(i => i.status === newStatus);
-    
-    // This is a bit complex because the global array might be sorted.
-    // To make it simple and predictable, we'll just put it at the "end" of the target status group 
-    // or use a temporary 'sort_order' if we had one.
-    // For now, let's just update the status and let the component's internal filtering/sorting handle it,
-    // BUT we need to make sure the component doesn't jump.
-    
-    setData(prev => {
-      const result = [...prev];
-      const idx = result.findIndex(i => i.id === draggableId);
-      if (idx !== -1) {
-        const [moved] = result.splice(idx, 1);
-        return [
-          ...result.slice(0, 0), // Placeholder for logic if needed
-          { 
-            ...moved, 
-            status: newStatus, 
-            status_updated_at: (newStatus !== moved.status && tableName !== "inadimplentes") ? nowIso : (moved as any).status_updated_at 
-          }
-        ];
-      }
-      return result;
-    });
-  }
 
   // 2. Persistence
   try {
