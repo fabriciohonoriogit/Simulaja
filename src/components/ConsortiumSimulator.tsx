@@ -280,14 +280,9 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     }
   }, [categoria, lista.length]);
 
-  useEffect(() => {
-    const grupoAtual = (dynamicGrupos[categoria] || [])[Math.min(idx, (dynamicGrupos[categoria] || []).length > 0 ? (dynamicGrupos[categoria] || []).length - 1 : 0)]?.grupo || "";
-    if (categoria === "servicos" || grupoAtual === "5293" || grupoAtual === "6038") {
-      setPaymentMode("linear");
-    } else {
-      setPaymentMode("reduzido");
-    }
-  }, [categoria, idx, dynamicGrupos]);
+  // effectiveMode: respeita a escolha do usuário, mas força "linear" quando o grupo não tem plano reduzido
+  const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
+  const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";
 
   const fmt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -304,7 +299,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   };
 
   const pct = lista.length > 1 ? (safeIdx / (lista.length - 1)) * 100 : 0;
-  const isLinear = paymentMode === "linear";
+  const isLinear = effectiveMode === "linear";
 
   const handleExportPDF = () => {
     if (!resultado) return;
@@ -400,7 +395,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     setConsultas(novaConsulta);
     setResultado(g);
 
-    const selectedInstallment = paymentMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
+    const selectedInstallment = effectiveMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
     const item: HistItem = {
       credito: g.credito, grupo: g.grupo, prazo: g.prazo, r50: selectedInstallment,
       nome: simNome.trim(),
@@ -441,7 +436,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const lanceTotalRS = lDinheiroRS + lEmbutidoRS;
   const creditoDisponivel = g.credito - lEmbutidoRS;
 
-  const isSelectedLinear = paymentMode === "linear";
+  const isSelectedLinear = effectiveMode === "linear";
   const selectedInstallment = isSelectedLinear ? (g.r100 ?? g.r50) : g.r50;
 
   const tx = isSelectedLinear ? (g.txLinear ?? g.tx ?? 20) : (g.tx5050 ?? g.tx ?? 20);
@@ -576,30 +571,29 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               <span className="bg-slate-100 px-2 py-0.5 rounded">
                 {simulationMode === "credit" 
                   ? `MIN: R$ ${lista[0].credito.toLocaleString("pt-BR")}` 
-                  : `MIN: R$ ${(paymentMode === "linear" ? (lista[0].r100 ?? lista[0].r50) : lista[0].r50).toLocaleString("pt-BR")}`}
+                  : `MIN: R$ ${(effectiveMode === "linear" ? (lista[0].r100 ?? lista[0].r50) : lista[0].r50).toLocaleString("pt-BR")}`}
               </span>
               <span className="bg-slate-100 px-2 py-0.5 rounded">
                 {simulationMode === "credit" 
                   ? `MÁX: R$ ${lista[lista.length - 1].credito.toLocaleString("pt-BR")}` 
-                  : `MÁX: R$ ${(paymentMode === "linear" ? (lista[lista.length - 1].r100 ?? lista[lista.length - 1].r50) : lista[lista.length - 1].r50).toLocaleString("pt-BR")}`}
+                  : `MÁX: R$ ${(effectiveMode === "linear" ? (lista[lista.length - 1].r100 ?? lista[lista.length - 1].r50) : lista[lista.length - 1].r50).toLocaleString("pt-BR")}`}
               </span>
             </div>
 
             {(() => {
-              const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
               if (!hasBothPlans) return null;
               return (
                 <div className="flex justify-center mb-8 animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex bg-slate-100/80 backdrop-blur p-1 rounded-2xl border border-slate-200/50">
                     <button 
                       onClick={() => setPaymentMode('reduzido')}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${paymentMode === 'reduzido' ? 'bg-[#FF7A00] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#FF7A00] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                       Reduzido (50/50)
                     </button>
                     <button 
                       onClick={() => setPaymentMode('linear')}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${paymentMode === 'linear' ? 'bg-[#FF7A00] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#FF7A00] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                       Linear (Integral)
                     </button>

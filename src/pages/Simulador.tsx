@@ -110,15 +110,9 @@ export default function Simulador() {
     setIdx(Math.min(4, lista.length - 1));
   }, [categoria, lista]);
 
-  useEffect(() => {
-    if (categoria === "servicos" || g.grupo === "5293" || g.grupo === "6038") {
-      setPaymentMode("linear");
-    } else if (g.grupo === "6021") {
-      setPaymentMode("reduzido");
-    } else {
-      setPaymentMode("reduzido");
-    }
-  }, [categoria, g.grupo]);
+  // effectiveMode: respeita a escolha do usuário, força "linear" apenas quando o grupo não tem plano reduzido
+  const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
+  const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";
 
   const mascaraWpp = (value: string) => {
     let v = value.replace(/\D/g, "");
@@ -129,8 +123,8 @@ export default function Simulador() {
   };
 
   const pct = lista.length > 1 ? (idx / (lista.length - 1)) * 100 : 0;
-  const isLinear = paymentMode === "linear";
-  const selectedInstallment = paymentMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
+  const isLinear = effectiveMode === "linear";
+  const selectedInstallment = effectiveMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
 
   const confirmar = async () => {
     const nomeOk = nome.trim().length > 0;
@@ -302,32 +296,28 @@ export default function Simulador() {
           ))}
         </div>
 
-        {(() => {
-          const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
-          if (!hasBothPlans) return null;
-          return (
-            <div className="flex justify-center mb-8 animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex bg-slate-100/80 backdrop-blur p-1 rounded-2xl border border-slate-200/50">
-                <button 
-                  onClick={() => setPaymentMode('reduzido')}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${paymentMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  Reduzido (50/50)
-                </button>
-                <button 
-                  onClick={() => setPaymentMode('linear')}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${paymentMode === 'linear' ? 'bg-[#0f2044] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  Linear (Integral)
-                </button>
-              </div>
+        {hasBothPlans && (
+          <div className="flex justify-center mb-8 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex bg-slate-100/80 backdrop-blur p-1 rounded-2xl border border-slate-200/50">
+              <button 
+                onClick={() => setPaymentMode('reduzido')}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Reduzido (50/50)
+              </button>
+              <button 
+                onClick={() => setPaymentMode('linear')}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Linear (Integral)
+              </button>
             </div>
-          );
-        })()}
+          </div>
+        )}
 
         <div className="bg-green-50 border border-green-100 rounded-2xl p-6 text-center mb-8">
           <p className="text-[10px] font-bold text-green-600 uppercase mb-1">
-            {paymentMode === "linear" ? "Parcela Linear (Integral)" : "Parcela Reduzida (50/50)"}
+            {effectiveMode === "linear" ? "Parcela Linear (Integral)" : "Parcela Reduzida (50/50)"}
           </p>
           <p className="text-4xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
         </div>
