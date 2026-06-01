@@ -74,58 +74,82 @@ const sliderThumbStyles = `
   }
 `;
 
-export type GrupoItem = { grupo: string; credito: number; r50: number; prazo: number; tx?: number; fr?: number; };
+export type GrupoItem = { 
+  grupo: string; 
+  credito: number; 
+  prazo: number; 
+  r50: number; 
+  r100?: number; 
+  tx5050?: number; 
+  txLinear?: number; 
+  fr5050?: number; 
+  frLinear?: number; 
+  tx?: number; 
+  fr?: number; 
+  seguro?: number; 
+  isPromo?: boolean; 
+};
 export type Category = { id: string; label: string; icon: string; };
 
 export const GRUPOS: Record<string, GrupoItem[]> = {
   imovel: [
-    { grupo: "Magalu", credito: 110000, r50: 398.97, prazo: 220 },
-    { grupo: "Magalu", credito: 120000, r50: 435.24, prazo: 220 },
-    { grupo: "Magalu", credito: 130000, r50: 471.50, prazo: 220 },
-    { grupo: "Magalu", credito: 150000, r50: 544.04, prazo: 220 },
-    { grupo: "Magalu", credito: 170000, r50: 616.58, prazo: 220 },
-    { grupo: "Magalu", credito: 200000, r50: 725.39, prazo: 220 },
-    { grupo: "Magalu", credito: 230000, r50: 866.98, prazo: 214 },
-    { grupo: "Magalu", credito: 250000, r50: 950.47, prazo: 197 },
-    { grupo: "Magalu", credito: 270000, r50: 1026.51, prazo: 197 },
-    { grupo: "Magalu", credito: 300000, r50: 1140.56, prazo: 197 },
-    { grupo: "Magalu", credito: 320000, r50: 1216.60, prazo: 197 },
-    { grupo: "Magalu", credito: 350000, r50: 1172.84, prazo: 240 },
-    { grupo: "Magalu", credito: 400000, r50: 1340.38, prazo: 240 },
-    { grupo: "Magalu", credito: 450000, r50: 1508.23, prazo: 240 },
-    { grupo: "6042", credito: 500000, r50: 1478.50, prazo: 240, tx: 20, fr: 1 },
-    { grupo: "Magalu", credito: 600000, r50: 2010.58, prazo: 240 },
-    { grupo: "Magalu", credito: 700000, r50: 2345.67, prazo: 240 },
+    { grupo: "6043", credito: 110000, prazo: 220, r50: 388.54, r100: 649.10, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6043", credito: 130000, prazo: 220, r50: 459.19, r100: 767.11, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6038", credito: 130000, prazo: 203, r50: 780.86, r100: 780.86, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6027", credito: 140000, prazo: 190, r50: 565.85, r100: 895.66, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6038", credito: 140000, prazo: 203, r50: 840.92, r100: 840.92, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6043", credito: 150000, prazo: 220, r50: 529.83, r100: 885.13, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6038", credito: 150000, prazo: 203, r50: 900.99, r100: 900.99, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6027", credito: 160000, prazo: 190, r50: 646.68, r100: 1023.31, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6043", credito: 180000, prazo: 220, r50: 635.79, r100: 1062.16, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6027", credito: 180000, prazo: 190, r50: 727.52, r100: 1151.56, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6038", credito: 180000, prazo: 203, r50: 1081.19, r100: 1081.19, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6043", credito: 200000, prazo: 220, r50: 706.44, r100: 1180.17, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6027", credito: 200000, prazo: 190, r50: 808.35, r100: 1279.52, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6038", credito: 200000, prazo: 203, r50: 1201.32, r100: 1201.32, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6043", credito: 220000, prazo: 220, r50: 777.08, r100: 1298.19, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6027", credito: 220000, prazo: 190, r50: 889.19, r100: 1407.47, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6038", credito: 230000, prazo: 203, r50: 1381.52, r100: 1381.52, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6027", credito: 240000, prazo: 190, r50: 970.02, r100: 1535.42, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6027", credito: 280000, prazo: 190, r50: 1131.69, r100: 1791.32, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6021", credito: 280000, prazo: 125, r50: 1583.36, r100: 1583.36, tx5050: 16, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6021", credito: 300000, prazo: 125, r50: 1696.45, r100: 1696.45, tx5050: 16, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6042", credito: 350000, prazo: 240, r50: 1142.14, r100: 1840.37, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6021", credito: 350000, prazo: 125, r50: 1979.19, r100: 1979.19, tx5050: 16, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6042", credito: 400000, prazo: 240, r50: 1305.30, r100: 2103.29, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6021", credito: 400000, prazo: 125, r50: 2261.94, r100: 2261.94, tx5050: 16, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6042", credito: 450000, prazo: 240, r50: 1468.46, r100: 2366.20, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6021", credito: 450000, prazo: 125, r50: 2544.68, r100: 2544.68, tx5050: 16, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6042", credito: 500000, prazo: 240, r50: 1631.63, r100: 2629.11, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6021", credito: 500000, prazo: 125, r50: 2827.42, r100: 2827.42, tx5050: 16, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6042", credito: 600000, prazo: 240, r50: 1957.95, r100: 3154.93, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6042", credito: 650000, prazo: 240, r50: 2121.11, r100: 3417.84, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6042", credito: 700000, prazo: 240, r50: 2284.28, r100: 3680.75, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true }
   ],
   veiculo: [
-    { grupo: "Magalu", credito: 20000, r50: 217.14, prazo: 75 },
-    { grupo: "Magalu", credito: 22000, r50: 238.84, prazo: 75 },
-    { grupo: "Magalu", credito: 25000, r50: 271.44, prazo: 75 },
-    { grupo: "Magalu", credito: 28000, r50: 304.01, prazo: 75 },
-    { grupo: "Magalu", credito: 30000, r50: 325.71, prazo: 75 },
-    { grupo: "Magalu", credito: 40000, r50: 293.63, prazo: 98 },
-    { grupo: "Magalu", credito: 50000, r50: 367.03, prazo: 98 },
-    { grupo: "Magalu", credito: 60000, r50: 440.44, prazo: 98 },
-    { grupo: "Magalu", credito: 70000, r50: 513.85, prazo: 98 },
-    { grupo: "Magalu", credito: 80000, r50: 587.26, prazo: 98 },
-    { grupo: "Magalu", credito: 90000, r50: 654.26, prazo: 99 },
-    { grupo: "Magalu", credito: 100000, r50: 726.96, prazo: 99 },
-    { grupo: "Magalu", credito: 110000, r50: 799.58, prazo: 99 },
-    { grupo: "Magalu", credito: 120000, r50: 872.35, prazo: 99 },
-    { grupo: "Magalu", credito: 130000, r50: 945.05, prazo: 99 },
-    { grupo: "Magalu", credito: 140000, r50: 1017.74, prazo: 99 },
-    { grupo: "Magalu", credito: 150000, r50: 1276.79, prazo: 89 },
-    { grupo: "Magalu", credito: 160000, r50: 1361.91, prazo: 89 },
+    { grupo: "5293", credito: 16000, prazo: 74, r50: 270.91, r100: 270.91, txLinear: 21, frLinear: 2, isPromo: true },
+    { grupo: "5293", credito: 20000, prazo: 74, r50: 338.63, r100: 338.63, txLinear: 21, frLinear: 2, isPromo: true },
+    { grupo: "5293", credito: 25000, prazo: 74, r50: 423.29, r100: 423.29, txLinear: 21, frLinear: 2, isPromo: true },
+    { grupo: "5293", credito: 28000, prazo: 74, r50: 474.08, r100: 474.08, txLinear: 21, frLinear: 2, isPromo: true },
+    { grupo: "5293", credito: 30000, prazo: 74, r50: 507.95, r100: 507.95, txLinear: 21, frLinear: 2, isPromo: true },
+    { grupo: "5294", credito: 40000, prazo: 97, r50: 296.53, r100: 490.04, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5294", credito: 50000, prazo: 97, r50: 370.66, r100: 612.55, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5294", credito: 60000, prazo: 97, r50: 444.80, r100: 735.06, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5294", credito: 70000, prazo: 97, r50: 518.93, r100: 857.58, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5294", credito: 80000, prazo: 97, r50: 593.06, r100: 980.09, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 90000, prazo: 98, r50: 660.66, r100: 1082.20, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 100000, prazo: 98, r50: 734.07, r100: 1202.45, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 120000, prazo: 98, r50: 880.88, r100: 1442.94, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 130000, prazo: 98, r50: 954.29, r100: 1563.18, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 140000, prazo: 98, r50: 1027.70, r100: 1683.43, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true }
   ],
   pesados: [
-    { grupo: "Magalu", credito: 190000, r50: 998.40, prazo: 133 },
-    { grupo: "Magalu", credito: 200000, r50: 1050.95, prazo: 133 },
-    { grupo: "Magalu", credito: 220000, r50: 1156.04, prazo: 133 },
-    { grupo: "Magalu", credito: 230000, r50: 1208.49, prazo: 133 },
-    { grupo: "Magalu", credito: 250000, r50: 1313.68, prazo: 133 },
-    { grupo: "Magalu", credito: 280000, r50: 1471.32, prazo: 133 },
-    { grupo: "Magalu", credito: 300000, r50: 1576.42, prazo: 133 },
-    { grupo: "Magalu", credito: 350000, r50: 2210.03, prazo: 113 },
+    { grupo: "5996", credito: 190000, prazo: 132, r50: 1005.54, r100: 1710.37, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5996", credito: 200000, prazo: 132, r50: 1058.46, r100: 1800.38, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5996", credito: 220000, prazo: 132, r50: 1164.31, r100: 1980.42, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5996", credito: 250000, prazo: 132, r50: 1323.08, r100: 2250.48, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5996", credito: 280000, prazo: 132, r50: 1481.85, r100: 2520.54, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5996", credito: 300000, prazo: 132, r50: 1587.70, r100: 2700.58, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true }
   ],
   servicos: [
     { grupo: "Magalu", credito: 8000, r50: 502.52, prazo: 20 },
@@ -189,11 +213,22 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const [historico, setHistorico] = useState<HistItem[]>([]);
   const [bloqueado, setBloqueado] = useState(false);
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
+  const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
   
   const [lanceDinheiroPct, setLanceDinheiroPct] = useState(0);
   const [lanceEmbutidoPct, setLanceEmbutidoPct] = useState(25);
   const [parcelasContemplar, setParcelasContemplar] = useState(1);
   const [incluirComp, setIncluirComp] = useState(true);
+
+  useEffect(() => {
+    if (categoria === "servicos" || g.grupo === "5293" || g.grupo === "6038") {
+      setPaymentMode("linear");
+    } else if (g.grupo === "6021") {
+      setPaymentMode("reduzido");
+    } else {
+      setPaymentMode("reduzido");
+    }
+  }, [categoria, g.grupo]);
 
   // Drag to scroll
   const scrollContainerRef = useRef<HTMLElement | null>(null);
@@ -270,7 +305,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   };
 
   const pct = lista.length > 1 ? (safeIdx / (lista.length - 1)) * 100 : 0;
-  const isLinear = categoria === "servicos";
+  const isLinear = paymentMode === "linear";
 
   const handleExportPDF = () => {
     if (!resultado) return;
@@ -319,19 +354,17 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     doc.text(isLinear ? "Parcela Linear:" : "Parcela Reduzida (50%):", 25, 120);
     doc.setFont("helvetica", "bold");
     doc.setTextColor("#16a34a");
-    doc.text(fmtFull(resultado.r50), 80, 120);
+    doc.text(fmtFull(isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50), 80, 120);
     
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "normal");
-    if (resultado.tx) {
-        doc.text("Taxa Administrativa:", 25, 130);
-        doc.text(`${resultado.tx}%`, 80, 130);
-    }
-    
-    if (resultado.fr) {
-        doc.text("Fundo de Reserva:", 25, 140);
-        doc.text(`${resultado.fr}%`, 80, 140);
-    }
+    const resIsLinear = isLinear;
+    const resTx = resIsLinear ? (resultado.txLinear ?? resultado.tx ?? 20) : (resultado.tx5050 ?? resultado.tx ?? 20);
+    const resFr = resIsLinear ? (resultado.frLinear ?? resultado.fr ?? 1) : (resultado.fr5050 ?? resultado.fr ?? 1);
+    doc.text("Taxa Administrativa:", 25, 130);
+    doc.text(`${resTx}%`, 80, 130);
+    doc.text("Fundo de Reserva:", 25, 140);
+    doc.text(`${resFr}%`, 80, 140);
     
     if (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) {
         doc.setFont("helvetica", "bold");
@@ -368,8 +401,9 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     setConsultas(novaConsulta);
     setResultado(g);
 
+    const selectedInstallment = paymentMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
     const item: HistItem = {
-      credito: g.credito, grupo: g.grupo, prazo: g.prazo, r50: g.r50,
+      credito: g.credito, grupo: g.grupo, prazo: g.prazo, r50: selectedInstallment,
       nome: simNome.trim(),
       ts: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
     };
@@ -389,7 +423,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
         categoriaLabel: dynamicCategorias.find(c => c.id === categoria)?.label || categoria,
         credito: g.credito,
         prazo: g.prazo,
-        r50: g.r50,
+        r50: selectedInstallment,
         leadScoreValor
       });
     }
@@ -408,12 +442,15 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const lanceTotalRS = lDinheiroRS + lEmbutidoRS;
   const creditoDisponivel = g.credito - lEmbutidoRS;
 
-  const tx = g.tx !== undefined ? g.tx : 20;
-  const fr = g.fr !== undefined ? g.fr : 1;
-  const seguro = 0; // Padrão
+  const isSelectedLinear = paymentMode === "linear";
+  const selectedInstallment = isSelectedLinear ? (g.r100 ?? g.r50) : g.r50;
+
+  const tx = isSelectedLinear ? (g.txLinear ?? g.tx ?? 20) : (g.tx5050 ?? g.tx ?? 20);
+  const fr = isSelectedLinear ? (g.frLinear ?? g.fr ?? 1) : (g.fr5050 ?? g.fr ?? 1);
+  const seguro = g.seguro ?? 0;
   const saldoDevedorBruto = g.credito + (g.credito * (tx / 100)) + (g.credito * (fr / 100));
   
-  const saldoDevedorPosLance = saldoDevedorBruto - (parcelasContemplar * g.r50) - lanceTotalRS;
+  const saldoDevedorPosLance = saldoDevedorBruto - (parcelasContemplar * selectedInstallment) - lanceTotalRS;
   const prazoRestante = g.prazo - parcelasContemplar;
   const parcelaPos = prazoRestante > 0 && saldoDevedorPosLance > 0 ? saldoDevedorPosLance / prazoRestante : 0;
 
@@ -520,7 +557,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             <div className="text-center mb-6">
               <span className="text-sm font-bold mr-1 text-muted-foreground/60">R$</span>
               <span className="text-4xl sm:text-5xl font-black text-[#0D214F] tracking-tighter">
-                {simulationMode === "credit" ? g.credito.toLocaleString("pt-BR") : g.r50.toLocaleString("pt-BR")}
+                {simulationMode === "credit" ? g.credito.toLocaleString("pt-BR") : selectedInstallment.toLocaleString("pt-BR")}
               </span>
             </div>
 
@@ -540,14 +577,37 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               <span className="bg-slate-100 px-2 py-0.5 rounded">
                 {simulationMode === "credit" 
                   ? `MIN: R$ ${lista[0].credito.toLocaleString("pt-BR")}` 
-                  : `MIN: R$ ${lista[0].r50.toLocaleString("pt-BR")}`}
+                  : `MIN: R$ ${(paymentMode === "linear" ? (lista[0].r100 ?? lista[0].r50) : lista[0].r50).toLocaleString("pt-BR")}`}
               </span>
               <span className="bg-slate-100 px-2 py-0.5 rounded">
                 {simulationMode === "credit" 
                   ? `MÁX: R$ ${lista[lista.length - 1].credito.toLocaleString("pt-BR")}` 
-                  : `MÁX: R$ ${lista[lista.length - 1].r50.toLocaleString("pt-BR")}`}
+                  : `MÁX: R$ ${(paymentMode === "linear" ? (lista[lista.length - 1].r100 ?? lista[lista.length - 1].r50) : lista[lista.length - 1].r50).toLocaleString("pt-BR")}`}
               </span>
             </div>
+
+            {(() => {
+              const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
+              if (!hasBothPlans) return null;
+              return (
+                <div className="flex justify-center mb-8 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="flex bg-slate-100/80 backdrop-blur p-1 rounded-2xl border border-slate-200/50">
+                    <button 
+                      onClick={() => setPaymentMode('reduzido')}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${paymentMode === 'reduzido' ? 'bg-[#FF7A00] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Reduzido (50/50)
+                    </button>
+                    <button 
+                      onClick={() => setPaymentMode('linear')}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${paymentMode === 'linear' ? 'bg-[#FF7A00] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Linear (Integral)
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center mb-6">
               {dynamicCategorias.map((cat) => (
@@ -573,15 +633,16 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     {isLinear ? "Parcela Linear" : "Parcela reduzida 50%"} <span style={{ color: "#4ade80", fontWeight: 400 }}>· {isLinear ? "integral" : "até a contemplação"}</span>
                   </p>
                   <p className="text-3xl sm:text-4xl font-medium" style={{ fontFamily: "monospace", color: "#16a34a" }}>
-                    {fmtFull(g.r50)}
+                    {fmtFull(selectedInstallment)}
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:gap-2 mt-3.5 gap-2">
                     {[
                       { label: "Crédito", value: fmt(g.credito) },
                       { label: "Prazo", value: `${g.prazo} meses` },
                       { label: "Grupo", value: g.grupo },
-                      ...(isInternal && g.tx !== undefined ? [{ label: "Tx Adm", value: `${g.tx}%` }] : []),
-                      ...(isInternal && g.fr !== undefined ? [{ label: "F. Reserva", value: `${g.fr}%` }] : [])
+                      { label: "Plano", value: isLinear ? "Linear" : "50/50" },
+                      ...(isInternal && tx !== undefined ? [{ label: "Tx Adm", value: `${tx}%` }] : []),
+                      ...(isInternal && fr !== undefined ? [{ label: "F. Reserva", value: `${fr}%` }] : [])
                     ].map((m) => (
                       <div key={m.label} className="bg-white rounded-lg py-2 px-2.5 text-center border border-green-100 shadow-sm">
                         <p className="text-[0.58rem] uppercase tracking-wider mb-0.5 text-muted-foreground whitespace-nowrap">{m.label}</p>
@@ -745,7 +806,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                 <div className="p-5 space-y-4">
                   <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center">
                     <p className="text-[0.65rem] uppercase tracking-wider mb-1 font-bold text-green-700">{isLinear ? "Parcela Linear (Integral)" : "Parcela Reduzida (50%)"}</p>
-                    <p className="text-3xl font-black text-[#16a34a]" style={{ fontFamily: "monospace" }}>{fmtFull(resultado.r50)}</p>
+                    <p className="text-3xl font-black text-[#16a34a]" style={{ fontFamily: "monospace" }}>{fmtFull(isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50)}</p>
                     <p className="text-[0.6rem] text-green-600 mt-1 uppercase font-medium">{isLinear ? "Investimento planejado" : "Investimento inteligente até a contemplação"}</p>
                   </div>
 
@@ -796,6 +857,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                         const isIm = categoria === 'imovel';
                         const taxaM = isIm ? 0.00887 : 0.025;
                         const pmtF = resultado.credito * taxaM / (1 - Math.pow(1 + taxaM, -resultado.prazo));
+                        const parcelaAtual = isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50;
                         return (
                           <div className="space-y-2">
                             <div className="flex justify-between text-[11px] text-muted-foreground">
@@ -804,11 +866,11 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                             </div>
                             <div className="flex justify-between text-[11px] font-bold text-[#16a34a] bg-green-50 p-2 rounded-lg">
                               <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Sua Parcela Aqui</span>
-                              <span className="font-mono">{fmtFull(resultado.r50)}</span>
+                              <span className="font-mono">{fmtFull(parcelaAtual)}</span>
                             </div>
                             <div className="flex justify-between text-[12px] font-black text-blue-900 border-t border-dashed border-border pt-2">
                               <span>Economia Mensal:</span>
-                              <span className="text-lg">+{fmtFull(pmtF - resultado.r50)}</span>
+                              <span className="text-lg">+{fmtFull(pmtF - parcelaAtual)}</span>
                             </div>
                           </div>
                         );
@@ -823,12 +885,16 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border mt-4">
                     <button
                       onClick={() => {
+                        const currentInstallment = isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50;
                         let msg = `*Simulação de Consórcio*\n\n`;
                         msg += `*Crédito:* ${fmtFull(resultado.credito)}\n`;
                         msg += `*Prazo:* ${resultado.prazo} meses\n`;
-                        msg += `*${isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}:* ${fmtFull(resultado.r50)}\n\n`;
-                        if (resultado.tx !== undefined) msg += `*Taxa Adm:* ${resultado.tx}%\n`;
-                        if (resultado.fr !== undefined) msg += `*Fundo Reserva:* ${resultado.fr}%\n`;
+                        msg += `*${isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}:* ${fmtFull(currentInstallment)}\n\n`;
+                        const resIsLinear = isLinear;
+                        const resTx = resIsLinear ? (resultado.txLinear ?? resultado.tx ?? 20) : (resultado.tx5050 ?? resultado.tx ?? 20);
+                        const resFr = resIsLinear ? (resultado.frLinear ?? resultado.fr ?? 1) : (resultado.fr5050 ?? resultado.fr ?? 1);
+                        if (resTx !== undefined) msg += `*Taxa Adm:* ${resTx}%\n`;
+                        if (resFr !== undefined) msg += `*Fundo Reserva:* ${resFr}%\n`;
                         if (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) {
                             msg += `*Estratégia de Lance:* ${lanceDinheiroPct + lanceEmbutidoPct}%\n`;
                         }

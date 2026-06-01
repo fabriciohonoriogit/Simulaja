@@ -98,6 +98,7 @@ export default function Simulador() {
   const [incluirComp, setIncluirComp] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
+  const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
 
   const resultRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef<HTMLDivElement>(null);
@@ -109,6 +110,16 @@ export default function Simulador() {
     setIdx(Math.min(4, lista.length - 1));
   }, [categoria, lista]);
 
+  useEffect(() => {
+    if (categoria === "servicos" || g.grupo === "5293" || g.grupo === "6038") {
+      setPaymentMode("linear");
+    } else if (g.grupo === "6021") {
+      setPaymentMode("reduzido");
+    } else {
+      setPaymentMode("reduzido");
+    }
+  }, [categoria, g.grupo]);
+
   const mascaraWpp = (value: string) => {
     let v = value.replace(/\D/g, "");
     if (v.length > 11) v = v.slice(0, 11);
@@ -118,7 +129,8 @@ export default function Simulador() {
   };
 
   const pct = lista.length > 1 ? (idx / (lista.length - 1)) * 100 : 0;
-  const isLinear = categoria === "servicos";
+  const isLinear = paymentMode === "linear";
+  const selectedInstallment = paymentMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
 
   const confirmar = async () => {
     const nomeOk = nome.trim().length > 0;
@@ -136,7 +148,7 @@ export default function Simulador() {
       const { lead, score } = await createLead({
         nome: nome.trim(),
         celular: wpp,
-        tipo_consorcio: `${CATEGORIAS.find(c => c.id === categoria)?.label || categoria} (G: ${g.grupo})`,
+        tipo_consorcio: `${CATEGORIAS.find(c => c.id === categoria)?.label || categoria} (G: ${g.grupo} - ${paymentMode === 'linear' ? 'Linear' : '50/50'})`,
         valor_credito: g.credito,
         prazo_meses: g.prazo,
         categoria: categoria,
@@ -153,7 +165,7 @@ export default function Simulador() {
         credito: g.credito, 
         grupo: g.grupo, 
         prazo: g.prazo, 
-        r50: g.r50,
+        r50: selectedInstallment,
         nome: nome.trim(),
         ts: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       };
@@ -236,7 +248,7 @@ export default function Simulador() {
     addRow("Tipo de Bem:", CATEGORIAS.find(c => c.id === categoria)?.label  || "");
     addRow("Crédito:", fmt(g.credito), true);
     addRow("Prazo:", `${g.prazo} meses`);
-    addRow(isLinear ? "Parcela Linear:" : "Parcela 50%:", fmt(g.r50), true);
+    addRow(paymentMode === 'linear' ? "Parcela Linear:" : "Parcela 50%:", fmt(selectedInstallment), true);
     
     doc.save(`simulacao_${nome.split(' ')[0] || 'cliente'}.pdf`);
     toast({ title: "PDF Gerado!" });
@@ -246,7 +258,7 @@ export default function Simulador() {
     if (!resultado) return;
     const text = `*📋 SIMULAÇÃO - O ESPECIALISTA*
 *Crédito:* ${fmt(g.credito)}
-*Parcela:* ${fmt(g.r50)}
+*Parcela:* ${fmt(selectedInstallment)} (${paymentMode === 'linear' ? 'Linear' : 'Reduzida 50/50'})
 *Prazo:* ${g.prazo} meses`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -290,9 +302,34 @@ export default function Simulador() {
           ))}
         </div>
 
+        {(() => {
+          const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
+          if (!hasBothPlans) return null;
+          return (
+            <div className="flex justify-center mb-8 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex bg-slate-100/80 backdrop-blur p-1 rounded-2xl border border-slate-200/50">
+                <button 
+                  onClick={() => setPaymentMode('reduzido')}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${paymentMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Reduzido (50/50)
+                </button>
+                <button 
+                  onClick={() => setPaymentMode('linear')}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${paymentMode === 'linear' ? 'bg-[#0f2044] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Linear (Integral)
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="bg-green-50 border border-green-100 rounded-2xl p-6 text-center mb-8">
-          <p className="text-[10px] font-bold text-green-600 uppercase mb-1">Parcela Estimada</p>
-          <p className="text-4xl font-mono font-bold text-green-700">{fmt(g.r50)}</p>
+          <p className="text-[10px] font-bold text-green-600 uppercase mb-1">
+            {paymentMode === "linear" ? "Parcela Linear (Integral)" : "Parcela Reduzida (50/50)"}
+          </p>
+          <p className="text-4xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
         </div>
 
         <div className="space-y-4 mb-8">

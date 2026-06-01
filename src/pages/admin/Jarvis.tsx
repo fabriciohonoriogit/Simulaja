@@ -79,6 +79,13 @@ interface GrupoItem {
     credito: number;
     r50: number;
     prazo: number;
+    r100?: number;
+    txLinear?: number;
+    frLinear?: number;
+    tx5050?: number;
+    fr5050?: number;
+    tx?: number;
+    fr?: number;
 }
 
 interface JarvisAnalysis {
