@@ -220,16 +220,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const [parcelasContemplar, setParcelasContemplar] = useState(1);
   const [incluirComp, setIncluirComp] = useState(true);
 
-  useEffect(() => {
-    if (categoria === "servicos" || g.grupo === "5293" || g.grupo === "6038") {
-      setPaymentMode("linear");
-    } else if (g.grupo === "6021") {
-      setPaymentMode("reduzido");
-    } else {
-      setPaymentMode("reduzido");
-    }
-  }, [categoria, g.grupo]);
-
   // Drag to scroll
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -289,6 +279,15 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       setIdx(Math.min(4, lista.length - 1));
     }
   }, [categoria, lista.length]);
+
+  useEffect(() => {
+    const grupoAtual = (dynamicGrupos[categoria] || [])[Math.min(idx, (dynamicGrupos[categoria] || []).length > 0 ? (dynamicGrupos[categoria] || []).length - 1 : 0)]?.grupo || "";
+    if (categoria === "servicos" || grupoAtual === "5293" || grupoAtual === "6038") {
+      setPaymentMode("linear");
+    } else {
+      setPaymentMode("reduzido");
+    }
+  }, [categoria, idx, dynamicGrupos]);
 
   const fmt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
