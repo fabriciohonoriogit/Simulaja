@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, CheckCircle2, ListFilter,
   Calendar as CalendarIcon, Trash2, Pencil, ChevronUp, ChevronDown,
   Zap, Users, Bell, Instagram, Copy, Check, Sparkles, Share2, FileText,
-  CheckSquare, RefreshCw
+  CheckSquare, RefreshCw, Send
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { Badge } from "@/components/ui/badge";
@@ -321,6 +321,7 @@ export default function Agendamentos() {
   const [selectedSocialPost, setSelectedSocialPost] = useState<SocialPost | null>(null);
   const [isViewPostDialogOpen, setIsViewPostDialogOpen] = useState(false);
   const [copiedTextId, setCopiedTextId] = useState<string | null>(null);
+  const [importingAll, setImportingAll] = useState(false);
 
   // States para novo agendamento
   const [isAddingAppointment, setIsAddingAppointment] = useState(false);
@@ -534,6 +535,38 @@ export default function Agendamentos() {
       toast({ title: "Erro ao importar", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Importado!", description: "Este post de rede social foi adicionado como compromisso oficial no banco de dados." });
+      fetchAgendas();
+    }
+  };
+
+  const importAllSocialPostsToCRM = async () => {
+    if (importingAll) return;
+    if (!confirm("Deseja realmente importar todos os 30 posts das redes sociais de Junho para a sua agenda?")) return;
+    
+    setImportingAll(true);
+    toast({ title: "Importando...", description: "Aguarde enquanto adicionamos todos os posts à agenda." });
+    
+    const inserts = postsRedesSociais.map(post => {
+      const dateStr = `2026-06-${String(post.dia).padStart(2, "0")}T09:00`;
+      return {
+        titulo: `[Post Social] ${post.formato}: ${post.tema}`,
+        data_agendada: dateStr,
+        descricao: `Legenda:\n${post.legenda}\n\nHashtags:\n${post.hashtags}`,
+        lead_id: null,
+        tipo: "outro",
+        criado_por: profile?.id,
+        status: "pendente"
+      };
+    });
+
+    const { error } = await supabase.from("agendamentos").insert(inserts);
+
+    setImportingAll(false);
+
+    if (error) {
+      toast({ title: "Erro ao importar tudo", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Tudo importado! 🎉", description: "Todos os 30 posts de Junho foram enviados com sucesso para a agenda de compromissos." });
       fetchAgendas();
     }
   };
@@ -1145,13 +1178,21 @@ export default function Agendamentos() {
               {/* Coluna da Esquerda: Lista de Posts do Calendário */}
               <div className="lg:col-span-2 space-y-4">
                 <Card className="rounded-[32px] overflow-hidden border-slate-100 shadow-xl">
-                  <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-5 flex flex-row items-center justify-between">
+                  <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <CardTitle className="text-lg font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
                         <Instagram className="h-5 w-5 text-pink-500" /> Cronograma de Conteúdo
                       </CardTitle>
                       <p className="text-xs text-slate-500 font-medium mt-1">Atividades recomendadas dia a dia para Junho de 2026</p>
                     </div>
+                    <Button
+                      onClick={importAllSocialPostsToCRM}
+                      disabled={importingAll}
+                      className="bg-pink-600 hover:bg-pink-700 text-white uppercase text-[10px] font-black tracking-wider rounded-xl gap-1.5 h-9"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      {importingAll ? "Importando..." : "Importar Todos para Agenda"}
+                    </Button>
                   </CardHeader>
                   <CardContent className="p-0 divide-y divide-slate-100">
                     <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
