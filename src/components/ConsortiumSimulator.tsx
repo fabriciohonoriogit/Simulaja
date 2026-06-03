@@ -76,8 +76,10 @@ const sliderThumbStyles = `
 
 export type GrupoItem = { 
   grupo: string; 
+  grupoLinear?: string;
   credito: number; 
   prazo: number; 
+  prazoLinear?: number;
   r50: number; 
   r100?: number; 
   tx5050?: number; 
@@ -103,6 +105,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6043", credito: 200000, prazo: 220, r50: 706.44, r100: 1180.17, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6043", credito: 220000, prazo: 220, r50: 777.08, r100: 1298.19, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 240000, prazo: 190, r50: 970.02, r100: 1535.42, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6030", grupoLinear: "6023", credito: 250000, prazo: 196, prazoLinear: 144, r50: 1008.49, r100: 2140.72, txLinear: 18, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 280000, prazo: 190, r50: 1131.69, r100: 1791.32, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6042", credito: 350000, prazo: 240, r50: 1142.14, r100: 1840.37, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6042", credito: 400000, prazo: 240, r50: 1305.30, r100: 2103.29, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
@@ -329,7 +332,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     doc.setFont("helvetica", "normal");
     doc.text("Prazo:", 25, 110);
     doc.setFont("helvetica", "bold");
-    doc.text(`${resultado.prazo} meses`, 80, 110);
+    doc.text(`${resIsLinear ? (resultado.prazoLinear ?? resultado.prazo) : resultado.prazo} meses`, 80, 110);
     
     doc.setFont("helvetica", "normal");
     doc.text(isLinear ? "Parcela Linear:" : "Parcela Reduzida (50%):", 25, 120);
@@ -384,7 +387,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
     const selectedInstallment = effectiveMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
     const item: HistItem = {
-      credito: g.credito, grupo: g.grupo, prazo: g.prazo, r50: selectedInstallment,
+      credito: g.credito, grupo: effectiveMode === "linear" ? (g.grupoLinear ?? g.grupo) : g.grupo, prazo: effectiveMode === "linear" ? (g.prazoLinear ?? g.prazo) : g.prazo, r50: selectedInstallment,
       nome: simNome.trim(),
       ts: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
     };
@@ -403,7 +406,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
         categoriaId: categoria,
         categoriaLabel: dynamicCategorias.find(c => c.id === categoria)?.label || categoria,
         credito: g.credito,
-        prazo: g.prazo,
+        prazo: effectiveMode === "linear" ? (g.prazoLinear ?? g.prazo) : g.prazo,
         r50: selectedInstallment,
         leadScoreValor
       });
@@ -432,19 +435,19 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const saldoDevedorBruto = g.credito + (g.credito * (tx / 100)) + (g.credito * (fr / 100));
   
   const saldoDevedorPosLance = saldoDevedorBruto - (parcelasContemplar * selectedInstallment) - lanceTotalRS;
-  const prazoRestante = g.prazo - parcelasContemplar;
+  const prazoRestante = (isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo) - parcelasContemplar;
   const parcelaPos = prazoRestante > 0 && saldoDevedorPosLance > 0 ? saldoDevedorPosLance / prazoRestante : 0;
 
   const handleGerarPDF = () => {
     gerarPDF({
       nomeCliente: simNome || 'Cliente',
       tipoAquisicao: dynamicCategorias.find(c => c.id === categoria)?.label || categoria,
-      numGrupo: g.grupo,
+      numGrupo: isSelectedLinear ? (g.grupoLinear ?? g.grupo) : g.grupo,
       credito: g.credito,
       taxaAdm: tx,
       fundoReserva: fr,
       seguro: seguro,
-      prazo: g.prazo,
+      prazo: isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo,
       tipoParcela: isLinear ? 'Linear' : 'Reduzida 50%',
       parcelasContemplar: parcelasContemplar,
       lanceDinheiroPct: lanceDinheiroPct,
@@ -469,9 +472,9 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       `👤 *Cliente:* ${simNome || 'Não informado'}`,
       `📋 *SIMULAÇÃO DE CONSÓRCIO*`,
       `─────────────────────────`,
-      `🚗 *Bem:* ${dynamicCategorias.find(c => c.id === categoria)?.label || categoria} | Grupo ${g.grupo}`,
+      `🚗 *Bem:* ${dynamicCategorias.find(c => c.id === categoria)?.label || categoria} | Grupo ${isSelectedLinear ? (g.grupoLinear ?? g.grupo) : g.grupo}`,
       `💳 *Carta de Crédito:* ${fmt(g.credito)}`,
-      `📆 *Prazo:* ${g.prazo} meses`,
+      `📆 *Prazo:* ${isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo} meses`,
       `📊 *Tipo de Parcela:* ${isLinear ? 'Linear' : 'Reduzida 50%'}`,
       ``,
       `🏹 *LANCE*`,
@@ -618,8 +621,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:gap-2 mt-3.5 gap-2">
                     {[
                       { label: "Crédito", value: fmt(g.credito) },
-                      { label: "Prazo", value: `${g.prazo} meses` },
-                      { label: "Grupo", value: g.grupo },
+                      { label: "Prazo", value: `${isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo} meses` },
+                      { label: "Grupo", value: isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo },
                       { label: "Plano", value: isLinear ? "Linear" : "50/50" },
                       ...(isInternal && tx !== undefined ? [{ label: "Tx Adm", value: `${tx}%` }] : []),
                       ...(isInternal && fr !== undefined ? [{ label: "F. Reserva", value: `${fr}%` }] : [])
@@ -797,7 +800,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     </div>
                     <div className="bg-muted/50 rounded-xl p-3 text-center border border-border">
                       <p className="text-[0.6rem] uppercase font-bold text-muted-foreground mb-1">Prazo</p>
-                      <p className="text-lg font-bold text-foreground">{resultado.prazo} meses</p>
+                      <p className="text-lg font-bold text-foreground">{isLinear ? (resultado.prazoLinear ?? resultado.prazo) : resultado.prazo} meses</p>
                     </div>
                     {isInternal && resultado.tx !== undefined && (
                       <div className="bg-muted/50 rounded-xl p-3 text-center border border-border">
@@ -836,7 +839,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                       {(() => {
                         const isIm = categoria === 'imovel';
                         const taxaM = isIm ? 0.00887 : 0.025;
-                        const pmtF = resultado.credito * taxaM / (1 - Math.pow(1 + taxaM, -resultado.prazo));
+                        const resPrazo = isLinear ? (resultado.prazoLinear ?? resultado.prazo) : resultado.prazo;
+                        const pmtF = resultado.credito * taxaM / (1 - Math.pow(1 + taxaM, -resPrazo));
                         const parcelaAtual = isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50;
                         return (
                           <div className="space-y-2">
@@ -868,7 +872,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                         const currentInstallment = isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50;
                         let msg = `*Simulação de Consórcio*\n\n`;
                         msg += `*Crédito:* ${fmtFull(resultado.credito)}\n`;
-                        msg += `*Prazo:* ${resultado.prazo} meses\n`;
+                        const resPrazoWpp = isLinear ? (resultado.prazoLinear ?? resultado.prazo) : resultado.prazo;
+                        msg += `*Prazo:* ${resPrazoWpp} meses\n`;
                         msg += `*${isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}:* ${fmtFull(currentInstallment)}\n\n`;
                         const resIsLinear = isLinear;
                         const resTx = resIsLinear ? (resultado.txLinear ?? resultado.tx ?? 20) : (resultado.tx5050 ?? resultado.tx ?? 20);
