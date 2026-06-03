@@ -209,6 +209,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const [lanceEmbutidoPct, setLanceEmbutidoPct] = useState(25);
   const [parcelasContemplar, setParcelasContemplar] = useState(1);
   const [incluirComp, setIncluirComp] = useState(true);
+  const [incluirSeguro, setIncluirSeguro] = useState(true);
 
   // Drag to scroll
   const scrollContainerRef = useRef<HTMLElement | null>(null);
@@ -262,7 +263,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
   const lista = dynamicGrupos[categoria] || [];
   const safeIdx = Math.min(idx, lista.length > 0 ? lista.length - 1 : 0);
-  const g = lista[safeIdx] || { grupo: "—", credito: 0, r50: 0, prazo: 0 };
+  const _g = lista[safeIdx] || { grupo: "—", credito: 0, r50: 0, prazo: 0 };
 
   useEffect(() => {
     if (lista.length > 0) {
@@ -270,9 +271,20 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     }
   }, [categoria, lista.length]);
 
-  // effectiveMode: respeita a escolha do usuário, mas força "linear" quando o grupo não tem plano reduzido
-  const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
+  const hasBothPlans = _g.r100 !== undefined && _g.r50 !== _g.r100;
   const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";
+  const isLinear = effectiveMode === "linear";
+
+  const valorSeguroMensal = (_g.credito * (_g.seguro ?? 0)) / 100;
+
+  const g = {
+    ..._g,
+    prazo: isLinear && _g.prazoLinear ? _g.prazoLinear : _g.prazo,
+    grupo: isLinear && _g.grupoLinear ? _g.grupoLinear : _g.grupo,
+    r50: incluirSeguro ? _g.r50 : _g.r50 - valorSeguroMensal,
+    r100: _g.r100 !== undefined ? (incluirSeguro ? _g.r100 : _g.r100 - valorSeguroMensal) : undefined,
+    seguro: incluirSeguro ? _g.seguro : 0,
+  };
 
   const fmt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -289,7 +301,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   };
 
   const pct = lista.length > 1 ? (safeIdx / (lista.length - 1)) * 100 : 0;
-  const isLinear = effectiveMode === "linear";
 
   const handleExportPDF = () => {
     if (!resultado) return;
@@ -561,12 +572,12 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               <span className="bg-slate-100 px-2 py-0.5 rounded">
                 {simulationMode === "credit" 
                   ? `MIN: R$ ${lista[0].credito.toLocaleString("pt-BR")}` 
-                  : `MIN: R$ ${(effectiveMode === "linear" ? (lista[0].r100 ?? lista[0].r50) : lista[0].r50).toLocaleString("pt-BR")}`}
+                  : `MIN: R$ ${((effectiveMode === "linear" ? (lista[0].r100 ?? lista[0].r50) : lista[0].r50) - (incluirSeguro ? 0 : (lista[0].credito * (lista[0].seguro ?? 0)) / 100)).toLocaleString("pt-BR", {maximumFractionDigits:0})}`}
               </span>
               <span className="bg-slate-100 px-2 py-0.5 rounded">
                 {simulationMode === "credit" 
                   ? `MÁX: R$ ${lista[lista.length - 1].credito.toLocaleString("pt-BR")}` 
-                  : `MÁX: R$ ${(effectiveMode === "linear" ? (lista[lista.length - 1].r100 ?? lista[lista.length - 1].r50) : lista[lista.length - 1].r50).toLocaleString("pt-BR")}`}
+                  : `MÁX: R$ ${((effectiveMode === "linear" ? (lista[lista.length - 1].r100 ?? lista[lista.length - 1].r50) : lista[lista.length - 1].r50) - (incluirSeguro ? 0 : (lista[lista.length - 1].credito * (lista[lista.length - 1].seguro ?? 0)) / 100)).toLocaleString("pt-BR", {maximumFractionDigits:0})}`}
               </span>
             </div>
 
@@ -610,6 +621,21 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
             {isInternal && (
               <>
+                {lista[safeIdx]?.seguro ? (
+                  <div className="flex justify-center mb-4">
+                    <button 
+                      onClick={() => setIncluirSeguro(!incluirSeguro)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all border-2 ${
+                        incluirSeguro 
+                          ? "bg-green-100 text-green-700 border-green-500 shadow-sm" 
+                          : "bg-slate-100 text-slate-500 border-slate-300"
+                      }`}
+                    >
+                      <Shield className="w-4 h-4" />
+                      {incluirSeguro ? "Com Seguro Incluso" : "Sem Seguro"}
+                    </button>
+                  </div>
+                ) : null}
                 <div className="rounded-[14px] p-5 text-center mb-5 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1.5px solid #86efac" }}>
                   <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: "linear-gradient(90deg,#16a34a,#4ade80)" }} />
                   <p className="text-[0.65rem] font-bold uppercase tracking-wider mb-1" style={{ color: "#15803d" }}>
