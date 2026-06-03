@@ -28,12 +28,6 @@ import { formatToUpper } from "@/lib/formatters";
 interface ParsedLead {
   nome: string;
   celular?: string;
-  email?: string;
-  cidade?: string;
-  tipo_consorcio?: string;
-  valor_credito?: number;
-  prazo_meses?: number;
-  status?: string;
   _row: number;
   _errors: string[];
 }
@@ -59,87 +53,10 @@ const COLUMN_MAP: Record<string, keyof Omit<ParsedLead, "_row" | "_errors">> = {
   phone: "celular",
   whatsapp: "celular",
   fone: "celular",
-  // email
-  email: "email",
-  "e-mail": "email",
-  mail: "email",
-  // cidade
-  cidade: "cidade",
-  city: "cidade",
-  municipio: "cidade",
-  município: "cidade",
-  localidade: "cidade",
-  // tipo
-  tipo_consorcio: "tipo_consorcio",
-  tipo: "tipo_consorcio",
-  segmento: "tipo_consorcio",
-  "tipo consorcio": "tipo_consorcio",
-  "tipo de consórcio": "tipo_consorcio",
-  consorcio: "tipo_consorcio",
-  // valor
-  valor_credito: "valor_credito",
-  valor: "valor_credito",
-  credito: "valor_credito",
-  "valor credito": "valor_credito",
-  "valor do crédito": "valor_credito",
-  credit: "valor_credito",
-  // prazo
-  prazo_meses: "prazo_meses",
-  prazo: "prazo_meses",
-  meses: "prazo_meses",
-  parcelas: "prazo_meses",
-  // status
-  status: "status",
-  etapa: "status",
-  situacao: "status",
-  situação: "status",
+  contato: "celular",
 };
 
-const TIPO_ALIASES: Record<string, string> = {
-  imovel: "imovel",
-  imóvel: "imovel",
-  imobile: "imovel",
-  imovél: "imovel",
-  casa: "imovel",
-  apartamento: "imovel",
-  veiculo: "veiculo",
-  veículo: "veiculo",
-  carro: "veiculo",
-  auto: "veiculo",
-  automovel: "veiculo",
-  automóvel: "veiculo",
-  moto: "veiculo",
-  servico: "servico",
-  serviço: "servico",
-  service: "servico",
-  outros: "outros",
-  other: "outros",
-};
 
-const STATUS_ALIASES: Record<string, string> = {
-  novo: "novo_lead",
-  "novo lead": "novo_lead",
-  novo_lead: "novo_lead",
-  contatado: "contatado",
-  "em contato": "contatado",
-  primeiro_contato: "contatado",
-  negociacao: "negociacao",
-  negociação: "negociacao",
-  "em negociacao": "negociacao",
-  "em negociação": "negociacao",
-  negociando: "negociacao",
-  proposta: "simulacao_enviada",
-  "proposta enviada": "simulacao_enviada",
-  simulacao_enviada: "simulacao_enviada",
-  qualificacao: "qualificacao",
-  qualificação: "qualificacao",
-  vendido: "venda_fechada",
-  venda_fechada: "venda_fechada",
-  "venda fechada": "venda_fechada",
-  fechado: "venda_fechada",
-  perdido: "perdido",
-  lost: "perdido",
-};
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -166,19 +83,7 @@ function parseRows(rows: Record<string, unknown>[]): ParsedLead[] {
       if (!field || rawVal == null || rawVal === "") continue;
 
       const val = String(rawVal).trim();
-
-      if (field === "valor_credito") {
-        lead.valor_credito = parseMoney(rawVal);
-      } else if (field === "prazo_meses") {
-        const n = parseInt(val, 10);
-        if (!isNaN(n)) lead.prazo_meses = n;
-      } else if (field === "tipo_consorcio") {
-        lead.tipo_consorcio = TIPO_ALIASES[normKey(val)] ?? normKey(val);
-      } else if (field === "status") {
-        lead.status = STATUS_ALIASES[normKey(val)] ?? "novo_lead";
-      } else {
-        (lead as any)[field] = val;
-      }
+      (lead as any)[field] = val;
     }
 
     // validations
@@ -194,10 +99,10 @@ function parseRows(rows: Record<string, unknown>[]): ParsedLead[] {
 
 function downloadSample() {
   const ws = XLSX.utils.aoa_to_sheet([
-    ["nome", "celular", "email", "cidade", "tipo_consorcio", "valor_credito", "prazo_meses", "status"],
-    ["João Silva", "11999991111", "joao@email.com", "São Paulo", "imovel", "350000", "180", "novo"],
-    ["Maria Souza", "21988882222", "maria@email.com", "Rio de Janeiro", "veiculo", "80000", "60", "contatado"],
-    ["Carlos Lima", "31977773333", "", "Belo Horizonte", "imovel", "500000", "200", "negociacao"],
+    ["nome", "telefone"],
+    ["João Silva", "11999991111"],
+    ["Maria Souza", "21988882222"],
+    ["Carlos Lima", "31977773333"],
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Leads");
@@ -294,12 +199,10 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
       const chunk = validLeads.slice(i, i + BATCH).map((l) => ({
         nome: formatToUpper(l.nome),
         celular: l.celular ?? null,
-        email: l.email ?? null,
-        cidade: l.cidade ?? null,
-        tipo_consorcio: l.tipo_consorcio ?? "imovel",
-        valor_credito: l.valor_credito ?? 0,
-        prazo_meses: l.prazo_meses ?? 0,
-        status: l.status ?? "novo_lead",
+        status: "novo_lead",
+        tipo_consorcio: "imovel", // Default
+        valor_credito: 0,
+        prazo_meses: 0,
         organizacao_id: organizacaoId,
       }));
 
@@ -456,16 +359,10 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
                     Colunas reconhecidas
                   </p>
                 </div>
-                <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="p-4 grid grid-cols-2 gap-4">
                   {[
                     { label: "Nome *", hint: "nome, cliente, name" },
-                    { label: "Celular", hint: "celular, telefone, whatsapp" },
-                    { label: "E-mail", hint: "email, e-mail" },
-                    { label: "Cidade", hint: "cidade, municipio" },
-                    { label: "Tipo consórcio", hint: "tipo, segmento" },
-                    { label: "Valor crédito", hint: "valor, credito" },
-                    { label: "Prazo (meses)", hint: "prazo, meses, parcelas" },
-                    { label: "Status", hint: "status, etapa" },
+                    { label: "Telefone", hint: "celular, telefone, whatsapp" },
                   ].map((f) => (
                     <div key={f.label} className="bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
                       <p className="text-[10px] font-black text-slate-800">{f.label}</p>
@@ -516,12 +413,9 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
                   <table className="w-full text-xs">
                     <thead className="bg-slate-50 text-slate-400 font-black text-[10px] uppercase">
                       <tr>
-                        <th className="px-3 py-2 text-left">Status</th>
+                        <th className="px-3 py-2 text-left w-16">Status</th>
                         <th className="px-3 py-2 text-left">Nome</th>
-                        <th className="px-3 py-2 text-left">Celular</th>
-                        <th className="px-3 py-2 text-left">Cidade</th>
-                        <th className="px-3 py-2 text-left">Tipo</th>
-                        <th className="px-3 py-2 text-left">Valor</th>
+                        <th className="px-3 py-2 text-left">Telefone</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -540,15 +434,8 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
                               </span>
                             )}
                           </td>
-                          <td className="px-3 py-2 font-black text-slate-900 max-w-[120px] truncate">{l.nome || "—"}</td>
+                          <td className="px-3 py-2 font-black text-slate-900 truncate">{l.nome || "—"}</td>
                           <td className="px-3 py-2 text-slate-500">{l.celular || "—"}</td>
-                          <td className="px-3 py-2 text-slate-500">{l.cidade || "—"}</td>
-                          <td className="px-3 py-2 text-slate-500 uppercase">{l.tipo_consorcio || "—"}</td>
-                          <td className="px-3 py-2 text-slate-700 font-black">
-                            {l.valor_credito != null
-                              ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(l.valor_credito)
-                              : "—"}
-                          </td>
                         </tr>
                       ))}
                     </tbody>
