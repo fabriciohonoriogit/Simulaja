@@ -98,7 +98,7 @@ function parseRows(rows: any[][]): ParsedLead[] {
 
     // validations
     if (!lead.nome) {
-      lead._errors.push("Nome obrigatório");
+      lead.nome = `Contato ${lead._row}`;
     }
 
     return lead;
