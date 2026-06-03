@@ -140,7 +140,7 @@ export function gerarPDF(data: SimData) {
   dataRow('Valor do Crédito', fmt(data.credito), false);
   dataRow('Taxa de Adm. Total', data.taxaAdm.toFixed(2) + '%', true);
   dataRow('Fundo de Reserva', data.fundoReserva.toFixed(2) + '%', false);
-  dataRow('Seguro do Plano', data.seguro.toFixed(2) + '%', true);
+  dataRow('Seguro do Plano', data.seguro > 0 ? data.seguro.toFixed(4) + '%' : '0.00%', true);
   dataRow('Prazo Original', data.prazo + ' meses', false);
   y += 4;
 
