@@ -18,8 +18,10 @@ import {
   ClipboardList,
   RefreshCw,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  FileUp
 } from "lucide-react";
+import { LeadImportModal } from "@/components/admin/LeadImportModal";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { Input } from "@/components/ui/input";
@@ -62,6 +64,7 @@ export default function Leads() {
   const [submitting, setSubmitting] = useState(false);
   const [historyLead, setHistoryLead] = useState<Lead | null>(null);
   const [viewingFichaLead, setViewingFichaLead] = useState<Lead | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const { mutateAsync: deleteLead } = useDelete();
   const { mutateAsync: createLead } = useCreate();
@@ -260,14 +263,24 @@ export default function Leads() {
       >
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-black text-slate-900">Operação Leads</h1>
-        <button
-          onClick={() => { setEditingLead(null); setIsDialogOpen(true); }}
-          className="flex items-center gap-1 h-8 px-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
-          title="Novo Lead"
-        >
-          <UserRound className="h-3.5 w-3.5" />
-          <Plus className="h-3 w-3" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsImportOpen(true)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors border border-emerald-100 text-[11px] font-black uppercase tracking-wide"
+            title="Importar leads em massa (CSV/XLS)"
+          >
+            <FileUp className="h-3.5 w-3.5" />
+            Importar
+          </button>
+          <button
+            onClick={() => { setEditingLead(null); setIsDialogOpen(true); }}
+            className="flex items-center gap-1 h-8 px-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+            title="Novo Lead"
+          >
+            <UserRound className="h-3.5 w-3.5" />
+            <Plus className="h-3 w-3" />
+          </button>
+        </div>
       </div>
 
       <AdminHeroCard
@@ -441,6 +454,13 @@ export default function Leads() {
         lead={historyLead}
         onClose={() => setHistoryLead(null)}
         allLeads={leads as Lead[]}
+      />
+
+      <LeadImportModal
+        open={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        organizacaoId={profile?.organizacao_id}
+        onImportDone={refetchLeads}
       />
 
       <Dialog open={!!viewingFichaLead} onOpenChange={(open) => !open && setViewingFichaLead(null)}>
