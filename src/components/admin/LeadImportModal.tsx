@@ -74,20 +74,30 @@ function parseMoney(v: unknown): number | undefined {
   return isNaN(n) ? undefined : n;
 }
 
-function parseRows(rows: Record<string, unknown>[]): ParsedLead[] {
-  return rows.map((row, i) => {
-    const lead: ParsedLead = { nome: "", _row: i + 2, _errors: [] };
+function parseRows(rows: any[][]): ParsedLead[] {
+  if (rows.length === 0) return [];
 
-    for (const [rawKey, rawVal] of Object.entries(row)) {
-      const field = COLUMN_MAP[normKey(rawKey)];
-      if (!field || rawVal == null || rawVal === "") continue;
+  const headerRow = rows[0].map(c => normKey(String(c)));
+  const hasNomeHeader = headerRow.some(c => COLUMN_MAP[c] === "nome");
 
-      const val = String(rawVal).trim();
-      (lead as any)[field] = val;
-    }
+  let dataRows = rows;
+  let nameIndex = 0;
+  let phoneIndex = 1;
+
+  if (hasNomeHeader) {
+    nameIndex = headerRow.findIndex(c => COLUMN_MAP[c] === "nome");
+    phoneIndex = headerRow.findIndex(c => COLUMN_MAP[c] === "celular");
+    dataRows = rows.slice(1); // skip header
+  }
+
+  return dataRows.map((row, i) => {
+    const lead: ParsedLead = { nome: "", celular: "", _row: i + (hasNomeHeader ? 2 : 1), _errors: [] };
+
+    if (row[nameIndex]) lead.nome = String(row[nameIndex]).trim();
+    if (phoneIndex >= 0 && row[phoneIndex]) lead.celular = String(row[phoneIndex]).trim();
 
     // validations
-    if (!lead.nome || lead.nome.trim() === "") {
+    if (!lead.nome) {
       lead._errors.push("Nome obrigatório");
     }
 
@@ -143,10 +153,13 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, {
+        const rawRows = XLSX.utils.sheet_to_json<any[]>(ws, {
+          header: 1,
           defval: "",
-          raw: false,
         });
+
+        // Remove entirely empty rows
+        const rows = rawRows.filter(r => r.some(cell => String(cell).trim() !== ""));
 
         if (rows.length === 0) {
           toast.error("Arquivo vazio ou sem dados válidos");
