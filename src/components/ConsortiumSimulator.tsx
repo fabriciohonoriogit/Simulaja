@@ -621,19 +621,52 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
             {isInternal && (
               <>
+                {/* Scroll up button */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                  <button
+                    onClick={() => window.scrollBy({ top: -300, behavior: 'smooth' })}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: '#f1f5f9', border: '1.5px solid #cbd5e1',
+                      cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+                    }}
+                    title="Rolar para cima"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="18 15 12 9 6 15" />
+                    </svg>
+                  </button>
+                </div>
+
                 {lista[safeIdx]?.seguro ? (
-                  <div className="flex justify-center mb-4">
-                    <button 
-                      onClick={() => setIncluirSeguro(!incluirSeguro)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all border-2 ${
-                        incluirSeguro 
-                          ? "bg-green-100 text-green-700 border-green-500 shadow-sm" 
-                          : "bg-slate-100 text-slate-500 border-slate-300"
-                      }`}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                    <label
+                      htmlFor="chk-seguro"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        cursor: 'pointer', userSelect: 'none',
+                        fontSize: '12px', fontWeight: 700,
+                        color: incluirSeguro ? '#15803d' : '#64748b',
+                        background: incluirSeguro ? '#f0fdf4' : '#f8fafc',
+                        border: `1.5px solid ${incluirSeguro ? '#86efac' : '#cbd5e1'}`,
+                        borderRadius: '999px', padding: '6px 14px 6px 10px',
+                        transition: 'all 0.2s'
+                      }}
                     >
-                      <Shield className="w-4 h-4" />
-                      {incluirSeguro ? "Com Seguro Incluso" : "Sem Seguro"}
-                    </button>
+                      <input
+                        id="chk-seguro"
+                        type="checkbox"
+                        checked={incluirSeguro}
+                        onChange={() => setIncluirSeguro(!incluirSeguro)}
+                        style={{
+                          width: '15px', height: '15px',
+                          accentColor: '#16a34a', cursor: 'pointer', flexShrink: 0
+                        }}
+                      />
+                      <Shield style={{ width: '13px', height: '13px', flexShrink: 0 }} />
+                      {incluirSeguro ? 'Seguro incluso' : 'Sem seguro'}
+                    </label>
                   </div>
                 ) : null}
                 <div className="rounded-[14px] p-5 text-center mb-5 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1.5px solid #86efac" }}>
@@ -754,8 +787,26 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     Enviar WhatsApp
                   </button>
                 </div>
-                
+
                 <div className="h-px bg-border mb-5" />
+
+                {/* Scroll down button */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                  <button
+                    onClick={() => window.scrollBy({ top: 300, behavior: 'smooth' })}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: '#f1f5f9', border: '1.5px solid #cbd5e1',
+                      cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+                    }}
+                    title="Rolar para baixo"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                </div>
               </>
 
             )}
