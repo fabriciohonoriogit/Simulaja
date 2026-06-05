@@ -621,23 +621,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
             {isInternal && (
               <>
-                {/* Scroll up button */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                  <button
-                    onClick={() => window.scrollBy({ top: -300, behavior: 'smooth' })}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: '40px', height: '40px', borderRadius: '50%',
-                      background: '#ffffff', border: '1.5px solid #e2e8f0',
-                      cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.10)'
-                    }}
-                    title="Rolar para cima"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="18 15 12 9 6 15" />
-                    </svg>
-                  </button>
-                </div>
 
                 {lista[safeIdx]?.seguro ? (
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
@@ -790,23 +773,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
                 <div className="h-px bg-border mb-5" />
 
-                {/* Scroll down button */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                  <button
-                    onClick={() => window.scrollBy({ top: 300, behavior: 'smooth' })}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: '40px', height: '40px', borderRadius: '50%',
-                      background: '#ffffff', border: '1.5px solid #e2e8f0',
-                      cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.10)'
-                    }}
-                    title="Rolar para baixo"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-                </div>
               </>
 
             )}
