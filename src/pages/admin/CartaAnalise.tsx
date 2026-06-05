@@ -619,9 +619,9 @@ export default function CartaAnalise() {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: '44px', height: '44px', borderRadius: '50%',
-            background: '#0f172a', border: '2px solid #334155',
-            color: '#fff', cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.25)'
+            background: '#ffffff', border: '1.5px solid #e2e8f0',
+            color: '#475569', cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
           }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -634,9 +634,9 @@ export default function CartaAnalise() {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: '44px', height: '44px', borderRadius: '50%',
-            background: '#0f172a', border: '2px solid #334155',
-            color: '#fff', cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.25)'
+            background: '#ffffff', border: '1.5px solid #e2e8f0',
+            color: '#475569', cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
           }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

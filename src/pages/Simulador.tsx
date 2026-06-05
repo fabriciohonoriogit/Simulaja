@@ -357,6 +357,44 @@ export default function Simulador() {
       </div>
 
       <CRMDrawer onLoadLead={handleLoadLead} onSaveSim={handleSaveSimToCRM} />
+
+      {/* Fixed scroll up/down buttons — visible on all devices */}
+      <div style={{
+        position: 'fixed', bottom: '24px', right: '20px',
+        display: 'flex', flexDirection: 'column', gap: '8px',
+        zIndex: 50
+      }}>
+        <button
+          onClick={() => window.scrollBy({ top: -400, behavior: 'smooth' })}
+          title="Rolar para cima"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '44px', height: '44px', borderRadius: '50%',
+            background: '#ffffff', border: '1.5px solid #e2e8f0',
+            color: '#475569', cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
+        </button>
+        <button
+          onClick={() => window.scrollBy({ top: 400, behavior: 'smooth' })}
+          title="Rolar para baixo"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '44px', height: '44px', borderRadius: '50%',
+            background: '#ffffff', border: '1.5px solid #e2e8f0',
+            color: '#475569', cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }

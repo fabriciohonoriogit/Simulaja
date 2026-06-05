@@ -628,8 +628,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     style={{
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       width: '40px', height: '40px', borderRadius: '50%',
-                      background: '#f1f5f9', border: '1.5px solid #cbd5e1',
-                      cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+                      background: '#ffffff', border: '1.5px solid #e2e8f0',
+                      cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.10)'
                     }}
                     title="Rolar para cima"
                   >
@@ -797,8 +797,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     style={{
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       width: '40px', height: '40px', borderRadius: '50%',
-                      background: '#f1f5f9', border: '1.5px solid #cbd5e1',
-                      cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+                      background: '#ffffff', border: '1.5px solid #e2e8f0',
+                      cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.10)'
                     }}
                     title="Rolar para baixo"
                   >
