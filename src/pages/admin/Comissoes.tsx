@@ -134,7 +134,7 @@ export default function Comissoes() {
           if (lead.administradora === "ADEMICON") {
             setRegra("ADEMICON");
             const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((lead.tipo_consorcio || "").toLowerCase());
-            setTipoComissionamento(isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL");
+            setTipoComissionamento(isVeiculo ? "ADEMICON_VEICULO_REDUZIDA" : "ADEMICON_IMOVEL_REDUZIDA");
           } else {
             setRegra("DEMAIS");
           }
@@ -306,6 +306,17 @@ export default function Comissoes() {
   };
 
   const handleEditComissao = (c: Comissao) => {
+    // Mapear tipo antigo para o novo formato
+    let tipoComiss = c.tipo_comissionamento || "REDUZIDA";
+    if (c.regra_comissao === "ADEMICON") {
+      if (!tipoComiss.startsWith("ADEMICON_")) {
+        const isVeiculo = c.parcelas_comissao === 13;
+        const base = isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL";
+        const tipo = tipoComiss === "LINEAR" ? "LINEAR" : "REDUZIDA";
+        tipoComiss = `${base}_${tipo}`;
+      }
+    }
+
     setEditingComissao(c);
     setSelectedLeadId(c.lead_id || "manual");
     setNomeCliente(c.cliente_nome);
@@ -313,16 +324,7 @@ export default function Comissoes() {
     setCota(c.cota || "");
     setValorVendaStr(formatCurrencyInput((Number(c.valor_venda) * 100).toString()));
     setRegra(c.regra_comissao);
-    
-    let tipoComiss = c.tipo_comissionamento || "REDUZIDA";
-    if (c.regra_comissao === "ADEMICON" && !tipoComiss.startsWith("ADEMICON_")) {
-       const isVeiculo = c.parcelas_comissao === 13;
-       const base = isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL";
-       const tipo = tipoComiss === "LINEAR" ? "LINEAR" : "REDUZIDA";
-       tipoComiss = `${base}_${tipo}`;
-    }
     setTipoComissionamento(tipoComiss);
-
     setPagamentosRetroativosStr(formatCurrencyInput((Number(c.pagamentos_retroativos) * 100).toString()));
     setDataVenda(c.data_venda);
     setParcelaAtual(c.parcela_atual || 1);
@@ -1074,7 +1076,7 @@ export default function Comissoes() {
                   <SelectContent>
                     <SelectItem value="REDUZIDA">Reduzida 50/50 (10x)</SelectItem>
                     <SelectItem value="LINEAR">Linear (4x)</SelectItem>
-                    {regra === "ADEMICON" && (
+                    {(regra === "ADEMICON" || tipoComissionamento.startsWith("ADEMICON_")) && (
                       <>
                         <SelectItem value="ADEMICON_VEICULO_REDUZIDA">Ademicon Veíc./Motos Reduzida 50/50 (13x)</SelectItem>
                         <SelectItem value="ADEMICON_VEICULO_LINEAR">Ademicon Veíc./Motos Linear (13x)</SelectItem>
