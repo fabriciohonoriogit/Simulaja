@@ -268,10 +268,8 @@ export default function Metas() {
                     return (s === "fechado" || s === "venda fechada");
                 });
                 const currentMonthVendas = segmentVendas.filter(l => {
-                    const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-                    const dateToCheck = l.status_updated_at || l.updated_at || l.created_at || "";
-                    if (isRetroativo) return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr) || (l.created_at || "").startsWith(mesStr);
-                    return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr);
+                    const dateToCheck = l.status_updated_at || l.created_at || "";
+                    return dateToCheck.startsWith(mesStr);
                 });
                 
                 const valorTotal = currentMonthVendas.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
@@ -449,16 +447,12 @@ export default function Metas() {
         return (s === "fechado" || s === "venda fechada");
     });
     const realizadoMes = fechados.filter(l => {
-        const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-        const dateToCheck = l.status_updated_at || l.updated_at || l.created_at || "";
-        if (isRetroativo) return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr) || (l.created_at || "").startsWith(mesStr);
-        return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr);
+        const dateToCheck = l.status_updated_at || l.created_at || "";
+        return dateToCheck.startsWith(mesStr);
     }).reduce((a, l) => a + Number(l.valor_credito || 0), 0);
     const vendasMesCount = fechados.filter(l => {
-        const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-        const dateToCheck = l.status_updated_at || l.updated_at || l.created_at || "";
-        if (isRetroativo) return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr) || (l.created_at || "").startsWith(mesStr);
-        return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr);
+        const dateToCheck = l.status_updated_at || l.created_at || "";
+        return dateToCheck.startsWith(mesStr);
     }).length;
     const realizadoAno = fechados.filter(l => {
         const dateToCheck = l.status_updated_at || l.created_at || "";
@@ -522,9 +516,7 @@ export default function Metas() {
         const d = new Date(currentYear, currentMonth - 1 - (3 - i), 1);
         const mStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
         const r = fechados.filter(l => {
-            const isRetroativo = l.dados_cadastro?.is_retroativo === true;
             const dateToCheck = l.status_updated_at || l.created_at || "";
-            if (isRetroativo) return dateToCheck.startsWith(mStr) || (l.updated_at || "").startsWith(mStr) || (l.created_at || "").startsWith(mStr);
             return dateToCheck.startsWith(mStr);
         }).reduce((a, l) => a + Number(l.valor_credito || 0), 0);
         return { name: d.toLocaleString("pt-BR", { month: "short" }).toUpperCase(), realizado: r, meta: metaMensal };

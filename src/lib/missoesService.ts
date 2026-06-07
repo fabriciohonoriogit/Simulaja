@@ -209,10 +209,9 @@ export const calcularMissoes = async (
     const s = (l.status || "").toLowerCase().replace("_", " ");
     const isClosed = s === "fechado" || s === "venda fechada";
     const isShadow = (l as any).origem === "carteira_shadow";
-    const isRetroativo = (l as any).dados_cadastro?.is_retroativo === true;
     const dateToCheck = l.status_updated_at || l.created_at || "";
     const currentMonthStr = inicioMesAtual.substring(0, 7);
-    const isInMonth = isRetroativo ? (dateToCheck.startsWith(currentMonthStr) || (l.updated_at || "").startsWith(currentMonthStr) || (l.created_at || "").startsWith(currentMonthStr)) : dateToCheck.startsWith(currentMonthStr);
+    const isInMonth = dateToCheck.startsWith(currentMonthStr);
     return isClosed && isInMonth && !isShadow;
   });
 
@@ -453,9 +452,8 @@ export const getLeadsForMissao = async (
       const isClosed = s === "fechado" || s === "venda fechada";
       const isMine = !isVendedor || l.responsavel_id === userId;
       const isShadow = (l as any).origem === "carteira_shadow";
-      const isRetroativo = (l as any).dados_cadastro?.is_retroativo === true;
       const dateToCheck = l.status_updated_at || l.created_at || "";
-      const isInMonth = isRetroativo ? (dateToCheck.startsWith(currentMonthStr) || (l.updated_at || "").startsWith(currentMonthStr) || (l.created_at || "").startsWith(currentMonthStr)) : dateToCheck.startsWith(currentMonthStr);
+      const isInMonth = dateToCheck.startsWith(currentMonthStr);
       return isClosed && isInMonth && isMine && !isShadow;
     });
 
