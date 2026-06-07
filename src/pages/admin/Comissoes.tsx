@@ -220,12 +220,21 @@ export default function Comissoes() {
     if (regra === "RETROATIVO") taxa_comissao = 3.5;
     if (regra === "ADEMICON") taxa_comissao = 2.5;
 
+    let finalTipoComissionamento = regra === "INDICACAO_MAGALU" ? "LINEAR" : tipoComissionamento;
+    if (regra === "ADEMICON" && !finalTipoComissionamento.startsWith("ADEMICON_")) {
+      // Tenta descobrir se é veículo pelo lead, ou assume Imóvel por padrão caso edição manual legada
+      const isVeiculo = false; 
+      const base = isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL";
+      const tipo = finalTipoComissionamento === "LINEAR" ? "LINEAR" : "REDUZIDA";
+      finalTipoComissionamento = `${base}_${tipo}`;
+    }
+
     let parcelas_comissao = 1;
-    if (tipoComissionamento === "REDUZIDA") parcelas_comissao = 10;
-    if (tipoComissionamento === "LINEAR") parcelas_comissao = 4;
+    if (finalTipoComissionamento === "REDUZIDA") parcelas_comissao = 10;
+    if (finalTipoComissionamento === "LINEAR") parcelas_comissao = 4;
     if (regra === "INDICACAO_MAGALU") parcelas_comissao = 4;
-    if (regra === "ADEMICON" || tipoComissionamento === "ADEMICON_VEICULO" || tipoComissionamento === "ADEMICON_IMOVEL") {
-      parcelas_comissao = tipoComissionamento === "ADEMICON_VEICULO" ? 13 : 15;
+    if (finalTipoComissionamento.startsWith("ADEMICON_")) {
+      parcelas_comissao = finalTipoComissionamento.includes("VEICULO") ? 13 : 15;
     }
 
     const comissao_total = (valorVenda * taxa_comissao) / 100;
@@ -239,7 +248,7 @@ export default function Comissoes() {
       valor_venda: valorVenda,
       regra_comissao: regra,
       taxa_comissao,
-      tipo_comissionamento: tipoComissionamento,
+      tipo_comissionamento: finalTipoComissionamento,
       comissao_total,
       parcelas_comissao,
       pagamentos_retroativos: pagamentosRetroativos,
@@ -304,7 +313,16 @@ export default function Comissoes() {
     setCota(c.cota || "");
     setValorVendaStr(formatCurrencyInput((Number(c.valor_venda) * 100).toString()));
     setRegra(c.regra_comissao);
-    setTipoComissionamento(c.tipo_comissionamento);
+    
+    let tipoComiss = c.tipo_comissionamento || "REDUZIDA";
+    if (c.regra_comissao === "ADEMICON" && !tipoComiss.startsWith("ADEMICON_")) {
+       const isVeiculo = c.parcelas_comissao === 13;
+       const base = isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL";
+       const tipo = tipoComiss === "LINEAR" ? "LINEAR" : "REDUZIDA";
+       tipoComiss = `${base}_${tipo}`;
+    }
+    setTipoComissionamento(tipoComiss);
+
     setPagamentosRetroativosStr(formatCurrencyInput((Number(c.pagamentos_retroativos) * 100).toString()));
     setDataVenda(c.data_venda);
     setParcelaAtual(c.parcela_atual || 1);

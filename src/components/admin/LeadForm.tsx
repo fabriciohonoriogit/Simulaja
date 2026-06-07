@@ -80,7 +80,16 @@ interface LeadFormProps {
 }
 
 export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
-  const [form, setForm] = useState<LeadFormData>(initialData);
+  const [form, setForm] = useState<LeadFormData>(() => {
+    const data = { ...initialData };
+    if (data.comissao_regra === "ADEMICON" && data.comissao_tipo && !data.comissao_tipo.startsWith("ADEMICON_")) {
+      const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((data.tipo_consorcio || "").toLowerCase());
+      const base = isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL";
+      const tipo = data.comissao_tipo === "LINEAR" ? "LINEAR" : "REDUZIDA";
+      data.comissao_tipo = `${base}_${tipo}`;
+    }
+    return data;
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type, checked } = e.target;
