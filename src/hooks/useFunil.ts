@@ -497,11 +497,14 @@ export function useFunil() {
       }
     }
 
+    const isStatusChanging = newStatus !== oldStatus;
+    const finalStatusUpdatedAt = isStatusChanging ? new Date().toISOString() : (lead.status_updated_at || new Date().toISOString());
+
     // Atualiza localmente com o novo timestamp para manter a posição após o sort
     setLeads(prev => prev.map(l => l.id === leadId ? { 
       ...l, 
       status: newStatus, 
-      status_updated_at: newTimestamp,
+      status_updated_at: finalStatusUpdatedAt,
       last_interaction_at: newTimestamp 
     } : l));
 
@@ -510,7 +513,7 @@ export function useFunil() {
       .from("leads")
       .update({ 
         status: newStatus, 
-        status_updated_at: newTimestamp,
+        status_updated_at: finalStatusUpdatedAt,
         last_interaction_at: newTimestamp,
         updated_at: new Date().toISOString()
       })
@@ -529,7 +532,7 @@ export function useFunil() {
     }
 
     if (newStatus === "fechado" || newStatus === "venda_fechada") {
-      setCelebrationLead({ ...lead, status: newStatus });
+      setCelebrationLead({ ...lead, status: newStatus, status_updated_at: finalStatusUpdatedAt });
       setGrupo(lead.grupo || "");
       setCota(lead.cota || "");
       const finalAdmin = lead.administradora || "";
