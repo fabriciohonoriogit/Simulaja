@@ -265,7 +265,7 @@ export default function Metas() {
                 const segmentVendas = segmentLeads.filter(l => {
                     const s = (l.status || "").toLowerCase().replace("_", " ");
                     const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-                    return (s === "fechado" || s === "venda fechada") && !isRetroativo;
+                    return (s === "fechado" || s === "venda fechada");
                 });
                 const currentMonthVendas = segmentVendas.filter(l => {
                     const dateToCheck = l.status_updated_at || l.created_at || "";
@@ -444,7 +444,7 @@ export default function Metas() {
     const fechados = leads.filter(l => {
         const s = (l.status || "").toLowerCase().replace("_", " ");
         const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-        return (s === "fechado" || s === "venda fechada") && !isRetroativo;
+        return (s === "fechado" || s === "venda fechada");
     });
     const realizadoMes = fechados.filter(l => {
         const dateToCheck = l.status_updated_at || l.created_at || "";

@@ -278,6 +278,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
                       <SelectItem value="SILVER">Silver (3%)</SelectItem>
                       <SelectItem value="DEMAIS">Demais (4%)</SelectItem>
                       <SelectItem value="INDICACAO_MAGALU">Indicação Magalu (0.8%)</SelectItem>
+                      <SelectItem value="ADEMICON">Ademicon (2.5%)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -292,6 +293,12 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
                     <SelectContent>
                       <SelectItem value="REDUZIDA">Reduzida (10x)</SelectItem>
                       <SelectItem value="LINEAR">Linear (4x)</SelectItem>
+                      {form.comissao_regra === "ADEMICON" && (
+                        <>
+                          <SelectItem value="ADEMICON_VEICULO">Ademicon Veículo (13x)</SelectItem>
+                          <SelectItem value="ADEMICON_IMOVEL">Ademicon Imóvel (15x)</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

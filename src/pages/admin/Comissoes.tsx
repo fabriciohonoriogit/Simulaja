@@ -109,7 +109,7 @@ export default function Comissoes() {
     try {
       const { data } = await supabase
         .from("leads")
-        .select("id, nome, valor_credito, grupo, cota, status_updated_at, administradora")
+        .select("id, nome, valor_credito, grupo, cota, status_updated_at, administradora, tipo_consorcio")
         .in("status", ["fechado", "venda_fechada"])
         .eq("organizacao_id", profile.organizacao_id);
       setLeadsFechados(data || []);
@@ -133,7 +133,8 @@ export default function Comissoes() {
           setAdministradora(lead.administradora);
           if (lead.administradora === "ADEMICON") {
             setRegra("ADEMICON");
-            setTipoComissionamento("LINEAR"); // 13x is linear-ish
+            const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((lead.tipo_consorcio || "").toLowerCase());
+            setTipoComissionamento(isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL");
           } else {
             setRegra("DEMAIS");
           }
@@ -223,7 +224,9 @@ export default function Comissoes() {
     if (tipoComissionamento === "REDUZIDA") parcelas_comissao = 10;
     if (tipoComissionamento === "LINEAR") parcelas_comissao = 4;
     if (regra === "INDICACAO_MAGALU") parcelas_comissao = 4;
-    if (regra === "ADEMICON") parcelas_comissao = 15;
+    if (regra === "ADEMICON" || tipoComissionamento === "ADEMICON_VEICULO" || tipoComissionamento === "ADEMICON_IMOVEL") {
+      parcelas_comissao = tipoComissionamento === "ADEMICON_VEICULO" ? 13 : 15;
+    }
 
     const comissao_total = (valorVenda * taxa_comissao) / 100;
     const payload = {

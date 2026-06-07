@@ -212,7 +212,7 @@ export const calcularMissoes = async (
     const isInMonth = dateToCheck.startsWith(inicioMesAtual.substring(0, 7));
     const isShadow = (l as any).origem === "carteira_shadow";
     const isRetroativo = (l as any).dados_cadastro?.is_retroativo === true;
-    return isClosed && isInMonth && !isShadow && !isRetroativo;
+    return isClosed && isInMonth && !isShadow;
   });
 
   if (isVendedor) {
@@ -455,7 +455,7 @@ export const getLeadsForMissao = async (
       const isMine = !isVendedor || l.responsavel_id === userId;
       const isShadow = (l as any).origem === "carteira_shadow";
       const isRetroativo = (l as any).dados_cadastro?.is_retroativo === true;
-      return isClosed && isInMonth && isMine && !isShadow && !isRetroativo;
+      return isClosed && isInMonth && isMine && !isShadow;
     });
 
     return filtered.map((d: any) => ({

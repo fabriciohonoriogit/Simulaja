@@ -269,7 +269,7 @@ export default function Dashboard() {
       const isInMonth = dateToCheck.startsWith(currentMonthStr);
       const isShadow = (l as any).origem === "carteira_shadow";
       const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-      return isClosed && isInMonth && !isShadow && !isRetroativo;
+      return isClosed && isInMonth && !isShadow;
     })
     .reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
   
@@ -300,7 +300,7 @@ export default function Dashboard() {
       const isInMonth = dateToCheck.startsWith(currentMonthStr);
       const isShadow = (l as any).origem === "carteira_shadow";
       const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-      return isClosed && isInMonth && l.responsavel_id && !isShadow && !isRetroativo;
+      return isClosed && isInMonth && l.responsavel_id && !isShadow;
     })
     .reduce((acc: Record<string, number>, lead) => {
       const rid = lead.responsavel_id!;

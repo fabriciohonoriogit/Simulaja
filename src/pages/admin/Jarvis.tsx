@@ -279,7 +279,7 @@ export default function Jarvis() {
                         const segmentVendas = segmentLeads.filter(l => {
                             const s = (l.status || "").toLowerCase().replace("_", " ");
                             const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-                            return (s === "fechado" || s === "venda fechada") && !isRetroativo;
+                            return (s === "fechado" || s === "venda fechada");
                         });
                         const currentMonthVendas = segmentVendas.filter(l => {
                             const dateToCheck = l.status_updated_at || l.updated_at || "";
@@ -323,7 +323,7 @@ export default function Jarvis() {
             const isClosed = s === "fechado" || s === "venda fechada";
             const isRetroativo = l.dados_cadastro?.is_retroativo === true;
             const dateToCheck = l.status_updated_at || l.updated_at || "";
-            return isClosed && dateToCheck.startsWith(currentMonthStr) && !isRetroativo;
+            return isClosed && dateToCheck.startsWith(currentMonthStr);
         });
         const realizadoMes = fechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
         
@@ -332,7 +332,7 @@ export default function Jarvis() {
             const s = (l.status || "").toLowerCase().replace("_", " ");
             const isClosed = s === "fechado" || s === "venda fechada";
             const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-            return isClosed && !isRetroativo && (l.status_updated_at || "").startsWith(currentYear);
+            return isClosed && (l.status_updated_at || "").startsWith(currentYear);
         }).reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
         const progressoAno = metaAnual > 0 ? (realizadoAno / metaAnual) * 100 : 0;
         
