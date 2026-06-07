@@ -306,8 +306,10 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
                       <SelectItem value="LINEAR">Linear (4x)</SelectItem>
                       {form.comissao_regra === "ADEMICON" && (
                         <>
-                          <SelectItem value="ADEMICON_VEICULO">Ademicon Veículo (13x)</SelectItem>
-                          <SelectItem value="ADEMICON_IMOVEL">Ademicon Imóvel (15x)</SelectItem>
+                          <SelectItem value="ADEMICON_VEICULO_REDUZIDA">Ademicon Veíc./Motos Reduzida 50/50 (13x)</SelectItem>
+                          <SelectItem value="ADEMICON_VEICULO_LINEAR">Ademicon Veíc./Motos Linear (13x)</SelectItem>
+                          <SelectItem value="ADEMICON_IMOVEL_REDUZIDA">Ademicon Imóvel/Invest. Reduzida 50/50 (15x)</SelectItem>
+                          <SelectItem value="ADEMICON_IMOVEL_LINEAR">Ademicon Imóvel/Invest. Linear (15x)</SelectItem>
                         </>
                       )}
                     </SelectContent>

@@ -213,6 +213,7 @@ export function FunilModals({ state }: { state: any }) {
                     <SelectItem value="GOLDEN">Golden (5%)</SelectItem>
                     <SelectItem value="SILVER">Silver (3%)</SelectItem>
                     <SelectItem value="DEMAIS">Demais (4%)</SelectItem>
+                    <SelectItem value="ADEMICON">Ademicon (2.5%)</SelectItem>
                     <SelectItem value="INDICACAO_MAGALU">Indicação Magalu (0.8%)</SelectItem>
                   </SelectContent>
                 </Select>
@@ -230,6 +231,14 @@ export function FunilModals({ state }: { state: any }) {
                   <SelectContent>
                     <SelectItem value="REDUZIDA">Reduzida (10x)</SelectItem>
                     <SelectItem value="LINEAR">Linear (4x)</SelectItem>
+                    {comissaoRegra === "ADEMICON" && (
+                      <>
+                        <SelectItem value="ADEMICON_VEICULO_REDUZIDA">Ademicon Veíc./Motos Reduzida 50/50 (13x)</SelectItem>
+                        <SelectItem value="ADEMICON_VEICULO_LINEAR">Ademicon Veíc./Motos Linear (13x)</SelectItem>
+                        <SelectItem value="ADEMICON_IMOVEL_REDUZIDA">Ademicon Imóvel/Invest. Reduzida 50/50 (15x)</SelectItem>
+                        <SelectItem value="ADEMICON_IMOVEL_LINEAR">Ademicon Imóvel/Invest. Linear (15x)</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
                 {comissaoRegra === "INDICACAO_MAGALU" && <p className="text-[9px] text-orange-500 font-bold mt-1">Sempre Linear 4x</p>}

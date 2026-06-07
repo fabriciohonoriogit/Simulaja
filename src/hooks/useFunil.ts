@@ -678,13 +678,20 @@ export function useFunil() {
     if (comissaoRegra === "INDICACAO_MAGALU") taxa_comissao = 0.8;
     if (finalAdmin === "ADEMICON") taxa_comissao = 2.5;
 
-    let parcelas_comissao = 1;
-    if (comissaoTipo === "REDUZIDA") parcelas_comissao = 10;
-    if (comissaoTipo === "LINEAR") parcelas_comissao = 4;
-    if (comissaoRegra === "INDICACAO_MAGALU") parcelas_comissao = 4;
-    if (finalAdmin === "ADEMICON") {
+    let finalTipoComissionamento = comissaoRegra === "INDICACAO_MAGALU" ? "LINEAR" : comissaoTipo;
+    if (finalAdmin === "ADEMICON" && !finalTipoComissionamento.startsWith("ADEMICON_")) {
       const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((celebrationLead.tipo_consorcio || "").toLowerCase());
-      parcelas_comissao = isVeiculo ? 13 : 15;
+      const base = isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL";
+      const tipo = finalTipoComissionamento === "LINEAR" ? "LINEAR" : "REDUZIDA";
+      finalTipoComissionamento = `${base}_${tipo}`;
+    }
+
+    let parcelas_comissao = 1;
+    if (finalTipoComissionamento === "REDUZIDA") parcelas_comissao = 10;
+    if (finalTipoComissionamento === "LINEAR") parcelas_comissao = 4;
+    if (comissaoRegra === "INDICACAO_MAGALU") parcelas_comissao = 4;
+    if (finalTipoComissionamento.startsWith("ADEMICON_")) {
+      parcelas_comissao = finalTipoComissionamento.includes("VEICULO") ? 13 : 15;
     }
 
     const comissao_total = (valorCredito * taxa_comissao) / 100;
@@ -699,9 +706,7 @@ export function useFunil() {
       valor_venda: valorCredito,
       regra_comissao: comissaoRegra,
       taxa_comissao,
-      tipo_comissionamento: finalAdmin === "ADEMICON"
-        ? (["veiculo","moto","pesados","agricolas"].includes((celebrationLead.tipo_consorcio||"").toLowerCase()) ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL")
-        : (comissaoRegra === "INDICACAO_MAGALU" ? "LINEAR" : comissaoTipo),
+      tipo_comissionamento: finalTipoComissionamento,
       comissao_total,
       parcelas_comissao,
       data_venda: (celebrationLead.status_updated_at || new Date().toISOString()).split('T')[0],
@@ -861,11 +866,21 @@ export function useFunil() {
             // Regra específica Ademicon
             if (formData.administradora === "ADEMICON") taxa_comissao = 2.5;
 
+            let finalTipoComissionamento = formData.comissao_regra === "INDICACAO_MAGALU" ? "LINEAR" : (formData.comissao_tipo || "REDUZIDA");
+            if (formData.administradora === "ADEMICON" && !finalTipoComissionamento.startsWith("ADEMICON_")) {
+              const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((formData.tipo_consorcio || "").toLowerCase());
+              const base = isVeiculo ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL";
+              const tipo = finalTipoComissionamento === "LINEAR" ? "LINEAR" : "REDUZIDA";
+              finalTipoComissionamento = `${base}_${tipo}`;
+            }
+
             let parcelas_comissao = 1;
-            if (formData.comissao_tipo === "REDUZIDA") parcelas_comissao = 10;
-            if (formData.comissao_tipo === "LINEAR") parcelas_comissao = 4;
+            if (finalTipoComissionamento === "REDUZIDA") parcelas_comissao = 10;
+            if (finalTipoComissionamento === "LINEAR") parcelas_comissao = 4;
             if (formData.comissao_regra === "INDICACAO_MAGALU") parcelas_comissao = 4;
-            if (formData.administradora === "ADEMICON") parcelas_comissao = 15;
+            if (finalTipoComissionamento.startsWith("ADEMICON_")) {
+              parcelas_comissao = finalTipoComissionamento.includes("VEICULO") ? 13 : 15;
+            }
 
             const valorVenda = Number(formData.valor_credito) || 0;
             const comissao_total = (valorVenda * taxa_comissao) / 100;
@@ -886,7 +901,7 @@ export function useFunil() {
               valor_venda: valorVenda,
               regra_comissao: formData.is_retroativo ? "RETROATIVO" : (formData.comissao_regra || "DEMAIS"),
               taxa_comissao,
-              tipo_comissionamento: formData.comissao_regra === "INDICACAO_MAGALU" ? "LINEAR" : (formData.comissao_tipo || "REDUZIDA"),
+              tipo_comissionamento: finalTipoComissionamento,
               comissao_total,
               parcelas_comissao,
               data_venda: formData.status_updated_at ? formData.status_updated_at.split('T')[0] : new Date().toISOString().split('T')[0],

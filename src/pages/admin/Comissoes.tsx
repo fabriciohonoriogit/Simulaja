@@ -1037,25 +1037,33 @@ export default function Comissoes() {
                     <SelectItem value="ADEMICON">Ademicon (2.5%)</SelectItem>
                   </SelectContent>
                 </Select>
-                {(regra === "INDICACAO_MAGALU" || regra === "ADEMICON") && (
+                {regra === "INDICACAO_MAGALU" && (
                   <p className="text-[10px] text-orange-500 font-bold">
-                    {regra === "ADEMICON" ? "Ademicon é fixo em 15x" : "Indicação Magalu é fixo em 4x"}
+                    Indicação Magalu é fixo em 4x
                   </p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase text-slate-500">Tipo (Parcelas)</label>
                 <Select 
-                  value={regra === "ADEMICON" ? "LINEAR" : tipoComissionamento} 
+                  value={regra === "INDICACAO_MAGALU" ? "LINEAR" : tipoComissionamento} 
                   onValueChange={setTipoComissionamento}
-                  disabled={regra === "ADEMICON" || regra === "INDICACAO_MAGALU"}
+                  disabled={regra === "INDICACAO_MAGALU"}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="REDUZIDA">Reduzida 50/50 (10x)</SelectItem>
-                    <SelectItem value="LINEAR">Linear</SelectItem>
+                    <SelectItem value="LINEAR">Linear (4x)</SelectItem>
+                    {regra === "ADEMICON" && (
+                      <>
+                        <SelectItem value="ADEMICON_VEICULO_REDUZIDA">Ademicon Veíc./Motos Reduzida 50/50 (13x)</SelectItem>
+                        <SelectItem value="ADEMICON_VEICULO_LINEAR">Ademicon Veíc./Motos Linear (13x)</SelectItem>
+                        <SelectItem value="ADEMICON_IMOVEL_REDUZIDA">Ademicon Imóvel/Invest. Reduzida 50/50 (15x)</SelectItem>
+                        <SelectItem value="ADEMICON_IMOVEL_LINEAR">Ademicon Imóvel/Invest. Linear (15x)</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
