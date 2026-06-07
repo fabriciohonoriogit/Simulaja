@@ -278,11 +278,12 @@ export default function Jarvis() {
                         });
                         const segmentVendas = segmentLeads.filter(l => {
                             const s = (l.status || "").toLowerCase().replace("_", " ");
-                            const isRetroativo = l.dados_cadastro?.is_retroativo === true;
                             return (s === "fechado" || s === "venda fechada");
                         });
                         const currentMonthVendas = segmentVendas.filter(l => {
-                            const dateToCheck = l.status_updated_at || l.updated_at || "";
+                            const isRetroativo = l.dados_cadastro?.is_retroativo === true;
+                            const dateToCheck = l.status_updated_at || l.created_at || "";
+                            if (isRetroativo) return dateToCheck.startsWith(currentMonthStr) || (l.updated_at || "").startsWith(currentMonthStr) || (l.created_at || "").startsWith(currentMonthStr);
                             return dateToCheck.startsWith(currentMonthStr);
                         });
                         const valorTotal = currentMonthVendas.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
@@ -318,13 +319,18 @@ export default function Jarvis() {
         const currentMonthStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).substring(0, 7);
         const metaMensal = metaAnual / 12;
         
-        const fechadosMes = leads.filter(l => {
+        const fechados = leads.filter(l => {
             const s = (l.status || "").toLowerCase().replace("_", " ");
-            const isClosed = s === "fechado" || s === "venda fechada";
-            const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-            const dateToCheck = l.status_updated_at || l.updated_at || "";
-            return isClosed && dateToCheck.startsWith(currentMonthStr);
+            return s === "fechado" || s === "venda fechada";
         });
+
+        const fechadosMes = fechados.filter(l => {
+            const isRetroativo = l.dados_cadastro?.is_retroativo === true;
+            const dateToCheck = l.status_updated_at || l.created_at || "";
+            if (isRetroativo) return dateToCheck.startsWith(currentMonthStr) || (l.updated_at || "").startsWith(currentMonthStr) || (l.created_at || "").startsWith(currentMonthStr);
+            return dateToCheck.startsWith(currentMonthStr);
+        });
+
         const realizadoMes = fechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
         
         const currentYear = new Date().getFullYear().toString();

@@ -528,8 +528,8 @@ export function useFunil() {
       setSelectedDate(lead.data_vencimento ? parseISO(lead.data_vencimento) : undefined);
     }
 
-    if (newStatus === "fechado") {
-      setCelebrationLead({ ...lead, status: "fechado" });
+    if (newStatus === "fechado" || newStatus === "venda_fechada") {
+      setCelebrationLead({ ...lead, status: newStatus });
       setGrupo(lead.grupo || "");
       setCota(lead.cota || "");
       setAdministradora(lead.administradora || "");
@@ -682,7 +682,10 @@ export function useFunil() {
     if (comissaoTipo === "REDUZIDA") parcelas_comissao = 10;
     if (comissaoTipo === "LINEAR") parcelas_comissao = 4;
     if (comissaoRegra === "INDICACAO_MAGALU") parcelas_comissao = 4;
-    if (finalAdmin === "ADEMICON") parcelas_comissao = 15;
+    if (finalAdmin === "ADEMICON") {
+      const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((celebrationLead.tipo_consorcio || "").toLowerCase());
+      parcelas_comissao = isVeiculo ? 13 : 15;
+    }
 
     const comissao_total = (valorCredito * taxa_comissao) / 100;
 
@@ -696,10 +699,12 @@ export function useFunil() {
       valor_venda: valorCredito,
       regra_comissao: comissaoRegra,
       taxa_comissao,
-      tipo_comissionamento: comissaoRegra === "INDICACAO_MAGALU" ? "LINEAR" : comissaoTipo,
+      tipo_comissionamento: finalAdmin === "ADEMICON"
+        ? (["veiculo","moto","pesados","agricolas"].includes((celebrationLead.tipo_consorcio||"").toLowerCase()) ? "ADEMICON_VEICULO" : "ADEMICON_IMOVEL")
+        : (comissaoRegra === "INDICACAO_MAGALU" ? "LINEAR" : comissaoTipo),
       comissao_total,
       parcelas_comissao,
-      data_venda: new Date().toISOString().split('T')[0],
+      data_venda: (celebrationLead.status_updated_at || new Date().toISOString()).split('T')[0],
       administradora: finalAdmin
     });
 

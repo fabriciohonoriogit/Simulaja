@@ -260,6 +260,18 @@ export default function Comissoes() {
 
       if (error) throw error;
       
+      if (payload.lead_id) {
+          const isoDate = new Date(`${payload.data_venda}T12:00:00Z`).toISOString();
+          await supabase.from("leads").update({
+              status: "fechado",
+              status_updated_at: isoDate,
+              valor_credito: payload.valor_venda,
+              administradora: payload.administradora,
+              grupo: payload.grupo,
+              cota: payload.cota
+          }).eq("id", payload.lead_id);
+      }
+      
       toast({ title: editingComissao ? "Comissão atualizada!" : "Comissão registrada!" });
       setIsModalOpen(false);
       resetForm();

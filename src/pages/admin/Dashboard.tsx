@@ -265,10 +265,10 @@ export default function Dashboard() {
     .filter(l => {
       const s = (l.status || "").toLowerCase().replace("_", " ");
       const isClosed = s === "fechado" || s === "venda fechada";
-      const dateToCheck = l.status_updated_at || l.created_at || "";
-      const isInMonth = dateToCheck.startsWith(currentMonthStr);
       const isShadow = (l as any).origem === "carteira_shadow";
       const isRetroativo = l.dados_cadastro?.is_retroativo === true;
+      const dateToCheck = l.status_updated_at || l.created_at || "";
+      const isInMonth = isRetroativo ? (dateToCheck.startsWith(currentMonthStr) || (l.updated_at || "").startsWith(currentMonthStr) || (l.created_at || "").startsWith(currentMonthStr)) : dateToCheck.startsWith(currentMonthStr);
       return isClosed && isInMonth && !isShadow;
     })
     .reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
@@ -296,10 +296,10 @@ export default function Dashboard() {
     .filter(l => {
       const s = (l.status || "").toLowerCase().replace("_", " ");
       const isClosed = s === "fechado" || s === "venda fechada";
-      const dateToCheck = l.status_updated_at || l.created_at || "";
-      const isInMonth = dateToCheck.startsWith(currentMonthStr);
       const isShadow = (l as any).origem === "carteira_shadow";
       const isRetroativo = l.dados_cadastro?.is_retroativo === true;
+      const dateToCheck = l.status_updated_at || l.created_at || "";
+      const isInMonth = isRetroativo ? (dateToCheck.startsWith(currentMonthStr) || (l.updated_at || "").startsWith(currentMonthStr) || (l.created_at || "").startsWith(currentMonthStr)) : dateToCheck.startsWith(currentMonthStr);
       return isClosed && isInMonth && l.responsavel_id && !isShadow;
     })
     .reduce((acc: Record<string, number>, lead) => {

@@ -89,7 +89,8 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
         ...prev, 
         [id]: checked,
         // Se for retroativo, garante que o status é fechado
-        status: checked ? "fechado" : prev.status 
+        status: checked ? "fechado" : prev.status,
+        status_updated_at: (checked && !prev.status_updated_at) ? new Date().toISOString() : prev.status_updated_at
       }));
     } else {
       setForm(prev => ({ ...prev, [id]: value }));
@@ -97,7 +98,13 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
   };
 
   const handleSelectChange = (id: keyof LeadFormData, value: string) => {
-    setForm(prev => ({ ...prev, [id]: value }));
+    setForm(prev => {
+        const updates: any = { [id]: value };
+        if (id === 'status' && STATUS_FECHADOS.includes(value) && !prev.status_updated_at) {
+            updates.status_updated_at = new Date().toISOString();
+        }
+        return { ...prev, ...updates };
+    });
   };
 
   const handleNestedChange = (field: string, value: string) => {
@@ -130,6 +137,10 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
       cota: formatToFourDigits(form.cota),
       indicador_nome: formatToUpper(form.indicador_nome),
     };
+
+    if ((STATUS_FECHADOS.includes(formattedData.status) || formattedData.is_retroativo) && !formattedData.status_updated_at) {
+        formattedData.status_updated_at = new Date().toISOString();
+    }
     
     onSubmit(formattedData);
   };
