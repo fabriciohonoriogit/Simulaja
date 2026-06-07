@@ -532,7 +532,21 @@ export function useFunil() {
       setCelebrationLead({ ...lead, status: newStatus });
       setGrupo(lead.grupo || "");
       setCota(lead.cota || "");
-      setAdministradora(lead.administradora || "");
+      const finalAdmin = lead.administradora || "";
+      setAdministradora(finalAdmin);
+
+      // Pré-selecionar regra e fracionamento baseado na administradora
+      if (finalAdmin === "ADEMICON") {
+        setComissaoRegra("ADEMICON");
+        const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes(
+          (lead.tipo_consorcio || "").toLowerCase()
+        );
+        setComissaoTipo(isVeiculo ? "ADEMICON_VEICULO_REDUZIDA" : "ADEMICON_IMOVEL_REDUZIDA");
+      } else {
+        setComissaoRegra("DEMAIS");
+        setComissaoTipo("REDUZIDA");
+      }
+
       fireConfetti();
     }
     

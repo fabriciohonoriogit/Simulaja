@@ -99,8 +99,24 @@ export default function Comissoes() {
   const [parcelaAtual, setParcelaAtual] = useState(1);
 
   useEffect(() => {
+    if (!profile?.organizacao_id) return;
     fetchComissoes();
     fetchLeads();
+
+    // Realtime: atualiza lista de comissões automaticamente
+    const channel = supabase
+      .channel(`comissoes-realtime-${profile.organizacao_id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'comissoes',
+        filter: `organizacao_id=eq.${profile.organizacao_id}`
+      }, () => {
+        fetchComissoes();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.organizacao_id]);
 
@@ -163,10 +179,10 @@ export default function Comissoes() {
       const { data, error } = await supabase
         .from("comissoes")
         .select("*")
+        .eq("organizacao_id", profile.organizacao_id)
         .order("created_at", { ascending: false });
 
       if (error) {
-        // Ignora erro de tabela não existente temporariamente para não quebrar a tela
         console.error(error);
       } else {
         setComissoes(data || []);

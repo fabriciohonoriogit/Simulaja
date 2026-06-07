@@ -269,9 +269,9 @@ export default function Metas() {
                 });
                 const currentMonthVendas = segmentVendas.filter(l => {
                     const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-                    const dateToCheck = l.status_updated_at || l.created_at || "";
+                    const dateToCheck = l.status_updated_at || l.updated_at || l.created_at || "";
                     if (isRetroativo) return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr) || (l.created_at || "").startsWith(mesStr);
-                    return dateToCheck.startsWith(mesStr);
+                    return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr);
                 });
                 
                 const valorTotal = currentMonthVendas.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
@@ -450,15 +450,15 @@ export default function Metas() {
     });
     const realizadoMes = fechados.filter(l => {
         const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-        const dateToCheck = l.status_updated_at || l.created_at || "";
+        const dateToCheck = l.status_updated_at || l.updated_at || l.created_at || "";
         if (isRetroativo) return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr) || (l.created_at || "").startsWith(mesStr);
-        return dateToCheck.startsWith(mesStr);
+        return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr);
     }).reduce((a, l) => a + Number(l.valor_credito || 0), 0);
     const vendasMesCount = fechados.filter(l => {
         const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-        const dateToCheck = l.status_updated_at || l.created_at || "";
+        const dateToCheck = l.status_updated_at || l.updated_at || l.created_at || "";
         if (isRetroativo) return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr) || (l.created_at || "").startsWith(mesStr);
-        return dateToCheck.startsWith(mesStr);
+        return dateToCheck.startsWith(mesStr) || (l.updated_at || "").startsWith(mesStr);
     }).length;
     const realizadoAno = fechados.filter(l => {
         const dateToCheck = l.status_updated_at || l.created_at || "";
