@@ -345,7 +345,7 @@ export default function Carteira() {
           ? (cliente.data_adesao.includes('T') ? cliente.data_adesao : `${cliente.data_adesao}T12:00:00Z`)
           : new Date().toISOString();
         
-        const { data: newLead, error: insErr } = await supabase.from("leads").insert({
+        const { data: newLead, error: insErr } = await (supabase.from("leads") as any).insert({
           nome: cliente.nome,
           celular: cliente.celular || "",
           tipo_consorcio: cliente.tipo_consorcio || "imovel",
@@ -616,11 +616,11 @@ export default function Carteira() {
     if (!editDateValue) return;
     try {
       const isoDate = new Date(editDateValue).toISOString();
-      await supabase.from("carteira").update({ data_adesao: isoDate }).eq("id", id);
+      await (supabase.from("carteira") as any).update({ data_adesao: isoDate }).eq("id", id);
       
       // Se houver lead associado, atualizar nele também para manter sincronizado total
       if (leadId) {
-         await supabase.from("leads").update({ 
+         await (supabase.from("leads") as any).update({ 
             data_fechamento: isoDate,
             status_updated_at: isoDate 
          }).eq("id", leadId);

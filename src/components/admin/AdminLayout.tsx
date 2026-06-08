@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import StreakBadge from "@/components/admin/StreakBadge";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
+import TrialBanner from "@/components/admin/TrialBanner";
+import TrialGate from "@/components/admin/TrialGate";
 
 interface MenuGroup {
     label: string;
@@ -237,6 +239,7 @@ export default function AdminLayout() {
                 </header>
 
                 <main className="flex-1 flex flex-col min-h-0 bg-slate-50 overflow-hidden">
+                    <TrialBanner />
                     <div className="flex-1 flex flex-col min-h-0 w-full p-4 md:p-6 overflow-hidden">
                         <ErrorBoundary>
                             <Suspense fallback={
@@ -244,7 +247,9 @@ export default function AdminLayout() {
                                     <RefreshCw className="h-8 w-8 animate-spin text-primary" />
                                 </div>
                             }>
-                                <Outlet />
+                                <TrialGate>
+                                    <Outlet />
+                                </TrialGate>
                             </Suspense>
                         </ErrorBoundary>
                     </div>

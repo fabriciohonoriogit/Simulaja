@@ -37,7 +37,7 @@ export const createLead = async (data: LeadData) => {
   const score = calculateLeadScore(data.valor_credito, data.categoria);
   
   // 1. Save to Supabase
-  const { data: lead, error: dbError } = await supabase.from("leads").insert({
+  const { data: lead, error: dbError } = await (supabase.from("leads") as any).insert({
     nome: data.nome.trim(),
     celular: data.celular.replace(/\D/g, ""),
     tipo_consorcio: data.tipo_consorcio,
@@ -46,7 +46,7 @@ export const createLead = async (data: LeadData) => {
     status: "novo_lead",
     lead_score_valor: score,
     lead_temperatura: "quente",
-    organizacao_id: "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4", // Fixed org for now
+    organizacao_id: "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4",
     indicador_nome: data.indicador_nome,
     indicador_celular: data.indicador_celular,
     origem: data.origem || "Simulador Web"

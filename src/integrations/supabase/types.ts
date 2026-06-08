@@ -334,6 +334,7 @@ export type Database = {
           id: string
           organizacao_id: string | null
           status: string | null
+          tipo: string
           tipo_acesso: string
           token: string
           updated_at: string | null
@@ -346,6 +347,7 @@ export type Database = {
           id?: string
           organizacao_id?: string | null
           status?: string | null
+          tipo?: string
           tipo_acesso?: string
           token: string
           updated_at?: string | null
@@ -358,6 +360,7 @@ export type Database = {
           id?: string
           organizacao_id?: string | null
           status?: string | null
+          tipo?: string
           tipo_acesso?: string
           token?: string
           updated_at?: string | null
@@ -1059,8 +1062,11 @@ export type Database = {
           max_leads: number | null
           max_usuarios: number | null
           nome: string
+          owner_id: string | null
           plano: string | null
           slug: string
+          subscription_status: string
+          trial_ends_at: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1069,8 +1075,11 @@ export type Database = {
           max_leads?: number | null
           max_usuarios?: number | null
           nome: string
+          owner_id?: string | null
           plano?: string | null
           slug: string
+          subscription_status?: string
+          trial_ends_at?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1079,8 +1088,11 @@ export type Database = {
           max_leads?: number | null
           max_usuarios?: number | null
           nome?: string
+          owner_id?: string | null
           plano?: string | null
           slug?: string
+          subscription_status?: string
+          trial_ends_at?: string | null
           updated_at?: string | null
         }
         Relationships: []
