@@ -72,7 +72,7 @@ export function useFunil() {
   });
 
   const handleUpdateLeadField = async (leadId: string, field: string, value: string) => {
-    const { error } = await supabase.from("leads").update({ [field]: value }).eq("id", leadId);
+    const { error } = await (supabase.from("leads") as any).update({ [field]: value }).eq("id", leadId);
     
     if (error) {
       toast.error(`Erro ao atualizar campo: ${error.message}`);
@@ -81,7 +81,7 @@ export function useFunil() {
 
     const { data: carteiraItem } = await supabase.from("carteira").select("id").eq("lead_id", leadId).maybeSingle();
     if (carteiraItem) {
-      await supabase.from("carteira").update({ [field]: value }).eq("lead_id", leadId);
+      await (supabase.from("carteira") as any).update({ [field]: value }).eq("lead_id", leadId);
     }
 
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, [field]: value } : l)));
@@ -602,9 +602,9 @@ export function useFunil() {
       }
     }
 
-    const { error } = await supabase
-      .from("leads")
-      .update(updateData)
+    const { error } = await (supabase
+      .from("leads") as any)
+      .update(updateData as any)
       .eq("id", vencimentoLead.id);
 
     if (error) {

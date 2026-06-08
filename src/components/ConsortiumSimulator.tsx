@@ -333,29 +333,30 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Detalhes da Simulação", 25, 87);
-    
+
+    const resIsLinear = isLinear;
+    const resTx = resIsLinear ? (resultado.txLinear ?? resultado.tx ?? 20) : (resultado.tx5050 ?? resultado.tx ?? 20);
+    const resFr = resIsLinear ? (resultado.frLinear ?? resultado.fr ?? 1) : (resultado.fr5050 ?? resultado.fr ?? 1);
+
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text("Crédito:", 25, 100);
     doc.setFont("helvetica", "bold");
     doc.text(fmtFull(resultado.credito), 80, 100);
-    
+
     doc.setFont("helvetica", "normal");
     doc.text("Prazo:", 25, 110);
     doc.setFont("helvetica", "bold");
     doc.text(`${resIsLinear ? (resultado.prazoLinear ?? resultado.prazo) : resultado.prazo} meses`, 80, 110);
-    
+
     doc.setFont("helvetica", "normal");
     doc.text(isLinear ? "Parcela Linear:" : "Parcela Reduzida (50%):", 25, 120);
     doc.setFont("helvetica", "bold");
     doc.setTextColor("#16a34a");
     doc.text(fmtFull(isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50), 80, 120);
-    
+
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "normal");
-    const resIsLinear = isLinear;
-    const resTx = resIsLinear ? (resultado.txLinear ?? resultado.tx ?? 20) : (resultado.tx5050 ?? resultado.tx ?? 20);
-    const resFr = resIsLinear ? (resultado.frLinear ?? resultado.fr ?? 1) : (resultado.fr5050 ?? resultado.fr ?? 1);
     doc.text("Taxa Administrativa:", 25, 130);
     doc.text(`${resTx}%`, 80, 130);
     doc.text("Fundo de Reserva:", 25, 140);

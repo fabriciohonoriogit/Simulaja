@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
  *   useUpdate() → supabase.from(resource).update()
  *   useDelete() → supabase.from(resource).delete()
  */
-export const refineDataProvider = dataProvider(supabase);
+export const refineDataProvider = dataProvider(supabase as any);
 
 /**
  * Recursos/tabelas gerenciadas pelo Refine.

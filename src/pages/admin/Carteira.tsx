@@ -353,7 +353,7 @@ export default function Carteira() {
           status: "fechado",
           status_updated_at: shadowStatusDate,
           organizacao_id: profile?.organizacao_id,
-          origem: "carteira_shadow",
+          origem: "carteira_shadow" as any,
           grupo: cliente.grupo,
           cota: cliente.cota
         }).select().single();
@@ -616,11 +616,11 @@ export default function Carteira() {
     if (!editDateValue) return;
     try {
       const isoDate = new Date(editDateValue).toISOString();
-      await supabase.from("carteira").update({ data_adesao: isoDate }).eq("id", id);
+      await (supabase.from("carteira") as any).update({ data_adesao: isoDate }).eq("id", id);
       
       // Se houver lead associado, atualizar nele também para manter sincronizado total
       if (leadId) {
-         await supabase.from("leads").update({ 
+         await (supabase.from("leads") as any).update({ 
             data_fechamento: isoDate,
             status_updated_at: isoDate 
          }).eq("id", leadId);
