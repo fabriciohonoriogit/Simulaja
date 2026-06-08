@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import StreakBadge from "@/components/admin/StreakBadge";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
+import TrialBanner from "@/components/admin/TrialBanner";
+import TrialGate from "@/components/admin/TrialGate";
 
 interface MenuGroup {
     label: string;
