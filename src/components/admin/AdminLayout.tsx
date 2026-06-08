@@ -237,6 +237,7 @@ export default function AdminLayout() {
                 </header>
 
                 <main className="flex-1 flex flex-col min-h-0 bg-slate-50 overflow-hidden">
+                    <TrialBanner />
                     <div className="flex-1 flex flex-col min-h-0 w-full p-4 md:p-6 overflow-hidden">
                         <ErrorBoundary>
                             <Suspense fallback={
@@ -244,7 +245,9 @@ export default function AdminLayout() {
                                     <RefreshCw className="h-8 w-8 animate-spin text-primary" />
                                 </div>
                             }>
-                                <Outlet />
+                                <TrialGate>
+                                    <Outlet />
+                                </TrialGate>
                             </Suspense>
                         </ErrorBoundary>
                     </div>
