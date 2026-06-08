@@ -65,12 +65,13 @@ export default function Settings() {
     setInviting(true);
     try {
       const token = Math.random().toString(36).substring(2, 15);
-      const { error } = await supabase.from("convites").insert({
+      const { error } = await (supabase.from("convites") as any).insert({
         email: emailToInvite,
         token,
         organizacao_id: profile.organizacao_id,
         convidado_por: profile.id,
         tipo_acesso: roleToInvite,
+        tipo: "membro_org",
       });
       if (error) throw error;
       toast({ title: "Convite Criado!", description: "Copie o link abaixo e envie ao colaborador." });
