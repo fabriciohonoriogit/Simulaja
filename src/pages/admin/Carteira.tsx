@@ -345,7 +345,7 @@ export default function Carteira() {
           ? (cliente.data_adesao.includes('T') ? cliente.data_adesao : `${cliente.data_adesao}T12:00:00Z`)
           : new Date().toISOString();
         
-        const { data: newLead, error: insErr } = await supabase.from("leads").insert({
+        const { data: newLead, error: insErr } = await (supabase.from("leads") as any).insert({
           nome: cliente.nome,
           celular: cliente.celular || "",
           tipo_consorcio: cliente.tipo_consorcio || "imovel",
@@ -353,7 +353,7 @@ export default function Carteira() {
           status: "fechado",
           status_updated_at: shadowStatusDate,
           organizacao_id: profile?.organizacao_id,
-          origem: "carteira_shadow" as any,
+          origem: "carteira_shadow",
           grupo: cliente.grupo,
           cota: cliente.cota
         }).select().single();
