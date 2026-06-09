@@ -557,7 +557,7 @@ export default function Comissoes() {
   const totalComissoes = comissoes.reduce((acc, c) => acc + Number(c.comissao_total || 0), 0);
   const totalEstornos = comissoes.reduce((acc, c) => acc + calcEstornoCorreto(c), 0);
   const totalRetroativo = comissoes.reduce((acc, c) => acc + Number(c.pagamentos_retroativos || 0), 0);
-  const totalReceberMes = comissoes.filter(c => c.status !== 'estornado').reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)), 0);
+  const totalReceberMes = comissoes.filter(c => c.status !== 'estornado').reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)), 0) - totalEstornos;
 
   const handleRegistrarPagamentos = async () => {
     if (selectedIds.length === 0 || !profile?.organizacao_id) return;
@@ -729,7 +729,7 @@ export default function Comissoes() {
                 {maskValue(
                   comissoes
                     .filter(c => selectedIds.includes(c.id))
-                    .reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)), 0)
+                    .reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)) - calcEstornoCorreto(c), 0)
                 )}
               </p>
             </div>
