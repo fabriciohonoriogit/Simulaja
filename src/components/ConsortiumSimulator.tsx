@@ -96,17 +96,20 @@ export type Category = { id: string; label: string; icon: string; };
 export const GRUPOS: Record<string, GrupoItem[]> = {
   imovel: [
     // Deduplicated: for each credit value, kept the group with the lowest r50
-    { grupo: "6043", credito: 110000, prazo: 220, r50: 388.54, r100: 649.10, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6043", credito: 110000, prazo: 220, r50: 388.51, r100: 649.10, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0305, isPromo: true },
+    { grupo: "6043", credito: 120000, prazo: 220, r50: 423.83, r100: 707.80, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6043", credito: 130000, prazo: 220, r50: 459.19, r100: 767.11, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 140000, prazo: 190, r50: 565.85, r100: 895.66, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6043", credito: 150000, prazo: 220, r50: 529.83, r100: 885.13, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 160000, prazo: 190, r50: 646.68, r100: 1023.31, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6043", credito: 170000, prazo: 220, r50: 600.43, r100: 1002.72, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6043", credito: 180000, prazo: 220, r50: 635.79, r100: 1062.16, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6043", credito: 200000, prazo: 220, r50: 706.44, r100: 1180.17, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6043", credito: 220000, prazo: 220, r50: 777.08, r100: 1298.19, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 240000, prazo: 190, r50: 970.02, r100: 1535.42, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6030", grupoLinear: "6023", credito: 250000, prazo: 196, prazoLinear: 144, r50: 1008.49, r100: 2140.72, txLinear: 18, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 280000, prazo: 190, r50: 1131.69, r100: 1791.32, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6030", credito: 300000, prazo: 196, r50: 1210.19, r100: 2021.00, txLinear: 18, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0310, isPromo: true },
     { grupo: "6042", credito: 350000, prazo: 240, r50: 1142.14, r100: 1840.37, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6042", credito: 400000, prazo: 240, r50: 1305.30, r100: 2103.29, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6042", credito: 450000, prazo: 240, r50: 1468.46, r100: 2366.20, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
@@ -118,7 +121,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
   ],
   veiculo: [
     { grupo: "5293", credito: 16000, prazo: 74, r50: 270.91, r100: 270.91, txLinear: 21, frLinear: 2, isPromo: true },
-    { grupo: "5293", credito: 20000, prazo: 74, r50: 338.63, r100: 338.63, txLinear: 21, frLinear: 2, isPromo: true },
+    { grupo: "5293", credito: 20000, prazo: 74, r50: 220.02, r100: 367.43, txLinear: 21, frLinear: 2, tx5050: 27, fr5050: 2, seguro: 0.0325, isPromo: true },
     { grupo: "5293", credito: 25000, prazo: 74, r50: 423.29, r100: 423.29, txLinear: 21, frLinear: 2, isPromo: true },
     { grupo: "5293", credito: 28000, prazo: 74, r50: 474.08, r100: 474.08, txLinear: 21, frLinear: 2, isPromo: true },
     { grupo: "5293", credito: 30000, prazo: 74, r50: 507.95, r100: 507.95, txLinear: 21, frLinear: 2, isPromo: true },
@@ -131,7 +134,8 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "5295", credito: 100000, prazo: 98, r50: 734.07, r100: 1202.45, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "5295", credito: 120000, prazo: 98, r50: 880.88, r100: 1442.94, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "5295", credito: 130000, prazo: 98, r50: 954.29, r100: 1563.18, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5295", credito: 140000, prazo: 98, r50: 1027.70, r100: 1683.43, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true }
+    { grupo: "5295", credito: 140000, prazo: 98, r50: 1027.70, r100: 1683.43, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5282", credito: 150000, prazo: 88, r50: 1290.74, r100: 2155.53, txLinear: 18, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0310, isPromo: true }
   ],
   pesados: [
     { grupo: "5996", credito: 190000, prazo: 132, r50: 1005.54, r100: 1710.37, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },

@@ -353,11 +353,11 @@ export default function Comissoes() {
     const confirm = window.confirm("Confirmar inadimplência de 3 meses? Isso gerará um estorno de 50% do valor pago.");
     if (!confirm) return;
 
-    // Calcular estorno (simulando que o pago = comissao_total / parcelas * meses_pagos). 
-    // Para simplificar, o estorno é 50% do total se considerarmos tudo pago, ou 50% do valor que ele já recebeu.
-    // Vamos colocar estorno = 50% da comissão total como punição padrão ou do valor_venda. 
-    // "estorno de 50% do valor pago". Vamos assumir valor pago = comissão total já recebida.
-    const valor_estorno = comissao.comissao_total * 0.5;
+    // O valor pago é calculado pelo número de parcelas já pagas multiplicado pelo valor de cada parcela da comissão.
+    // A regra determina que após 3x de inadimplência, o estorno é de 50% sobre o valor das parcelas já pagas.
+    const valor_parcela = comissao.comissao_total / comissao.parcelas_comissao;
+    const parcelas_pagas = comissao.parcela_atual || 1;
+    const valor_estorno = valor_parcela * parcelas_pagas * 0.5;
 
     try {
       const { error } = await supabase.from("comissoes").update({

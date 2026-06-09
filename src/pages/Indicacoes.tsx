@@ -50,18 +50,18 @@ type GrupoItem = { grupo: string; credito: number; r50: number; prazo: number; t
 
 const GRUPOS: Record<string, GrupoItem[]> = {
   imovel: [
-    { grupo: "6041", credito: 110000, r50: 405.9, prazo: 216 },
-    { grupo: "6041", credito: 120000, r50: 442.8, prazo: 216 },
+    { grupo: "6043", credito: 110000, r50: 388.51, prazo: 220, tx: 20, fr: 1 },
+    { grupo: "6043", credito: 120000, r50: 423.83, prazo: 220, tx: 20, fr: 1 },
     { grupo: "6041", credito: 130000, r50: 479.69, prazo: 216 },
     { grupo: "6041", credito: 140000, r50: 516.59, prazo: 216 },
     { grupo: "6041", credito: 150000, r50: 553.49, prazo: 216 },
     { grupo: "6041", credito: 160000, r50: 590.39, prazo: 216 },
-    { grupo: "6041", credito: 170000, r50: 627.29, prazo: 216 },
+    { grupo: "6043", credito: 170000, r50: 600.43, prazo: 220, tx: 20, fr: 1 },
     { grupo: "6041", credito: 180000, r50: 664.19, prazo: 216 },
     { grupo: "6041", credito: 190000, r50: 701.09, prazo: 216 },
     { grupo: "6041", credito: 200000, r50: 737.99, prazo: 216 },
     { grupo: "6030", credito: 250000, r50: 1008.49, prazo: 196, tx: 22, fr: 1 },
-    { grupo: "6030", credito: 300000, r50: 1140.56, prazo: 197, tx: 18, fr: 1 },
+    { grupo: "6030", credito: 300000, r50: 1210.19, prazo: 196, tx: 22, fr: 1 },
     { grupo: "6042", credito: 350000, r50: 1141.67, prazo: 240, tx: 20, fr: 1 },
     { grupo: "6042", credito: 400000, r50: 1304.77, prazo: 240, tx: 20, fr: 1 },
     { grupo: "6042", credito: 450000, r50: 1467.86, prazo: 240, tx: 20, fr: 1 },
@@ -71,6 +71,7 @@ const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6043", credito: 1000000, r50: 3263.26, prazo: 240, tx: 20, fr: 1 },
   ],
   veiculo: [
+    { grupo: "5293", credito: 20000, r50: 220.02, prazo: 74, tx: 27, fr: 2 },
     { grupo: "5294", credito: 37000, r50: 276.62, prazo: 100 },
     { grupo: "5294", credito: 40000, r50: 299.04, prazo: 100 },
     { grupo: "5294", credito: 50000, r50: 373.80, prazo: 100 },
@@ -83,7 +84,7 @@ const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "5295", credito: 120000, r50: 863.99, prazo: 100 },
     { grupo: "5295", credito: 130000, r50: 935.98, prazo: 100 },
     { grupo: "5286", credito: 140000, r50: 1259.99, prazo: 100 },
-    { grupo: "5286", credito: 150000, r50: 1349.99, prazo: 100 },
+    { grupo: "5282", credito: 150000, r50: 1290.74, prazo: 88, tx: 22, fr: 1 },
     { grupo: "5286", credito: 160000, r50: 1439.99, prazo: 100 },
   ],
   pesados: [
