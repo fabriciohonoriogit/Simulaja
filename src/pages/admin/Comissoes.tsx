@@ -730,8 +730,9 @@ export default function Comissoes() {
               <p className="text-2xl font-black text-emerald-400">
                 {maskValue(
                   comissoes
-                    .filter(c => selectedIds.includes(c.id))
-                    .reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)) - calcEstornoCorreto(c), 0)
+                    .filter(c => selectedIds.includes(c.id) && c.status !== 'estornado')
+                    .reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao || 1)), 0)
+                  - comissoes.filter(c => selectedIds.includes(c.id)).reduce((acc, c) => acc + calcEstornoCorreto(c), 0)
                 )}
               </p>
             </div>
