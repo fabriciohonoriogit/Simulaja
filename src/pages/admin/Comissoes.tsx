@@ -729,7 +729,7 @@ export default function Comissoes() {
                 {maskValue(
                   comissoes
                     .filter(c => selectedIds.includes(c.id))
-                    .reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)), 0)
+                    .reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)) - calcEstornoCorreto(c), 0)
                 )}
               </p>
             </div>
