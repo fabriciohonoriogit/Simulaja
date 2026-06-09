@@ -185,7 +185,21 @@ export default function Comissoes() {
       if (error) {
         console.error(error);
       } else {
-        setComissoes(data || []);
+        // Auto-fix: recalcular estornos com a regra correta (50% do valor das parcelas já pagas)
+        const fixed = (data || []).map(c => {
+          if (c.status === "estornado" && c.comissao_total && c.parcelas_comissao) {
+            const valor_parcela = c.comissao_total / c.parcelas_comissao;
+            const parcelas_pagas = c.parcela_atual || 1;
+            const estorno_correto = parseFloat((valor_parcela * parcelas_pagas * 0.5).toFixed(2));
+            if (Math.abs(c.valor_estorno - estorno_correto) > 0.01) {
+              // Atualizar no banco de forma silenciosa
+              supabase.from("comissoes").update({ valor_estorno: estorno_correto }).eq("id", c.id).then(() => {});
+              return { ...c, valor_estorno: estorno_correto };
+            }
+          }
+          return c;
+        });
+        setComissoes(fixed);
       }
     } catch (error) {
       console.error(error);
