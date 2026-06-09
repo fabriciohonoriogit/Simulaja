@@ -546,8 +546,16 @@ export default function Comissoes() {
     return groups;
   }, [filtered]);
 
+  // Função para calcular o estorno correto: 50% do valor das parcelas já pagas
+  const calcEstornoCorreto = (c: Comissao) => {
+    if (c.status !== "estornado" || !c.comissao_total || !c.parcelas_comissao) return 0;
+    const valor_parcela = c.comissao_total / c.parcelas_comissao;
+    const parcelas_pagas = c.parcela_atual || 1;
+    return parseFloat((valor_parcela * parcelas_pagas * 0.5).toFixed(2));
+  };
+
   const totalComissoes = comissoes.reduce((acc, c) => acc + Number(c.comissao_total || 0), 0);
-  const totalEstornos = comissoes.reduce((acc, c) => acc + Number(c.valor_estorno || 0), 0);
+  const totalEstornos = comissoes.reduce((acc, c) => acc + calcEstornoCorreto(c), 0);
   const totalRetroativo = comissoes.reduce((acc, c) => acc + Number(c.pagamentos_retroativos || 0), 0);
   const totalReceberMes = comissoes.filter(c => c.status !== 'estornado').reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)), 0);
 
@@ -933,7 +941,7 @@ export default function Comissoes() {
                             {(() => {
                               const isInadimplente = inadimplentes.some(i => i.lead_id === c.lead_id && i.status !== "regularizado");
                               if (c.status === "estornado") {
-                                return <Badge variant="destructive" className="text-[10px]">Estornado ({formatCurrency(c.valor_estorno)})</Badge>;
+                                return <Badge variant="destructive" className="text-[10px]">Estornado ({formatCurrency(calcEstornoCorreto(c))})</Badge>;
                               }
                               if (isInadimplente) {
                                 return (
