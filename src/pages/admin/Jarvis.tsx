@@ -591,23 +591,21 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
                             <div className="p-4 bg-white border-t space-y-4">
                                 <div className="flex gap-2 p-1 bg-slate-50/50 rounded-2xl border border-slate-100">
                                     <Button 
+                                        type="button"
                                         variant="outline" 
                                         size="icon" 
-                                        className={`h-14 w-14 shrink-0 rounded-[20px] transition-all relative ${isListening ? "bg-red-500 text-white border-red-400 scale-110 shadow-lg shadow-red-500/20" : "hover:bg-primary/10 hover:text-primary active:scale-90"}`}
-                                        onMouseDown={startRecording}
-                                        onMouseUp={stopRecording}
-                                        onMouseLeave={isListening ? stopRecording : undefined}
-                                        onTouchStart={(e: React.TouchEvent<HTMLButtonElement>) => { e.preventDefault(); startRecording(); }}
-                                        onTouchEnd={(e: React.TouchEvent<HTMLButtonElement>) => { e.preventDefault(); stopRecording(); }}
+                                        className={`h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-2xl transition-all relative ${isListening ? "bg-red-500 text-white border-red-400 scale-105 shadow-lg shadow-red-500/30 animate-pulse" : "hover:bg-primary/10 hover:text-primary active:scale-95"}`}
+                                        onClick={toggleRecording}
+                                        title={isListening ? "Toque para parar e enviar" : "Toque para falar"}
                                     >
                                         {isListening ? (
                                             <>
-                                                <MicOff className="h-6 w-6 animate-pulse" />
-                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap animate-bounce shadow-xl">
-                                                    Gravando...
+                                                <MicOff className="h-5 w-5 sm:h-6 sm:w-6" />
+                                                <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap shadow-xl">
+                                                    Ouvindo...
                                                 </div>
                                             </>
-                                        ) : <Mic className="h-6 w-6" />}
+                                        ) : <Mic className="h-5 w-5 sm:h-6 sm:w-6" />}
                                     </Button>
                                     <Input 
                                         placeholder="Clique e segure para falar, ou digite aqui..."
