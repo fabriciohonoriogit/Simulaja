@@ -122,6 +122,11 @@ export default function Jarvis() {
         }
     ]);
     const [isListening, setIsListening] = useState(false);
+    const [isHandsFree, setIsHandsFree] = useState(false);
+    const isHandsFreeRef = useRef(false);
+    const handsFreeRecognitionRef = useRef<any>(null);
+    const analyzeRef = useRef<any>(null);
+
 
     const speak = (text: string) => {
         if (typeof window === "undefined") return;
@@ -498,12 +503,76 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
 
         toast({ title: "Análise Concluída", description: `${updatedCount} leads foram re-qualificados estrategicamente.` });
         setIsScanning(false);
-        // Atualiza estado local
         setLeads(prev => prev.map(l => {
             const r = results.find((res: any) => res.id === l.id);
             return r ? { ...l, lead_temperatura: r.temp, propensity_score: r.score, propensity_reason: r.reason } : l;
         }));
     };
+
+    useEffect(() => {
+        analyzeRef.current = handleAnalyze;
+    }, [handleAnalyze]);
+
+    useEffect(() => {
+        isHandsFreeRef.current = isHandsFree;
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) return;
+
+        if (isHandsFree) {
+            if (!handsFreeRecognitionRef.current) {
+                handsFreeRecognitionRef.current = new SpeechRecognition();
+                handsFreeRecognitionRef.current.lang = "pt-BR";
+                handsFreeRecognitionRef.current.continuous = true;
+                handsFreeRecognitionRef.current.interimResults = false;
+
+                handsFreeRecognitionRef.current.onresult = (event: any) => {
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            const transcript = event.results[i][0].transcript.toLowerCase();
+                            console.log("Wake Word log:", transcript);
+                            
+                            if (transcript.includes("jarvis")) {
+                                toast({ title: "Comando de Voz Detectado", description: "Jarvis está pensando...", variant: "default" });
+                                setTimeout(() => {
+                                    if (analyzeRef.current) {
+                                        analyzeRef.current(transcript);
+                                    }
+                                }, 500);
+                            }
+                        }
+                    }
+                };
+
+                handsFreeRecognitionRef.current.onend = () => {
+                    if (isHandsFreeRef.current) {
+                        try {
+                            handsFreeRecognitionRef.current.start();
+                        } catch (e) {
+                            console.error("Failed to restart hands free", e);
+                        }
+                    }
+                };
+            }
+
+            try {
+                handsFreeRecognitionRef.current.start();
+                toast({ title: "Modo Mãos Livres Ativado", description: "Diga 'Oi Jarvis' para acionar o microfone automaticamente." });
+            } catch (e) {
+                console.error(e);
+            }
+        } else {
+            if (handsFreeRecognitionRef.current) {
+                handsFreeRecognitionRef.current.stop();
+            }
+        }
+
+        return () => {
+            if (handsFreeRecognitionRef.current) {
+                handsFreeRecognitionRef.current.stop();
+            }
+        };
+    }, [isHandsFree, toast]);
 
     if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
@@ -590,6 +659,15 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
                             
                             <div className="p-4 bg-white border-t space-y-4">
                                 <div className="flex gap-2 p-1 bg-slate-50/50 rounded-2xl border border-slate-100">
+                                    <Button
+                                        variant={isHandsFree ? "default" : "outline"}
+                                        size="icon"
+                                        title="Modo Mãos Livres (Diga: Oi Jarvis)"
+                                        onClick={() => setIsHandsFree(!isHandsFree)}
+                                        className={`h-14 w-14 shrink-0 rounded-[20px] transition-all relative ${isHandsFree ? "bg-primary text-white shadow-lg shadow-primary/20" : "hover:bg-primary/10 text-slate-400 hover:text-primary"}`}
+                                    >
+                                        <Bot className={`h-6 w-6 ${isHandsFree ? "animate-pulse" : ""}`} />
+                                    </Button>
                                     <Button 
                                         type="button"
                                         variant="outline" 
