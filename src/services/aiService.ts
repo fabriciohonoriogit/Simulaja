@@ -38,21 +38,22 @@ Responda apenas com o texto da mensagem.`;
   },
 
   async askJarvis(context: string, question: string) {
-    const prompt = `Você é um diretor comercial especialista em consórcio.
-Seu objetivo é:
-- Aumentar conversão
-- Priorizar ações com maior impacto financeiro
-- Dar respostas diretas, estratégicas e acionáveis
+    const prompt = `Você é o Jarvis, diretor comercial especialista em consórcio.
 
-Nunca responda de forma genérica.
-Sempre use os dados fornecidos.
-Se possível, traga números, prioridades e próximos passos.
+REGRAS DE RESPOSTA (OBRIGATÓRIAS):
+- Seja MUITO CURTO e direto. Máximo 2 a 3 frases curtas.
+- Nada de listas longas, nada de parágrafos, nada de markdown.
+- Vá direto ao ponto: número, prioridade ou próximo passo.
+- Tom humano, conversacional, como um parceiro respondendo no WhatsApp.
+- Se o usuário pedir mais detalhe, aí sim você expande.
 
-DADOS FORNECIDOS (OPERAÇÃO E CRM EM TEMPO REAL):
+DADOS DO CRM (use só o que for relevante para a pergunta):
 ${context}
 
-PERGUNTA DO USUÁRIO: "${question}"`;
-    const { text, error } = await callAI(prompt, 1200);
+PERGUNTA: "${question}"
+
+Responda em no máximo 3 frases curtas.`;
+    const { text, error } = await callAI(prompt, 250);
     return {
       answer: text || "Desculpe, ocorreu um erro de conexão. Tente novamente em instantes.",
       error,

@@ -33,7 +33,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
-import JarvisHero from "@/components/admin/JarvisHero";
+import jarvisAvatar from "@/assets/jarvis-avatar.png";
 import { GRUPOS } from "@/components/ConsortiumSimulator";
 import { aiService } from "@/services/aiService";
 import { calcularMissoes, Missao } from "@/lib/missoesService";
@@ -142,45 +142,63 @@ export default function Jarvis() {
     };
 
     const recognitionRef = useRef<any>(null);
+    const finalTranscriptRef = useRef<string>("");
 
     const startRecording = () => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            toast({ title: "Erro", description: "Reconhecimento de voz não suportado.", variant: "destructive" });
+            toast({ title: "Voz indisponível", description: "Seu navegador não suporta reconhecimento de voz. Use Chrome/Safari no celular.", variant: "destructive" });
             return;
         }
 
-        if (!recognitionRef.current) {
-            recognitionRef.current = new SpeechRecognition();
-            recognitionRef.current.lang = "pt-BR";
-            recognitionRef.current.continuous = true;
-            recognitionRef.current.interimResults = true;
+        try {
+            const rec = new SpeechRecognition();
+            rec.lang = "pt-BR";
+            rec.continuous = false;
+            rec.interimResults = true;
 
-            recognitionRef.current.onresult = (event: any) => {
-                const transcript = Array.from(event.results)
-                    .map((result: any) => result[0])
-                    .map((result: any) => result.transcript)
-                    .join('');
-                setQuestion(transcript);
+            finalTranscriptRef.current = "";
+
+            rec.onresult = (event: any) => {
+                let interim = "";
+                let finalText = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const t = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) finalText += t;
+                    else interim += t;
+                }
+                if (finalText) finalTranscriptRef.current += finalText;
+                setQuestion((finalTranscriptRef.current + " " + interim).trim());
             };
 
-            recognitionRef.current.onstart = () => setIsListening(true);
-            recognitionRef.current.onend = () => setIsListening(false);
-        }
+            rec.onstart = () => setIsListening(true);
+            rec.onerror = () => setIsListening(false);
+            rec.onend = () => {
+                setIsListening(false);
+                const finalQ = finalTranscriptRef.current.trim();
+                if (finalQ) {
+                    setQuestion("");
+                    handleAnalyze(finalQ);
+                }
+            };
 
-        recognitionRef.current.start();
+            recognitionRef.current = rec;
+            rec.start();
+        } catch (e) {
+            console.error("Speech recognition error:", e);
+            setIsListening(false);
+        }
     };
 
     const stopRecording = () => {
         if (recognitionRef.current) {
-            recognitionRef.current.stop();
-            // Pequeno delay para garantir que o último transcript foi capturado
-            setTimeout(() => {
-                if (question.trim()) {
-                    handleAnalyze(question);
-                }
-            }, 500);
+            try { recognitionRef.current.stop(); } catch {}
         }
+    };
+
+    const toggleRecording = () => {
+        if (isListening) stopRecording();
+        else startRecording();
     };
 
     // Motor de Simulação Portado do ConsortiumSimulator (Importado nativamente)
@@ -490,7 +508,7 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
     if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700">
+        <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-700 px-2 sm:px-0">
             {/* Jarvis Central - Standardized Slim Style */}
             <AdminHeroCard 
                 title="Jarvis Strategist" 
@@ -499,12 +517,16 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
                 bgIcon={Sparkles}
                 accentColor="amber"
             >
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                    {/* Visual Premium Gerado - Smaller Container */}
-                    <div className="shrink-0 -my-4 h-32 w-32 md:h-40 md:w-40 flex items-center justify-center">
-                        <div className="scale-[0.6] md:scale-[0.7]">
-                            <JarvisHero />
-                        </div>
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
+                    {/* Avatar Premium do Jarvis */}
+                    <div className="shrink-0 h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 ring-2 ring-amber-400/30 shadow-xl">
+                        <img
+                            src={jarvisAvatar}
+                            alt="Jarvis - Assistente IA"
+                            width={320}
+                            height={320}
+                            className="w-full h-full object-cover"
+                        />
                     </div>
 
                     <div className="text-center md:text-left space-y-3 flex-1">
@@ -512,19 +534,19 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
                             <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" />
                             <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">v2.0 Online</span>
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-tight text-slate-900">
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight text-slate-900">
                             Inteligência <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">Jarvis</span>
                         </h1>
                         <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-xl">
-                            Estrategista dedicado à sua operação. Analisando leads, metas e performance em tempo real para maximizar conversões.
+                            Respostas curtas e diretas. Fale ou digite — o Jarvis já entende.
                         </p>
                     </div>
                 </div>
             </AdminHeroCard>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                 {/* Coluna de Pergunta e Sugestões */}
-                <div className="lg:col-span-2 space-y-6 flex flex-col h-[600px]">
+                <div className="lg:col-span-2 space-y-6 flex flex-col h-[70vh] min-h-[500px] lg:h-[600px]">
                     <Card className="border-none shadow-xl bg-white overflow-hidden flex-1 flex flex-col">
                         <CardHeader className="bg-slate-50/50 border-b py-4">
                             <CardTitle className="flex items-center justify-between text-lg">
@@ -569,27 +591,25 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
                             <div className="p-4 bg-white border-t space-y-4">
                                 <div className="flex gap-2 p-1 bg-slate-50/50 rounded-2xl border border-slate-100">
                                     <Button 
+                                        type="button"
                                         variant="outline" 
                                         size="icon" 
-                                        className={`h-14 w-14 shrink-0 rounded-[20px] transition-all relative ${isListening ? "bg-red-500 text-white border-red-400 scale-110 shadow-lg shadow-red-500/20" : "hover:bg-primary/10 hover:text-primary active:scale-90"}`}
-                                        onMouseDown={startRecording}
-                                        onMouseUp={stopRecording}
-                                        onMouseLeave={isListening ? stopRecording : undefined}
-                                        onTouchStart={(e: React.TouchEvent<HTMLButtonElement>) => { e.preventDefault(); startRecording(); }}
-                                        onTouchEnd={(e: React.TouchEvent<HTMLButtonElement>) => { e.preventDefault(); stopRecording(); }}
+                                        className={`h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-2xl transition-all relative ${isListening ? "bg-red-500 text-white border-red-400 scale-105 shadow-lg shadow-red-500/30 animate-pulse" : "hover:bg-primary/10 hover:text-primary active:scale-95"}`}
+                                        onClick={toggleRecording}
+                                        title={isListening ? "Toque para parar e enviar" : "Toque para falar"}
                                     >
                                         {isListening ? (
                                             <>
-                                                <MicOff className="h-6 w-6 animate-pulse" />
-                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap animate-bounce shadow-xl">
-                                                    Gravando...
+                                                <MicOff className="h-5 w-5 sm:h-6 sm:w-6" />
+                                                <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap shadow-xl">
+                                                    Ouvindo...
                                                 </div>
                                             </>
-                                        ) : <Mic className="h-6 w-6" />}
+                                        ) : <Mic className="h-5 w-5 sm:h-6 sm:w-6" />}
                                     </Button>
                                     <Input 
-                                        placeholder="Clique e segure para falar, ou digite aqui..."
-                                        className="h-14 text-base border-none bg-transparent focus-visible:ring-0 rounded-xl"
+                                        placeholder="Toque no microfone para falar, ou digite aqui..."
+                                        className="h-12 sm:h-14 text-sm sm:text-base border-none bg-transparent focus-visible:ring-0 rounded-xl min-w-0"
                                         value={question}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
                                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && handleAnalyze()}
