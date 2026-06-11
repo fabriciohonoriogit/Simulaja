@@ -120,6 +120,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6043", credito: 1000000, prazo: 240, r50: 3263.26, r100: 5258.22, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
   ],
   veiculo: [
+    { grupo: "5292", credito: 15000, prazo: 74, r50: 250.00, r100: 250.00, txLinear: 21, frLinear: 2, isPromo: true }, // Exemplo do grupo 5292
     { grupo: "5293", credito: 16000, prazo: 74, r50: 270.91, r100: 270.91, txLinear: 21, frLinear: 2, isPromo: true },
     { grupo: "5293", credito: 20000, prazo: 74, r50: 220.02, r100: 367.43, txLinear: 21, frLinear: 2, tx5050: 27, fr5050: 2, seguro: 0.0325, isPromo: true },
     { grupo: "5293", credito: 25000, prazo: 74, r50: 423.29, r100: 423.29, txLinear: 21, frLinear: 2, isPromo: true },
@@ -165,6 +166,11 @@ export const CATEGORIAS: Category[] = [
   { id: "pesados", label: "Pesados / Agrícola", icon: "🚛" },
   { id: "servicos", label: "Serviços / Plástica", icon: "✨" },
 ];
+
+export const ESTATISTICAS_LANCES: Record<string, { lanceMaior: number, lanceMenor: number, lanceMedia: number, qtdLances: number }> = {
+  "5292": { lanceMaior: 85.00, lanceMenor: 64.00, lanceMedia: 71.31, qtdLances: 17 },
+  // Adicione outros grupos aqui no mesmo formato...
+};
 
 const MAX_CONSULTAS = 5;
 

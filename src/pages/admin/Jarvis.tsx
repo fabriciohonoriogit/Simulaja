@@ -34,7 +34,7 @@ import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import jarvisAvatar from "@/assets/jarvis-avatar.png";
-import { GRUPOS } from "@/components/ConsortiumSimulator";
+import { GRUPOS, ESTATISTICAS_LANCES } from "@/components/ConsortiumSimulator";
 import { aiService } from "@/services/aiService";
 import { calcularMissoes, Missao } from "@/lib/missoesService";
 
@@ -387,7 +387,14 @@ export default function Jarvis() {
         
         // Simulações disponíveis (Grupos)
         const gruposInfo = Object.entries(GRUPOS).map(([tipo, lista]) => {
-            return `Segmento ${tipo.toUpperCase()}:\n` + lista.slice(0, 5).map(g => `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m`).join("\n");
+            return `Segmento ${tipo.toUpperCase()}:\n` + lista.map(g => {
+                let txt = `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m`;
+                const stats = ESTATISTICAS_LANCES[g.grupo];
+                if (stats) {
+                    txt += ` | Histórico Lances: Min ${stats.lanceMenor}%, Média ${stats.lanceMedia}%, Max ${stats.lanceMaior}%`;
+                }
+                return txt;
+            }).join("\n");
         }).join("\n\n");
 
         // Cotas Contempladas
