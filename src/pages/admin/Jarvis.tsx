@@ -33,7 +33,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
-import JarvisHero from "@/components/admin/JarvisHero";
+import jarvisAvatar from "@/assets/jarvis-avatar.png";
 import { GRUPOS } from "@/components/ConsortiumSimulator";
 import { aiService } from "@/services/aiService";
 import { calcularMissoes, Missao } from "@/lib/missoesService";
@@ -142,45 +142,63 @@ export default function Jarvis() {
     };
 
     const recognitionRef = useRef<any>(null);
+    const finalTranscriptRef = useRef<string>("");
 
     const startRecording = () => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            toast({ title: "Erro", description: "Reconhecimento de voz não suportado.", variant: "destructive" });
+            toast({ title: "Voz indisponível", description: "Seu navegador não suporta reconhecimento de voz. Use Chrome/Safari no celular.", variant: "destructive" });
             return;
         }
 
-        if (!recognitionRef.current) {
-            recognitionRef.current = new SpeechRecognition();
-            recognitionRef.current.lang = "pt-BR";
-            recognitionRef.current.continuous = true;
-            recognitionRef.current.interimResults = true;
+        try {
+            const rec = new SpeechRecognition();
+            rec.lang = "pt-BR";
+            rec.continuous = false;
+            rec.interimResults = true;
 
-            recognitionRef.current.onresult = (event: any) => {
-                const transcript = Array.from(event.results)
-                    .map((result: any) => result[0])
-                    .map((result: any) => result.transcript)
-                    .join('');
-                setQuestion(transcript);
+            finalTranscriptRef.current = "";
+
+            rec.onresult = (event: any) => {
+                let interim = "";
+                let finalText = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const t = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) finalText += t;
+                    else interim += t;
+                }
+                if (finalText) finalTranscriptRef.current += finalText;
+                setQuestion((finalTranscriptRef.current + " " + interim).trim());
             };
 
-            recognitionRef.current.onstart = () => setIsListening(true);
-            recognitionRef.current.onend = () => setIsListening(false);
-        }
+            rec.onstart = () => setIsListening(true);
+            rec.onerror = () => setIsListening(false);
+            rec.onend = () => {
+                setIsListening(false);
+                const finalQ = finalTranscriptRef.current.trim();
+                if (finalQ) {
+                    setQuestion("");
+                    handleAnalyze(finalQ);
+                }
+            };
 
-        recognitionRef.current.start();
+            recognitionRef.current = rec;
+            rec.start();
+        } catch (e) {
+            console.error("Speech recognition error:", e);
+            setIsListening(false);
+        }
     };
 
     const stopRecording = () => {
         if (recognitionRef.current) {
-            recognitionRef.current.stop();
-            // Pequeno delay para garantir que o último transcript foi capturado
-            setTimeout(() => {
-                if (question.trim()) {
-                    handleAnalyze(question);
-                }
-            }, 500);
+            try { recognitionRef.current.stop(); } catch {}
         }
+    };
+
+    const toggleRecording = () => {
+        if (isListening) stopRecording();
+        else startRecording();
     };
 
     // Motor de Simulação Portado do ConsortiumSimulator (Importado nativamente)
