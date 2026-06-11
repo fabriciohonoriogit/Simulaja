@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const DEFAULT_MODEL = "gemini-2.0-flash";
+const DEFAULT_MODEL = "gemini-2.5-flash-lite";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -52,9 +52,14 @@ Deno.serve(async (req) => {
     if (!upstream.ok) {
       const errText = await upstream.text();
       console.error("Gemini API error:", upstream.status, errText);
+
+      const friendlyText = upstream.status === 429
+        ? "O Jarvis está sem cota disponível na API do Google Gemini neste momento. Verifique o plano/faturamento da chave GEMINI_API_KEY no Google AI Studio e tente novamente."
+        : "O Jarvis não conseguiu resposta da API do Google Gemini agora. Tente novamente em instantes.";
+
       return new Response(
-        JSON.stringify({ error: "Falha no provedor Gemini", detail: errText }),
-        { status: upstream.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        JSON.stringify({ text: friendlyText, error: "GEMINI_PROVIDER_ERROR" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -69,8 +74,8 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("jarvis-ai error:", err);
     return new Response(
-      JSON.stringify({ error: "Erro interno", detail: String(err) }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({ text: "O Jarvis encontrou uma instabilidade interna. Tente novamente em instantes.", error: "JARVIS_INTERNAL_ERROR" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
