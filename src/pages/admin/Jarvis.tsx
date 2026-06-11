@@ -608,8 +608,8 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
                                         ) : <Mic className="h-5 w-5 sm:h-6 sm:w-6" />}
                                     </Button>
                                     <Input 
-                                        placeholder="Clique e segure para falar, ou digite aqui..."
-                                        className="h-14 text-base border-none bg-transparent focus-visible:ring-0 rounded-xl"
+                                        placeholder="Toque no microfone para falar, ou digite aqui..."
+                                        className="h-12 sm:h-14 text-sm sm:text-base border-none bg-transparent focus-visible:ring-0 rounded-xl min-w-0"
                                         value={question}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
                                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && handleAnalyze()}
