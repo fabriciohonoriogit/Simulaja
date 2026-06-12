@@ -6,7 +6,7 @@ import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { Lead, HistoricoContato, Membro } from "@/types/funil";
-import { TEMP_EMOJIS, TEMP_LABELS, normalizeStatus } from "./constants";
+import { TEMP_EMOJIS, TEMP_LABELS, normalizeStatus, COLUMNS, COLUMN_DOT_COLORS } from "./constants";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
