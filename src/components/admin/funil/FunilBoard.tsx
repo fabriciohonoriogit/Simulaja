@@ -36,6 +36,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
   } = state;
 
   const currentCol = COLUMNS[mobileColIdx];
+  const columnRefs = React.useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const applyFilters = (leads: Lead[]) => {
     return leads.filter((l: Lead) => {
@@ -150,10 +151,10 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId={currentCol.id}>
             {(provided, snapshot) => {
-              const columnRef = React.useRef<HTMLDivElement>(null);
               const scrollColumn = (direction: 'up' | 'down') => {
-                if (columnRef.current) {
-                  columnRef.current.scrollBy({
+                const el = columnRefs.current[currentCol.id];
+                if (el) {
+                  el.scrollBy({
                     top: direction === 'up' ? -300 : 300,
                     behavior: 'smooth'
                   });
@@ -165,7 +166,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
                   <div
                     ref={(el) => {
                       provided.innerRef(el);
-                      (columnRef as any).current = el;
+                      columnRefs.current[currentCol.id] = el;
                     }}
                     {...provided.droppableProps}
                     className={`rounded-lg border-t-4 ${COLUMN_COLORS[currentCol.id]} bg-card p-3 min-h-[400px] max-h-[calc(100vh-400px)] overflow-y-auto custom-scrollbar ${snapshot.isDraggingOver ? "ring-2 ring-primary/30" : ""}`}
@@ -266,11 +267,10 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
 
                 <Droppable droppableId={col.id}>
                   {(provided, snapshot) => {
-                    const columnRef = React.useRef<HTMLDivElement>(null);
-                    
                     const scrollColumn = (direction: 'up' | 'down') => {
-                      if (columnRef.current) {
-                        columnRef.current.scrollBy({
+                      const el = columnRefs.current[col.id];
+                      if (el) {
+                        el.scrollBy({
                           top: direction === 'up' ? -300 : 300,
                           behavior: 'smooth'
                         });
@@ -282,7 +282,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
                         <div
                           ref={(el) => {
                             provided.innerRef(el);
-                            (columnRef as any).current = el;
+                            columnRefs.current[col.id] = el;
                           }}
                           {...provided.droppableProps}
                           className={`space-y-1.5 flex-1 overflow-y-auto pr-1 custom-scrollbar ${snapshot.isDraggingOver ? "ring-2 ring-primary/30 rounded" : ""}`}
