@@ -201,7 +201,7 @@ export function useFunil() {
       }
 
       let score = 0;
-      let reasons: string[] = [];
+      const reasons: string[] = [];
 
       if (lead.lead_score_valor === "premium") { score += 40; reasons.push("Crédito Premium"); }
       else if (lead.lead_score_valor === "alto") { score += 30; reasons.push("Alto Potencial"); }

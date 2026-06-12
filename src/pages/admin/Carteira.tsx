@@ -143,7 +143,7 @@ export default function Carteira() {
       // Enriquecer data_adesao a partir da data de fechamento do lead (status_updated_at)
       const leadIds = uniqueClients.map(c => c.lead_id).filter(Boolean) as string[];
       let leadDateMap = new Map<string, string>();
-      let leadsSet = new Set<string>();
+      const leadsSet = new Set<string>();
 
       if (leadIds.length > 0) {
         const startOfMonth = new Date();
