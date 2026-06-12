@@ -609,211 +609,131 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
     if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-700 px-2 sm:px-0">
-            {/* Jarvis Central - Standardized Slim Style */}
-            <AdminHeroCard 
-                title="Jarvis Strategist" 
-                subtitle="Sistema Central de Inteligência Comercial"
-                icon={Zap} 
-                bgIcon={Sparkles}
-                accentColor="amber"
-            >
-                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
-                    {/* Avatar Premium do Jarvis / 3D Orb - Forçando HMR */}
-                    <div className="shrink-0 h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 ring-2 ring-amber-400/30 shadow-xl relative">
-                        <JarvisOrb state={orbState} />
+        <div className="h-[calc(100vh-6rem)] w-full relative overflow-hidden rounded-3xl bg-slate-950 flex flex-col items-center shadow-2xl border border-slate-800 animate-in fade-in zoom-in-95 duration-700">
+            {/* The 3D Orb Background - absolute and huge */}
+            <div className="absolute inset-0 z-0 flex items-center justify-center opacity-70 pointer-events-none mix-blend-screen scale-150 sm:scale-125 md:scale-110 lg:scale-100">
+                <JarvisOrb state={orbState} />
+            </div>
+
+            {/* Top Text */}
+            <div className="z-10 w-full text-center pt-8 sm:pt-12 pb-4">
+                <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-[0.2em] md:tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 drop-shadow-[0_0_20px_rgba(56,189,248,0.4)] uppercase">
+                    J.A.R.V.I.S STRATEGIST
+                </h1>
+                <p className="text-blue-400/60 text-[10px] sm:text-xs md:text-sm tracking-[0.4em] mt-3 uppercase font-semibold">
+                    Sistema Central de Inteligência
+                </p>
+            </div>
+
+            {/* Chat Area - Floating */}
+            <div className="z-10 flex-1 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8">
+                {/* Messages Container (glassmorphism) */}
+                <ScrollArea className="flex-1 w-full mb-6 pr-2 sm:pr-4">
+                    <div className="space-y-6 pb-4">
+                        {messages.map((msg) => (
+                            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start animate-in slide-in-from-bottom-4 duration-500"}`}>
+                                <div className={`max-w-[85%] sm:max-w-[75%] flex gap-3 sm:gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                                    <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center shrink-0 shadow-lg border border-white/10 ${msg.role === "user" ? "bg-indigo-600 text-white" : "bg-slate-900/80 text-cyan-400 backdrop-blur-md"}`}>
+                                        {msg.role === "user" ? <User className="h-4 w-4 sm:h-5 sm:w-5" /> : <Bot className="h-4 w-4 sm:h-5 sm:w-5" />}
+                                    </div>
+                                    <div className={`p-4 sm:p-5 rounded-3xl shadow-xl text-sm sm:text-base leading-relaxed backdrop-blur-md border border-white/5 ${msg.role === "user" ? "bg-indigo-600/90 text-white rounded-tr-sm" : "bg-slate-900/70 text-slate-200 rounded-tl-sm"}`}>
+                                        <div className="whitespace-pre-wrap font-medium">{msg.content}</div>
+                                        <p className={`text-[10px] sm:text-xs mt-3 opacity-50 ${msg.role === "user" ? "text-right text-indigo-200" : "text-cyan-200"}`}>
+                                            {format(msg.timestamp, "HH:mm")}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {isAnalyzing && (
+                            <div className="flex justify-start animate-pulse">
+                                <div className="bg-slate-900/70 backdrop-blur-md border border-white/5 p-5 rounded-3xl rounded-tl-sm flex gap-3 items-center shadow-xl">
+                                    <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 bg-cyan-400 rounded-full animate-bounce" />
+                                    <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                                    <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+                                </div>
+                            </div>
+                        )}
                     </div>
-
-                    <div className="text-center md:text-left space-y-3 flex-1">
-                        <div className="inline-flex items-center gap-2 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-                            <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">v2.0 Online</span>
-                        </div>
-                        <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight text-slate-900">
-                            Inteligência <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">Jarvis</span>
-                        </h1>
-                        <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-xl">
-                            Respostas curtas e diretas. Fale ou digite — o Jarvis já entende.
-                        </p>
+                </ScrollArea>
+                
+                {/* Input Area */}
+                <div className="w-full bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-3 sm:p-4 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-3 sm:gap-4">
+                    <div className="flex gap-2 sm:gap-3 items-center">
+                        <Button
+                            variant={isHandsFree ? "default" : "outline"}
+                            size="icon"
+                            title="Modo Mãos Livres (Diga: Oi Jarvis)"
+                            onClick={() => setIsHandsFree(!isHandsFree)}
+                            className={`h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-full transition-all border-white/10 ${isHandsFree ? "bg-cyan-500 hover:bg-cyan-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)]" : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-cyan-400"}`}
+                        >
+                            <Bot className={`h-5 w-5 sm:h-6 sm:w-6 ${isHandsFree ? "animate-pulse" : ""}`} />
+                        </Button>
+                        <Button 
+                            type="button"
+                            variant="outline" 
+                            size="icon" 
+                            className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 rounded-full transition-all relative border-white/10 ${isListening ? "bg-red-500 hover:bg-red-600 text-white border-red-400 scale-105 shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse" : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"}`}
+                            onClick={toggleRecording}
+                            title={isListening ? "Toque para parar e enviar" : "Toque para falar"}
+                        >
+                            {isListening ? (
+                                <>
+                                    <MicOff className="h-5 w-5 sm:h-7 sm:w-7" />
+                                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap shadow-xl border border-red-400/50">
+                                        Ouvindo...
+                                    </div>
+                                </>
+                            ) : <Mic className="h-5 w-5 sm:h-7 sm:w-7" />}
+                        </Button>
+                        <Input 
+                            placeholder="Comande o Jarvis..."
+                            className="h-12 sm:h-16 text-sm sm:text-lg border-none bg-transparent focus-visible:ring-0 text-white placeholder:text-slate-500 flex-1 min-w-0"
+                            value={question}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
+                            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && handleAnalyze()}
+                        />
+                        <Button 
+                            className="h-12 w-12 sm:h-16 sm:w-16 shrink-0 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-[0_0_20px_rgba(56,189,248,0.4)] border-0 transition-transform active:scale-95"
+                            onClick={() => handleAnalyze()}
+                            disabled={isAnalyzing || !question.trim()}
+                        >
+                            <Send className="h-5 w-5 sm:h-7 sm:w-7" />
+                        </Button>
                     </div>
-                </div>
-            </AdminHeroCard>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                {/* Coluna de Pergunta e Sugestões */}
-                <div className="lg:col-span-2 space-y-6 flex flex-col h-[70vh] min-h-[500px] lg:h-[600px]">
-                    <Card className="border-none shadow-xl bg-white overflow-hidden flex-1 flex flex-col">
-                        <CardHeader className="bg-slate-50/50 border-b py-4">
-                            <CardTitle className="flex items-center justify-between text-lg">
-                                <div className="flex items-center gap-2">
-                                    <MessageSquare className="h-5 w-5 text-primary" /> Chat com Jarvis
-                                </div>
-                                <Button variant="ghost" size="icon" onClick={() => setMessages([{ id: "1", role: "jarvis", content: "Chat resetado. Como posso ajudar?", timestamp: new Date() }])} title="Limpar chat">
-                                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                                </Button>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0 flex-1 overflow-hidden flex flex-col bg-slate-50/30">
-                            <ScrollArea className="flex-1 p-4">
-                                <div className="space-y-4 pb-4">
-                                    {messages.map((msg) => (
-                                        <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start animate-in slide-in-from-left-2"}`}>
-                                            <div className={`max-w-[85%] flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                                                <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${msg.role === "user" ? "bg-primary text-white" : "bg-slate-900 text-white"}`}>
-                                                    {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                                                </div>
-                                                <div className={`p-4 rounded-2xl shadow-sm text-sm leading-relaxed ${msg.role === "user" ? "bg-primary text-white rounded-tr-none" : "bg-white text-slate-700 border rounded-tl-none"}`}>
-                                                    <div className="whitespace-pre-wrap font-medium">{msg.content}</div>
-                                                    <p className={`text-[10px] mt-2 opacity-60 ${msg.role === "user" ? "text-right" : ""}`}>
-                                                        {format(msg.timestamp, "HH:mm")}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {isAnalyzing && (
-                                        <div className="flex justify-start animate-pulse">
-                                            <div className="bg-white border p-3 rounded-2xl flex gap-2 items-center">
-                                                <div className="h-2 w-2 bg-primary rounded-full animate-bounce" />
-                                                <div className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
-                                                <div className="h-2 w-2 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </ScrollArea>
-                            
-                            <div className="p-4 bg-white border-t space-y-4">
-                                <div className="flex gap-2 p-1 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                    <Button
-                                        variant={isHandsFree ? "default" : "outline"}
-                                        size="icon"
-                                        title="Modo Mãos Livres (Diga: Oi Jarvis)"
-                                        onClick={() => setIsHandsFree(!isHandsFree)}
-                                        className={`h-14 w-14 shrink-0 rounded-[20px] transition-all relative ${isHandsFree ? "bg-primary text-white shadow-lg shadow-primary/20" : "hover:bg-primary/10 text-slate-400 hover:text-primary"}`}
-                                    >
-                                        <Bot className={`h-6 w-6 ${isHandsFree ? "animate-pulse" : ""}`} />
-                                    </Button>
-                                    <Button 
-                                        type="button"
-                                        variant="outline" 
-                                        size="icon" 
-                                        className={`h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-2xl transition-all relative ${isListening ? "bg-red-500 text-white border-red-400 scale-105 shadow-lg shadow-red-500/30 animate-pulse" : "hover:bg-primary/10 hover:text-primary active:scale-95"}`}
-                                        onClick={toggleRecording}
-                                        title={isListening ? "Toque para parar e enviar" : "Toque para falar"}
-                                    >
-                                        {isListening ? (
-                                            <>
-                                                <MicOff className="h-5 w-5 sm:h-6 sm:w-6" />
-                                                <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap shadow-xl">
-                                                    Ouvindo...
-                                                </div>
-                                            </>
-                                        ) : <Mic className="h-5 w-5 sm:h-6 sm:w-6" />}
-                                    </Button>
-                                    <Input 
-                                        placeholder="Toque no microfone para falar, ou digite aqui..."
-                                        className="h-12 sm:h-14 text-sm sm:text-base border-none bg-transparent focus-visible:ring-0 rounded-xl min-w-0"
-                                        value={question}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
-                                        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && handleAnalyze()}
-                                    />
-                                    <Button 
-                                        className="h-12 w-12 shrink-0 rounded-full shadow-lg shadow-primary/20"
-                                        onClick={() => handleAnalyze()}
-                                        disabled={isAnalyzing || !question.trim()}
-                                    >
-                                        <Send className="h-5 w-5" />
-                                    </Button>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5 overflow-x-auto no-scrollbar pb-1">
-                                    {suggestedQuestions.map((q, i) => (
-                                        <Button 
-                                            key={i} 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="rounded-full bg-slate-100/50 hover:bg-primary/5 hover:text-primary text-[10px] h-7 whitespace-nowrap"
-                                            onClick={() => handleAnalyze(q)}
-                                        >
-                                            {q}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Sidebar com Sugestões do Dia */}
-                <div className="space-y-8">
-                    <Card className="border-none shadow-xl bg-slate-900 text-white overflow-hidden relative">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                        <CardHeader className="pb-2 relative z-10">
-                            <CardTitle className="text-lg flex items-center gap-2 text-primary-foreground">
-                                <Clock className="h-5 w-5" /> Sugestões Diárias
-                            </CardTitle>
-                            <CardDescription className="text-slate-400">Jarvis recomenda hoje:</CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-2 relative z-10">
-                            <ScrollArea className="h-auto space-y-4">
-                                <div className="space-y-4">
-                                    {[
-                                        { 
-                                            icon: Zap, 
-                                            text: "Escanear e Qualificar Oportunidades", 
-                                            action: handleQualifyAll,
-                                            loading: isScanning,
-                                            highlight: true
-                                        },
-                                        { icon: TrendingUp, text: `Gerar pelo menos ${Math.ceil((metaAnual/12)/100000)} novos leads hoje` },
-                                        { icon: Users, text: `O lead 'Consórcio Imobiliário' (R$ 450k) está esfriando` },
-                                        { icon: Send, text: "Faltam 4 propostas para bater o ritmo da semana" },
-                                        { icon: MessageSquare, text: "Redes: Explique hoje a taxa Selic no consórcio" },
-                                        { icon: Target, text: "Prospecção: Foco em médicos e profissionais liberais" }
-                                    ].map((s, i) => (
-                                        <div 
-                                            key={i} 
-                                            className={`flex gap-4 items-center p-3 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] ${
-                                                (s as any).highlight 
-                                                ? "bg-primary/20 border-primary/40 hover:bg-primary/30" 
-                                                : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-primary/30"
-                                            } ${(s as any).loading ? "animate-pulse pointer-events-none" : ""}`}
-                                            onClick={() => {
-                                                if ((s as any).action) {
-                                                    (s as any).action();
-                                                    return;
-                                                }
-                                                if (s.text.toLowerCase().includes("redes")) {
-                                                    toast({
-                                                        title: "Sugestão Jarvis",
-                                                        description: "Acesse a aba 'Dashboard' para completar missões de redes sociais!"
-                                                    });
-                                                }
-                                            }}
-                                        >
-                                            <div className="h-8 w-8 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
-                                                <s.icon className={`h-4 w-4 ${ (s as any).highlight ? "text-primary animate-pulse" : "text-primary-foreground"}`} />
-                                            </div>
-                                            <p className={`text-xs font-medium ${ (s as any).highlight ? "text-white font-black" : "text-slate-300"}`}>{s.text}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                                <Button variant="link" className="w-full text-primary-foreground text-xs mt-4">Ver plano estratégico completo <ArrowRight className="h-3 w-3 ml-1" /></Button>
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-dashed border-2 bg-transparent">
-                        <CardContent className="p-6 text-center space-y-4">
-                            <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto opacity-40">
-                                <TrendingUp className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <div className="space-y-1">
-                                <h4 className="font-bold text-muted-foreground">Evoluindo o Jarvis...</h4>
-                                <p className="text-[10px] text-muted-foreground px-4 uppercase tracking-tighter">O Jarvis aprende com cada interação para ser seu braço direito nas vendas.</p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    
+                    {/* Sugestões Chips */}
+                    <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 px-1 pb-1">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="shrink-0 rounded-full bg-cyan-900/40 border-cyan-500/50 hover:bg-cyan-800/60 hover:text-white text-cyan-300 text-[10px] sm:text-xs h-8 sm:h-9 whitespace-nowrap backdrop-blur-sm transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)] font-semibold"
+                            onClick={() => handleQualifyAll()}
+                            disabled={isScanning}
+                        >
+                            {isScanning ? <span className="animate-pulse">Escaneando...</span> : <><Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5" /> Escanear Oportunidades</>}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 rounded-full bg-rose-900/20 border-rose-500/30 hover:bg-rose-900/40 hover:text-rose-300 text-rose-400 text-[10px] sm:text-xs h-8 sm:h-9 whitespace-nowrap backdrop-blur-sm transition-all"
+                            onClick={() => setMessages([{ id: "1", role: "jarvis", content: "Chat resetado. Como posso ajudar?", timestamp: new Date() }])}
+                            title="Limpar histórico do chat"
+                        >
+                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5" /> Limpar Chat
+                        </Button>
+                        {suggestedQuestions.map((q, i) => (
+                            <Button 
+                                key={i} 
+                                variant="outline" 
+                                size="sm" 
+                                className="shrink-0 rounded-full bg-slate-800/40 border-white/5 hover:bg-slate-700/80 hover:text-white text-[10px] sm:text-xs h-8 sm:h-9 text-slate-400 whitespace-nowrap backdrop-blur-sm transition-all"
+                                onClick={() => handleAnalyze(q)}
+                            >
+                                {q}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
