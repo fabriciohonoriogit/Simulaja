@@ -11,9 +11,9 @@ export interface LeadContext {
   cidade: string;
 }
 
-async function callAI(prompt: string, maxTokens = 800): Promise<{ text: string; error: any }> {
+async function callAI(prompt: string, maxTokens = 800, history?: Array<{role: string, text: string}>): Promise<{ text: string; error: any }> {
   const { data, error } = await supabase.functions.invoke("jarvis-ai", {
-    body: { prompt, maxTokens },
+    body: { prompt, maxTokens, history },
   });
   if (error) {
     console.error("aiService.callAI error:", error);
@@ -37,7 +37,7 @@ Responda apenas com o texto da mensagem.`;
     return { script: text || "Olá, bom dia! Gostaria de falar sobre o seu consórcio.", error };
   },
 
-  async askJarvis(context: string, question: string) {
+  async askJarvis(context: string, question: string, history?: Array<{role: string, text: string}>) {
     const prompt = `Você é o Jarvis, diretor comercial parceiro de vendas.
 
 REGRAS DE RESPOSTA (EXTREMAMENTE IMPORTANTES - SUA VOZ É SINTETIZADA):
@@ -53,7 +53,7 @@ ${context}
 PERGUNTA: "${question}"
 
 Responda em no máximo 2 frases muito curtas e diretas.`;
-    const { text, error } = await callAI(prompt, 200);
+    const { text, error } = await callAI(prompt, 200, history);
     return {
       answer: text || "Desculpe, ocorreu um erro de conexão. Tente novamente em instantes.",
       error,

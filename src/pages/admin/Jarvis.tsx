@@ -34,9 +34,10 @@ import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import jarvisAvatar from "@/assets/jarvis-avatar.png";
-import { GRUPOS, ESTATISTICAS_LANCES } from "@/components/ConsortiumSimulator";
+import { ESTATISTICAS_LANCES, GRUPOS } from "@/components/ConsortiumSimulator";
 import { aiService } from "@/services/aiService";
-import { calcularMissoes, Missao } from "@/lib/missoesService";
+import { Missao, calcularMissoes } from "@/lib/missoesService";
+import { JarvisOrb } from "@/components/admin/JarvisOrb";
 
 interface Message {
     id: string;
@@ -123,9 +124,11 @@ export default function Jarvis() {
     ]);
     const [isListening, setIsListening] = useState(false);
     const [isHandsFree, setIsHandsFree] = useState(false);
+    const [orbState, setOrbState] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
     const isHandsFreeRef = useRef(false);
     const handsFreeRecognitionRef = useRef<any>(null);
     const analyzeRef = useRef<any>(null);
+    const speakingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 
     const speak = (text: string) => {
@@ -143,6 +146,19 @@ export default function Jarvis() {
         msg.lang = "pt-BR";
         msg.rate = 1.0;
         msg.pitch = 1.0;
+        
+        setOrbState("speaking");
+        
+        msg.onend = () => {
+             setOrbState("idle");
+        };
+        
+        // Fallback timeout case onend fails
+        if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
+        speakingTimeoutRef.current = setTimeout(() => {
+            setOrbState("idle");
+        }, Math.max(3000, cleanText.length * 80));
+
         window.speechSynthesis.speak(msg);
     };
 
@@ -176,8 +192,14 @@ export default function Jarvis() {
                 setQuestion((finalTranscriptRef.current + " " + interim).trim());
             };
 
-            rec.onstart = () => setIsListening(true);
-            rec.onerror = () => setIsListening(false);
+            rec.onstart = () => {
+                setIsListening(true);
+                setOrbState("listening");
+            };
+            rec.onerror = () => {
+                setIsListening(false);
+                setOrbState("idle");
+            };
             rec.onend = () => {
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
@@ -333,6 +355,7 @@ export default function Jarvis() {
         if (!query.trim()) return;
         
         setIsAnalyzing(true);
+        setOrbState("thinking");
         const userMsg: Message = { id: Date.now().toString(), role: "user", content: query, timestamp: new Date() };
         setMessages(prev => [...prev, userMsg]);
         setQuestion("");
@@ -446,7 +469,12 @@ Cotas Vencedoras: ${cotasContempladasResumo || "Sem registros ainda."}
 Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, use a nova análise que seria gerada abaixo, mas seja humano. 
 `;
 
-        const response = await aiService.askJarvis(contextBuilder, query);
+        const history = messages.map(m => ({
+            role: m.role,
+            text: m.content
+        }));
+
+        const response = await aiService.askJarvis(contextBuilder, query, history);
         
         let newAnalysis: JarvisAnalysis | null = null;
         if (query.toLowerCase().includes("resumo") || query.toLowerCase().includes("funil") || query.toLowerCase().includes("tudo")) {
@@ -594,15 +622,9 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
                 accentColor="amber"
             >
                 <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
-                    {/* Avatar Premium do Jarvis */}
-                    <div className="shrink-0 h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 ring-2 ring-amber-400/30 shadow-xl">
-                        <img
-                            src={jarvisAvatar}
-                            alt="Jarvis - Assistente IA"
-                            width={320}
-                            height={320}
-                            className="w-full h-full object-cover"
-                        />
+                    {/* Avatar Premium do Jarvis / 3D Orb */}
+                    <div className="shrink-0 h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 ring-2 ring-amber-400/30 shadow-xl relative">
+                        <JarvisOrb state={orbState} />
                     </div>
 
                     <div className="text-center md:text-left space-y-3 flex-1">

@@ -30,6 +30,7 @@ Deno.serve(async (req) => {
     const prompt: string = body?.prompt ?? "";
     const model: string = body?.model ?? DEFAULT_MODEL;
     const maxTokens: number = Number(body?.maxTokens) || 800;
+    const history: Array<{role: string, text: string}> = body?.history || [];
 
     if (!prompt || typeof prompt !== "string") {
       return new Response(
@@ -38,13 +39,22 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Mapear history e a nova pergunta para o formato esperado pelo Gemini
+    const contents = [
+      ...history.map(h => ({
+        role: h.role === "jarvis" || h.role === "model" ? "model" : "user",
+        parts: [{ text: h.text }]
+      })),
+      { role: "user", parts: [{ text: prompt }] }
+    ];
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const upstream = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
+        contents,
         generationConfig: { maxOutputTokens: maxTokens },
       }),
     });
