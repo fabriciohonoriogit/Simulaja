@@ -276,11 +276,8 @@ export default function Jarvis() {
                         }
                     }
 
-                    // Saudação automática ao carregar (após carregar os dados)
-                    setTimeout(() => {
-                        const prioritarios = allLeads.filter(l => !["fechado", "perdido", "desistiu"].includes((l.status || "").toLowerCase())).length;
-                        speak(`Fala ${profile?.nome_completo?.split(' ')[0] || 'Parceiro'}! Tem ${prioritarios} leads em negociação na mesa. Bora focar hoje e fechar essas pendências.`);
-                    }, 1000);
+                    // Saudação silenciosa no chat (opcional), removido o áudio automático
+                    // O texto inicial já fica no array `messages` no estado inicial do componente.
                 }
 
                 if (inadRes.data) {
