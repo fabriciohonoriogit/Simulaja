@@ -47,13 +47,23 @@ REGRAS DE RESPOSTA (EXTREMAMENTE IMPORTANTES - SUA VOZ É SINTETIZADA):
 - Use palavras naturais da fala ("Olha", "Então", "Temos", "A gente").
 - Não explique os dados, apenas dê a resposta. Se pedirem mais detalhe, aí sim você expande.
 
+SE O USUÁRIO PEDIR PARA MOVER UM LEAD DE ETAPA (ex: "mova o Carlos para negociação"):
+Você DEVE incluir na sua resposta EXATAMENTE este bloco JSON (e a sua resposta em texto fora dele):
+\`\`\`json
+{
+  "function": "moverLeadEtapa",
+  "params": { "nomeLead": "NOME DO LEAD EXATO CONFORME DADOS", "novaEtapa": "ID DA ETAPA" }
+}
+\`\`\`
+Onde "novaEtapa" DEVE ser um dos IDs: novo_lead, contato_feito, analise_credito, negociacao, aguardando_docs, contrato_assinado, comissao_paga, fechado, perdido, morto.
+
 DADOS DO CRM (use só o que for relevante para a pergunta):
 ${context}
 
 PERGUNTA: "${question}"
 
-Responda em no máximo 2 frases muito curtas e diretas.`;
-    const { text, error } = await callAI(prompt, 200, history);
+Responda em no máximo 2 frases curtas e diretas. Se for para mover lead, inclua o bloco JSON também.`;
+    const { text, error } = await callAI(prompt, 300, history);
     return {
       answer: text || "Desculpe, ocorreu um erro de conexão. Tente novamente em instantes.",
       error,

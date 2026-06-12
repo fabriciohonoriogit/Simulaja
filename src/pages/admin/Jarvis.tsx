@@ -487,12 +487,50 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
             };
         }
 
-        const responseContent = response.answer;
+        let responseContent = response.answer;
+
+        // Extrair JSON do comando
+        const jsonMatch = responseContent.match(/```json\n([\s\S]*?)\n```/);
+        let actionMessage = "";
+        
+        if (jsonMatch) {
+            try {
+                const command = JSON.parse(jsonMatch[1]);
+                if (command.function === "moverLeadEtapa") {
+                    const nome = command.params.nomeLead.toLowerCase();
+                    const novaEtapa = command.params.novaEtapa;
+                    const leadAlvo = leads.find(l => 
+                        l.dados_cadastro?.nome?.toLowerCase().includes(nome) || 
+                        l.nome?.toLowerCase().includes(nome)
+                    );
+                    
+                    if (leadAlvo) {
+                        await supabase.from("leads").update({ 
+                            status: novaEtapa, 
+                            status_updated_at: new Date().toISOString() 
+                        } as any).eq("id", leadAlvo.id);
+                        
+                        setLeads(prev => prev.map(l => 
+                            l.id === leadAlvo.id 
+                                ? { ...l, status: novaEtapa, status_updated_at: new Date().toISOString() } 
+                                : l
+                        ));
+                        actionMessage = `\n*(Ação Executada: Moveu ${leadAlvo.nome || "Lead"} para ${novaEtapa})*`;
+                    } else {
+                        actionMessage = `\n*(Falha: Lead "${command.params.nomeLead}" não encontrado)*`;
+                    }
+                }
+            } catch (e) {
+                console.error("Erro ao fazer parse do comando JSON", e);
+            }
+            // Remove o bloco JSON para o Jarvis não ler em voz alta
+            responseContent = responseContent.replace(/```json\n([\s\S]*?)\n```/, "").trim();
+        }
 
         const jarvisMsg: Message = {
             id: (Date.now()+1).toString(),
             role: "jarvis",
-            content: responseContent,
+            content: responseContent + actionMessage,
             timestamp: new Date(),
             type: newAnalysis ? "analysis" : "text",
             data: newAnalysis || undefined
