@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Phone, MapPin, Calendar as CalendarIcon, TrendingUp, Trash2, Bell, NotebookPen, Plus, Clock, GripVertical, ClipboardList, Pencil, Bot } from "lucide-react";
+import { Phone, MapPin, Calendar as CalendarIcon, TrendingUp, Trash2, Bell, NotebookPen, Plus, Clock, GripVertical, ClipboardList, Pencil, Bot, ArrowRightLeft } from "lucide-react";
 import { format, parseISO, differenceInDays, isValid } from "date-fns";
 import { formatLeadValue } from "@/lib/utils";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
@@ -14,6 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const TEMP_STRIPE: Record<string, string> = {
   quente: "bg-red-500",
@@ -132,6 +138,7 @@ export function LeadCard({
   onEdit?: (lead: Lead) => void;
   onViewFicha?: (lead: Lead) => void;
   onToggleAI?: (leadId: string, currentStatus: boolean) => void;
+  onMoveStage?: (leadId: string, newStatus: string) => void;
 }) {
   const [isEditingField, setIsEditingField] = useState<{field: string, value: string} | null>(null);
 
@@ -444,6 +451,30 @@ export function LeadCard({
                   title="Editar Lead">
                   <Pencil className="h-3 w-3" />
                 </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-6 h-6 rounded-md flex items-center justify-center bg-violet-50 hover:bg-violet-100 text-violet-500 transition-colors"
+                      title="Mover para outra etapa"
+                    >
+                      <ArrowRightLeft className="h-3 w-3" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {COLUMNS.filter(c => c.id !== statusNormalized).map((col) => (
+                      <DropdownMenuItem
+                        key={col.id}
+                        onClick={(e) => { e.stopPropagation(); onMoveStage?.(lead.id, col.id); }}
+                      >
+                        <span className={`h-2 w-2 rounded-full mr-2 ${COLUMN_DOT_COLORS[col.id]}`} />
+                        {col.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <button 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
@@ -510,6 +541,30 @@ export function LeadCard({
               title="Editar Lead">
               <Pencil className="h-3 w-3" />
             </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-6 h-6 rounded-md flex items-center justify-center bg-violet-50 hover:bg-violet-100 text-violet-500 transition-colors"
+                  title="Mover para outra etapa"
+                >
+                  <ArrowRightLeft className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {COLUMNS.filter(c => c.id !== statusNormalized).map((col) => (
+                  <DropdownMenuItem
+                    key={col.id}
+                    onClick={(e) => { e.stopPropagation(); onMoveStage?.(lead.id, col.id); }}
+                  >
+                    <span className={`h-2 w-2 rounded-full mr-2 ${COLUMN_DOT_COLORS[col.id]}`} />
+                    {col.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <button 
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}

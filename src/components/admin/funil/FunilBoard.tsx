@@ -72,6 +72,15 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
           setLeads((prev: Lead[]) => prev.map((l) => l.id === leadId ? { ...l, responsavel_id: val } : l));
         };
 
+        const moveStage = async (leadId: string, newStatus: string) => {
+          const updateData = {
+            status: newStatus,
+            status_updated_at: new Date().toISOString()
+          };
+          await supabase.from("leads").update(updateData as any).eq("id", leadId);
+          setLeads((prev: Lead[]) => prev.map((l) => l.id === leadId ? { ...l, ...updateData } : l));
+        };
+
         const cardElement = (
           <LeadCard
             lead={lead}
@@ -92,6 +101,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
             onEdit={state.setEditingLead}
             onViewFicha={state.setViewingFichaLead}
             onToggleAI={handleToggleAI}
+            onMoveStage={moveStage}
           />
         );
 
