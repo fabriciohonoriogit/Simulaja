@@ -402,68 +402,19 @@ export default function Jarvis() {
         const pctImo = imo && imo.meta_vendas > 0 ? Math.round((imo.valor_total / imo.meta_vendas) * 100) : 0;
         const pctVei = vei && vei.meta_vendas > 0 ? Math.round((vei.valor_total / vei.meta_vendas) * 100) : 0;
 
-        // Construir um super contexto resumido para o Jarvis, sem expor os dados completos de leads,
-        // apenas um resumo e as informações essenciais para responder.
-        
-        // Simulações disponíveis (Grupos)
-        const gruposInfo = Object.entries(GRUPOS).map(([tipo, lista]) => {
-            return `Segmento ${tipo.toUpperCase()}:\n` + lista.map(g => {
-                let txt = `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m`;
-                const stats = ESTATISTICAS_LANCES[g.grupo];
-                if (stats) {
-                    txt += ` | Histórico Lances: Min ${stats.lanceMenor}%, Média ${stats.lanceMedia}%, Max ${stats.lanceMaior}%`;
-                }
-                return txt;
-            }).join("\n");
-        }).join("\n\n");
-
-        // Cotas Contempladas
-        const qtdAgrupada = cotasContempladas.reduce((acc, cota) => {
-            acc[cota.grupo] = (acc[cota.grupo] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
-        const cotasContempladasResumo = Object.entries(qtdAgrupada).map(([g, q]) => `Grupo ${g}: ${q} cotas`).join(", ");
-
-        // Missões Diárias
-        const missoesInfo = missoes.map(m => `- ${m.label}: ${m.atual} / ${m.meta} ${m.concluida ? "✅ CONCLUÍDA" : "⏳ PENDENTE"}`).join("\n");
-
+        // Novo Contexto Reduzido: O Jarvis agora usa Tools (Function Calling)
+        // para buscar dados profundos, então mandamos apenas um resumo rápido.
         const contextBuilder = `
---- DADOS EM TEMPO REAL DO CRM ---
-
+--- RESUMO RÁPIDO DA TELA ATUAL ---
 DATA DE HOJE: ${new Date().toLocaleDateString('pt-BR')} (Faltam ${Math.max(0, diasNoMes - diaHoje)} dias para o fim do mês)
 
-1. FUNIL E VENDAS DO MÊS:
-- Prospecção (Novos): ${getCount('novo')}
-- Qualificação (Em Andamento): ${getCount('em_andamento')}
-- Proposta: ${getCount('proposta')}
-- Negociação: ${getCount('negociacao')}
-- Fechamentos: ${getCount('fechado')}
 - Realizado no Mês: ${formatCurrency(realizadoMes)} de uma meta de ${formatCurrency(metaMensal)}.
 - Projeção de Fechamento Mês: ${formatCurrency(projecao)}
-- Progressão Anual: ${Math.round(progressoAno)}% (${formatCurrency(realizadoAno)} de ${formatCurrency(metaAnual)})
 - Pipeline Total em Negociação: ${formatCurrency(pipelineValue)} (${emNegociacao.length} leads)
 - Novos leads hoje: ${novosHoje}
-- Leads esfriando (risco): ${leadsFrios}
+- Total Devendo (Inadimplência): ${formatCurrency(dividaTotal)}
 
-2. METAS POR SEGMENTO (MÊS):
-- Imóveis: ${pctImo}% (${formatCurrency(imo?.valor_total || 0)} / ${formatCurrency(imo?.meta_vendas || 0)})
-- Veículos: ${pctVei}% (${formatCurrency(vei?.valor_total || 0)} / ${formatCurrency(vei?.meta_vendas || 0)})
-
-3. MISSÕES DO DIA (Dashboard de Missões):
-${missoesInfo || "Nenhuma missão disponível no momento."}
-
-4. INADIMPLÊNCIA:
-- Total Devendo: ${formatCurrency(dividaTotal)} (${inadCount} clientes ativos)
-- Clientes Críticos (>2 parcelas): ${criticosLista || "Nenhum no momento."}
-
-5. SIMULADOR E COTAS (Para cálculos de parcelas):
-${gruposInfo}
-
-6. HISTÓRICO DE CONTEMPLAÇÕES (Loteria):
-Cotas Vencedoras: ${cotasContempladasResumo || "Sem registros ainda."}
-
---- FIM DOS DADOS ---
-Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, use a nova análise que seria gerada abaixo, mas seja humano. 
+*Nota*: Para detalhes profundos de clientes, inadimplentes, ou histórico, use suas Ferramentas (Tools).
 `;
 
         const history = messages.map(m => ({

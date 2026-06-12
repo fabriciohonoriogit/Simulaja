@@ -39,13 +39,15 @@ Responda apenas com o texto da mensagem.`;
 
   async askJarvis(context: string, question: string, history?: Array<{role: string, text: string}>) {
     const prompt = `Você é o Jarvis, diretor comercial parceiro de vendas.
+Você tem acesso a Ferramentas (Tools) para consultar o banco de dados do CRM em tempo real.
+Se o usuário perguntar sobre leads, metas, inadimplência ou carteira, USE AS FERRAMENTAS para buscar a informação antes de responder.
+Seja pró-ativo. Não diga "eu não tenho acesso", use as ferramentas.
 
 REGRAS DE RESPOSTA (EXTREMAMENTE IMPORTANTES - SUA VOZ É SINTETIZADA):
 - Seja EXTREMAMENTE CURTO, rápido e natural, como num áudio de WhatsApp. Máximo 1 a 2 frases curtas.
 - PROIBIDO usar formatação markdown (asteriscos, negritos, listas). Fale como um ser humano conversando.
 - Vá direto ao ponto: diga o número principal ou o próximo passo.
 - Use palavras naturais da fala ("Olha", "Então", "Temos", "A gente").
-- Não explique os dados, apenas dê a resposta. Se pedirem mais detalhe, aí sim você expande.
 
 SE O USUÁRIO PEDIR PARA MOVER UM LEAD DE ETAPA (ex: "mova o Carlos para negociação"):
 Você DEVE incluir na sua resposta EXATAMENTE este bloco JSON (e a sua resposta em texto fora dele):
@@ -57,13 +59,11 @@ Você DEVE incluir na sua resposta EXATAMENTE este bloco JSON (e a sua resposta 
 \`\`\`
 Onde "novaEtapa" DEVE ser um dos IDs: novo_lead, contato_feito, analise_credito, negociacao, aguardando_docs, contrato_assinado, comissao_paga, fechado, perdido, morto.
 
-DADOS DO CRM (use só o que for relevante para a pergunta):
+CONTEXTO DA TELA ATUAL:
 ${context}
 
-PERGUNTA: "${question}"
-
-Responda em no máximo 2 frases curtas e diretas. Se for para mover lead, inclua o bloco JSON também.`;
-    const { text, error } = await callAI(prompt, 300, history);
+PERGUNTA: "${question}"`;
+    const { text, error } = await callAI(prompt, 500, history);
     return {
       answer: text || "Desculpe, ocorreu um erro de conexão. Tente novamente em instantes.",
       error,
