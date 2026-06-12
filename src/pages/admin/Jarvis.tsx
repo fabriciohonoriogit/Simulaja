@@ -219,7 +219,7 @@ export default function Jarvis() {
 
     const stopRecording = () => {
         if (recognitionRef.current) {
-            try { recognitionRef.current.stop(); } catch {}
+            try { recognitionRef.current.stop(); } catch (e) { console.error("Error stopping recognition", e); }
         }
     };
 
