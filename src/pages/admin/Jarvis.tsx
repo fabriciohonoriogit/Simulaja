@@ -619,7 +619,7 @@ Instrução: Se a pergunta do usuário for pedir um resumo ou o cenário atual, 
                 accentColor="amber"
             >
                 <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
-                    {/* Avatar Premium do Jarvis / 3D Orb */}
+                    {/* Avatar Premium do Jarvis / 3D Orb - Forçando HMR */}
                     <div className="shrink-0 h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 ring-2 ring-amber-400/30 shadow-xl relative">
                         <JarvisOrb state={orbState} />
                     </div>
