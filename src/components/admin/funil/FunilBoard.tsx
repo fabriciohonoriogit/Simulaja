@@ -161,25 +161,14 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId={currentCol.id}>
             {(provided, snapshot) => {
-              const scrollColumn = (direction: 'up' | 'down') => {
-                const el = columnRefs.current[currentCol.id];
-                if (el) {
-                  el.scrollBy({
-                    top: direction === 'up' ? -300 : 300,
-                    behavior: 'smooth'
-                  });
-                }
-              };
-
               return (
                 <div className="relative">
                   <div
                     ref={(el) => {
                       provided.innerRef(el);
-                      columnRefs.current[currentCol.id] = el;
                     }}
                     {...provided.droppableProps}
-                    className={`rounded-lg border-t-4 ${COLUMN_COLORS[currentCol.id]} bg-card p-3 min-h-[400px] max-h-[calc(100vh-400px)] overflow-y-auto custom-scrollbar ${snapshot.isDraggingOver ? "ring-2 ring-primary/30" : ""}`}
+                    className={`rounded-lg border-t-4 ${COLUMN_COLORS[currentCol.id]} bg-card p-2 min-h-[60vh] pb-32 ${snapshot.isDraggingOver ? "ring-2 ring-primary/30" : ""}`}
                   >
                     <div className="space-y-2">
                       {currentColLeads.map((lead: Lead, idx: number) => renderLeadCard(lead, idx))}
@@ -190,29 +179,6 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
                       )}
                       {provided.placeholder}
                     </div>
-                  </div>
-
-                  <div className="flex absolute right-4 bottom-4 flex-col gap-1 z-20">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full shadow-md bg-primary/20 backdrop-blur-md border border-primary/20 text-primary transition-all"
-                      onPointerDown={(e) => { e.preventDefault(); scrollColumn('up'); }}
-                      onTouchStart={(e) => { e.preventDefault(); scrollColumn('up'); }}
-                      onClick={() => scrollColumn('up')}
-                    >
-                      <ChevronUp className="h-5 w-5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full shadow-md bg-primary/20 backdrop-blur-md border border-primary/20 text-primary transition-all"
-                      onPointerDown={(e) => { e.preventDefault(); scrollColumn('down'); }}
-                      onTouchStart={(e) => { e.preventDefault(); scrollColumn('down'); }}
-                      onClick={() => scrollColumn('down')}
-                    >
-                      <ChevronDown className="h-5 w-5" />
-                    </Button>
                   </div>
                 </div>
               );

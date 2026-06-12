@@ -47,7 +47,7 @@ export default function Funil() {
   const activeColor = getCategoryColor(selectedCategory);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 space-y-2 select-none w-full overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 space-y-2 select-none w-full overflow-y-auto md:overflow-hidden pb-10 md:pb-0">
       {/* Operational Summary Bar - Ultra Slim */}
       <div className="flex flex-col xl:flex-row gap-2">
         {/* Rapid Status Stats */}
