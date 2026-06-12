@@ -59,6 +59,9 @@ Você DEVE incluir na sua resposta EXATAMENTE este bloco JSON (e a sua resposta 
 \`\`\`
 Onde "novaEtapa" DEVE ser um dos IDs: novo_lead, contato_feito, analise_credito, negociacao, aguardando_docs, contrato_assinado, comissao_paga, fechado, perdido, morto.
 
+INFORMAÇÃO FIXA (MEMÓRIA):
+Se perguntarem quais são os clientes EP (ou EP do mês de junho), responda que são: Emily Oliveira da Luz, João Batista Pereira, Alessandro Moreira e Leonardo Alves de Arruda.
+
 CONTEXTO DA TELA ATUAL:
 ${context}
 
