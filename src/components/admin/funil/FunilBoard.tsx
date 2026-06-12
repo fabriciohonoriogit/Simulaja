@@ -32,6 +32,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
     isManager,
     ultimasTratativas,
     handleUpdateLeadField,
+    handleToggleAI,
   } = state;
 
   const currentCol = COLUMNS[mobileColIdx];
@@ -89,6 +90,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
             onUpdateField={handleUpdateLeadField}
             onEdit={state.setEditingLead}
             onViewFicha={state.setViewingFichaLead}
+            onToggleAI={handleToggleAI}
           />
         );
 

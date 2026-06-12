@@ -955,5 +955,20 @@ export function useFunil() {
     viewingFichaLead,
     setViewingFichaLead,
     profile,
+    handleToggleAI: async (leadId: string, currentStatus: boolean) => {
+      const novoStatus = !currentStatus;
+      const { error } = await supabase
+        .from('leads')
+        .update({ atendimento_ia: novoStatus } as any)
+        .eq('id', leadId);
+
+      if (error) {
+        toast.error("Erro ao alterar status da IA");
+        return;
+      }
+      
+      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, atendimento_ia: novoStatus } : l));
+      toast.success(novoStatus ? "IA Ativada para este lead" : "IA Desativada para este lead");
+    },
   };
 }

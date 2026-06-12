@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Phone, MapPin, Calendar as CalendarIcon, TrendingUp, Trash2, Bell, NotebookPen, Plus, Clock, GripVertical, ClipboardList, Pencil } from "lucide-react";
+import { Phone, MapPin, Calendar as CalendarIcon, TrendingUp, Trash2, Bell, NotebookPen, Plus, Clock, GripVertical, ClipboardList, Pencil, Bot } from "lucide-react";
 import { format, parseISO, differenceInDays, isValid } from "date-fns";
 import { formatLeadValue } from "@/lib/utils";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
@@ -131,6 +131,7 @@ export function LeadCard({
   onUpdateField?: (leadId: string, field: string, value: string) => void;
   onEdit?: (lead: Lead) => void;
   onViewFicha?: (lead: Lead) => void;
+  onToggleAI?: (leadId: string, currentStatus: boolean) => void;
 }) {
   const [isEditingField, setIsEditingField] = useState<{field: string, value: string} | null>(null);
 
@@ -419,6 +420,14 @@ export function LeadCard({
                 <button 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); onToggleAI?.(lead.id, lead.atendimento_ia ?? true); }}
+                  className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${lead.atendimento_ia !== false ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-600" : "bg-slate-100 hover:bg-slate-200 text-slate-400"}`}
+                  title={lead.atendimento_ia !== false ? "IA Jarvis Ativada - Clique para desativar" : "IA Jarvis Desativada - Clique para ativar"}>
+                  <Bot className="h-3.5 w-3.5" />
+                </button>
+                <button 
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onOpenHistorico(lead); }}
                   className="w-6 h-6 rounded-md flex items-center justify-center bg-sky-50 hover:bg-sky-100 text-sky-500 transition-colors"
                   title="Histórico">
@@ -474,6 +483,14 @@ export function LeadCard({
               title="WhatsApp">
               <WhatsAppIcon className="h-4 w-4" />
             </a>
+            <button 
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onToggleAI?.(lead.id, lead.atendimento_ia ?? true); }}
+              className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${lead.atendimento_ia !== false ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-600" : "bg-slate-100 hover:bg-slate-200 text-slate-400"}`}
+              title={lead.atendimento_ia !== false ? "IA Jarvis Ativada - Clique para desativar" : "IA Jarvis Desativada - Clique para ativar"}>
+              <Bot className="h-3.5 w-3.5" />
+            </button>
             <button 
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
