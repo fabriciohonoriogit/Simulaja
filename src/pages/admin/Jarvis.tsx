@@ -402,6 +402,13 @@ export default function Jarvis() {
         const pctImo = imo && imo.meta_vendas > 0 ? Math.round((imo.valor_total / imo.meta_vendas) * 100) : 0;
         const pctVei = vei && vei.meta_vendas > 0 ? Math.round((vei.valor_total / vei.meta_vendas) * 100) : 0;
 
+        // Simulações disponíveis (Grupos)
+        const gruposInfo = Object.entries(GRUPOS).map(([tipo, lista]) => {
+            return `Segmento ${tipo.toUpperCase()}:\n` + lista.map(g => {
+                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m`;
+            }).join("\n");
+        }).join("\n\n");
+
         // Novo Contexto Reduzido: O Jarvis agora usa Tools (Function Calling)
         // para buscar dados profundos, então mandamos apenas um resumo rápido.
         const contextBuilder = `
@@ -414,7 +421,10 @@ DATA DE HOJE: ${new Date().toLocaleDateString('pt-BR')} (Faltam ${Math.max(0, di
 - Novos leads hoje: ${novosHoje}
 - Total Devendo (Inadimplência): ${formatCurrency(dividaTotal)}
 
-*Nota*: Para detalhes profundos de clientes, inadimplentes, ou histórico, use suas Ferramentas (Tools).
+--- VALORES DO SIMULADOR DE CONSÓRCIO (MEMÓRIA) ---
+${gruposInfo}
+
+*Nota*: Para detalhes profundos de clientes específicos, inadimplentes, ou histórico, use suas Ferramentas (Tools).
 `;
 
         const history = messages.map(m => ({
