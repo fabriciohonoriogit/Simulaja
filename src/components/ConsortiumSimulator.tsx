@@ -219,7 +219,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const [errWpp, setErrWpp] = useState(false);
   const [consultas, setConsultas] = useState(0);
   const [resultado, setResultado] = useState<GrupoItem | null>(null);
-  const [resultado, setResultado] = useState<GrupoItem | null>(null);
   const [bloqueado, setBloqueado] = useState(false);
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
   const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
