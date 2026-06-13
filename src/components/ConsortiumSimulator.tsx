@@ -109,7 +109,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   
   const { categorias: hookCategorias, grupos: hookGrupos, isLoading } = useSimulador();
   const salvarSimulacao = useSimuladorStore((state) => state.salvarSimulacao);
-  const historicoZustand = useSimuladorStore((state) => state.historico);
+  const historicoZustand = useSimuladorStore((state) => state.historico) || [];
 
   const dynamicCategorias = overrideConfig?.categorias || hookCategorias;
   const dynamicGrupos = overrideConfig?.grupos || hookGrupos;
@@ -542,14 +542,14 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             />
             <div className="flex justify-between text-[9px] font-black text-muted-foreground/50 mb-8 uppercase tracking-widest">
               <span className="bg-slate-100 px-2 py-0.5 rounded">
-                {simulationMode === "credit" 
+                {lista.length > 0 && (simulationMode === "credit" 
                   ? `MIN: R$ ${lista[0].credito.toLocaleString("pt-BR")}` 
-                  : `MIN: R$ ${((effectiveMode === "linear" ? (lista[0].r100 ?? lista[0].r50) : lista[0].r50) - (incluirSeguro ? 0 : (lista[0].credito * (lista[0].seguro ?? 0)) / 100)).toLocaleString("pt-BR", {maximumFractionDigits:0})}`}
+                  : `MIN: R$ ${((effectiveMode === "linear" ? (lista[0].r100 ?? lista[0].r50) : lista[0].r50) - (incluirSeguro ? 0 : (lista[0].credito * (lista[0].seguro ?? 0)) / 100)).toLocaleString("pt-BR", {maximumFractionDigits:0})}`)}
               </span>
               <span className="bg-slate-100 px-2 py-0.5 rounded">
-                {simulationMode === "credit" 
+                {lista.length > 0 && (simulationMode === "credit" 
                   ? `MÁX: R$ ${lista[lista.length - 1].credito.toLocaleString("pt-BR")}` 
-                  : `MÁX: R$ ${((effectiveMode === "linear" ? (lista[lista.length - 1].r100 ?? lista[lista.length - 1].r50) : lista[lista.length - 1].r50) - (incluirSeguro ? 0 : (lista[lista.length - 1].credito * (lista[lista.length - 1].seguro ?? 0)) / 100)).toLocaleString("pt-BR", {maximumFractionDigits:0})}`}
+                  : `MÁX: R$ ${((effectiveMode === "linear" ? (lista[lista.length - 1].r100 ?? lista[lista.length - 1].r50) : lista[lista.length - 1].r50) - (incluirSeguro ? 0 : (lista[lista.length - 1].credito * (lista[lista.length - 1].seguro ?? 0)) / 100)).toLocaleString("pt-BR", {maximumFractionDigits:0})}`)}
               </span>
             </div>
 
