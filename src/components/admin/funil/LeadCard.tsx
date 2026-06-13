@@ -122,6 +122,8 @@ export function LeadCard({
   onUpdateField,
   onEdit,
   onViewFicha,
+  onToggleAI,
+  onMoveStage,
 }: {
   lead: Lead;
   snapshot: any;

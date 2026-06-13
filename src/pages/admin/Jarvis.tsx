@@ -50,6 +50,7 @@ interface Message {
 
 interface Lead {
     id: string;
+    nome: string | null;
     status: string | null;
     valor_credito: number;
     created_at: string | null;
@@ -128,7 +129,7 @@ export default function Jarvis() {
     const isHandsFreeRef = useRef(false);
     const handsFreeRecognitionRef = useRef<any>(null);
     const analyzeRef = useRef<any>(null);
-    const speakingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 
     const speak = (text: string) => {
