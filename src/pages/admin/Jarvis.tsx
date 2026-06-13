@@ -405,7 +405,7 @@ export default function Jarvis() {
 
         // Simulações disponíveis (Grupos)
         const gruposInfo = Object.entries(GRUPOS).map(([tipo, lista]) => {
-            return `Segmento ${tipo.toUpperCase()}:\n` + lista.map(g => {
+            return `Segmento ${tipo.toUpperCase()}:\n` + (lista as any[]).map(g => {
                 return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m`;
             }).join("\n");
         }).join("\n\n");
