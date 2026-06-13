@@ -22,6 +22,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
 import { useProfile } from "@/hooks/useProfile";
+import { useSimulador } from "@/hooks/useSimulador";
+import { useSimuladorStore } from "@/stores/simuladorStore";
+import { ResultadosSimulacao } from "./ResultadosSimulacao";
+import { SimulacaoData } from "@/schemas/simulacao";
 
 const sliderThumbStyles = `
   input[type=range].custom-slider {
@@ -199,9 +203,13 @@ interface ConsortiumSimulatorProps {
 const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: ConsortiumSimulatorProps) => {
   const { profile } = useProfile();
   const { toast } = useToast();
+  
+  const { categorias: hookCategorias, grupos: hookGrupos, isLoading } = useSimulador();
+  const salvarSimulacao = useSimuladorStore((state) => state.salvarSimulacao);
+  const historicoZustand = useSimuladorStore((state) => state.historico);
 
-  const dynamicCategorias = overrideConfig?.categorias || CATEGORIAS;
-  const dynamicGrupos = overrideConfig?.grupos || GRUPOS;
+  const dynamicCategorias = overrideConfig?.categorias || hookCategorias;
+  const dynamicGrupos = overrideConfig?.grupos || hookGrupos;
 
   const [categoria, setCategoria] = useState("imovel");
   const [idx, setIdx] = useState(4);
@@ -211,7 +219,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const [errWpp, setErrWpp] = useState(false);
   const [consultas, setConsultas] = useState(0);
   const [resultado, setResultado] = useState<GrupoItem | null>(null);
-  const [historico, setHistorico] = useState<HistItem[]>([]);
+  const [resultado, setResultado] = useState<GrupoItem | null>(null);
   const [bloqueado, setBloqueado] = useState(false);
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
   const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
@@ -409,12 +417,18 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     setResultado(g);
 
     const selectedInstallment = effectiveMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
-    const item: HistItem = {
-      credito: g.credito, grupo: effectiveMode === "linear" ? (g.grupoLinear ?? g.grupo) : g.grupo, prazo: effectiveMode === "linear" ? (g.prazoLinear ?? g.prazo) : g.prazo, r50: selectedInstallment,
-      nome: simNome.trim(),
-      ts: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    // Salvar no estado global do Zustand
+    const dadosParaSalvar: SimulacaoData = {
+      valor_credito: g.credito,
+      tipo: categoria as any,
+      com_seguro: incluirSeguro,
+      meses: effectiveMode === "linear" ? (g.prazoLinear ?? g.prazo) : g.prazo,
+      grupo: effectiveMode === "linear" ? (g.grupoLinear ?? g.grupo) : g.grupo,
+      taxa_adm: g.tx ?? 20,
+      fundo_reserva: g.fr ?? 1,
+      parcela: selectedInstallment,
     };
-    setHistorico(prev => [...prev, item]);
+    salvarSimulacao(dadosParaSalvar);
 
     // Lead Score Logic
     let leadScoreValor = "baixo";
@@ -439,7 +453,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
   };
 
-  const wppLockMsg = historico.map((h, i) => `${i + 1}. ${fmtFull(h.credito)} — ${fmtFull(h.r50)} / ${h.prazo}m`).join("\n");
+  const wppLockMsg = historicoZustand.map((h, i) => `${i + 1}. ${fmtFull(h.valor_credito)} — ${fmtFull(h.parcela)} / ${h.meses}m`).join("\n");
   const lockWppUrl = `https://wa.me/5541997925357?text=${encodeURIComponent("Olá Fabricio! Fiz simulações:\n\n" + wppLockMsg + "\n\nQuero mais informações!")}`;
 
   // Lance Cálculos
@@ -1021,23 +1035,25 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               </div>
             )}
 
-            {historico.length > 0 && (
+            {historicoZustand.length > 0 && (
               <div className="mt-4">
-                <p className="text-[0.64rem] font-bold tracking-[0.1em] uppercase mb-2 text-muted-foreground">Suas simulações</p>
-                {historico.map((h, i) => (
+                <p className="text-[0.64rem] font-bold tracking-[0.1em] uppercase mb-2 text-muted-foreground">Suas simulações (Zustand)</p>
+                {historicoZustand.slice(0, 3).map((h, i) => (
                   <div key={i} className="flex items-center justify-between p-2.5 rounded-[10px] mb-1.5 flex-wrap gap-2 bg-card border border-border" style={{ borderLeft: "3px solid hsl(var(--secondary))" }}>
                     <div>
-                      <p className="font-bold text-sm text-foreground">{fmt(h.credito)}</p>
-                      <p className="text-[0.67rem] text-muted-foreground">Grupo {h.grupo} · {h.prazo} meses · {h.ts}</p>
+                      <p className="font-bold text-sm text-foreground">{fmt(h.valor_credito)}</p>
+                      <p className="text-[0.67rem] text-muted-foreground">Grupo {h.grupo} · {h.meses} meses · {new Date(h.data_simulacao).toLocaleTimeString("pt-BR")}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-sm" style={{ fontFamily: "monospace", color: "#16a34a" }}>{fmtFull(h.r50)}</p>
-                      <p className="text-[0.67rem] text-muted-foreground">Reduzida 50%</p>
+                      <p className="font-bold text-sm" style={{ fontFamily: "monospace", color: "#16a34a" }}>{fmtFull(h.parcela)}</p>
+                      <p className="text-[0.67rem] text-muted-foreground">Valor Mensal</p>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+            
+            <ResultadosSimulacao data={lista} />
 
             {bloqueado && (
               <div className="rounded-[14px] p-7 text-center mt-5 animate-fade-in bg-card border-2 border-secondary shadow-lg">
