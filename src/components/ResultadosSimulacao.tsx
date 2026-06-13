@@ -8,7 +8,7 @@ import {
   ColumnDef,
   SortingState,
 } from "@tanstack/react-table";
-import { GrupoItem } from "./ConsortiumSimulator";
+import { GrupoItem } from "@/constants/simulador";
 
 interface ResultadosSimulacaoProps {
   data: GrupoItem[];

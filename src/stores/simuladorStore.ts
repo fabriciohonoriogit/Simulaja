@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { SimulacaoData, SimulacaoSchema } from "@/schemas/simulacao";
-import { GRUPOS, CATEGORIAS, Category, GrupoItem } from "@/components/ConsortiumSimulator";
+import { GRUPOS, CATEGORIAS, Category, GrupoItem } from "@/constants/simulador";
 
 // Tipagem para simulação registrada no histórico
 export interface HistoricoItem extends SimulacaoData {
@@ -47,7 +47,7 @@ export const useSimuladorStore = create<SimuladorState>()(
       salvarSimulacao: (simulacao) => {
         const item: HistoricoItem = {
           ...simulacao,
-          id: crypto.randomUUID(),
+          id: Date.now().toString() + Math.random().toString(36).substring(2, 10),
           data_simulacao: new Date().toISOString(),
         };
         set((state) => ({

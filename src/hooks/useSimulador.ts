@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSimuladorStore } from "@/stores/simuladorStore";
-import { GRUPOS, CATEGORIAS } from "@/components/ConsortiumSimulator";
+import { GRUPOS, CATEGORIAS } from "@/constants/simulador";
 import { useEffect } from "react";
 
 export function useSimulador() {
