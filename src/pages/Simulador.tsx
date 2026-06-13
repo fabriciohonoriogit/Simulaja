@@ -17,7 +17,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 
-import { GRUPOS, CATEGORIAS, GrupoItem } from "@/components/ConsortiumSimulator";
+import { GRUPOS, CATEGORIAS, GrupoItem } from "@/constants/simulador";
 import { createLead } from "@/services/leadService";
 
 const sliderThumbStyles = `

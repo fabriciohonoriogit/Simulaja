@@ -34,7 +34,7 @@ import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import jarvisAvatar from "@/assets/jarvis-avatar.png";
-import { ESTATISTICAS_LANCES, GRUPOS } from "@/components/ConsortiumSimulator";
+import { ESTATISTICAS_LANCES, GRUPOS } from "@/constants/simulador";
 import { aiService } from "@/services/aiService";
 import { Missao, calcularMissoes } from "@/lib/missoesService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
@@ -405,7 +405,7 @@ export default function Jarvis() {
 
         // Simulações disponíveis (Grupos)
         const gruposInfo = Object.entries(GRUPOS).map(([tipo, lista]) => {
-            return `Segmento ${tipo.toUpperCase()}:\n` + lista.map(g => {
+            return `Segmento ${tipo.toUpperCase()}:\n` + (lista as any[]).map(g => {
                 return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m`;
             }).join("\n");
         }).join("\n\n");
