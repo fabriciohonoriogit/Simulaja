@@ -353,14 +353,14 @@ export default function Dashboard() {
         <div className="space-y-6 mb-8">
           <AICoachMessage />
           <DashboardHero />
-          <MoneyOnTableCard />
+          <MoneyOnTableCard leads={leads} />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
               <BossOfTheWeek />
             </div>
             <div className="lg:col-span-1">
-              <HallOfFame />
+              <HallOfFame ranking={ranking} profileId={profile?.id} />
             </div>
             <div className="lg:col-span-1">
               <StreakCard />

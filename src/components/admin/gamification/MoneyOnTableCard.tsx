@@ -3,21 +3,14 @@ import { AlertTriangle, Rocket } from 'lucide-react';
 import { analisarDinheiroNaMesa } from '../../../lib/gamificationUtils';
 import { useEffect, useState } from 'react';
 
-// Na implementação real, os leads viriam de um hook/store (ex: useQuery dos leads do Supabase)
-// Vamos simular por agora.
-const mockLeads = [
-  { status: 'proposta_enviada', valor_estimado: 120000 },
-  { status: 'proposta_enviada', valor_estimado: 50000 },
-  { status: 'em_negociacao', valor_estimado: 150000 }
-];
-
-export function MoneyOnTableCard() {
+// Na implementação real, agora usamos os leads passados pelo Dashboard
+export function MoneyOnTableCard({ leads = [] }: { leads?: any[] }) {
   const [analise, setAnalise] = useState({ quantidadeLeads: 0, potencialVendas: 0, potencialComissaoMensal: 0 });
 
   useEffect(() => {
-    // Aqui seria a chamada real para calcular baseada nos dados atualizados do consultor
-    setAnalise(analisarDinheiroNaMesa(mockLeads));
-  }, []);
+    // Agora avaliamos o dinheiro deixado na mesa baseados na prop leads do dashboard
+    setAnalise(analisarDinheiroNaMesa(leads));
+  }, [leads]);
 
   if (analise.quantidadeLeads === 0) return null;
 

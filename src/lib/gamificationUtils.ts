@@ -52,15 +52,31 @@ export function calcularProgressoProximaPatente(comissaoMensal: number, patenteA
  * Analisa leads e retorna estimativa de dinheiro deixado na mesa.
  * Aqui simulamos uma busca simples. Em produção, isso iteraria sobre os leads reais.
  */
-export function analisarDinheiroNaMesa(leadsSemContato: any[]) {
-  // Simulando para o MVP da Gamificação:
-  const leadsQuentes = leadsSemContato.filter(l => 
-    l.status === 'proposta_enviada' || 
-    l.status === 'em_negociacao' || 
-    l.temperature === 'hot'
-  );
+export function analisarDinheiroNaMesa(leadsSemContato: any[] = []) {
+  const leadsQuentes = leadsSemContato.filter(l => {
+    // Exclui fechados, perdidos e mortos
+    if (['fechado', 'venda_fechada', 'perdido', 'morto'].includes(l.status)) return false;
+
+    // Considera "dinheiro na mesa" leads quentes ou em fases quentes
+    const isHotStatus = ['proposta', 'simulacao_enviada', 'negociacao'].includes(l.status);
+    const isHotTemp = l.lead_temperatura === 'quente';
+    
+    // Consideramos "esquecidos" (na mesa) leads sem interacao nos ultimos 2 dias
+    let isEsquecido = false;
+    if (l.last_interaction_at) {
+      const diasSemContato = (Date.now() - new Date(l.last_interaction_at).getTime()) / (1000 * 60 * 60 * 24);
+      isEsquecido = diasSemContato > 2;
+    } else if (l.created_at) {
+      const diasCriado = (Date.now() - new Date(l.created_at).getTime()) / (1000 * 60 * 60 * 24);
+      isEsquecido = diasCriado > 2;
+    } else {
+      isEsquecido = true;
+    }
+
+    return (isHotStatus || isHotTemp) && isEsquecido;
+  });
   
-  const potencialVendas = leadsQuentes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0);
+  const potencialVendas = leadsQuentes.reduce((acc, l) => acc + Number(l.valor_credito || l.valor_estimado || 0), 0);
   // Assumindo taxa média de 4% se não tivermos no lead
   const potencialComissaoMensal = calcularComissaoMensal(potencialVendas, 4); 
 
