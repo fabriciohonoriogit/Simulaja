@@ -955,7 +955,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               </div>
             )}
             
-            <ResultadosSimulacao data={lista} />
 
             {bloqueado && (
               <div className="rounded-[14px] p-7 text-center mt-5 animate-fade-in bg-card border-2 border-secondary shadow-lg">
