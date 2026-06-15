@@ -102,16 +102,30 @@ export const calcularMissoes = async (
   followsPendentes = followsCnt || 0;
 
   // ── Missão 3: RPC - Revisão de Previsão de Cancelamento ───────────────────
+  let totalRpc = 0;
   const rpcQuery = supabase
     .from("inadimplentes")
-    .select("id", { count: "exact" })
+    .select("grupo, cota")
     .eq("organizacao_id", orgId)
     .neq("status", "regularizado")
     .eq("administradora", "MAGALU")
     .gte("parcelas_atrasadas", 3);
 
-  const { count: rpcCount } = await (rpcQuery as any);
-  const totalRpc = rpcCount || 0;
+  const { data: rpcData } = await rpcQuery;
+
+  if (isVendedor && rpcData && rpcData.length > 0) {
+    // Puxar a carteira do vendedor para cruzar grupo/cota
+    const { data: myCarteira } = await supabase
+      .from("carteira")
+      .select("grupo, cota, leads!inner(id, responsavel_id)")
+      .eq("organizacao_id", orgId)
+      .eq("leads.responsavel_id", userId);
+      
+    const myPairs = new Set((myCarteira || []).map(c => `${c.grupo}-${c.cota}`));
+    totalRpc = rpcData.filter(d => myPairs.has(`${d.grupo}-${d.cota}`)).length;
+  } else {
+    totalRpc = rpcData?.length || 0;
+  }
 
   // ── Missão 4: EP (Funil: 2ª e 3ª parcelas) ──────────────────────────
   // Base: Leads fechados ou avançados em M-1 e M-2

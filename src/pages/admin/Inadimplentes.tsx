@@ -114,12 +114,25 @@ export default function Inadimplentes() {
     if (!profile?.organizacao_id) return;
     setLoading(true);
     try {
-      const { data: rows, error } = await supabase
+      let { data: rows, error } = await supabase
         .from("inadimplentes")
         .select("*")
         .eq("organizacao_id", profile.organizacao_id)
         .order("created_at", { ascending: false });
       if (error) throw error;
+
+      if (profile.tipo_acesso === "vendedor" && rows && rows.length > 0) {
+        // Filtra para o vendedor ver apenas os seus próprios inadimplentes (via carteira)
+        const { data: myCarteira } = await supabase
+          .from("carteira")
+          .select("grupo, cota, leads!inner(responsavel_id)")
+          .eq("organizacao_id", profile.organizacao_id)
+          .eq("leads.responsavel_id", profile.id);
+          
+        const myPairs = new Set((myCarteira || []).map(c => `${c.grupo}-${c.cota}`));
+        rows = rows.filter(r => myPairs.has(`${r.grupo}-${r.cota}`));
+      }
+
       setData((rows || []) as Inadimplente[]);
     } catch (e) {
       console.error("Erro ao carregar inadimplentes:", e);
