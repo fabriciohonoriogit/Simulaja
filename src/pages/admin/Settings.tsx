@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileRow, ConviteRow, OrganizationRow } from "@/types";
-import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Upload, CalendarDays, Settings as SettingsIcon } from "lucide-react";
+import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Upload, CalendarDays, Settings as SettingsIcon, MessageSquare, Loader2 } from "lucide-react";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
+import { createWhatsAppInstance } from "@/services/evolutionOnboardingService";
 
 const ROLES = [
   { value: "admin", label: "Administrador" },
@@ -34,6 +35,7 @@ export default function Settings() {
   const [invitations, setInvitations] = useState<ConviteRow[]>([]);
   const [org, setOrg] = useState<OrganizationRow | null>(null);
   const [changingRole, setChangingRole] = useState<string | null>(null);
+  const [creatingInstance, setCreatingInstance] = useState(false);
 
   useEffect(() => { fetchData(); }, [profile]);
 
@@ -137,6 +139,28 @@ export default function Settings() {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     } finally {
       setChangingRole(null);
+    }
+  };
+
+  const handleCreateWhatsApp = async () => {
+    if (!profile?.organizacao_id || !org) return;
+    setCreatingInstance(true);
+    try {
+      const instanceName = `simulaja_org_${profile.organizacao_id.substring(0, 8)}`;
+      const result = await createWhatsAppInstance(profile.organizacao_id, instanceName);
+      toast({
+        title: "WhatsApp Criado",
+        description: "A instância foi criada com sucesso! Atualize a página e escaneie o QR Code no seu Inbox.",
+      });
+      fetchData();
+    } catch (err: any) {
+      toast({
+        title: "Erro ao criar WhatsApp",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingInstance(false);
     }
   };
 
@@ -413,6 +437,81 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Integrações (WhatsApp) */}
+          {isAdmin && (
+            <Card className="border-none shadow-lg rounded-2xl overflow-hidden mt-6">
+              <CardHeader className="bg-slate-900 text-white p-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-500/20 rounded-xl"><MessageSquare className="h-5 w-5 text-green-400" /></div>
+                  <div>
+                    <CardTitle className="text-base font-bold">Conexão WhatsApp (Evolution API)</CardTitle>
+                    <CardDescription className="text-slate-400 text-xs">Crie sua instância exclusiva automaticamente</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-slate-600">
+                    <p className="font-bold text-slate-900 mb-1">Status: {org?.evolution_instance_name ? "Conectado" : "Desconectado"}</p>
+                    <p>
+                      {org?.evolution_instance_name 
+                        ? `Instância ativa: ${org.evolution_instance_name}` 
+                        : "Clique no botão para provisionar uma nova máquina de WhatsApp dedicada para sua corretora."}
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={handleCreateWhatsApp}
+                    disabled={creatingInstance || !!org?.evolution_instance_name}
+                    className="font-bold shrink-0"
+                  >
+                    {creatingInstance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {org?.evolution_instance_name ? "Já Conectado" : "Provisionar WhatsApp"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Webhooks de Recebimento de Leads */}
+          {isAdmin && (
+            <Card className="border-none shadow-lg rounded-2xl overflow-hidden mt-6">
+              <CardHeader className="bg-slate-900 text-white p-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/20 rounded-xl"><Upload className="h-5 w-5 text-blue-400" /></div>
+                  <div>
+                    <CardTitle className="text-base font-bold">Webhooks de Captura (Integrações)</CardTitle>
+                    <CardDescription className="text-slate-400 text-xs">Receba leads do Facebook Ads, TikTok ou RD Station</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <p className="text-sm text-slate-600">
+                  Use a URL abaixo nas suas campanhas de tráfego pago (via Zapier, Make ou nativo) para que os leads caiam diretamente no Funil do CRM em tempo real.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    readOnly 
+                    value={`https://[seu-projeto].supabase.co/functions/v1/webhook-leads?org=${profile?.organizacao_id}`}
+                    className="font-mono text-xs bg-slate-50 border-slate-200"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://[seu-projeto].supabase.co/functions/v1/webhook-leads?org=${profile?.organizacao_id}`);
+                      toast({ title: "URL Copiada", description: "Cole esta URL na sua plataforma de anúncios." });
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="bg-amber-50 text-amber-800 p-3 rounded-lg text-xs border border-amber-200">
+                  <p className="font-bold mb-1">Campos suportados no POST JSON:</p>
+                  <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">nome</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">telefone</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">email</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">origem</code>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

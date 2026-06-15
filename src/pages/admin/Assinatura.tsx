@@ -1,7 +1,10 @@
 import { useSubscription } from "@/hooks/useSubscription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, MessageCircle, Sparkles, ShieldCheck } from "lucide-react";
+import { Check, MessageCircle, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const WHATSAPP_URL =
   "https://wa.me/5541997925357?text=Quero%20ativar%20minha%20assinatura%20do%20Contemplar%20CRM";
@@ -12,6 +15,7 @@ const PLANOS = [
     preco: "R$ 97",
     periodo: "/mês",
     destaque: false,
+    priceId: "price_starter", // Placeholder, o usuário deverá colocar o ID real do Stripe
     features: ["Até 2 usuários", "500 leads ativos", "Funil + Carteira", "Suporte por e-mail"],
   },
   {
@@ -19,6 +23,7 @@ const PLANOS = [
     preco: "R$ 197",
     periodo: "/mês",
     destaque: true,
+    priceId: "price_pro", // Placeholder, o usuário deverá colocar o ID real do Stripe
     features: [
       "Até 5 usuários",
       "Leads ilimitados",
@@ -32,12 +37,49 @@ const PLANOS = [
     preco: "Sob consulta",
     periodo: "",
     destaque: false,
+    priceId: null,
     features: ["Usuários ilimitados", "API + integrações dedicadas", "Onboarding white-glove", "SLA 99,9%"],
   },
 ];
 
 export default function Assinatura() {
   const { isExpired, isTrialing, daysLeft, orgNome } = useSubscription();
+  const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleSubscribe = async (priceId: string | null) => {
+    if (!priceId) {
+      window.open(WHATSAPP_URL, "_blank");
+      return;
+    }
+
+    try {
+      setLoadingPriceId(priceId);
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: {
+          priceId,
+          returnUrl: window.location.origin + "/admin/assinatura",
+        },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("URL de checkout não retornada");
+      }
+    } catch (error) {
+      console.error("Erro ao criar sessão de checkout:", error);
+      toast({
+        title: "Erro no checkout",
+        description: "Não foi possível iniciar o pagamento. Tente novamente ou fale no WhatsApp.",
+        variant: "destructive",
+      });
+      window.open(WHATSAPP_URL, "_blank"); // Fallback
+    } finally {
+      setLoadingPriceId(null);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto py-6 space-y-8">
@@ -97,15 +139,18 @@ export default function Assinatura() {
                 ))}
               </ul>
               <Button
-                asChild
+                onClick={() => handleSubscribe(p.priceId)}
+                disabled={loadingPriceId !== null}
                 className={`w-full h-12 rounded-xl font-bold ${
                   p.destaque ? "" : "bg-slate-900 hover:bg-slate-800"
                 }`}
               >
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener">
+                {loadingPriceId === p.priceId ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : !p.priceId ? (
                   <MessageCircle className="mr-2 h-4 w-4" />
-                  Ativar via WhatsApp
-                </a>
+                ) : null}
+                {!p.priceId ? "Falar com Consultor" : "Assinar Agora"}
               </Button>
             </CardContent>
           </Card>
