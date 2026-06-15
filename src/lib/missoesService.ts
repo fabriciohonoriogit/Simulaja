@@ -107,6 +107,7 @@ export const calcularMissoes = async (
     .select("id", { count: "exact" })
     .eq("organizacao_id", orgId)
     .neq("status", "regularizado")
+    .eq("administradora", "MAGALU")
     .gte("parcelas_atrasadas", 4);
 
   const { count: rpcCount } = await (rpcQuery as any);
@@ -246,10 +247,10 @@ export const calcularMissoes = async (
   const missoes: Missao[] = [
     {
       id: "contatos_hoje",
-      label: "3 contatos hoje",
-      atual: Math.min(contatosHoje, 3),
-      meta: 3,
-      concluida: contatosHoje >= 3,
+      label: "20 contatos hoje",
+      atual: Math.min(contatosHoje, 20),
+      meta: 20,
+      concluida: contatosHoje >= 20,
       invertida: false,
     },
     {
@@ -262,7 +263,7 @@ export const calcularMissoes = async (
     },
     {
       id: "rpc_revisao",
-      label: "0 RPC (+4m)",
+      label: "RPC - REVISÃO DE PREVISÃO CANCELAMENTO",
       atual: totalRpc,
       meta: 0,
       concluida: totalRpc === 0,
@@ -363,6 +364,7 @@ export const getLeadsForMissao = async (
       .select("id, nome, celular, status, grupo, cota, parcelas_atrasadas")
       .eq("organizacao_id", orgId)
       .neq("status", "regularizado")
+      .eq("administradora", "MAGALU")
       .gte("parcelas_atrasadas", 4);
       
     return (data || []).map((d: any) => ({

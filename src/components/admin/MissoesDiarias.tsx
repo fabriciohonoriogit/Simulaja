@@ -18,7 +18,7 @@ interface MissoesDiariasProps {
 const ICON_MAP: Record<string, any> = {
   contatos_hoje: Zap,
   followup_agendado: Target,
-  rpc_revisao: Target,
+  rpc_revisao: AlertTriangle,
   pagamentos_ep: CheckCircle2,
   meta_mes: Target,
   inadimplencia: AlertTriangle,
@@ -28,7 +28,7 @@ const ICON_MAP: Record<string, any> = {
 const COLOR_MAP: Record<string, string> = {
   contatos_hoje: "text-amber-500 bg-amber-50",
   followup_agendado: "text-blue-500 bg-blue-50",
-  rpc_revisao: "text-rose-500 bg-rose-50",
+  rpc_revisao: "text-red-500 bg-red-50",
   pagamentos_ep: "text-emerald-500 bg-emerald-50",
   meta_mes: "text-red-500 bg-red-50",
   inadimplencia: "text-amber-500 bg-amber-50",
@@ -38,7 +38,7 @@ const COLOR_MAP: Record<string, string> = {
 const LABEL_MAP: Record<string, string> = {
   contatos_hoje: "Contatos de hoje",
   followup_agendado: "Follow-ups agendados",
-  rpc_revisao: "RPC (+4m)",
+  rpc_revisao: "RPC - REVISÃO DE PREVISÃO CANCELAMENTO",
   pagamentos_ep: "Pagamentos EP (Mês Ant.)",
   meta_mes: "Meta",
   inadimplencia: "Inadimplência",
