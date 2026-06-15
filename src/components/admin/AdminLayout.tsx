@@ -122,6 +122,24 @@ export default function AdminLayout() {
         localStorage.setItem("admin_sidebar_collapsed", String(sidebarCollapsed));
     }, [sidebarCollapsed]);
 
+    const forceUpdate = () => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then((keyList) => {
+                return Promise.all(keyList.map((key) => caches.delete(key)));
+            });
+        }
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload();
+    };
+
     const renderSidebar = (collapsed: boolean) => (
         <div className={`flex flex-col h-full transition-all duration-300 border-r ${
             isDayTime 
@@ -210,6 +228,19 @@ export default function AdminLayout() {
                 >
                     <LogOut className="h-4 w-4" />
                     {!collapsed && <span className="text-xs font-bold">Sair</span>}
+                </Button>
+                
+                <Button
+                    variant="ghost"
+                    onClick={forceUpdate}
+                    className={`w-full justify-start gap-3 transition-colors mt-2 ${
+                        isDayTime 
+                            ? "text-slate-500 hover:text-slate-700 hover:bg-slate-100" 
+                            : "text-slate-400 hover:text-white hover:bg-white/10"
+                    }`}
+                >
+                    <RefreshCw className="h-4 w-4" />
+                    {!collapsed && <span className="text-[10px] font-bold">Forçar Atualização</span>}
                 </Button>
             </div>
         </div>
