@@ -18,7 +18,7 @@ interface MissoesDiariasProps {
 const ICON_MAP: Record<string, any> = {
   contatos_hoje: Zap,
   followup_agendado: Target,
-  leads_sem_toque: Clock,
+  rpc_revisao: Target,
   pagamentos_ep: CheckCircle2,
   meta_mes: Target,
   inadimplencia: AlertTriangle,
@@ -28,7 +28,7 @@ const ICON_MAP: Record<string, any> = {
 const COLOR_MAP: Record<string, string> = {
   contatos_hoje: "text-amber-500 bg-amber-50",
   followup_agendado: "text-blue-500 bg-blue-50",
-  leads_sem_toque: "text-rose-500 bg-rose-50",
+  rpc_revisao: "text-rose-500 bg-rose-50",
   pagamentos_ep: "text-emerald-500 bg-emerald-50",
   meta_mes: "text-red-500 bg-red-50",
   inadimplencia: "text-amber-500 bg-amber-50",
@@ -38,7 +38,7 @@ const COLOR_MAP: Record<string, string> = {
 const LABEL_MAP: Record<string, string> = {
   contatos_hoje: "Contatos de hoje",
   followup_agendado: "Follow-ups agendados",
-  leads_sem_toque: "Leads sem toque (+5d)",
+  rpc_revisao: "RPC (+4m)",
   pagamentos_ep: "Pagamentos EP (Mês Ant.)",
   meta_mes: "Meta",
   inadimplencia: "Inadimplência",
@@ -320,8 +320,8 @@ export default function MissoesDiarias({
           ) : (expandedLeads || []).length === 0 ? (
             <div className="py-4 text-center bg-white rounded-xl border border-dashed border-slate-200">
                <p className="text-[10px] text-slate-400 italic font-medium">
-                  {expandedMission === "leads_sem_toque"
-                    ? "✅ Nenhum lead esquecido. Missão concluída!"
+                  {expandedMission === "rpc_revisao"
+                    ? "✅ Nenhum cliente com +4 atrasos!"
                     : "Nenhum item encontrado nesta categoria."}
                </p>
             </div>

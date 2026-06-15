@@ -101,23 +101,16 @@ export const calcularMissoes = async (
   const { count: followsCnt } = await agendaQuery;
   followsPendentes = followsCnt || 0;
 
-  // ── Missão 3: Leads sem contato há mais de 5 dias ───────────────────
-  const cincoAntras = new Date();
-  cincoAntras.setDate(cincoAntras.getDate() - 5);
-
-  const semContatoQuery = supabase
-    .from("leads")
-    .select("*", { count: "exact", head: true })
+  // ── Missão 3: RPC - Revisão de Previsão de Cancelamento ───────────────────
+  const rpcQuery = supabase
+    .from("inadimplentes")
+    .select("id", { count: "exact" })
     .eq("organizacao_id", orgId)
-    .lt("last_interaction_at", cincoAntras.toISOString())
-    .not("status", "in", '("fechado","perdido","morto")');
+    .neq("status", "regularizado")
+    .gte("parcelas_atrasadas", 4);
 
-  if (isVendedor) {
-    semContatoQuery.eq("responsavel_id", userId);
-  }
-
-  const { count: semContato } = await semContatoQuery;
-  const totalSemContato = semContato || 0;
+  const { count: rpcCount } = await (rpcQuery as any);
+  const totalRpc = rpcCount || 0;
 
   // ── Missão 4: EP (Funil: 2ª e 3ª parcelas) ──────────────────────────
   // Base: Leads fechados ou avançados em M-1 e M-2
@@ -268,11 +261,11 @@ export const calcularMissoes = async (
       invertida: true,
     },
     {
-      id: "leads_sem_toque",
-      label: "0 leads +5d sem toque",
-      atual: totalSemContato,
+      id: "rpc_revisao",
+      label: "0 RPC (+4m)",
+      atual: totalRpc,
       meta: 0,
-      concluida: totalSemContato === 0,
+      concluida: totalRpc === 0,
       invertida: true,
     },
     {
@@ -364,16 +357,21 @@ export const getLeadsForMissao = async (
     })) as MissaoLead[];
   }
 
-  if (missaoId === "leads_sem_toque") {
-    let q = (supabase as any)
-      .from("leads")
-      .select("id, nome, celular, status")
+  if (missaoId === "rpc_revisao") {
+    const { data } = await (supabase as any)
+      .from("inadimplentes")
+      .select("id, nome, celular, status, grupo, cota, parcelas_atrasadas")
       .eq("organizacao_id", orgId)
-      .lt("last_interaction_at", cincoAntras.toISOString())
-      .not("status", "in", '("fechado","perdido","morto")');
-    if (isVendedor) q = q.eq("responsavel_id", userId);
-    const { data } = await q;
-    return (data as MissaoLead[]) || [];
+      .neq("status", "regularizado")
+      .gte("parcelas_atrasadas", 4);
+      
+    return (data || []).map((d: any) => ({
+      id: d.id,
+      nome: d.nome,
+      celular: d.celular,
+      status: `G:${d.grupo} C:${d.cota} - ${d.parcelas_atrasadas}x em atraso`,
+      lead_id: d.id
+    })) as MissaoLead[];
   }
 
   if (missaoId === "pagamentos_ep") {
