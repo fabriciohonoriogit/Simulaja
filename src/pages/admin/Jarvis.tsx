@@ -225,6 +225,13 @@ export default function Jarvis() {
     };
 
     const toggleRecording = () => {
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+            const unlockMsg = new SpeechSynthesisUtterance("");
+            unlockMsg.volume = 0;
+            window.speechSynthesis.speak(unlockMsg);
+            window.speechSynthesis.resume();
+        }
+        
         if (isListening) stopRecording();
         else startRecording();
     };
@@ -352,6 +359,14 @@ export default function Jarvis() {
     const handleAnalyze = async (query: string = question) => {
         if (!query.trim()) return;
         
+        // Unlock speech synthesis for iOS Safari (must be synchronous with user gesture)
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+            const unlockMsg = new SpeechSynthesisUtterance("");
+            unlockMsg.volume = 0;
+            window.speechSynthesis.speak(unlockMsg);
+            window.speechSynthesis.resume();
+        }
+
         setIsAnalyzing(true);
         setOrbState("thinking");
         const userMsg: Message = { id: Date.now().toString(), role: "user", content: query, timestamp: new Date() };

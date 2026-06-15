@@ -17,6 +17,14 @@ import StreakBadge from "@/components/admin/StreakBadge";
 import MissoesDiarias from "@/components/admin/MissoesDiarias";
 import { Button } from "@/components/ui/button";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { DashboardHero } from "@/components/admin/gamification/DashboardHero";
+import { AICoachMessage } from "@/components/admin/gamification/AICoachMessage";
+import { MoneyOnTableCard } from "@/components/admin/gamification/MoneyOnTableCard";
+import { BossOfTheWeek } from "@/components/admin/gamification/BossOfTheWeek";
+import { HallOfFame } from "@/components/admin/gamification/HallOfFame";
+import { StreakCard } from "@/components/admin/gamification/StreakCard";
+import { useGamificationStore } from "@/stores/gamificationStore";
+import { calcularComissaoMensal } from "@/lib/gamificationUtils";
 
 interface Lead {
   id: string;
@@ -67,6 +75,7 @@ export default function Dashboard() {
   const prevCountRef = useRef(0);
   const { toast } = useToast();
   const [showCommission, setShowCommission] = useState(false);
+  const { setComissaoAtual, setProducaoMes } = useGamificationStore();
 
   const handleDeleteLead = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -274,7 +283,17 @@ export default function Dashboard() {
     .reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
   
   const progressoMes = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
-  
+
+  // Atualizar Gamificação
+  useEffect(() => {
+    if (!loading) {
+      setProducaoMes(realizadoMes);
+      // Assumindo taxa média de 4% se não houver taxa específica por venda
+      const comissaoRecorrente = calcularComissaoMensal(realizadoMes, 4);
+      setComissaoAtual(comissaoRecorrente);
+    }
+  }, [loading, realizadoMes, setProducaoMes, setComissaoAtual]);
+
   // Funil de Vendas - Dados Real-time
   const funnelStages = [
     { label: "Novos", icon: UserPlus, color: "text-blue-500", bg: "bg-blue-500", statuses: ["novo", "novo_lead"] },
@@ -328,9 +347,30 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative group/main-scroll overflow-hidden">
-      <div id="dashboard-main-container" className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Clientes na Carteira */}
+      <div id="dashboard-main-container" className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar pb-10">
+        
+        {/* GAMIFICAÇÃO - HERO SECTION */}
+        <div className="space-y-6 mb-8">
+          <AICoachMessage />
+          <DashboardHero />
+          <MoneyOnTableCard />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <BossOfTheWeek />
+            </div>
+            <div className="lg:col-span-1">
+              <HallOfFame />
+            </div>
+            <div className="lg:col-span-1">
+              <StreakCard />
+            </div>
+          </div>
+        </div>
+
+        {/* MÉTRICAS CLÁSSICAS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Clientes na Carteira */}
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02]">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-white/20">

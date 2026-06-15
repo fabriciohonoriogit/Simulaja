@@ -33,6 +33,7 @@ import { useLocation } from "react-router-dom";
 import WhatsAppInbox from "./pages/admin/WhatsAppInbox";
 import { Refine } from "@refinedev/core";
 import { refineDataProvider, refineResources } from "./lib/refineConfig";
+import { LevelUpModal } from "./components/admin/gamification/LevelUpModal";
 
 const AppContent = () => {
   const location = useLocation();
@@ -42,6 +43,7 @@ const AppContent = () => {
     <>
       <Toaster />
       <Sonner />
+      <LevelUpModal />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/home" element={<LandingV2 />} />
