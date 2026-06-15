@@ -75,7 +75,7 @@ CREATE POLICY "carteira_select_org" ON public.carteira
         SELECT 1 FROM public.perfis 
         WHERE id = auth.uid() AND tipo_acesso = 'admin'
       )
-      OR consultor_id = auth.uid()
+      OR lead_id IN (SELECT id FROM public.leads WHERE responsavel_id = auth.uid())
     )
   );
 
@@ -88,7 +88,7 @@ CREATE POLICY "carteira_update_org" ON public.carteira
         SELECT 1 FROM public.perfis 
         WHERE id = auth.uid() AND tipo_acesso = 'admin'
       )
-      OR consultor_id = auth.uid()
+      OR lead_id IN (SELECT id FROM public.leads WHERE responsavel_id = auth.uid())
     )
   )
   WITH CHECK (

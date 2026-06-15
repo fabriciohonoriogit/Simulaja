@@ -247,7 +247,7 @@ export default function AdminLayout() {
     );
 
     return (
-        <div className="flex h-screen bg-slate-50 overflow-hidden">
+        <div className="flex h-[100dvh] overflow-hidden bg-slate-50/50 [overscroll-behavior:none]">
             <aside className="hidden lg:block h-full w-auto shrink-0 z-40">
                 {renderSidebar(sidebarCollapsed)}
             </aside>

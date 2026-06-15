@@ -80,34 +80,8 @@ export default function Register() {
     }
   };
 
-  // Invite-only gate: no token → tell user to request one
-  if (!invitationToken) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <Card className="w-full max-w-md border-none shadow-2xl rounded-[28px] p-8 text-center space-y-5">
-          <div className="bg-primary/10 h-20 w-20 rounded-full flex items-center justify-center mx-auto">
-            <Lock className="h-10 w-10 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black text-slate-900">Acesso por convite</h2>
-            <p className="text-slate-500 mt-2">
-              O Contemplar CRM está em fase de acesso restrito. Solicite seu convite e ganhe{" "}
-              <strong className="text-primary">14 dias grátis</strong>.
-            </p>
-          </div>
-          <Button asChild className="w-full h-12 rounded-xl font-bold">
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener">
-              <MessageCircle className="mr-2 h-5 w-5" />
-              Solicitar convite no WhatsApp
-            </a>
-          </Button>
-          <button onClick={() => navigate("/admin/login")} className="text-sm text-slate-500 hover:text-slate-900">
-            Já tenho conta — Entrar
-          </button>
-        </Card>
-      </div>
-    );
-  }
+  // If no invitation token is provided, it's an open registration for a new Trial tenant.
+  // We no longer block access for users without a token.
 
   if (checking) {
     return (
@@ -152,7 +126,7 @@ export default function Register() {
     );
   }
 
-  const isNovoTenant = invitationData?.tipo !== "membro_org";
+  const isNovoTenant = !invitationToken || invitationData?.tipo !== "membro_org";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
@@ -160,7 +134,7 @@ export default function Register() {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
             <Sparkles className="h-3.5 w-3.5" />
-            {isNovoTenant ? "14 dias grátis" : `Entrar na equipe ${invitationData?.organizacoes?.nome || ""}`}
+            {isNovoTenant ? "15 dias grátis" : `Entrar na equipe ${invitationData?.organizacoes?.nome || ""}`}
           </div>
           <h2 className="text-2xl font-black text-slate-900">
             {isNovoTenant ? "Ative seu acesso" : "Aceitar convite"}
@@ -198,7 +172,7 @@ export default function Register() {
             </div>
           </div>
           <Button className="w-full h-12 rounded-xl font-bold" disabled={loading}>
-            {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isNovoTenant ? "Começar trial de 14 dias" : "Entrar na equipe")}
+            {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isNovoTenant ? "Começar trial de 15 dias" : "Entrar na equipe")}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </form>

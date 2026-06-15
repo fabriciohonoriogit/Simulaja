@@ -685,7 +685,7 @@ export default function Metas() {
             </div>
             
             {/* Ritmo Diário (Pace) - Simplified & Elegant Style */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
                 <Card className={`relative overflow-hidden border-none text-white shadow-lg transition-all hover:scale-[1.01] ${
                     ritmoStatus === 'verde' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 
                     ritmoStatus === 'amarelo' ? 'bg-gradient-to-br from-amber-400 to-amber-600 shadow-amber-500/20' : 
