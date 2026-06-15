@@ -373,13 +373,23 @@ export const getLeadsForMissao = async (
   }
 
   if (missaoId === "rpc_revisao") {
-    const { data } = await (supabase as any)
+    let { data } = await (supabase as any)
       .from("inadimplentes")
       .select("id, nome, celular, status, grupo, cota, parcelas_atrasadas")
       .eq("organizacao_id", orgId)
-      .neq("status", "regularizado")
       .eq("administradora", "MAGALU")
-      .gte("parcelas_atrasadas", 3);
+      .eq("parcelas_atrasadas", 3);
+      
+    if (tipoAcesso === "vendedor" && data && data.length > 0) {
+      const { data: myCarteira } = await supabase
+        .from("carteira")
+        .select("grupo, cota, leads!inner(responsavel_id)")
+        .eq("organizacao_id", orgId)
+        .eq("leads.responsavel_id", userId);
+        
+      const myPairs = new Set((myCarteira || []).map(c => `${c.grupo}-${c.cota}`));
+      data = data.filter((d: any) => myPairs.has(`${d.grupo}-${d.cota}`));
+    }
       
     return (data || []).map((d: any) => ({
       id: d.id,

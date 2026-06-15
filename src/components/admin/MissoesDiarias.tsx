@@ -328,24 +328,30 @@ export default function MissoesDiarias({
           ) : (
             <div className="flex flex-col gap-1.5 max-h-56 overflow-y-auto pr-1">
               {(expandedLeads || []).map((l) => {
-                const isPatricia = expandedMission === "rpc_revisao" && (formatToUpper(l.nome).includes("PATRICIA") || formatToUpper(l.nome).includes("PATRÍCIA"));
+                const isRpc = expandedMission === "rpc_revisao";
+                const isPaid = l.status === "regularizado";
+                const isPendingRpc = isRpc && !isPaid;
+                
                 return (
                 <div
                   key={l.id}
                   className={`flex items-center justify-between gap-3 px-3 py-2 rounded-xl border shadow-sm transition-all ${
-                    isPatricia 
+                    isPaid && isRpc
+                      ? "bg-emerald-50 border-emerald-200 shadow-emerald-500/10 hover:border-emerald-300"
+                      : isPendingRpc 
                       ? "bg-red-50 border-red-200 shadow-red-500/10 hover:border-red-300" 
                       : "bg-white border-slate-100 hover:border-primary/20"
                   }`}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className={`text-[11px] font-black truncate leading-tight ${isPatricia ? "text-red-700" : "text-slate-800"}`}>
+                    <p className={`text-[11px] font-black truncate leading-tight ${isPaid && isRpc ? "text-emerald-700" : isPendingRpc ? "text-red-700" : "text-slate-800"}`}>
                        {formatToUpper(l.nome)}
-                       {isPatricia && " 🚨"}
+                       {isPaid && isRpc ? " ✅" : isPendingRpc ? " 🚨" : ""}
                     </p>
                     {l.status && (
                       <p className={`text-[9px] font-bold uppercase tracking-tighter mt-0.5 ${
-                        isPatricia ? 'text-red-500' :
+                        isPaid && isRpc ? 'text-emerald-500' :
+                        isPendingRpc ? 'text-red-500' :
                         l.status.includes('⏳') || l.status.includes('Pendente') ? 'text-amber-500' : 
                         l.status.includes('✅') ? 'text-emerald-500' : 'text-slate-400'
                       }`}>
