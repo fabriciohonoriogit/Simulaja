@@ -108,7 +108,7 @@ export const calcularMissoes = async (
     .eq("organizacao_id", orgId)
     .neq("status", "regularizado")
     .eq("administradora", "MAGALU")
-    .gte("parcelas_atrasadas", 4);
+    .gte("parcelas_atrasadas", 3);
 
   const { count: rpcCount } = await (rpcQuery as any);
   const totalRpc = rpcCount || 0;
@@ -365,7 +365,7 @@ export const getLeadsForMissao = async (
       .eq("organizacao_id", orgId)
       .neq("status", "regularizado")
       .eq("administradora", "MAGALU")
-      .gte("parcelas_atrasadas", 4);
+      .gte("parcelas_atrasadas", 3);
       
     return (data || []).map((d: any) => ({
       id: d.id,
