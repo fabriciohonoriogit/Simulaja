@@ -24,7 +24,7 @@ import { BossOfTheWeek } from "@/components/admin/gamification/BossOfTheWeek";
 import { HallOfFame } from "@/components/admin/gamification/HallOfFame";
 import { StreakCard } from "@/components/admin/gamification/StreakCard";
 import { useGamificationStore } from "@/stores/gamificationStore";
-import { calcularComissaoMensal } from "@/lib/gamificationUtils";
+import { calcularComissaoRecorrenteLead } from "@/lib/gamificationUtils";
 
 interface Lead {
   id: string;
@@ -270,29 +270,28 @@ export default function Dashboard() {
 
   const metaMensal = metaAnual / 12;
   const currentMonthStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).substring(0, 7);
-  const realizadoMes = leads
-    .filter(l => {
-      const s = (l.status || "").toLowerCase().replace("_", " ");
-      const isClosed = s === "fechado" || s === "venda fechada";
-      const isShadow = (l as any).origem === "carteira_shadow";
-      const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-      const dateToCheck = l.status_updated_at || l.created_at || "";
-      const isInMonth = dateToCheck.startsWith(currentMonthStr);
-      return isClosed && isInMonth && !isShadow;
-    })
-    .reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
-  
+  const leadsFechadosMes = leads.filter(l => {
+    const s = (l.status || "").toLowerCase().replace("_", " ");
+    const isClosed = s === "fechado" || s === "venda fechada";
+    const isShadow = (l as any).origem === "carteira_shadow";
+    const isRetroativo = l.dados_cadastro?.is_retroativo === true;
+    const dateToCheck = l.status_updated_at || l.created_at || "";
+    const isInMonth = dateToCheck.startsWith(currentMonthStr);
+    return isClosed && isInMonth && !isShadow;
+  });
+
+  const realizadoMes = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
+  const comissaoTotalMes = leadsFechadosMes.reduce((acc, l) => acc + calcularComissaoRecorrenteLead(l), 0);
+
   const progressoMes = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
 
   // Atualizar Gamificação
   useEffect(() => {
     if (!loading) {
       setProducaoMes(realizadoMes);
-      // Assumindo taxa média de 4% se não houver taxa específica por venda
-      const comissaoRecorrente = calcularComissaoMensal(realizadoMes, 4);
-      setComissaoAtual(comissaoRecorrente);
+      setComissaoAtual(comissaoTotalMes);
     }
-  }, [loading, realizadoMes, setProducaoMes, setComissaoAtual]);
+  }, [loading, realizadoMes, comissaoTotalMes, setProducaoMes, setComissaoAtual]);
 
   // Funil de Vendas - Dados Real-time
   const funnelStages = [
@@ -321,23 +320,26 @@ export default function Dashboard() {
       const isInMonth = dateToCheck.startsWith(currentMonthStr);
       return isClosed && isInMonth && l.responsavel_id && !isShadow;
     })
-    .reduce((acc: Record<string, number>, lead) => {
+    .reduce((acc: Record<string, { vendas: number, comissao: number }>, lead) => {
       const rid = lead.responsavel_id!;
-      acc[rid] = (acc[rid] || 0) + Number(lead.valor_credito || 0);
+      if (!acc[rid]) acc[rid] = { vendas: 0, comissao: 0 };
+      acc[rid].vendas += Number(lead.valor_credito || 0);
+      acc[rid].comissao += calcularComissaoRecorrenteLead(lead);
       return acc;
     }, {});
 
   const ranking = Object.entries(rankingRaw)
-    .map(([rid, total]) => {
+    .map(([rid, data]) => {
       const perfil = perfis.find(p => p.id === rid);
       return {
         id: rid,
         nome: perfil?.nome_completo || "Consultor",
         avatar: perfil?.avatar_url,
-        total
+        total: data.vendas,
+        comissao: data.comissao
       };
     })
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) => b.comissao - a.comissao)
     .slice(0, 3);
 
 

@@ -6,6 +6,7 @@ interface RankingItem {
   nome: string;
   avatar?: string | null;
   total: number;
+  comissao?: number;
 }
 
 export function HallOfFame({ ranking = [], profileId }: { ranking?: RankingItem[], profileId?: string }) {
@@ -32,8 +33,8 @@ export function HallOfFame({ ranking = [], profileId }: { ranking?: RankingItem[
           rankingValido.map((user, index) => {
             const rank = index + 1;
             const isUser = user.id === profileId;
-            // Estima a comissão de 4% se não tivermos o valor exato no ranking
-            const comissao = user.total * 0.04; 
+            // Estima a comissão de 4% se não tivermos o valor exato no ranking (fallback)
+            const comissao = user.comissao !== undefined ? user.comissao : user.total * 0.04; 
 
             return (
               <div 

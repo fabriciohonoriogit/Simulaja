@@ -11,6 +11,32 @@ export function calcularComissaoMensal(valorVendido: number, taxaComissaoPercent
 }
 
 /**
+ * Calcula a comissão recorrente mensal de um único lead,
+ * aplicando regras específicas de administradoras (ex: Ademicon).
+ */
+export function calcularComissaoRecorrenteLead(lead: any): number {
+  const valorVendido = Number(lead.valor_credito || lead.valor_estimado || 0);
+  if (!valorVendido) return 0;
+
+  const administradora = (lead.administradora || lead.dados_cadastro?.administradora || "").toUpperCase();
+  const tipo = (lead.tipo_consorcio || lead.dados_cadastro?.tipo_consorcio || "").toLowerCase();
+
+  // Regra Específica: ADEMICON
+  if (administradora === "ADEMICON") {
+    const comissaoTotal = valorVendido * 0.025; // 2.5%
+    // 13x para Veículos (inclui moto, pesados, agricolas)
+    if (["veiculo", "moto", "pesados", "agricolas"].includes(tipo)) {
+      return comissaoTotal / 13;
+    }
+    // 15x para Imóveis e Investimentos
+    return comissaoTotal / 15;
+  }
+
+  // Regra Padrão: 4% em 10x
+  return calcularComissaoMensal(valorVendido, 4);
+}
+
+/**
  * Retorna a patente com base no valor da comissão mensal
  */
 export function obterPatentePorComissao(comissaoMensal: number): Patente {
@@ -77,8 +103,9 @@ export function analisarDinheiroNaMesa(leadsSemContato: any[] = []) {
   });
   
   const potencialVendas = leadsQuentes.reduce((acc, l) => acc + Number(l.valor_credito || l.valor_estimado || 0), 0);
-  // Assumindo taxa média de 4% se não tivermos no lead
-  const potencialComissaoMensal = calcularComissaoMensal(potencialVendas, 4); 
+  
+  // Agora calcula a comissão potencial iterando por cada lead e suas regras
+  const potencialComissaoMensal = leadsQuentes.reduce((acc, l) => acc + calcularComissaoRecorrenteLead(l), 0);
 
   return {
     quantidadeLeads: leadsQuentes.length,
