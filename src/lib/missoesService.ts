@@ -109,7 +109,7 @@ export const calcularMissoes = async (
     .eq("organizacao_id", orgId)
     .neq("status", "regularizado")
     .eq("administradora", "MAGALU")
-    .gte("parcelas_atrasadas", 3);
+    .eq("parcelas_atrasadas", 3);
 
   const { data: rpcData } = await rpcQuery;
 
