@@ -7,7 +7,7 @@ import { Progress } from '../../ui/progress';
 
 const PATENTE_EMOJIS: Record<string, string> = {
   'BABY': '👶',
-  'JÚNIOR': '👦',
+  'JÚNIOR': '👦🏻',
   'PRO': '💼',
   'ESPECIALISTA': '🎓',
   'ELITE': '💎',
