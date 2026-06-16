@@ -242,7 +242,7 @@ export function LeadCard({
       )}
 
       {/* Conteúdo com padding interno maior, agora compensando o grip */}
-      <div className={compact ? "pl-8 pr-6 pt-2 pb-1.5 space-y-1" : "pl-9 pr-7 pt-2.5 pb-2.5 space-y-2"}>
+      <div className={compact ? "pl-8 pr-2 pt-2 pb-1.5 space-y-1" : "pl-9 pr-3 pt-2.5 pb-2.5 space-y-2"}>
         
         {/* Header: Nome + Temperatura */}
         <div className="flex flex-col min-w-0">
