@@ -23,6 +23,7 @@ import { MoneyOnTableCard } from "@/components/admin/gamification/MoneyOnTableCa
 import { BossOfTheWeek } from "@/components/admin/gamification/BossOfTheWeek";
 import { HallOfFame } from "@/components/admin/gamification/HallOfFame";
 import { StreakCard } from "@/components/admin/gamification/StreakCard";
+import { JarvisReport } from "@/components/admin/gamification/JarvisReport";
 import { useGamificationStore } from "@/stores/gamificationStore";
 import { calcularComissaoRecorrenteLead } from "@/lib/gamificationUtils";
 
@@ -856,6 +857,15 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Relatório Diário JARVIS */}
+        <JarvisReport 
+          leads={leads} 
+          carteira={carteira} 
+          inadimplentes={inadimplentes} 
+          realizadoMes={realizadoMes} 
+          metaMensal={metaMensal} 
+        />
 
         {/* Calendário de Vencimentos */}
         <DashboardCalendar leads={leads} />
