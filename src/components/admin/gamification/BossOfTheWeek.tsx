@@ -1,7 +1,7 @@
 import { useGamificationStore } from '../../../stores/gamificationStore';
 import { Card } from '../../ui/card';
 import { Progress } from '../../ui/progress';
-import { Skull, Gift } from 'lucide-react';
+import { Gift } from 'lucide-react';
 
 export function BossOfTheWeek() {
   const { bossDaSemanaAtual } = useGamificationStore();
@@ -15,11 +15,10 @@ export function BossOfTheWeek() {
       
       <div className="p-5 relative z-10">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg">
-            <Skull className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          </div>
           <div>
-            <h3 className="font-extrabold text-foreground tracking-wide uppercase">{bossDaSemanaAtual.titulo}</h3>
+            <h3 className="font-extrabold text-foreground tracking-wide uppercase flex items-center gap-2">
+              <span className="text-xl">👾</span> {bossDaSemanaAtual.titulo.replace(/👹/g, '').trim()}
+            </h3>
             <p className="text-xs text-muted-foreground">{bossDaSemanaAtual.descricao}</p>
           </div>
         </div>

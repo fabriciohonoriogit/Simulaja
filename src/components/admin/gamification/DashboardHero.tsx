@@ -1,9 +1,18 @@
 import { useGamificationStore } from '../../../stores/gamificationStore';
 import { calcularProgressoProximaPatente } from '../../../lib/gamificationUtils';
 import { PATENTES_CONFIG } from '../../../types/gamification';
-import { Trophy, TrendingUp, Target, Crown } from 'lucide-react';
+import { Trophy, TrendingUp, Target } from 'lucide-react';
 import { Card } from '../../ui/card';
 import { Progress } from '../../ui/progress';
+
+const PATENTE_EMOJIS: Record<string, string> = {
+  'BABY': '👶',
+  'JÚNIOR': '👦',
+  'PRO': '💼',
+  'ESPECIALISTA': '🎓',
+  'ELITE': '💎',
+  'LENDA': '👑'
+};
 
 export function DashboardHero() {
   const { patenteAtual, comissaoMensalAtual, producaoMes } = useGamificationStore();
@@ -24,12 +33,11 @@ export function DashboardHero() {
           {/* Patente Atual */}
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Crown className="w-4 h-4 text-amber-500" />
               Patente Atual
             </span>
-            <div className="flex items-center gap-3">
-              <span className={`px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${config.cor} text-white`}>
-                {patenteAtual}
+            <div className="flex items-center gap-2">
+              <span className={`px-3 py-1.5 rounded-md text-sm font-black uppercase tracking-wider ${config.cor} text-white flex items-center gap-2 shadow-sm`}>
+                <span className="text-lg leading-none">{PATENTE_EMOJIS[patenteAtual] || '⭐'}</span> {patenteAtual}
               </span>
             </div>
           </div>
@@ -75,7 +83,7 @@ export function DashboardHero() {
               </>
             ) : (
               <div className="flex flex-col gap-2 items-center justify-center h-full">
-                <Crown className="w-8 h-8 text-amber-500" />
+                <span className="text-3xl">👑</span>
                 <span className="text-sm font-bold text-amber-600">Nível Máximo Alcançado</span>
               </div>
             )}
