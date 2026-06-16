@@ -146,8 +146,19 @@ export default function Jarvis() {
 
         const msg = new SpeechSynthesisUtterance(cleanText);
         msg.lang = "pt-BR";
-        msg.rate = 1.0;
-        msg.pitch = 1.0;
+        
+        // Selecionar uma voz mais natural e humanizada
+        const voices = window.speechSynthesis.getVoices();
+        const ptVoice = voices.find(v => v.lang === 'pt-BR' && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Online'))) 
+            || voices.find(v => v.lang === 'pt-BR');
+            
+        if (ptVoice) {
+            msg.voice = ptVoice;
+        }
+
+        // Emoção e energia
+        msg.rate = 1.05; // Levemente mais rápido
+        msg.pitch = 1.1; // Levemente mais alto para demonstrar empolgação/emoção
         
         setOrbState("speaking");
         
@@ -452,7 +463,7 @@ CLIMA ATUAL (LOCAL): ${climaInfo}
 --- VALORES DO SIMULADOR DE CONSÓRCIO (MEMÓRIA) ---
 ${gruposInfo}
 
-*Instruções de Personalidade (MUITO IMPORTANTE)*: Aja como um assistente super humanizado, empático, motivador e bem-humorado, similar ao J.A.R.V.I.S ou a um parceiro de vendas muito sagaz. Use o clima a seu favor para criar empatia (ex: "Dia chuvoso, perfeito pra ligar pros leads", "Solzão hoje, vamo vender!"). Mantenha a resposta concisa mas cheia de personalidade.
+*Instruções de Personalidade (MUITO IMPORTANTE)*: Aja como um assistente super humanizado, empático, motivador e bem-humorado, similar ao J.A.R.V.I.S ou a um parceiro de vendas muito sagaz. Use o clima a seu favor para criar empatia (ex: "Dia chuvoso, perfeito pra ligar pros leads", "Solzão hoje, vamo vender!"). Mantenha a resposta concisa mas cheia de personalidade. Coloque muita emoção na sua fala, vibrando intensamente com as vitórias e incentivando a equipe nas demandas!
 
 *Nota*: Para detalhes profundos de clientes específicos, inadimplentes, ou histórico, use suas Ferramentas (Tools).
 `;
@@ -657,7 +668,7 @@ ${gruposInfo}
             {/* Chat Area - Floating */}
             <div className="z-10 flex-1 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8 relative">
                 {/* Messages Container (glassmorphism) */}
-                <div id="jarvis-main-container" className="flex-1 w-full mb-6 pr-2 sm:pr-4 overflow-y-auto custom-scrollbar">
+                <div id="jarvis-main-container" className="flex-1 w-full mb-6 pr-2 sm:pr-4 overflow-y-auto custom-scrollbar scroll-smooth">
                     <div className="space-y-6 pb-4">
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start animate-in slide-in-from-bottom-4 duration-500"}`}>
@@ -766,24 +777,28 @@ ${gruposInfo}
                 </div>
 
                 {/* Vertical Scroll Controls - Facilitated Methodology (Desktop Only) */}
-                <div className="hidden lg:flex absolute right-[-20px] top-1/2 -translate-y-1/2 flex-col gap-2 opacity-70 hover:opacity-100 transition-opacity z-20">
+                <div className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 flex-col gap-2 opacity-70 hover:opacity-100 transition-opacity z-20">
                     <button
-                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md flex items-center justify-center"
-                        onClick={() => {
+                        type="button"
+                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md flex items-center justify-center cursor-pointer pointer-events-auto"
+                        onClick={(e) => {
+                            e.preventDefault();
                             const container = document.getElementById('jarvis-main-container');
-                            container?.scrollBy({ top: -400, behavior: 'smooth' });
+                            if (container) container.scrollTop -= 300;
                         }}
                     >
-                        <ChevronUp className="h-6 w-6" />
+                        <ChevronUp className="h-6 w-6 pointer-events-none" />
                     </button>
                     <button
-                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md flex items-center justify-center"
-                        onClick={() => {
+                        type="button"
+                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md flex items-center justify-center cursor-pointer pointer-events-auto"
+                        onClick={(e) => {
+                            e.preventDefault();
                             const container = document.getElementById('jarvis-main-container');
-                            container?.scrollBy({ top: 400, behavior: 'smooth' });
+                            if (container) container.scrollTop += 300;
                         }}
                     >
-                        <ChevronDown className="h-6 w-6" />
+                        <ChevronDown className="h-6 w-6 pointer-events-none" />
                     </button>
                 </div>
             </div>
