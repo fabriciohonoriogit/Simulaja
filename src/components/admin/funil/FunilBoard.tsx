@@ -121,7 +121,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
       onDragEnd={onDragEnd}
       onDragStart={() => { isDraggingCardRef.current = true; }}
     >
-      <div className="relative group w-full flex-1 min-h-0 flex flex-col">
+      <div className={`relative group w-full flex-1 flex flex-col ${isMobile ? 'h-auto' : 'min-h-0'}`}>
         <button
           onClick={() => kanbanRef.current && (kanbanRef.current.scrollLeft -= 500)}
           className="hidden lg:block absolute left-2 top-1/2 -translate-y-1/2 z-50 bg-primary/20 backdrop-blur-xl text-primary shadow-[0_8px_32px_rgba(0,0,0,0.15)] rounded-full p-2 hover:scale-110 active:scale-95 transition-all border border-primary/20 opacity-0 group-hover:opacity-70"
@@ -169,7 +169,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
 
         <div
           ref={kanbanRef}
-          className={`flex-1 min-h-0 flex ${isMobile ? 'flex-col' : 'overflow-x-auto pb-4 custom-scrollbar'} ${isWideView ? '' : 'justify-start'}`}
+          className={`flex-1 flex ${isMobile ? 'flex-col h-auto' : 'min-h-0 overflow-x-auto pb-4 custom-scrollbar'} ${isWideView ? '' : 'justify-start'}`}
         >
           {(isMobile ? [currentCol] : COLUMNS).map((col, index) => {
             const colLeads = applyFilters(getColumnLeads(col.id));
@@ -180,7 +180,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
             return (
               <div
                 key={col.id}
-                className={`shrink-0 rounded-lg border-t-4 ${COLUMN_COLORS[col.id] || "border-t-border bg-card/50"} bg-card/80 p-1.5 flex flex-col h-full relative group/col ${isMobile ? 'mx-2 mb-2 flex-1 min-h-0' : 'mr-2 first:ml-2'}`}
+                className={`shrink-0 rounded-lg border-t-4 ${COLUMN_COLORS[col.id] || "border-t-border bg-card/50"} bg-card/80 p-1.5 flex flex-col relative group/col ${isMobile ? 'mx-2 mb-2 h-auto' : 'h-full mr-2 first:ml-2'}`}
                 style={isMobile ? { width: 'auto' } : { width: columnWidths[col.id] || (isWideView ? 180 : 240), minWidth: isWideView ? 140 : 230 }}
               >
                 <div className="mb-2 flex items-center justify-between">
@@ -210,14 +210,14 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
                     };
 
                     return (
-                      <div className="relative flex-1 min-h-[100px] flex flex-col group/colcontent">
+                      <div className="relative flex-1 flex flex-col group/colcontent">
                         <div
                           ref={(el) => {
                             provided.innerRef(el);
                             columnRefs.current[col.id] = el;
                           }}
                           {...provided.droppableProps}
-                          className={`space-y-1.5 flex-1 overflow-y-auto pr-1 custom-scrollbar ${snapshot.isDraggingOver ? "ring-2 ring-primary/30 rounded" : ""}`}
+                          className={`space-y-1.5 flex-1 ${isMobile ? '' : 'overflow-y-auto min-h-[100px]'} pr-1 custom-scrollbar ${snapshot.isDraggingOver ? "ring-2 ring-primary/30 rounded" : ""}`}
                         >
                           {colLeads.map((lead: Lead, idx: number) => renderLeadCard(lead, idx))}
                           {provided.placeholder}
