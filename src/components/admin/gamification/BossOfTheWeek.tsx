@@ -17,7 +17,7 @@ export function BossOfTheWeek() {
         <div className="flex items-center gap-3 mb-4">
           <div>
             <h3 className="font-extrabold text-foreground tracking-wide uppercase flex items-center gap-2">
-              <span className="text-xl">👾</span> {bossDaSemanaAtual.titulo.replace(/👹/g, '').trim()}
+              <span className="text-xl">💰</span> {bossDaSemanaAtual.titulo.replace(/👹/g, '').trim()}
             </h3>
             <p className="text-xs text-muted-foreground">{bossDaSemanaAtual.descricao}</p>
           </div>
