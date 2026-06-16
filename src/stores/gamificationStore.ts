@@ -34,7 +34,7 @@ export const useGamificationStore = create<GamificationStore>()(
       conquistas: [],
       bossDaSemanaAtual: {
         id: 'boss_1',
-        titulo: '👹 BOSS DA SEMANA',
+        titulo: 'BOSS DA SEMANA',
         descricao: 'Semana do Fechamento Agressivo',
         recompensa: '+20% de XP e Badge Especialista em Lances',
         prazo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),

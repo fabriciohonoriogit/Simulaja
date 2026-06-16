@@ -576,13 +576,15 @@ export default function Dashboard() {
         </Card>
 
         <Card className="lg:col-span-2 shadow-sm border-border">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" /> Performance Semanal (Novos Leads)
-            </CardTitle>
-            <Badge variant="outline" className="text-[10px] uppercase font-bold">Últimos 7 dias</Badge>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base sm:text-sm flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" /> Performance Semanal
+              </CardTitle>
+              <Badge variant="outline" className="text-[9px] uppercase font-bold">7 dias</Badge>
+            </div>
           </CardHeader>
-          <CardContent className="h-[220px] sm:h-[300px]">
+          <CardContent className="h-[120px] sm:h-[160px] pb-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
@@ -602,14 +604,6 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
-        <JarvisReport 
-            leads={leads}
-            carteira={carteira}
-            inadimplentes={inadimplentes}
-            realizadoMes={realizadoMes}
-            metaMensal={metaMensal}
-        />
 
         <Card className="shadow-sm border-border bg-gradient-to-br from-emerald-500/5 to-transparent">
           <CardHeader className="pb-2">
