@@ -153,7 +153,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
             return (
               <div
                 key={col.id}
-                className={`shrink-0 rounded-lg border-t-4 ${COLUMN_COLORS[col.id] || "border-t-border bg-card/50"} bg-card/80 p-1.5 flex flex-col relative group/col ${isMobile ? 'h-auto mr-3 first:ml-3' : 'h-full mr-2 first:ml-2'}`}
+                className={`shrink-0 rounded-lg border-t-4 ${COLUMN_COLORS[col.id] || "border-t-border bg-card/50"} bg-card/80 p-1.5 flex flex-col relative group/col ${isMobile ? 'h-auto mr-3 first:ml-3' : 'h-full min-h-0 mr-2 first:ml-2'}`}
                 style={isMobile ? { width: '85vw', maxWidth: '300px' } : { width: columnWidths[col.id] || (isWideView ? 240 : 280), minWidth: isWideView ? 220 : 280 }}
               >
                 <div className="mb-2 flex items-center justify-between">
@@ -183,7 +183,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
                     };
 
                     return (
-                      <div className="relative flex-1 flex flex-col group/colcontent">
+                      <div className="relative flex-1 flex flex-col min-h-0 group/colcontent">
                         <div
                           ref={(el) => {
                             provided.innerRef(el);
