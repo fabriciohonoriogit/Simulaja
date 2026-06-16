@@ -399,22 +399,22 @@ export function LeadCard({
                 </div>
               </div>
               
-              <div className="flex items-center gap-0.5">
+              <div className="flex flex-wrap items-center justify-end gap-1">
                 <button 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onSetVencimento(lead); }}
-                  className="w-6 h-6 rounded-md flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-500 transition-colors"
+                  className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-500 transition-colors"
                   title="Agendar">
-                  <CalendarIcon className="h-3 w-3" />
+                  <CalendarIcon className="h-3.5 w-3.5" />
                 </button>
                 <button 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onViewFicha?.(lead); }}
-                  className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${lead.dados_cadastro ? "bg-blue-50 text-blue-600 hover:bg-blue-100" : "bg-slate-50 text-slate-300 hover:bg-slate-100"}`}
+                  className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center transition-colors ${lead.dados_cadastro ? "bg-blue-50 text-blue-600 hover:bg-blue-100" : "bg-slate-50 text-slate-300 hover:bg-slate-100"}`}
                   title="Ver Ficha Cadastral">
-                  <ClipboardList className="h-3.5 w-3.5" />
+                  <ClipboardList className="h-4 w-4" />
                 </button>
                 <a href={`https://wa.me/55${(lead.celular || "").replace(/\D/g, "")}?text=Olá!`}
                   onMouseDown={(e) => e.stopPropagation()}
@@ -422,7 +422,7 @@ export function LeadCard({
                   onClick={(e) => e.stopPropagation()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-6 h-6 rounded-md flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-[#25D366] transition-colors"
+                  className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-[#25D366] transition-colors"
                   title="WhatsApp">
                   <WhatsAppIcon className="h-4 w-4" />
                 </a>
@@ -430,17 +430,17 @@ export function LeadCard({
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onToggleAI?.(lead.id, lead.atendimento_ia ?? true); }}
-                  className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${lead.atendimento_ia !== false ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-600" : "bg-slate-100 hover:bg-slate-200 text-slate-400"}`}
+                  className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center transition-colors ${lead.atendimento_ia !== false ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-600" : "bg-slate-100 hover:bg-slate-200 text-slate-400"}`}
                   title={lead.atendimento_ia !== false ? "IA Jarvis Ativada - Clique para desativar" : "IA Jarvis Desativada - Clique para ativar"}>
-                  <Bot className="h-3.5 w-3.5" />
+                  <Bot className="h-4 w-4" />
                 </button>
                 <button 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onOpenHistorico(lead); }}
-                  className="w-6 h-6 rounded-md flex items-center justify-center bg-sky-50 hover:bg-sky-100 text-sky-500 transition-colors"
+                  className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-sky-50 hover:bg-sky-100 text-sky-500 transition-colors"
                   title="Histórico">
-                  <NotebookPen className="h-3 w-3" />
+                  <NotebookPen className="h-3.5 w-3.5" />
                 </button>
                 <button 
                   onMouseDown={(e) => e.stopPropagation()}
@@ -449,19 +449,19 @@ export function LeadCard({
                     e.stopPropagation(); 
                     if (onEdit) onEdit(lead); 
                   }}
-                  className="w-6 h-6 rounded-md flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-500 transition-colors"
+                  className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-500 transition-colors"
                   title="Editar Lead">
-                  <Pencil className="h-3 w-3" />
+                  <Pencil className="h-3.5 w-3.5" />
                 </button>
                 <div className="relative flex items-center justify-center">
                   <button
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-6 h-6 rounded-md flex items-center justify-center bg-violet-50 hover:bg-violet-100 text-violet-500 transition-colors"
+                    className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-violet-50 hover:bg-violet-100 text-violet-500 transition-colors"
                     title="Mover para outra etapa"
                   >
-                    <ArrowRightLeft className="h-3 w-3" />
+                    <ArrowRightLeft className="h-3.5 w-3.5" />
                   </button>
                   <select
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -483,30 +483,30 @@ export function LeadCard({
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onDelete(lead.id, lead.nome); }}
-                  className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors"
+                  className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors"
                   title="Excluir">
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
             )
         ) : (
-          <div className="flex items-center justify-end gap-0.5 pt-1.5 border-t border-slate-100 mt-0.5">
+          <div className="flex flex-wrap items-center justify-end gap-1 pt-1.5 border-t border-slate-100 mt-0.5">
             <button 
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onSetVencimento(lead); }}
-              className="w-6 h-6 rounded-md flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-500 transition-colors"
+              className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-500 transition-colors"
               title="Agendar">
-              <CalendarIcon className="h-3 w-3" />
+              <CalendarIcon className="h-3.5 w-3.5" />
             </button>
             <button 
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onViewFicha?.(lead); }}
-              className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${lead.dados_cadastro ? "bg-blue-50 text-blue-600 hover:bg-blue-100" : "bg-slate-50 text-slate-300 hover:bg-slate-100"}`}
+              className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center transition-colors ${lead.dados_cadastro ? "bg-blue-50 text-blue-600 hover:bg-blue-100" : "bg-slate-50 text-slate-300 hover:bg-slate-100"}`}
               title="Ver Ficha Cadastral">
-              <ClipboardList className="h-3.5 w-3.5" />
+              <ClipboardList className="h-4 w-4" />
             </button>
             <a href={`https://wa.me/55${(lead.celular || "").replace(/\D/g, "")}?text=Olá!`}
               onMouseDown={(e) => e.stopPropagation()}
@@ -514,7 +514,7 @@ export function LeadCard({
               onClick={(e) => e.stopPropagation()}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-6 h-6 rounded-md flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-[#25D366] transition-colors"
+              className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-[#25D366] transition-colors"
               title="WhatsApp">
               <WhatsAppIcon className="h-4 w-4" />
             </a>
@@ -522,17 +522,17 @@ export function LeadCard({
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onToggleAI?.(lead.id, lead.atendimento_ia ?? true); }}
-              className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${lead.atendimento_ia !== false ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-600" : "bg-slate-100 hover:bg-slate-200 text-slate-400"}`}
+              className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center transition-colors ${lead.atendimento_ia !== false ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-600" : "bg-slate-100 hover:bg-slate-200 text-slate-400"}`}
               title={lead.atendimento_ia !== false ? "IA Jarvis Ativada - Clique para desativar" : "IA Jarvis Desativada - Clique para ativar"}>
-              <Bot className="h-3.5 w-3.5" />
+              <Bot className="h-4 w-4" />
             </button>
             <button 
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onOpenHistorico(lead); }}
-              className="w-6 h-6 rounded-md flex items-center justify-center bg-sky-50 hover:bg-sky-100 text-sky-500 transition-colors"
+              className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-sky-50 hover:bg-sky-100 text-sky-500 transition-colors"
               title="Histórico">
-              <NotebookPen className="h-3 w-3" />
+              <NotebookPen className="h-3.5 w-3.5" />
             </button>
             <button 
               onMouseDown={(e) => e.stopPropagation()}
@@ -541,19 +541,19 @@ export function LeadCard({
                 e.stopPropagation(); 
                 if (onEdit) onEdit(lead); 
               }}
-              className="w-6 h-6 rounded-md flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-500 transition-colors"
+              className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-500 transition-colors"
               title="Editar Lead">
-              <Pencil className="h-3 w-3" />
+              <Pencil className="h-3.5 w-3.5" />
             </button>
             <div className="relative flex items-center justify-center">
               <button
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
-                className="w-6 h-6 rounded-md flex items-center justify-center bg-violet-50 hover:bg-violet-100 text-violet-500 transition-colors"
+                className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-violet-50 hover:bg-violet-100 text-violet-500 transition-colors"
                 title="Mover para outra etapa"
               >
-                <ArrowRightLeft className="h-3 w-3" />
+                <ArrowRightLeft className="h-3.5 w-3.5" />
               </button>
               <select
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -575,9 +575,9 @@ export function LeadCard({
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onDelete(lead.id, lead.nome); }}
-              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors"
+              className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors"
               title="Excluir">
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
