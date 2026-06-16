@@ -26,12 +26,20 @@ export function WeatherWidget() {
   useEffect(() => {
     const fetchWeather = async (lat: number, lon: number) => {
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
-        const data = await res.json();
+        const [weatherRes, geoRes] = await Promise.all([
+          fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`),
+          fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`)
+        ]);
+        const data = await weatherRes.json();
+        const geoData = await geoRes.json();
+        
+        let city = geoData.city || geoData.locality || "Sua Região";
+
         if (data.current_weather) {
           const w = {
             temperature: data.current_weather.temperature,
             weathercode: data.current_weather.weathercode,
+            city
           };
           setWeather(w);
           localStorage.setItem("jarvis_weather", JSON.stringify(w));
@@ -70,13 +78,20 @@ export function WeatherWidget() {
   }
 
   const { icon, desc } = getWeatherIconAndDesc(weather.weathercode);
+  const dataHoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-100/50 shadow-sm transition-all hover:scale-105 cursor-default">
+    <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-100/50 shadow-sm transition-all hover:scale-105 cursor-default">
       {icon}
       <div className="flex flex-col">
-        <span className="text-xs font-black text-slate-700 leading-none">{weather.temperature}°C</span>
-        <span className="text-[9px] font-bold text-slate-500 tracking-wider uppercase leading-none mt-0.5">{desc}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-black text-slate-700 leading-none">{weather.temperature}°C</span>
+          <span className="text-[10px] font-bold text-slate-400 border-l border-slate-300 pl-1.5 leading-none capitalize">{weather.city}</span>
+        </div>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span className="text-[9px] font-bold text-slate-500 tracking-wider uppercase leading-none">{desc}</span>
+          <span className="text-[9px] font-bold text-slate-400 border-l border-slate-300 pl-1.5 leading-none">{dataHoje}</span>
+        </div>
       </div>
     </div>
   );

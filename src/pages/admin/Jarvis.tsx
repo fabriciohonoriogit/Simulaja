@@ -432,7 +432,7 @@ export default function Jarvis() {
             const savedWeather = localStorage.getItem("jarvis_weather");
             if (savedWeather) {
                 const w = JSON.parse(savedWeather);
-                climaInfo = `${w.temperature}°C`;
+                climaInfo = `${w.temperature}°C${w.city ? ` em ${w.city}` : ""}`;
             }
         } catch (e) { }
 
