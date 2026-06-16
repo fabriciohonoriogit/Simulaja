@@ -203,7 +203,7 @@ export function LeadCard({
       ref={provided.innerRef}
       {...provided.draggableProps}
       className={cn(
-        "group relative bg-white rounded-lg border border-slate-200 select-none overflow-hidden transition-all duration-200",
+        "group relative bg-white rounded-lg border border-slate-200 select-none overflow-hidden transition-all duration-200 flex flex-col",
         snapshot.isDragging ? "shadow-2xl ring-2 ring-primary/40 rotate-1 z-[999] opacity-100 cursor-grabbing" : "shadow-sm hover:border-primary/30 hover:shadow-md",
         isDeadLead && "opacity-60 grayscale-[30%]"
       )}
@@ -242,7 +242,7 @@ export function LeadCard({
       )}
 
       {/* Conteúdo com padding interno maior, agora compensando o grip */}
-      <div className={compact ? "pl-8 pr-2 pt-2 pb-1.5 space-y-1" : "pl-9 pr-3 pt-2.5 pb-2.5 space-y-2"}>
+      <div className={compact ? "pl-8 pr-2 pt-2 pb-1.5 space-y-1 flex-1 flex flex-col" : "pl-9 pr-3 pt-2.5 pb-2.5 space-y-2 flex-1 flex flex-col"}>
         
         {/* Header: Nome + Temperatura */}
         <div className="flex flex-col min-w-0">
@@ -365,7 +365,7 @@ export function LeadCard({
 
         {((isManager && onAssignLead) || lead.responsavel_id) ? (
             isEditingField?.field === "responsavel" ? (
-             <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 mt-1">
+             <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 mt-auto">
               <select
                 className="w-full text-[10px] p-1 rounded border border-slate-200 bg-white"
                 value={lead.responsavel_id || "none"}
@@ -383,7 +383,7 @@ export function LeadCard({
               </select>
              </div>
             ) : (
-            <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 mt-0.5">
+            <div className="flex flex-col sm:flex-row items-center justify-between pt-1.5 border-t border-slate-100 mt-auto gap-2 sm:gap-0">
               <div
                 className="flex items-center gap-1.5 cursor-pointer"
                 onClick={(e) => {
@@ -491,7 +491,7 @@ export function LeadCard({
             </div>
             )
         ) : (
-          <div className="flex flex-wrap items-center justify-end gap-1 pt-1.5 border-t border-slate-100 mt-0.5">
+          <div className="flex flex-wrap items-center justify-end gap-1 pt-1.5 border-t border-slate-100 mt-auto">
             <button 
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
