@@ -636,7 +636,7 @@ export default function Dashboard() {
 
             <div className={`p-3 rounded-lg border text-center ${progressoMes >= 100 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
                 <p className="text-xs font-bold uppercase">
-                    {progressoMes >= 100 ? '🚀 Meta Batida!' : `Ainda faltam ${formatLeadValue(Math.max(0, metaMensal - realizadoMes))}`}
+                    {progressoMes >= 100 ? 'Meta Batida!' : `Ainda faltam ${formatLeadValue(Math.max(0, metaMensal - realizadoMes))}`}
                 </p>
             </div>
           </CardContent>
@@ -670,7 +670,7 @@ export default function Dashboard() {
                     <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-100">
                       <div className="p-2 rounded-full bg-white text-red-500 shadow-sm"><Bell className="h-4 w-4 animate-pulse" /></div>
                       <div>
-                        <p className="text-xs sm:text-sm font-semibold text-red-800">🔔 {atrasados.length} pagamento(s) ATRASADO(S)</p>
+                        <p className="text-xs sm:text-sm font-semibold text-red-800">{atrasados.length} pagamento(s) ATRASADO(S)</p>
                         <div className="space-y-0.5 mt-1">
                           {atrasados.slice(0, 3).map(l => (
                             <p key={l.id} className="text-[10px] sm:text-xs text-red-700">
@@ -686,7 +686,7 @@ export default function Dashboard() {
                     <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-100">
                       <div className="p-2 rounded-full bg-white text-amber-500 shadow-sm"><Bell className="h-4 w-4 animate-bounce" /></div>
                       <div>
-                        <p className="text-xs sm:text-sm font-semibold text-amber-800">🔔 {vencendoHoje.length} pagamento(s) vencem HOJE</p>
+                        <p className="text-xs sm:text-sm font-semibold text-amber-800">{vencendoHoje.length} pagamento(s) vencem HOJE</p>
                         <div className="space-y-0.5 mt-1">
                           {vencendoHoje.map(l => (
                             <p key={l.id} className="text-[10px] sm:text-xs text-amber-700">{l.nome}</p>
@@ -744,7 +744,7 @@ export default function Dashboard() {
                   <div className="p-2 rounded-full bg-white text-yellow-500 shadow-sm"><Bell className="h-4 w-4 animate-bounce" /></div>
                   <div>
                     <p className="text-xs sm:text-sm font-semibold text-yellow-800">
-                      🔥 {quentes.length} lead(s) quente(s) sem contato há +48h
+                      {quentes.length} lead(s) quente(s) sem contato há +48h
                     </p>
                     <div className="space-y-0.5 mt-1">
                       {quentes.slice(0, 3).map(l => (
@@ -778,7 +778,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs sm:text-sm font-black text-indigo-900 uppercase">
-                      🎯 {proximos.length} Clientes Próximos da Contemplação
+                      {proximos.length} Clientes Próximos da Contemplação
                     </p>
                     <div className="space-y-1 mt-1.5">
                       {proximos.slice(0, 4).map(({ item, lot }) => (
@@ -788,7 +788,7 @@ export default function Dashboard() {
                           </p>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${lot?.isWinner ? 'bg-green-500 text-white animate-pulse' : 'bg-indigo-100 text-indigo-700'}`}>
-                              {lot?.isWinner ? '🏆 GANHADOR' : `G:${item.grupo} C:${item.cota}`}
+                              {lot?.isWinner ? 'GANHADOR' : `G:${item.grupo} C:${item.cota}`}
                             </span>
                           </div>
                         </div>
