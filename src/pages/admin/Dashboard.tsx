@@ -26,6 +26,7 @@ import { StreakCard } from "@/components/admin/gamification/StreakCard";
 import { JarvisReport } from "@/components/admin/gamification/JarvisReport";
 import { useGamificationStore } from "@/stores/gamificationStore";
 import { calcularComissaoRecorrenteLead } from "@/lib/gamificationUtils";
+import { WeatherWidget } from "@/components/admin/WeatherWidget";
 
 interface Lead {
   id: string;
@@ -354,6 +355,9 @@ export default function Dashboard() {
         
         {/* GAMIFICAÇÃO - HERO SECTION */}
         <div className="space-y-6 mb-8">
+          <div className="flex justify-end">
+            <WeatherWidget />
+          </div>
           <AICoachMessage />
           <DashboardHero />
           <MoneyOnTableCard leads={leads} />

@@ -427,11 +427,22 @@ export default function Jarvis() {
             }).join("\n");
         }).join("\n\n");
 
+        // Obter Clima
+        let climaInfo = "Desconhecido";
+        try {
+            const savedWeather = localStorage.getItem("jarvis_weather");
+            if (savedWeather) {
+                const w = JSON.parse(savedWeather);
+                climaInfo = `${w.temperature}°C`;
+            }
+        } catch (e) { }
+
         // Novo Contexto Reduzido: O Jarvis agora usa Tools (Function Calling)
         // para buscar dados profundos, então mandamos apenas um resumo rápido.
         const contextBuilder = `
 --- RESUMO RÁPIDO DA TELA ATUAL ---
 DATA DE HOJE: ${new Date().toLocaleDateString('pt-BR')} (Faltam ${Math.max(0, diasNoMes - diaHoje)} dias para o fim do mês)
+CLIMA ATUAL (LOCAL): ${climaInfo}
 
 - Realizado no Mês: ${formatCurrency(realizadoMes)} de uma meta de ${formatCurrency(metaMensal)}.
 - Projeção de Fechamento Mês: ${formatCurrency(projecao)}
@@ -441,6 +452,8 @@ DATA DE HOJE: ${new Date().toLocaleDateString('pt-BR')} (Faltam ${Math.max(0, di
 
 --- VALORES DO SIMULADOR DE CONSÓRCIO (MEMÓRIA) ---
 ${gruposInfo}
+
+*Instruções de Personalidade (MUITO IMPORTANTE)*: Aja como um assistente super humanizado, empático, motivador e bem-humorado, similar ao J.A.R.V.I.S ou a um parceiro de vendas muito sagaz. Use o clima a seu favor para criar empatia (ex: "Dia chuvoso, perfeito pra ligar pros leads", "Solzão hoje, vamo vender!"). Mantenha a resposta concisa mas cheia de personalidade.
 
 *Nota*: Para detalhes profundos de clientes específicos, inadimplentes, ou histórico, use suas Ferramentas (Tools).
 `;
