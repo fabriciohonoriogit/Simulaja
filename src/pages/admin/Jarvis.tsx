@@ -666,9 +666,9 @@ ${gruposInfo}
             </div>
 
             {/* Chat Area - Floating */}
-            <div className="z-10 flex-1 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8 relative">
+            <div className="z-10 flex-1 min-h-0 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8 relative">
                 {/* Messages Container (glassmorphism) */}
-                <div id="jarvis-main-container" className="flex-1 w-full mb-6 pr-2 sm:pr-4 overflow-y-auto custom-scrollbar scroll-smooth">
+                <div id="jarvis-main-container" className="flex-1 min-h-0 w-full mb-6 pr-2 sm:pr-4 overflow-y-auto custom-scrollbar scroll-smooth">
                     <div className="space-y-6 pb-4">
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start animate-in slide-in-from-bottom-4 duration-500"}`}>
