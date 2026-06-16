@@ -94,7 +94,7 @@ export default function Onboarding() {
           <div className="bg-primary/10 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <Rocket className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Bem-vindo ao Simulajá</h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Bem-vindo ao seu CRM</h1>
           <p className="text-slate-500 mt-2">Vamos preparar o seu ambiente em menos de 1 minuto.</p>
         </div>
 
