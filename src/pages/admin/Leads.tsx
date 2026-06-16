@@ -320,9 +320,9 @@ export default function Leads() {
             <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
               <tr>
                 <th className="px-4 py-3">Lead</th>
-                <th className="px-4 py-3">Segmento</th>
+                <th className="px-4 py-3 hidden md:table-cell">Segmento</th>
                 <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Grupo / Cota</th>
+                <th className="px-4 py-3 hidden lg:table-cell">Grupo / Cota</th>
                 <th className="px-4 py-3">Valor</th>
                 <th className="px-4 py-3 text-right">Ações</th>
               </tr>
@@ -355,7 +355,7 @@ export default function Leads() {
                       </div>
                     </td>
 
-                    <td className="px-4 py-3 uppercase text-[10px] font-bold text-slate-500">
+                    <td className="px-4 py-3 uppercase text-[10px] font-bold text-slate-500 hidden md:table-cell">
                       {l.tipo_consorcio || getDC(l.dados_cadastro, ['segmento', 'SEGMENTO', 'TIPO', 'tipo']) || "Indefinido"}
                     </td>
 
@@ -371,7 +371,7 @@ export default function Leads() {
                       </div>
                     </td>
 
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden lg:table-cell">
                       {(l.grupo || l.cota) ? (
                         <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black ${
                           isFechado ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-slate-50 text-slate-500 border border-slate-100"

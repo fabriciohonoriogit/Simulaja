@@ -138,11 +138,40 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
           <ChevronRight className="h-6 w-6" />
         </button>
 
+        {isMobile && (
+          <div className="flex items-center justify-between bg-white/80 backdrop-blur-md border border-slate-200 p-1.5 mb-2 rounded-lg sticky top-0 z-20 mx-2 mt-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0 shrink-0"
+              onClick={() => setMobileColIdx(Math.max(0, mobileColIdx - 1))}
+              disabled={mobileColIdx === 0}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex flex-col items-center flex-1 min-w-0">
+              <span className={`text-[11px] font-black uppercase truncate tracking-tight ${COLUMN_COLORS[currentCol.id]?.replace('border-t-', 'text-') || 'text-slate-700'}`}>
+                {currentCol.label}
+              </span>
+              <span className="text-[9px] text-slate-500 font-bold">{currentColLeads.length} leads</span>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0 shrink-0"
+              onClick={() => setMobileColIdx(Math.min(COLUMNS.length - 1, mobileColIdx + 1))}
+              disabled={mobileColIdx === COLUMNS.length - 1}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
+
         <div
           ref={kanbanRef}
-          className={`flex-1 min-h-0 flex overflow-x-auto pb-4 custom-scrollbar ${isWideView ? '' : 'justify-start'}`}
+          className={`flex-1 min-h-0 flex ${isMobile ? 'flex-col' : 'overflow-x-auto pb-4 custom-scrollbar'} ${isWideView ? '' : 'justify-start'}`}
         >
-          {COLUMNS.map((col, index) => {
+          {(isMobile ? [currentCol] : COLUMNS).map((col, index) => {
             const colLeads = applyFilters(getColumnLeads(col.id));
             const totalValor = colLeads
               .filter(l => l.dados_cadastro?.is_retroativo !== true)
@@ -151,8 +180,8 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
             return (
               <div
                 key={col.id}
-                className={`shrink-0 rounded-lg border-t-4 ${COLUMN_COLORS[col.id] || "border-t-border bg-card/50"} bg-card/80 p-1.5 flex flex-col h-full relative group/col mr-2 first:ml-2`}
-                style={{ width: columnWidths[col.id] || (isWideView ? 180 : 240), minWidth: isWideView ? 140 : 230 }}
+                className={`shrink-0 rounded-lg border-t-4 ${COLUMN_COLORS[col.id] || "border-t-border bg-card/50"} bg-card/80 p-1.5 flex flex-col h-full relative group/col ${isMobile ? 'mx-2 mb-2 flex-1 min-h-0' : 'mr-2 first:ml-2'}`}
+                style={isMobile ? { width: 'auto' } : { width: columnWidths[col.id] || (isWideView ? 180 : 240), minWidth: isWideView ? 140 : 230 }}
               >
                 <div className="mb-2 flex items-center justify-between">
                   <div className="min-w-0 flex-1">
