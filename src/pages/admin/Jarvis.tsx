@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
     Sparkles, 
     Send, 
@@ -658,7 +657,7 @@ ${gruposInfo}
             {/* Chat Area - Floating */}
             <div className="z-10 flex-1 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8 relative">
                 {/* Messages Container (glassmorphism) */}
-                <ScrollArea id="jarvis-main-container" className="flex-1 w-full mb-6 pr-2 sm:pr-4">
+                <div id="jarvis-main-container" className="flex-1 w-full mb-6 pr-2 sm:pr-4 overflow-y-auto custom-scrollbar">
                     <div className="space-y-6 pb-4">
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start animate-in slide-in-from-bottom-4 duration-500"}`}>
@@ -685,7 +684,7 @@ ${gruposInfo}
                             </div>
                         )}
                     </div>
-                </ScrollArea>
+                </div>
                 
                 {/* Input Area */}
                 <div className="w-full bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-3 sm:p-4 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-3 sm:gap-4">
@@ -771,25 +770,23 @@ ${gruposInfo}
                     <Button
                         variant="secondary"
                         size="icon"
-                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md"
+                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md flex items-center justify-center"
                         onClick={() => {
-                            const container = document.querySelector('#jarvis-main-container [data-radix-scroll-area-viewport]');
+                            const container = document.getElementById('jarvis-main-container');
                             container?.scrollBy({ top: -400, behavior: 'smooth' });
                         }}
                     >
                         <ChevronUp className="h-6 w-6" />
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        size="icon"
-                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md"
+                    </button>
+                    <button
+                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md flex items-center justify-center"
                         onClick={() => {
-                            const container = document.querySelector('#jarvis-main-container [data-radix-scroll-area-viewport]');
+                            const container = document.getElementById('jarvis-main-container');
                             container?.scrollBy({ top: 400, behavior: 'smooth' });
                         }}
                     >
                         <ChevronDown className="h-6 w-6" />
-                    </Button>
+                    </button>
                 </div>
             </div>
         </div>
