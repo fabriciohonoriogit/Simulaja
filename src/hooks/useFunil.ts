@@ -15,7 +15,7 @@ import { makeService } from "@/services/makeService";
 export const ADMINISTRADORAS = ["MAGALU", "ADEMICON", "SERVOPA"];
 
 export function useFunil() {
-  const { profile } = useProfile();
+  const { profile, isManager } = useProfile();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [celebrationLead, setCelebrationLead] = useState<Lead | null>(null);
@@ -42,7 +42,7 @@ export function useFunil() {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [mobileColIdx, setMobileColIdx] = useState(0);
   const [membros, setMembros] = useState<Membro[]>([]);
-  const isManager = true; 
+  // isManager is now dynamically fetched from useProfile 
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -646,48 +646,6 @@ export function useFunil() {
     const valorCredito = Number(celebrationLead.valor_credito) || 0;
     const finalAdmin = (administradora === "none" ? null : administradora) || celebrationLead.administradora;
 
-    const carteiraData = {
-      lead_id: celebrationLead.id,
-      nome: celebrationLead.nome,
-      celular: celebrationLead.celular,
-      tipo_consorcio: celebrationLead.tipo_consorcio,
-      valor_credito: valorCredito,
-      grupo,
-      cota,
-      administradora: finalAdmin,
-      status: "aguardando",
-      data_adesao: celebrationLead.status_updated_at ? celebrationLead.status_updated_at.split('T')[0] : new Date().toISOString().split('T')[0],
-      organizacao_id: celebrationLead.organizacao_id || profile?.organizacao_id,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data: existingCarteira } = await supabase.from("carteira").select("id").eq("lead_id", celebrationLead.id).maybeSingle();
-    
-    let carteiraError = null;
-    if (existingCarteira) {
-      const { error } = await supabase.from("carteira").update(carteiraData).eq("id", existingCarteira.id);
-      carteiraError = error;
-    } else {
-      const { error } = await supabase.from("carteira").insert(carteiraData);
-      carteiraError = error;
-    }
-
-    if (!carteiraError) {
-      await supabase.from("leads").update({
-        grupo,
-        cota,
-        administradora: finalAdmin,
-      }).eq("id", celebrationLead.id);
-    }
-
-    setSaving(false);
-
-    if (carteiraError) {
-      console.error("Erro detalhado ao salvar na carteira:", carteiraError);
-      toast.error(`Erro ao salvar na carteira: ${carteiraError.message}`);
-      return;
-    }
-
     // Comissionamento Auto-Create
     let taxa_comissao = 4; // DEMAIS
     if (comissaoRegra === "GOLDEN") taxa_comissao = 5;
@@ -713,22 +671,32 @@ export function useFunil() {
 
     const comissao_total = (valorCredito * taxa_comissao) / 100;
 
-    await supabase.from("comissoes").insert({
-      organizacao_id: celebrationLead.organizacao_id || profile?.organizacao_id,
-      usuario_id: profile?.id,
-      lead_id: celebrationLead.id,
-      cliente_nome: celebrationLead.nome,
-      grupo,
-      cota,
-      valor_venda: valorCredito,
-      regra_comissao: comissaoRegra,
-      taxa_comissao,
-      tipo_comissionamento: finalTipoComissionamento,
-      comissao_total,
-      parcelas_comissao,
-      data_venda: (celebrationLead.status_updated_at || new Date().toISOString()).split('T')[0],
-      administradora: finalAdmin
+    const { error: rpcError } = await supabase.rpc('fechar_venda', {
+      p_lead_id: celebrationLead.id,
+      p_valor_credito: valorCredito,
+      p_grupo: grupo,
+      p_cota: cota,
+      p_administradora: finalAdmin,
+      p_data_adesao: celebrationLead.status_updated_at ? celebrationLead.status_updated_at.split('T')[0] : new Date().toISOString().split('T')[0],
+      p_comissao_regra: comissaoRegra,
+      p_taxa_comissao: taxa_comissao,
+      p_tipo_comissionamento: finalTipoComissionamento,
+      p_parcelas_comissao: parcelas_comissao,
+      p_comissao_total: comissao_total,
+      p_organizacao_id: celebrationLead.organizacao_id || profile?.organizacao_id,
+      p_usuario_id: profile?.id,
+      p_nome_cliente: celebrationLead.nome,
+      p_celular_cliente: celebrationLead.celular,
+      p_tipo_consorcio: celebrationLead.tipo_consorcio
     });
+
+    setSaving(false);
+
+    if (rpcError) {
+      console.error("Erro detalhado ao fechar venda:", rpcError);
+      toast.error(`Erro ao salvar venda: ${rpcError.message}`);
+      return;
+    }
 
     toast.success("Cliente adicionado à carteira e comissão registrada!");
     setCelebrationLead(null);

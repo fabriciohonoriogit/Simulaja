@@ -72,6 +72,7 @@ export default function Simulador() {
   const refCelular = searchParams.get("ref") || "";
   const refNome = searchParams.get("nome") ? decodeURIComponent(searchParams.get("nome")!) : "";
   const initialSegment = searchParams.get("segmento") || "imovel";
+  const orgParam = searchParams.get("org") || searchParams.get("organizacao_id") || undefined;
   const isIndicacao = refCelular.length >= 10;
   const wppDestino = isIndicacao ? refCelular : "5541997925357";
 
@@ -148,7 +149,8 @@ export default function Simulador() {
         categoria: categoria,
         origem: searchParams.get("utm_source") || (isIndicacao ? "indicacao" : "Página Simulador"),
         indicador_nome: isIndicacao ? refNome : undefined,
-        indicador_celular: isIndicacao ? refCelular : undefined
+        indicador_celular: isIndicacao ? refCelular : undefined,
+        organizacao_id: orgParam
       });
 
       const novaConsulta = consultas + 1;

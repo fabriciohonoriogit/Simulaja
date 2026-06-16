@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Profile, OrganizationRow } from "@/types";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { LayoutDashboard, Filter, Users, LogOut, Target, Briefcase, AlertTriangle, Menu, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Calculator, CalendarDays, Sparkles, Settings, MessageSquare, RefreshCw, FileText } from "lucide-react";
@@ -78,6 +78,7 @@ const menuGroups: MenuGroup[] = [
 export default function AdminLayout() {
     const { signOut } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
     const [org, setOrg] = useState<OrganizationRow | null>(null);
@@ -117,6 +118,12 @@ export default function AdminLayout() {
             console.error("Layout fetch error:", e);
         }
     };
+
+    useEffect(() => {
+        if (org && !(org as any).onboarding_completed && location.pathname !== "/admin/onboarding") {
+            navigate("/admin/onboarding", { replace: true });
+        }
+    }, [org, location.pathname, navigate]);
 
     useEffect(() => {
         localStorage.setItem("admin_sidebar_collapsed", String(sidebarCollapsed));

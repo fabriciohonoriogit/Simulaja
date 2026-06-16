@@ -178,6 +178,9 @@ export default function Indicacoes() {
     else if (g.credito >= 200000) leadScoreValor = "alto";
     else if (g.credito >= 80000) leadScoreValor = "medio";
 
+    const searchParams = new URLSearchParams(window.location.search);
+    const orgParam = searchParams.get("org") || searchParams.get("organizacao_id") || undefined;
+
     try {
       await (supabase.from("leads") as any).insert({
         nome: nomeCliente.trim(),
@@ -188,7 +191,7 @@ export default function Indicacoes() {
         status: "novo",
         lead_score_valor: leadScoreValor,
         lead_temperatura: "quente",
-        organizacao_id: "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4",
+        organizacao_id: orgParam,
         indicador_nome: pNome.trim(),
         indicador_celular: pWpp.replace(/\D/g, ""),
       });

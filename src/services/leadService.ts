@@ -10,6 +10,7 @@ export type LeadData = {
   origem?: string;
   indicador_nome?: string;
   indicador_celular?: string;
+  organizacao_id?: string;
 };
 
 export const calculateLeadScore = (credito: number, categoria: string): "baixo" | "medio" | "alto" | "premium" => {
@@ -46,7 +47,7 @@ export const createLead = async (data: LeadData) => {
     status: "novo_lead",
     lead_score_valor: score,
     lead_temperatura: "quente",
-    organizacao_id: "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4",
+    organizacao_id: data.organizacao_id,
     indicador_nome: data.indicador_nome,
     indicador_celular: data.indicador_celular,
     origem: data.origem || "Simulador Web"

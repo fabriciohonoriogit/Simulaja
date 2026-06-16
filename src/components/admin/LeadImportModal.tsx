@@ -129,6 +129,7 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState(0);
   const [errors, setErrors] = useState(0);
+  const [duplicates, setDuplicates] = useState(0);
   const [fileName, setFileName] = useState("");
 
   const reset = () => {
@@ -137,6 +138,7 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
     setImporting(false);
     setImported(0);
     setErrors(0);
+    setDuplicates(0);
     setFileName("");
   };
 
@@ -205,31 +207,58 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
     setImporting(true);
     let ok = 0;
     let fail = 0;
+    let dup = 0;
 
     // Chunk insert in batches of 50
     const BATCH = 50;
     for (let i = 0; i < validLeads.length; i += BATCH) {
-      const chunk = validLeads.slice(i, i + BATCH).map((l) => ({
-        nome: formatToUpper(l.nome),
-        celular: l.celular ?? null,
-        status: "novo_lead",
-        tipo_consorcio: "imovel", // Default
-        valor_credito: 0,
-        prazo_meses: 0,
-        organizacao_id: organizacaoId,
-      }));
+      const currentChunk = validLeads.slice(i, i + BATCH);
 
-      const { error } = await supabase.from("leads").insert(chunk);
-      if (error) {
-        fail += chunk.length;
-        console.error("[import] batch error:", error);
-      } else {
-        ok += chunk.length;
+      const celulares = currentChunk.map(l => l.celular).filter(Boolean) as string[];
+      let celularesExistentes = new Set<string>();
+
+      if (celulares.length > 0) {
+         const { data: leadsExistentes } = await supabase
+           .from("leads")
+           .select("celular")
+           .eq("organizacao_id", organizacaoId)
+           .in("celular", celulares);
+           
+         if (leadsExistentes) {
+            leadsExistentes.forEach(l => {
+              if (l.celular) celularesExistentes.add(l.celular);
+            });
+         }
+      }
+
+      const chunkToInsert = currentChunk.filter(l => !l.celular || !celularesExistentes.has(l.celular));
+      const chunkDuplicatesCount = currentChunk.length - chunkToInsert.length;
+      dup += chunkDuplicatesCount;
+
+      if (chunkToInsert.length > 0) {
+        const chunk = chunkToInsert.map((l) => ({
+          nome: formatToUpper(l.nome),
+          celular: l.celular ?? null,
+          status: "novo_lead",
+          tipo_consorcio: "imovel", // Default
+          valor_credito: 0,
+          prazo_meses: 0,
+          organizacao_id: organizacaoId,
+        }));
+
+        const { error } = await supabase.from("leads").insert(chunk);
+        if (error) {
+          fail += chunk.length;
+          console.error("[import] batch error:", error);
+        } else {
+          ok += chunk.length;
+        }
       }
     }
 
     setImported(ok);
     setErrors(fail);
+    setDuplicates(dup);
     setImporting(false);
     setStep("done");
 
@@ -506,6 +535,12 @@ export function LeadImportModal({ open, onClose, organizacaoId, onImportDone }: 
                   <p className="text-4xl font-black text-emerald-500">{imported}</p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Importados</p>
                 </div>
+                {duplicates > 0 && (
+                  <div className="text-center">
+                    <p className="text-4xl font-black text-amber-500">{duplicates}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Duplicados</p>
+                  </div>
+                )}
                 {errors > 0 && (
                   <div className="text-center">
                     <p className="text-4xl font-black text-red-400">{errors}</p>

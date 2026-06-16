@@ -605,6 +605,15 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        <JarvisReport 
+            leads={leads}
+            carteira={carteira}
+            inadimplentes={inadimplentes}
+            realizadoMes={realizadoMes}
+            metaMensal={metaMensal}
+        />
+
         <Card className="shadow-sm border-border bg-gradient-to-br from-emerald-500/5 to-transparent">
           <CardHeader className="pb-2">
             <CardTitle className="text-base sm:text-lg flex items-center gap-2">
@@ -639,6 +648,22 @@ export default function Dashboard() {
                     {progressoMes >= 100 ? '🚀 Meta Batida!' : `Ainda faltam ${formatLeadValue(Math.max(0, metaMensal - realizadoMes))}`}
                 </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Simulador Quick Access */}
+        <Card className="shadow-sm border-border bg-gradient-to-br from-cyan-500/10 to-transparent flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer" onClick={() => window.location.href='/admin/simulador'}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-cyan-600" /> Simulador Rápido
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col justify-center pb-6">
+            <p className="text-sm text-slate-500 mb-4">Acesse rapidamente o simulador de consórcios para gerar propostas em tempo real para os seus leads quentes.</p>
+            <Button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold gap-2">
+              <Calculator className="h-4 w-4" />
+              Nova Simulação
+            </Button>
           </CardContent>
         </Card>
 

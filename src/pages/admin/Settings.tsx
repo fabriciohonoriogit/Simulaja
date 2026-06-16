@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileRow, ConviteRow, OrganizationRow } from "@/types";
-import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Upload, CalendarDays, Settings as SettingsIcon, MessageSquare, Loader2 } from "lucide-react";
+import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Upload, CalendarDays, Settings as SettingsIcon, MessageSquare, Loader2, Link2 } from "lucide-react";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createWhatsAppInstance } from "@/services/evolutionOnboardingService";
 
 const ROLES = [
@@ -186,7 +187,6 @@ export default function Settings() {
         subtitle="Configurações e Acesso do Colaborador"
         icon={SettingsIcon} 
         bgIcon={SettingsIcon}
-        accentColor="primary"
         className="mb-6"
       >
         <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
@@ -290,230 +290,248 @@ export default function Settings() {
         </div>
       </AdminHeroCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <Tabs defaultValue="equipe" className="w-full">
+        <TabsList className="w-full justify-start h-auto p-1 bg-slate-100/50 rounded-xl mb-6 overflow-x-auto flex-nowrap hide-scrollbar">
+          <TabsTrigger value="equipe" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold py-2 px-4 gap-2 text-xs">
+            <Users className="h-4 w-4" />
+            Minha Equipe
+          </TabsTrigger>
+          <TabsTrigger value="integracoes" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold py-2 px-4 gap-2 text-xs">
+            <Link2 className="h-4 w-4" />
+            Integrações & Webhooks
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Painel de convite */}
-        <div className="lg:col-span-4 space-y-4">
-          <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
-            <CardHeader className="bg-slate-900 text-white p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-xl"><UserPlus className="h-5 w-5 text-primary" /></div>
-                <div>
-                  <CardTitle className="text-base font-bold">Novo Convite</CardTitle>
-                  <CardDescription className="text-slate-400 text-xs">Adicione membros ao time</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email-convite" className="font-bold text-slate-700">E-mail</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="email-convite"
-                    type="email"
-                    placeholder="vendedor@empresa.com"
-                    className="pl-9 h-11 rounded-xl text-sm"
-                    value={emailToInvite}
-                    onChange={(e) => setEmailToInvite(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="font-bold text-slate-700">Cargo</Label>
-                <Select value={roleToInvite} onValueChange={setRoleToInvite}>
-                  <SelectTrigger className="h-11 rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="vendedor">Vendedor</SelectItem>
-                    {isAdmin && <SelectItem value="admin">Administrador</SelectItem>}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                className="w-full h-11 rounded-xl font-bold"
-                onClick={handleInvite}
-                disabled={inviting || !emailToInvite}
-              >
-                {inviting ? <RefreshCw className="animate-spin h-4 w-4" /> : "Gerar Link de Acesso"}
-              </Button>
-            </CardContent>
-          </Card>
+        <TabsContent value="equipe" className="mt-0 outline-none">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Painel de convite */}
+            <div className="lg:col-span-4 space-y-4">
+              <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
+                <CardHeader className="bg-slate-900 text-white p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/20 rounded-xl"><UserPlus className="h-5 w-5 text-primary" /></div>
+                    <div>
+                      <CardTitle className="text-base font-bold">Novo Convite</CardTitle>
+                      <CardDescription className="text-slate-400 text-xs">Adicione membros ao time</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email-convite" className="font-bold text-slate-700">E-mail</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        id="email-convite"
+                        type="email"
+                        placeholder="vendedor@empresa.com"
+                        className="pl-9 h-11 rounded-xl text-sm"
+                        value={emailToInvite}
+                        onChange={(e) => setEmailToInvite(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-slate-700">Cargo</Label>
+                    <Select value={roleToInvite} onValueChange={setRoleToInvite}>
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="vendedor">Vendedor</SelectItem>
+                        {isAdmin && <SelectItem value="admin">Administrador</SelectItem>}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    className="w-full h-11 rounded-xl font-bold"
+                    onClick={handleInvite}
+                    disabled={inviting || !emailToInvite}
+                  >
+                    {inviting ? <RefreshCw className="animate-spin h-4 w-4" /> : "Gerar Link de Acesso"}
+                  </Button>
+                </CardContent>
+              </Card>
 
-          {invitations.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Convites Pendentes</p>
-              {invitations.map((inv) => (
-                <div key={inv.id} className="bg-white border border-slate-100 rounded-xl p-4 flex items-center justify-between gap-2 shadow-sm">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-slate-700 truncate">{inv.email}</p>
-                    <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded-full border ${ROLE_COLORS[inv.tipo_acesso || 'vendedor']}`}>
-                      {inv.tipo_acesso || 'vendedor'}
+              {invitations.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Convites Pendentes</p>
+                  {invitations.map((inv) => (
+                    <div key={inv.id} className="bg-white border border-slate-100 rounded-xl p-4 flex items-center justify-between gap-2 shadow-sm">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-700 truncate">{inv.email}</p>
+                        <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded-full border ${ROLE_COLORS[inv.tipo_acesso || 'vendedor']}`}>
+                          {inv.tipo_acesso || 'vendedor'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-primary hover:bg-primary/5" onClick={() => copyInviteLink(inv.token)}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-red-400 hover:bg-red-50" onClick={() => deleteInvite(inv.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Membros */}
+            <div className="lg:col-span-8">
+              <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
+                <CardHeader className="p-5 sm:p-6 border-b border-slate-50">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 rounded-xl"><Users className="h-5 w-5 text-blue-500" /></div>
+                      <div>
+                        <CardTitle className="text-base font-bold">Membros Ativos</CardTitle>
+                        <CardDescription className="text-xs">Pessoas com acesso ao CRM</CardDescription>
+                      </div>
+                    </div>
+                    <span className="bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-600">
+                      {users.length} {users.length === 1 ? "membro" : "membros"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-primary hover:bg-primary/5" onClick={() => copyInviteLink(inv.token)}>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-slate-50">
+                    {users.map((u) => (
+                      <div key={u.id} className="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center font-black text-slate-500 text-sm shrink-0">
+                            {(u.nome_completo || "?").charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-slate-900 text-sm truncate">{u.nome_completo || "Sem nome"}</p>
+                            <p className="text-xs text-slate-400">{u.id === profile?.id ? "Você" : ""}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isAdmin && u.id !== profile?.id ? (
+                            <>
+                              <div className="flex items-center gap-2">
+                                {changingRole === u.id ? (
+                                  <RefreshCw className="animate-spin h-4 w-4 text-slate-400" />
+                                ) : (
+                                  <Select value={u.tipo_acesso || "vendedor"} onValueChange={(val) => changeRole(u.id, val)}>
+                                    <SelectTrigger className={`h-8 text-[11px] font-black uppercase rounded-full border px-3 ${ROLE_COLORS[u.tipo_acesso || "vendedor"]}`}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="manager">Manager</SelectItem>
+                                      <SelectItem value="vendedor">Vendedor</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                onClick={() => deleteMember(u.id)}
+                                title="Excluir Vendedor"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${ROLE_COLORS[u.tipo_acesso || "vendedor"]}`}>
+                              {u.tipo_acesso === "admin" ? "Admin" : u.tipo_acesso === "manager" ? "Manager" : "Vendedor"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="integracoes" className="mt-0 outline-none">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Integrações (WhatsApp) */}
+            {isAdmin && (
+              <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
+                <CardHeader className="bg-slate-900 text-white p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-500/20 rounded-xl"><MessageSquare className="h-5 w-5 text-green-400" /></div>
+                    <div>
+                      <CardTitle className="text-base font-bold">Conexão WhatsApp</CardTitle>
+                      <CardDescription className="text-slate-400 text-xs">Evolution API</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-sm text-slate-600">
+                      <p className="font-bold text-slate-900 mb-1">Status: {org?.evolution_instance_name ? "Conectado" : "Desconectado"}</p>
+                      <p>
+                        {org?.evolution_instance_name 
+                          ? `Instância ativa: ${org.evolution_instance_name}` 
+                          : "Provisione uma máquina de WhatsApp dedicada."}
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={handleCreateWhatsApp}
+                      disabled={creatingInstance || !!org?.evolution_instance_name}
+                      className="font-bold shrink-0"
+                    >
+                      {creatingInstance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {org?.evolution_instance_name ? "Já Conectado" : "Provisionar WhatsApp"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Webhooks de Recebimento de Leads */}
+            {isAdmin && (
+              <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
+                <CardHeader className="bg-slate-900 text-white p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/20 rounded-xl"><Upload className="h-5 w-5 text-blue-400" /></div>
+                    <div>
+                      <CardTitle className="text-base font-bold">Webhooks de Captura</CardTitle>
+                      <CardDescription className="text-slate-400 text-xs">Receba leads via POST</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <p className="text-sm text-slate-600">
+                    Use a URL abaixo nas campanhas (Zapier, Make, FB Ads) para injetar leads no CRM.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      readOnly 
+                      value={`https://[seu-projeto].supabase.co/functions/v1/webhook-leads?org=${profile?.organizacao_id}`}
+                      className="font-mono text-xs bg-slate-50 border-slate-200"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://[seu-projeto].supabase.co/functions/v1/webhook-leads?org=${profile?.organizacao_id}`);
+                        toast({ title: "URL Copiada", description: "Cole esta URL na sua plataforma de anúncios." });
+                      }}
+                    >
                       <Copy className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-red-400 hover:bg-red-50" onClick={() => deleteInvite(inv.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Membros */}
-        <div className="lg:col-span-8">
-          <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
-            <CardHeader className="p-5 sm:p-6 border-b border-slate-50">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-xl"><Users className="h-5 w-5 text-blue-500" /></div>
-                  <div>
-                    <CardTitle className="text-base font-bold">Membros Ativos</CardTitle>
-                    <CardDescription className="text-xs">Pessoas com acesso ao CRM</CardDescription>
+                  <div className="bg-amber-50 text-amber-800 p-3 rounded-lg text-xs border border-amber-200">
+                    <p className="font-bold mb-1">Campos suportados no JSON:</p>
+                    <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">nome</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">telefone</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">email</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">origem</code>
                   </div>
-                </div>
-                <span className="bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-600">
-                  {users.length} {users.length === 1 ? "membro" : "membros"}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-slate-50">
-                {users.map((u) => (
-                  <div key={u.id} className="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center font-black text-slate-500 text-sm shrink-0">
-                        {(u.nome_completo || "?").charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-900 text-sm truncate">{u.nome_completo || "Sem nome"}</p>
-                        <p className="text-xs text-slate-400">{u.id === profile?.id ? "Você" : ""}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isAdmin && u.id !== profile?.id ? (
-                        <>
-                          <div className="flex items-center gap-2">
-                            {changingRole === u.id ? (
-                              <RefreshCw className="animate-spin h-4 w-4 text-slate-400" />
-                            ) : (
-                              <Select value={u.tipo_acesso || "vendedor"} onValueChange={(val) => changeRole(u.id, val)}>
-                                <SelectTrigger className={`h-8 text-[11px] font-black uppercase rounded-full border px-3 ${ROLE_COLORS[u.tipo_acesso || "vendedor"]}`}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="manager">Manager</SelectItem>
-                                  <SelectItem value="vendedor">Vendedor</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                            onClick={() => deleteMember(u.id)}
-                            title="Excluir Vendedor"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${ROLE_COLORS[u.tipo_acesso || "vendedor"]}`}>
-                          {u.tipo_acesso === "admin" ? "Admin" : u.tipo_acesso === "manager" ? "Manager" : "Vendedor"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Integrações (WhatsApp) */}
-          {isAdmin && (
-            <Card className="border-none shadow-lg rounded-2xl overflow-hidden mt-6">
-              <CardHeader className="bg-slate-900 text-white p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-500/20 rounded-xl"><MessageSquare className="h-5 w-5 text-green-400" /></div>
-                  <div>
-                    <CardTitle className="text-base font-bold">Conexão WhatsApp (Evolution API)</CardTitle>
-                    <CardDescription className="text-slate-400 text-xs">Crie sua instância exclusiva automaticamente</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="text-sm text-slate-600">
-                    <p className="font-bold text-slate-900 mb-1">Status: {org?.evolution_instance_name ? "Conectado" : "Desconectado"}</p>
-                    <p>
-                      {org?.evolution_instance_name 
-                        ? `Instância ativa: ${org.evolution_instance_name}` 
-                        : "Clique no botão para provisionar uma nova máquina de WhatsApp dedicada para sua corretora."}
-                    </p>
-                  </div>
-                  <Button 
-                    onClick={handleCreateWhatsApp}
-                    disabled={creatingInstance || !!org?.evolution_instance_name}
-                    className="font-bold shrink-0"
-                  >
-                    {creatingInstance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {org?.evolution_instance_name ? "Já Conectado" : "Provisionar WhatsApp"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Webhooks de Recebimento de Leads */}
-          {isAdmin && (
-            <Card className="border-none shadow-lg rounded-2xl overflow-hidden mt-6">
-              <CardHeader className="bg-slate-900 text-white p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/20 rounded-xl"><Upload className="h-5 w-5 text-blue-400" /></div>
-                  <div>
-                    <CardTitle className="text-base font-bold">Webhooks de Captura (Integrações)</CardTitle>
-                    <CardDescription className="text-slate-400 text-xs">Receba leads do Facebook Ads, TikTok ou RD Station</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                <p className="text-sm text-slate-600">
-                  Use a URL abaixo nas suas campanhas de tráfego pago (via Zapier, Make ou nativo) para que os leads caiam diretamente no Funil do CRM em tempo real.
-                </p>
-                <div className="flex items-center gap-2">
-                  <Input 
-                    readOnly 
-                    value={`https://[seu-projeto].supabase.co/functions/v1/webhook-leads?org=${profile?.organizacao_id}`}
-                    className="font-mono text-xs bg-slate-50 border-slate-200"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      navigator.clipboard.writeText(`https://[seu-projeto].supabase.co/functions/v1/webhook-leads?org=${profile?.organizacao_id}`);
-                      toast({ title: "URL Copiada", description: "Cole esta URL na sua plataforma de anúncios." });
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="bg-amber-50 text-amber-800 p-3 rounded-lg text-xs border border-amber-200">
-                  <p className="font-bold mb-1">Campos suportados no POST JSON:</p>
-                  <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">nome</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">telefone</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">email</code>, <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">origem</code>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

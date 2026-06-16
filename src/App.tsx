@@ -27,6 +27,7 @@ import Chat from "./pages/admin/Chat";
 import CartaAnalise from "./pages/admin/CartaAnalise";
 import Comissoes from "./pages/admin/Comissoes";
 import Assinatura from "./pages/admin/Assinatura";
+import Onboarding from "./pages/admin/Onboarding";
 import AIChatbot from "./components/AIChatbot";
 import { useLocation } from "react-router-dom";
 
@@ -53,6 +54,11 @@ const AppContent = () => {
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/register" element={<Register />} />
         <Route path="/admin/reset-password" element={<ResetPassword />} />
+        <Route path="/admin/onboarding" element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        } />
         <Route
           path="/admin"
           element={
