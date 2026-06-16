@@ -18,7 +18,9 @@ import {
   Sparkles, 
   Search,
   ShieldAlert,
-  Calendar
+  Calendar,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { toast } from "sonner";
@@ -357,7 +359,11 @@ export default function Inadimplentes() {
   if (loading) return <div className="p-20 text-center animate-pulse text-slate-400 font-bold uppercase tracking-widest">Sincronizando base de cobrança...</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 flex flex-col min-h-0 relative group/main-scroll overflow-hidden">
+      <div 
+        id="inadimplentes-main-container"
+        className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar p-1"
+      >
       {/* Standard Header Row */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-black text-slate-900">Régua de Cobrança</h1>
@@ -722,6 +728,33 @@ export default function Inadimplentes() {
            </div>
         </DialogContent>
       </Dialog>
+      </div>
+
+      {/* Vertical Scroll Controls - Facilitated Methodology (Desktop Only) */}
+      <div className="hidden lg:flex absolute right-4 bottom-4 flex flex-col gap-2 opacity-70 hover:opacity-100 transition-opacity z-20">
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-10 w-10 rounded-full shadow-2xl bg-white/95 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all"
+          onClick={() => {
+            const container = document.getElementById('inadimplentes-main-container');
+            container?.scrollBy({ top: -400, behavior: 'smooth' });
+          }}
+        >
+          <ChevronUp className="h-6 w-6" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-10 w-10 rounded-full shadow-2xl bg-white/95 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all"
+          onClick={() => {
+            const container = document.getElementById('inadimplentes-main-container');
+            container?.scrollBy({ top: 400, behavior: 'smooth' });
+          }}
+        >
+          <ChevronDown className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   );
 }

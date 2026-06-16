@@ -25,7 +25,9 @@ import {
     Trash2, 
     Bike, 
     Home, 
-    Car as CarIcon
+    Car as CarIcon,
+    ChevronUp,
+    ChevronDown
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -641,9 +643,9 @@ ${gruposInfo}
             </div>
 
             {/* Chat Area - Floating */}
-            <div className="z-10 flex-1 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8">
+            <div className="z-10 flex-1 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8 relative">
                 {/* Messages Container (glassmorphism) */}
-                <ScrollArea className="flex-1 w-full mb-6 pr-2 sm:pr-4">
+                <ScrollArea id="jarvis-main-container" className="flex-1 w-full mb-6 pr-2 sm:pr-4">
                     <div className="space-y-6 pb-4">
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start animate-in slide-in-from-bottom-4 duration-500"}`}>
@@ -749,6 +751,32 @@ ${gruposInfo}
                             </Button>
                         ))}
                     </div>
+                </div>
+
+                {/* Vertical Scroll Controls - Facilitated Methodology (Desktop Only) */}
+                <div className="hidden lg:flex absolute right-[-20px] top-1/2 -translate-y-1/2 flex-col gap-2 opacity-70 hover:opacity-100 transition-opacity z-20">
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md"
+                        onClick={() => {
+                            const container = document.querySelector('#jarvis-main-container [data-radix-scroll-area-viewport]');
+                            container?.scrollBy({ top: -400, behavior: 'smooth' });
+                        }}
+                    >
+                        <ChevronUp className="h-6 w-6" />
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md"
+                        onClick={() => {
+                            const container = document.querySelector('#jarvis-main-container [data-radix-scroll-area-viewport]');
+                            container?.scrollBy({ top: 400, behavior: 'smooth' });
+                        }}
+                    >
+                        <ChevronDown className="h-6 w-6" />
+                    </Button>
                 </div>
             </div>
         </div>
