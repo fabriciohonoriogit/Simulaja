@@ -767,9 +767,7 @@ ${gruposInfo}
 
                 {/* Vertical Scroll Controls - Facilitated Methodology (Desktop Only) */}
                 <div className="hidden lg:flex absolute right-[-20px] top-1/2 -translate-y-1/2 flex-col gap-2 opacity-70 hover:opacity-100 transition-opacity z-20">
-                    <Button
-                        variant="secondary"
-                        size="icon"
+                    <button
                         className="h-10 w-10 rounded-full shadow-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-cyan-500 hover:text-white transition-all backdrop-blur-md flex items-center justify-center"
                         onClick={() => {
                             const container = document.getElementById('jarvis-main-container');
