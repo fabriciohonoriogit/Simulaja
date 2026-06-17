@@ -9,9 +9,9 @@ export const bcbService = {
   async getEconomicIndicators(): Promise<BcbData> {
     try {
       const [selicRes, ipcaRes, cdiRes, inccRes] = await Promise.all([
-        fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados/ultimos/1?formato=json').catch(() => null),
+        fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json').catch(() => null),
         fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/1?formato=json').catch(() => null),
-        fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json').catch(() => null),
+        fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json').catch(() => null),
         fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.192/dados/ultimos/1?formato=json').catch(() => null)
       ]);
 
