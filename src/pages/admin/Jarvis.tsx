@@ -472,7 +472,7 @@ export default function Jarvis() {
         // Simulações disponíveis (Grupos)
         const gruposInfo = Object.entries(GRUPOS).map(([tipo, lista]) => {
             return `Segmento ${tipo.toUpperCase()}:\n` + (lista as any[]).map(g => {
-                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m`;
+                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m, Taxa Adm: ${g.tx5050 ?? g.txLinear}%, Fundo de Reserva: ${g.fr5050 ?? g.frLinear}%`;
             }).join("\n");
         }).join("\n\n");
 
@@ -504,6 +504,8 @@ ${gruposInfo}
 
 *Instruções de Personalidade (MUITO IMPORTANTE)*: Aja como um assistente super humanizado, empático, motivador e bem-humorado, similar ao J.A.R.V.I.S ou a um parceiro de vendas muito sagaz. Use o clima a seu favor para criar empatia (ex: "Dia chuvoso, perfeito pra ligar pros leads", "Solzão hoje, vamo vender!"). Mantenha a resposta concisa mas cheia de personalidade. Coloque muita emoção na sua fala, vibrando intensamente com as vitórias e incentivando a equipe nas demandas!
 Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o usuário (ex: a roupa dele, a luz do ambiente, sua expressão), para criar um efeito UAU de que você o está enxergando.
+
+*Sobre o Simulador*: Ao informar opções de parcelas, diga ao usuário com muito orgulho que esses valores já são da "Nova Atualização da Tabela" inserida hoje. Se ele perguntar pela taxa, informe a "Taxa Administrativa" e o "Fundo de Reserva" que constam na memória.
 
 *Nota*: Para detalhes profundos de clientes específicos, inadimplentes, ou histórico, use suas Ferramentas (Tools).
 `;
