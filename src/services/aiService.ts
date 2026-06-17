@@ -12,17 +12,33 @@ export interface LeadContext {
 }
 
 async function callAI(prompt: string, maxTokens = 800, history?: Array<{role: string, text: string}>): Promise<{ text: string; error: any }> {
-  const { data, error } = await supabase.functions.invoke("jarvis-ai", {
-    body: { prompt, maxTokens, history },
-  });
-  if (error) {
-    console.error("aiService.callAI error:", error);
-    return { text: "", error };
+  let retries = 2;
+  let lastError = null;
+  while (retries >= 0) {
+    try {
+      const { data, error } = await supabase.functions.invoke("jarvis-ai", {
+        body: { prompt, maxTokens, history },
+      });
+      if (error) {
+        console.error("aiService.callAI error:", error);
+        lastError = error;
+        if (retries === 0) return { text: "", error };
+      } else if (data?.error) {
+        console.error("Jarvis returned error:", data.error);
+        lastError = data.error;
+        if (retries === 0) return { text: data.text || "", error: data.error };
+      } else {
+        return { text: data?.text ?? "", error: null };
+      }
+    } catch (e) {
+      console.error("aiService.callAI exception:", e);
+      lastError = e;
+      if (retries === 0) return { text: "", error: e };
+    }
+    retries--;
+    await new Promise(res => setTimeout(res, 1000));
   }
-  if (data?.error) {
-    return { text: "", error: data.error };
-  }
-  return { text: data?.text ?? "", error: null };
+  return { text: "", error: lastError };
 }
 
 export const aiService = {
