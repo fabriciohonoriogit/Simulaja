@@ -20,7 +20,7 @@ export type Category = { id: string; label: string; icon: string; };
 
 export const GRUPOS: Record<string, GrupoItem[]> = {
   imovel: [
-    { grupo: "6043", credito: 110000, prazo: 220, r50: 388.51, r100: 649.10, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0305, isPromo: true },
+    { grupo: "6043", credito: 110000, prazo: 220, r50: 377.84, r100: 649.10, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true },
     { grupo: "6043", credito: 120000, prazo: 220, r50: 423.83, r100: 707.80, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6043", credito: 130000, prazo: 220, r50: 459.19, r100: 767.11, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 140000, prazo: 190, r50: 565.85, r100: 895.66, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
