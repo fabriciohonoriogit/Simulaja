@@ -39,6 +39,7 @@ import { ESTATISTICAS_LANCES, GRUPOS } from "@/constants/simulador";
 import { aiService } from "@/services/aiService";
 import { Missao, calcularMissoes } from "@/lib/missoesService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
+import { bcbService, BcbData } from "@/services/bcbService";
 
 interface Message {
     id: string;
@@ -124,6 +125,7 @@ export default function Jarvis() {
             timestamp: new Date()
         }
     ]);
+    const [economiaDados, setEconomiaDados] = useState<BcbData | null>(null);
     const [isListening, setIsListening] = useState(false);
     const [isHandsFree, setIsHandsFree] = useState(false);
     const [orbState, setOrbState] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
@@ -380,6 +382,9 @@ export default function Jarvis() {
                     });
                     setSegmentMetas(segs);
                 }
+
+                const bcb = await bcbService.getEconomicIndicators();
+                setEconomiaDados(bcb);
             } catch (err) {
                 console.error("Erro ao carregar dados para o Jarvis:", err);
             } finally {
@@ -492,6 +497,12 @@ export default function Jarvis() {
 --- RESUMO RÁPIDO DA TELA ATUAL ---
 DATA DE HOJE: ${new Date().toLocaleDateString('pt-BR')} (Faltam ${Math.max(0, diasNoMes - diaHoje)} dias para o fim do mês)
 CLIMA ATUAL (LOCAL): ${climaInfo}
+
+--- INDICADORES ECONÔMICOS (BCB) ---
+Selic: ${economiaDados?.selic?.valor ? parseFloat(economiaDados.selic.valor).toFixed(2) + '% a.a.' : 'Não disponível'}
+IPCA: ${economiaDados?.ipca?.valor ? parseFloat(economiaDados.ipca.valor).toFixed(2) + '% ao mês' : 'Não disponível'}
+CDI: ${economiaDados?.cdi?.valor ? parseFloat(economiaDados.cdi.valor).toFixed(2) + '% a.a.' : 'Não disponível'}
+INCC: ${economiaDados?.incc?.valor ? parseFloat(economiaDados.incc.valor).toFixed(2) + '% ao mês' : 'Não disponível'}
 
 - Realizado no Mês: ${formatCurrency(realizadoMes)} de uma meta de ${formatCurrency(metaMensal)}.
 - Projeção de Fechamento Mês: ${formatCurrency(projecao)}

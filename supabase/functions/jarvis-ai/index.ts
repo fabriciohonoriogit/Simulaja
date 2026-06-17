@@ -41,6 +41,17 @@ const tools = [
         name: "get_metas",
         description: "Obtem as metas comerciais da equipe no ano atual.",
         parameters: { type: "OBJECT", properties: {} }
+      },
+      {
+        name: "search_web",
+        description: "Pesquisa na internet usando Tavily para obter notícias externas, informações sobre consórcios, ABAC, mercado imobiliário, veículos e investimentos.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            query: { type: "STRING", description: "O termo de busca (ex: 'notícias consórcio ABAC 2024')." }
+          },
+          required: ["query"]
+        }
       }
     ]
   }
@@ -72,6 +83,32 @@ async function executeTool(supabase: any, name: string, args: any) {
     if (name === "get_metas") {
       const { data } = await supabase.from('meta').select('*').limit(10);
       return { results: data || [] };
+    }
+    if (name === "search_web") {
+      const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "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";
+      if (!tavilyKey) return { error: "TAVILY_API_KEY não configurada no Supabase Secrets." };
+      
+      const reqBody = {
+        api_key: tavilyKey,
+        query: args.query,
+        search_depth: "basic",
+        include_answer: true,
+        max_results: 3
+      };
+      
+      const res = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody)
+      });
+      
+      if (!res.ok) return { error: "Erro ao buscar na internet via Tavily." };
+      const data = await res.json();
+      
+      return { 
+        answer: data.answer, 
+        results: data.results?.map((r: any) => ({ title: r.title, content: r.content, url: r.url })) 
+      };
     }
     return { error: `Ferramenta ${name} não encontrada.` };
   } catch(e: any) {
