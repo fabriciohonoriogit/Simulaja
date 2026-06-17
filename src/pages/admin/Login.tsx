@@ -4,10 +4,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { LogIn, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+
+const breatheAnimation = `
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+`;
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -26,7 +35,7 @@ export default function Login() {
     const { error } = await signIn(email, password);
     setLoading(false);
     if (error) {
-      setError("Email ou senha inválidos.");
+      setError("E-mail ou senha inválidos.");
     } else {
       navigate("/admin");
     }
@@ -59,49 +68,64 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <Card className="w-full max-w-md border-none shadow-2xl rounded-[28px] sm:rounded-[32px] overflow-hidden">
-        <CardHeader className="text-center space-y-2 pt-8 sm:pt-10 px-6 sm:px-8">
-          <div className="flex flex-col items-center pb-4 transition-all duration-700 hover:scale-105">
-            <img 
-              src="/icon-512.png" 
-              alt="Logo Contemplar" 
-              className="h-32 sm:h-40 w-auto object-contain drop-shadow-xl" 
-            />
-            <div className="flex flex-col items-center leading-tight mt-4">
-              <span className="text-[24px] sm:text-[32px] font-black tracking-tighter text-slate-900 uppercase">CONTEMPLAR</span>
-              <span className="text-[18px] sm:text-[22px] font-bold tracking-[0.3em] text-[#84CC16] -mt-1 ml-2">CRM</span>
-            </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0B1727] via-[#0D214F] to-[#102A20] p-4 relative overflow-hidden">
+      <style>{breatheAnimation}</style>
+      
+      {/* Pontos de luz sutis ao fundo */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#84CC16]/10 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Container Principal */}
+      <div className="w-full max-w-md animate-in fade-in duration-1000 z-10 flex flex-col items-center">
+        
+        {/* Logo Section */}
+        <div className="relative flex flex-col items-center mb-8 animate-breathe w-full">
+          {/* Halo luminoso atrás da logo */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 blur-2xl rounded-full" />
+          
+          <img src="/icon-512.png" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-2xl relative z-10" />
+          
+          <div className="flex flex-col items-center leading-tight mt-4 relative z-10">
+            <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase">CONTEMPLAR</span>
+            <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.3em] text-[#84CC16] -mt-1 ml-2">CRM</span>
           </div>
-          <CardTitle className="text-lg sm:text-xl font-bold text-slate-800 pt-3">Acesso ao Painel</CardTitle>
-        </CardHeader>
-        <CardContent className="px-6 sm:px-8 pb-8 sm:pb-10">
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          <p className="text-slate-300 text-sm mt-3 font-medium text-center max-w-xs relative z-10">
+            Gerencie clientes, vendas e contemplações em um só lugar.
+          </p>
+        </div>
+
+        {/* Card de Login */}
+        <div className="w-full bg-white/95 backdrop-blur-md rounded-[24px] shadow-2xl overflow-hidden p-6 sm:p-8 border border-white/20">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="vendedor@empresa.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12 rounded-xl text-base"
-              />
+              <Label htmlFor="email" className="text-slate-700 font-semibold ml-1">E-mail</Label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="vendedor@empresa.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-14 pl-12 rounded-2xl bg-slate-50 border-slate-200 text-base focus-visible:ring-[#84CC16] focus-visible:ring-offset-0 transition-all"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Senha</Label>
+              <div className="flex items-center justify-between ml-1">
+                <Label htmlFor="password" className="text-slate-700 font-semibold">Senha</Label>
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-xs font-bold text-primary hover:underline transition-all"
+                  className="text-xs font-semibold text-[#0D214F] hover:text-[#84CC16] transition-colors"
                 >
-                  Esqueceu a senha?
+                  Esqueceu sua senha?
                 </button>
               </div>
               <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -109,36 +133,35 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="pr-10 h-12 rounded-xl text-base"
+                  className="h-14 pl-12 pr-12 rounded-2xl bg-slate-50 border-slate-200 text-base focus-visible:ring-[#84CC16] focus-visible:ring-offset-0 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
-            {error && <p className="text-sm text-destructive font-medium text-center bg-destructive/10 py-2 rounded-lg">{error}</p>}
+            {error && <p className="text-sm text-red-500 font-medium text-center bg-red-50 py-2 rounded-lg border border-red-100">{error}</p>}
 
-            <Button type="submit" className="w-full h-12 rounded-xl font-bold text-base" disabled={loading}>
-              <LogIn className="mr-2 h-4 w-4" />
-              {loading ? "Entrando..." : "Entrar no CRM"}
+            <Button type="submit" className="w-full h-14 rounded-2xl font-bold text-base bg-[#0D214F] hover:bg-[#153273] text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all" disabled={loading}>
+              {loading ? "Autenticando..." : "Acessar Meu CRM"}
             </Button>
           </form>
 
-          <div className="mt-4 flex items-center justify-center space-x-2">
-            <div className="h-px bg-border flex-1"></div>
-            <span className="text-xs text-muted-foreground uppercase font-semibold">ou conecte-se com</span>
-            <div className="h-px bg-border flex-1"></div>
+          <div className="mt-6 flex items-center justify-center space-x-3 opacity-60">
+            <div className="h-px bg-slate-300 flex-1"></div>
+            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">OU</span>
+            <div className="h-px bg-slate-300 flex-1"></div>
           </div>
 
           <Button
             type="button"
             variant="outline"
-            className="w-full h-12 rounded-xl font-bold text-base mt-4 border-slate-200 hover:bg-slate-50 transition-colors"
+            className="w-full h-14 rounded-2xl font-bold text-base mt-6 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all"
             onClick={async () => {
               setLoading(true);
               await signInWithGoogle();
@@ -153,8 +176,23 @@ export default function Login() {
             </svg>
             Entrar com Google Workspace
           </Button>
-        </CardContent>
-      </Card>
+
+          <div className="mt-8 text-center">
+            <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold tracking-widest uppercase">
+              Clientes &bull; Vendas &bull; Contemplações &bull; Automações
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Rodapé Minimalista */}
+      <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
+        <p className="text-white/30 text-[11px] font-semibold tracking-[0.2em] uppercase">
+          Powered by Fabricio Honório
+        </p>
+      </div>
+
     </div>
   );
 }
