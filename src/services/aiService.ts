@@ -11,13 +11,13 @@ export interface LeadContext {
   cidade: string;
 }
 
-async function callAI(prompt: string, maxTokens = 800, history?: Array<{role: string, text: string}>): Promise<{ text: string; error: any }> {
+async function callAI(prompt: string, maxTokens = 800, history?: Array<{role: string, text: string}>, imageBase64?: string): Promise<{ text: string; error: any }> {
   let retries = 2;
   let lastError = null;
   while (retries >= 0) {
     try {
       const { data, error } = await supabase.functions.invoke("jarvis-ai", {
-        body: { prompt, maxTokens, history },
+        body: { prompt, maxTokens, history, imageBase64 },
       });
       if (error) {
         console.error("aiService.callAI error:", error);
@@ -53,7 +53,7 @@ Responda apenas com o texto da mensagem.`;
     return { script: text || "Olá, bom dia! Gostaria de falar sobre o seu consórcio.", error };
   },
 
-  async askJarvis(context: string, question: string, history?: Array<{role: string, text: string}>) {
+  async askJarvis(context: string, question: string, history?: Array<{role: string, text: string}>, imageBase64?: string) {
     const prompt = `Você é o Jarvis, diretor comercial parceiro de vendas.
 Você tem acesso a Ferramentas (Tools) para consultar o banco de dados do CRM em tempo real.
 Se o usuário perguntar sobre leads, metas, inadimplência ou carteira, USE AS FERRAMENTAS para buscar a informação antes de responder.
@@ -84,7 +84,7 @@ CONTEXTO DA TELA ATUAL:
 ${context}
 
 PERGUNTA: "${question}"`;
-    const { text, error } = await callAI(prompt, 500, history);
+    const { text, error } = await callAI(prompt, 500, history, imageBase64);
     return {
       answer: text || "Desculpe, ocorreu um erro de conexão. Tente novamente em instantes.",
       error,

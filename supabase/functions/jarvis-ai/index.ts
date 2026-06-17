@@ -101,14 +101,31 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     let prompt = body?.prompt ?? "";
     const history = body?.history || [];
+    const imageBase64 = body?.imageBase64;
+
+    const userParts: any[] = [];
+    if (prompt) {
+      userParts.push({ text: prompt });
+    }
+    if (imageBase64) {
+      userParts.push({
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: imageBase64
+        }
+      });
+    }
 
     const contents = [
       ...history.map((h: any) => ({
         role: h.role === "jarvis" || h.role === "model" ? "model" : "user",
         parts: [{ text: h.text }]
-      })),
-      { role: "user", parts: [{ text: prompt }] }
+      }))
     ];
+
+    if (userParts.length > 0) {
+      contents.push({ role: "user", parts: userParts });
+    }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODEL}:generateContent?key=${apiKey}`;
 

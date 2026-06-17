@@ -131,6 +131,28 @@ export default function Jarvis() {
     const handsFreeRecognitionRef = useRef<any>(null);
     const analyzeRef = useRef<any>(null);
     const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        // Inicializa a câmera ocultamente
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play().catch(e => console.error("Video play error", e));
+                }
+            })
+            .catch(err => {
+                console.warn("Câmera não autorizada ou não disponível:", err);
+            });
+            
+        return () => {
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                stream.getTracks().forEach(t => t.stop());
+            }
+        };
+    }, []);
 
 
     const speak = (text: string) => {
@@ -385,6 +407,23 @@ export default function Jarvis() {
         setMessages(prev => [...prev, userMsg]);
         setQuestion("");
 
+        let imageBase64: string | undefined;
+        if (videoRef.current && videoRef.current.readyState === 4) {
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = videoRef.current.videoWidth;
+                canvas.height = videoRef.current.videoHeight;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    ctx.drawImage(videoRef.current, 0, 0);
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+                    imageBase64 = dataUrl.split(",")[1];
+                }
+            } catch (err) {
+                console.error("Erro ao capturar imagem da câmera", err);
+            }
+        }
+
         const currentMonthStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).substring(0, 7);
         const metaMensal = metaAnual / 12;
         
@@ -464,6 +503,7 @@ CLIMA ATUAL (LOCAL): ${climaInfo}
 ${gruposInfo}
 
 *Instruções de Personalidade (MUITO IMPORTANTE)*: Aja como um assistente super humanizado, empático, motivador e bem-humorado, similar ao J.A.R.V.I.S ou a um parceiro de vendas muito sagaz. Use o clima a seu favor para criar empatia (ex: "Dia chuvoso, perfeito pra ligar pros leads", "Solzão hoje, vamo vender!"). Mantenha a resposta concisa mas cheia de personalidade. Coloque muita emoção na sua fala, vibrando intensamente com as vitórias e incentivando a equipe nas demandas!
+Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o usuário (ex: a roupa dele, a luz do ambiente, sua expressão), para criar um efeito UAU de que você o está enxergando.
 
 *Nota*: Para detalhes profundos de clientes específicos, inadimplentes, ou histórico, use suas Ferramentas (Tools).
 `;
@@ -473,7 +513,7 @@ ${gruposInfo}
             text: m.content
         }));
 
-        const response = await aiService.askJarvis(contextBuilder, query, history);
+        const response = await aiService.askJarvis(contextBuilder, query, history, imageBase64);
         
         let newAnalysis: JarvisAnalysis | null = null;
         if (query.toLowerCase().includes("resumo") || query.toLowerCase().includes("funil") || query.toLowerCase().includes("tudo")) {
@@ -650,6 +690,7 @@ ${gruposInfo}
 
     return (
         <div className="h-[calc(100vh-6rem)] w-full relative overflow-hidden rounded-3xl bg-slate-950 flex flex-col items-center shadow-2xl border border-slate-800 animate-in fade-in zoom-in-95 duration-700">
+            <video ref={videoRef} className="hidden" playsInline muted />
             {/* The 3D Orb Background - absolute and huge */}
             <div className="absolute inset-0 z-0 flex items-center justify-center opacity-70 pointer-events-none mix-blend-screen scale-150 sm:scale-125 md:scale-110 lg:scale-100">
                 <JarvisOrb state={orbState} />
