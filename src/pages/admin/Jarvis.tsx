@@ -692,7 +692,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
 
     return (
         <div className="h-[calc(100vh-6rem)] w-full relative overflow-hidden rounded-3xl bg-slate-950 flex flex-col items-center shadow-2xl border border-slate-800 animate-in fade-in zoom-in-95 duration-700">
-            <video ref={videoRef} className="hidden" playsInline muted />
+            <video ref={videoRef} className="opacity-0 absolute pointer-events-none w-1 h-1 -z-10" playsInline muted autoPlay />
             {/* The 3D Orb Background - absolute and huge */}
             <div className="absolute inset-0 z-0 flex items-center justify-center opacity-70 pointer-events-none mix-blend-screen scale-150 sm:scale-125 md:scale-110 lg:scale-100">
                 <JarvisOrb state={orbState} />
