@@ -241,13 +241,13 @@ export default function Login() {
 
       </div>
 
-      {/* Footer Powered by Jarvis */}
+      {/* Footer Powered by Fabricio */}
       <div className="absolute bottom-4 flex items-center justify-center space-x-2 z-10">
         <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-900/40 border border-blue-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(59,130,246,0.3)]">
           <Bot className="w-4 h-4 text-[#4ca8e8]" />
         </div>
-        <p className="text-white/70 text-[12px] font-medium">
-          Powered by <span className="text-[#84CC16] font-bold">Jarvis AI</span>
+        <p className="text-white/70 text-[12px] font-medium uppercase tracking-wider">
+          Powered por <span className="text-[#84CC16] font-bold">FABRICIO HONÓRIO</span>
         </p>
       </div>
 
