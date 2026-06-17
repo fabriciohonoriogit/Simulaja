@@ -210,10 +210,7 @@ Deno.serve(async (req) => {
         const result = await executeTool(supabase, fnName, fnArgs);
         
         contents.push({
-          role: "user", // The Gemini REST API accepts 'user' role with functionResponse or 'function' role. 'function' role is standard but 'user' works if strict mode is off. Better to use 'function'. Wait, actually Gemini API strictly uses 'function'. Let me use 'function'.
-          // Wait, role must be "function" for functionResponse! Wait, Gemini requires role "user" or "model" usually, but for functionResponse it uses "function"! No, role is "user" for function calls in some versions, but standard is "function". Let's use "function".
-          // In Gemini API, it's actually `role: "function"`.
-          role: "function",
+          role: "user",
           parts: [{
             functionResponse: {
               name: fnName,
