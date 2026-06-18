@@ -226,7 +226,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const pct = lista.length > 1 ? (safeIdx / (lista.length - 1)) * 100 : 0;
 
   const handleExportPDF = () => {
-    if (!resultado) return;
+    const res = resultado || (isInternal ? g : null);
+    if (!res) return;
     
     const doc = new jsPDF();
     const primaryColor = "#0D214F";
@@ -258,25 +259,25 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     doc.text("Detalhes da Simulação", 25, 87);
 
     const resIsLinear = isLinear;
-    const resTx = resIsLinear ? (resultado.txLinear ?? resultado.tx ?? 20) : (resultado.tx5050 ?? resultado.tx ?? 20);
-    const resFr = resIsLinear ? (resultado.frLinear ?? resultado.fr ?? 1) : (resultado.fr5050 ?? resultado.fr ?? 1);
+    const resTx = resIsLinear ? (res.txLinear ?? res.tx ?? 20) : (res.tx5050 ?? res.tx ?? 20);
+    const resFr = resIsLinear ? (res.frLinear ?? res.fr ?? 1) : (res.fr5050 ?? res.fr ?? 1);
 
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text("Crédito:", 25, 100);
     doc.setFont("helvetica", "bold");
-    doc.text(fmtFull(resultado.credito), 80, 100);
+    doc.text(fmtFull(res.credito), 80, 100);
 
     doc.setFont("helvetica", "normal");
     doc.text("Prazo:", 25, 110);
     doc.setFont("helvetica", "bold");
-    doc.text(`${resIsLinear ? (resultado.prazoLinear ?? resultado.prazo) : resultado.prazo} meses`, 80, 110);
+    doc.text(`${resIsLinear ? (res.prazoLinear ?? res.prazo) : res.prazo} meses`, 80, 110);
 
     doc.setFont("helvetica", "normal");
     doc.text(isLinear ? "Parcela Linear:" : "Parcela Reduzida (50%):", 25, 120);
     doc.setFont("helvetica", "bold");
     doc.setTextColor("#16a34a");
-    doc.text(fmtFull(isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50), 80, 120);
+    doc.text(fmtFull(isLinear ? (res.r100 ?? res.r50) : res.r50), 80, 120);
 
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "normal");
@@ -289,7 +290,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
         doc.setFont("helvetica", "bold");
         doc.text("Estratégia de Lance:", 25, 155);
         doc.setFont("helvetica", "normal");
-        const lanceTotal = resultado.credito * (lanceDinheiroPct + lanceEmbutidoPct) / 100;
+        const lanceTotal = res.credito * (lanceDinheiroPct + lanceEmbutidoPct) / 100;
         doc.text(`Total: ${fmtFull(lanceTotal)} (${lanceDinheiroPct + lanceEmbutidoPct}%)`, 80, 155);
     }
     
@@ -903,15 +904,16 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border mt-4">
                     <button
                       onClick={() => {
-                        const currentInstallment = isLinear ? (resultado.r100 ?? resultado.r50) : resultado.r50;
+                        const res = resultado || g;
+                        const currentInstallment = isLinear ? (res.r100 ?? res.r50) : res.r50;
                         let msg = `*Simulação de Consórcio*\n\n`;
-                        msg += `*Crédito:* ${fmtFull(resultado.credito)}\n`;
-                        const resPrazoWpp = isLinear ? (resultado.prazoLinear ?? resultado.prazo) : resultado.prazo;
+                        msg += `*Crédito:* ${fmtFull(res.credito)}\n`;
+                        const resPrazoWpp = isLinear ? (res.prazoLinear ?? res.prazo) : res.prazo;
                         msg += `*Prazo:* ${resPrazoWpp} meses\n`;
                         msg += `*${isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}:* ${fmtFull(currentInstallment)}\n\n`;
                         const resIsLinear = isLinear;
-                        const resTx = resIsLinear ? (resultado.txLinear ?? resultado.tx ?? 20) : (resultado.tx5050 ?? resultado.tx ?? 20);
-                        const resFr = resIsLinear ? (resultado.frLinear ?? resultado.fr ?? 1) : (resultado.fr5050 ?? resultado.fr ?? 1);
+                        const resTx = resIsLinear ? (res.txLinear ?? res.tx ?? 20) : (res.tx5050 ?? res.tx ?? 20);
+                        const resFr = resIsLinear ? (res.frLinear ?? res.fr ?? 1) : (res.fr5050 ?? res.fr ?? 1);
                         if (resTx !== undefined) msg += `*Taxa Adm:* ${resTx}%\n`;
                         if (resFr !== undefined) msg += `*Fundo Reserva:* ${resFr}%\n`;
                         if (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) {
@@ -993,14 +995,14 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
         </div>
       </section>
       {/* VERSAO INJETADA PARA DEBUG VISUAL */}
-      <div className="text-[10px] text-gray-300 text-center mt-2">v_fix_8_absoluto</div>
+      <div className="text-[10px] text-gray-300 text-center mt-2">v_fix_9_crm_fix</div>
       
       {/* Hidden Banner Generator placed absolutely to avoid ResizeObserver loops */}
-      {resultado && (
+      {(resultado || isInternal) && (
         <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
           <BannerGenerator 
             ref={bannerRef}
-            grupo={resultado}
+            grupo={resultado || g}
             categoria={categoria}
             paymentMode={effectiveMode}
             installmentValue={selectedInstallment}
