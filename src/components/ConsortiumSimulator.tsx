@@ -442,10 +442,12 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const bannerRef = useRef<HTMLDivElement>(null);
 
   const handleGerarImagem = async () => {
-    if (!bannerRef.current) {
+    const bannerElement = document.getElementById("banner-generator-container") || bannerRef.current;
+    
+    if (!bannerElement) {
       toast({
         title: "Erro interno",
-        description: "Referência da imagem não encontrada.",
+        description: "Referência da imagem não encontrada no DOM.",
         variant: "destructive"
       });
       return;
@@ -462,7 +464,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       // Wait a bit to ensure the offscreen DOM is fully painted
       await new Promise(res => setTimeout(res, 300));
       
-      const canvas = await html2canvas(bannerRef.current, { 
+      const canvas = await html2canvas(bannerElement, { 
         scale: 1, 
         useCORS: true, 
         logging: true,
