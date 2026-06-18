@@ -67,7 +67,7 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
       <div
         id="banner-generator-container"
         ref={ref}
-        className="fixed top-0 left-0 w-[1080px] h-[1920px] bg-cover bg-center flex flex-col text-white"
+        className="fixed top-0 left-[-9999px] w-[1080px] h-[1920px] bg-cover bg-center flex flex-col text-white"
         style={{
           backgroundImage: `url(${bgImage})`,
           opacity: 0.01,
