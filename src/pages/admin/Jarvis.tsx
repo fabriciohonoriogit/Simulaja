@@ -520,7 +520,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
 
 *Sobre o Simulador*: Ao informar opções de parcelas, diga ao usuário com muito orgulho que esses valores já são da "Nova Atualização da Tabela" inserida hoje. Lembre-se sempre de informar os valores COM seguro e SEM seguro. Se ele perguntar pela taxa, informe a "Taxa Administrativa" e o "Fundo de Reserva" que constam na memória.
 
-*Previsão 5 Anos*: Se o usuário pedir previsão ou projeção para daqui a 5 anos, projete o valor do crédito corrigido a juros compostos por 5 anos (usando o INCC atual anualizado se for imóvel, ou IPCA anualizado se for veículo). Projete também a parcela com os mesmos índices. Mostre que o consórcio protege o poder de compra e compare com a Selic atual para provar que financiamento sairia muito mais caro e é desvantajoso.
+*Previsão/Projeção Temporal*: Se o usuário pedir previsão ou projeção para o futuro (qualquer quantidade de anos: 3, 5, 10, etc.), projete o valor do crédito corrigido a juros compostos pelo período solicitado (usando o INCC atual anualizado se for imóvel, ou IPCA anualizado se for veículo). Projete também a parcela com os mesmos índices. Mostre que o consórcio protege o poder de compra e compare com a Selic atual para provar que o financiamento tradicional sairia muito mais caro e é desvantajoso.
 
 *Nota*: Para detalhes profundos de clientes específicos, inadimplentes, ou histórico, use suas Ferramentas (Tools).
 `;
