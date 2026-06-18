@@ -866,12 +866,89 @@ export default function Carteira() {
         <Button
           variant="outline"
           size="sm"
+          onClick={() => {
+            if (filteredAndSorted.length === 0) {
+              toast({ title: "Nenhum cliente para exportar." });
+              return;
+            }
+
+            const title = lotteryAdmin !== "TODAS" 
+              ? `Relatório de Clientes - ${lotteryAdmin}`
+              : `Relatório Geral de Clientes`;
+
+            const reportLines = filteredAndSorted.map(c => 
+              `Nome: ${c.nome} | Adm: ${c.administradora || 'N/I'} | Grupo: ${c.grupo} | Cota: ${c.cota} | Crédito: ${formatCurrency(c.valor_credito || 0)}`
+            );
+
+            const textToCopy = `${title}\n\n${reportLines.join('\n')}\n\nTotal de Clientes: ${filteredAndSorted.length}`;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+              toast({ title: "Copiado para área de transferência!" });
+            }).catch(() => {
+              toast({ title: "Pronto para imprimir!" });
+            });
+
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(`
+                <html>
+                  <head>
+                    <title>${title}</title>
+                    <style>
+                      body { font-family: Arial, sans-serif; padding: 20px; }
+                      h1 { font-size: 18px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+                      table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+                      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                      th { background-color: #f2f2f2; }
+                    </style>
+                  </head>
+                  <body>
+                    <h1>${title} (Total: ${filteredAndSorted.length})</h1>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Nome</th>
+                          <th>Administradora</th>
+                          <th>Grupo/Cota</th>
+                          <th>Crédito</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${filteredAndSorted.map(c => `
+                          <tr>
+                            <td>${c.nome}</td>
+                            <td>${c.administradora || 'N/I'}</td>
+                            <td>${c.grupo} / ${c.cota}</td>
+                            <td>${formatCurrency(c.valor_credito || 0)}</td>
+                            <td>${c.status === 'inadimplente' ? 'Inadimplente' : (c.cota_contemplada ? 'Contemplado' : 'Ativo')}</td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                    <script>
+                      window.onload = function() { window.print(); }
+                    </script>
+                  </body>
+                </html>
+              `);
+              printWindow.document.close();
+            }
+          }}
+          className="h-12 gap-2 text-indigo-600 bg-indigo-50 border-indigo-100 hover:bg-indigo-100 rounded-xl px-4 font-black uppercase text-xs"
+        >
+          <FileText className="h-4 w-4" />
+          Exportar Relatório
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={handleSyncData}
           className="h-12 gap-2 text-slate-600 bg-white border-slate-100 rounded-xl px-4 font-black uppercase text-xs"
           disabled={loading}
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Sincronizar Dados
+          Sincronizar
         </Button>
       </div>
 
