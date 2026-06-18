@@ -877,7 +877,7 @@ export default function Carteira() {
               : `Relatório Geral de Clientes`;
 
             const reportLines = filteredAndSorted.map(c => 
-              `Nome: ${c.nome} | Adm: ${c.administradora || 'N/I'} | Grupo: ${c.grupo} | Cota: ${c.cota} | Crédito: ${formatCurrency(c.valor_credito || 0)}`
+              `Nome: ${c.nome} | Segmento: ${formatToUpper(c.tipo_consorcio || 'N/I')} | Grupo: ${c.grupo} | Cota: ${c.cota}`
             );
 
             const textToCopy = `${title}\n\n${reportLines.join('\n')}\n\nTotal de Clientes: ${filteredAndSorted.length}`;
@@ -908,20 +908,18 @@ export default function Carteira() {
                       <thead>
                         <tr>
                           <th>Nome</th>
-                          <th>Administradora</th>
-                          <th>Grupo/Cota</th>
-                          <th>Crédito</th>
-                          <th>Status</th>
+                          <th>Segmento</th>
+                          <th>Grupo</th>
+                          <th>Cota</th>
                         </tr>
                       </thead>
                       <tbody>
                         ${filteredAndSorted.map(c => `
                           <tr>
                             <td>${c.nome}</td>
-                            <td>${c.administradora || 'N/I'}</td>
-                            <td>${c.grupo} / ${c.cota}</td>
-                            <td>${formatCurrency(c.valor_credito || 0)}</td>
-                            <td>${c.status === 'inadimplente' ? 'Inadimplente' : (c.cota_contemplada ? 'Contemplado' : 'Ativo')}</td>
+                            <td>${formatToUpper(c.tipo_consorcio || 'N/I')}</td>
+                            <td>${c.grupo}</td>
+                            <td>${c.cota}</td>
                           </tr>
                         `).join('')}
                       </tbody>
