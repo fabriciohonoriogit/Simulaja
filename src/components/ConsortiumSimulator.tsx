@@ -442,31 +442,48 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const bannerRef = useRef<HTMLDivElement>(null);
 
   const handleGerarImagem = async () => {
-    if (!bannerRef.current) return;
+    if (!bannerRef.current) {
+      toast({
+        title: "Erro interno",
+        description: "Referência da imagem não encontrada.",
+        variant: "destructive"
+      });
+      return;
+    }
     
+    toast({
+      title: "Gerando Imagem",
+      description: "Aguarde, processando alta resolução...",
+    });
+
     try {
       const { default: html2canvas } = await import("html2canvas");
       
       // Wait a bit to ensure the offscreen DOM is fully painted
       await new Promise(res => setTimeout(res, 300));
       
-      const canvas = await html2canvas(bannerRef.current, { scale: 1, useCORS: true, logging: true });
-      
+      const canvas = await html2canvas(bannerRef.current, { 
+        scale: 1, 
+        useCORS: true, 
+        logging: true,
+        backgroundColor: null
+      });
       
       const link = document.createElement('a');
       link.download = `Simulacao_Banner_${simNome || 'Consorcio'}.png`;
       link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
       link.click();
-      
+      document.body.removeChild(link);
       toast({
         title: "Sucesso",
         description: "Imagem gerada com sucesso!",
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       toast({
         title: "Erro",
-        description: "Não foi possível gerar a imagem.",
+        description: err?.message || "Não foi possível gerar a imagem.",
         variant: "destructive"
       });
     }
