@@ -61,6 +61,7 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
     }
 
     // Determine values to show
+    if (!grupo) return null;
     const taxaValue = grupo.txLinear || grupo.tx5050 || 18;
 
     return (
@@ -116,7 +117,7 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
               <div className="flex items-start">
                 <span className="text-[50px] font-bold mt-[20px] mr-[10px] text-blue-100">R$</span>
                 <span className="text-[140px] font-black text-white leading-none drop-shadow-md">
-                  {installmentValue.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {installmentValue?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
