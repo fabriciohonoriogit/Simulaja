@@ -13,6 +13,21 @@
     <link rel="icon" type="image/webp" href="/icon-512.webp" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <script>
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:red;color:white;z-index:999999;padding:20px;font-family:monospace;white-space:pre-wrap;overflow:auto;';
+        el.innerHTML = '<h1>CRITICAL ERROR</h1><p>' + msg + '</p><p>' + url + ':' + lineNo + ':' + columnNo + '</p><p>' + (error && error.stack ? error.stack : '') + '</p>';
+        document.body.appendChild(el);
+        return false;
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:darkred;color:white;z-index:999999;padding:20px;font-family:monospace;white-space:pre-wrap;overflow:auto;';
+        el.innerHTML = '<h1>UNHANDLED PROMISE REJECTION</h1><p>' + (event.reason && event.reason.stack ? event.reason.stack : event.reason) + '</p>';
+        document.body.appendChild(el);
+      });
+    </script>
+    <script>
       // AGGRESSIVE CACHE BUSTER FOR BRICKED PWAS
       (function() {
         var version = 'v_2026_06_18_fix2';
