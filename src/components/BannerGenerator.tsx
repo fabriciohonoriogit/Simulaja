@@ -87,23 +87,22 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
           <div className="flex justify-between items-start mb-[10px]">
             <div className="flex flex-col mt-[40px]">
               <span className="text-[45px] font-medium text-[#1e3a8a] tracking-widest uppercase">CONSÓRCIO</span>
-              <span className="text-[130px] font-black leading-none text-[#1e40af] drop-shadow-sm uppercase">
+              <span className="text-[130px] font-black leading-none text-[#1e40af] uppercase">
                 {title.replace('CONSÓRCIO ', '')}
               </span>
             </div>
             {/* Logo */}
-            <div className="flex flex-col items-end text-[#1e40af]">
-              <span className="text-[35px] font-medium leading-none tracking-wide">consórcio</span>
-              <span className="text-[75px] font-black tracking-tighter leading-none">MAGALU</span>
+            <div className="flex flex-col items-end mt-[20px]">
+              <img src="/logo-consorcio-magalu.png" alt="Consórcio Magalu" className="h-[80px] object-contain" />
             </div>
           </div>
 
           {/* Credit Value */}
-          <div className="flex items-end mb-[60px] drop-shadow-2xl">
-            <span className="text-[280px] font-black leading-none text-transparent bg-clip-text bg-gradient-to-b from-[#60a5fa] to-[#1e40af]" style={{ WebkitTextStroke: '3px white' }}>
+          <div className="flex items-end mb-[50px] drop-shadow-2xl">
+            <span className="text-[180px] font-black leading-none text-[#2563eb]" style={{ WebkitTextStroke: '2px white' }}>
               {Math.floor(grupo.credito / 1000)}
             </span>
-            <span className="text-[90px] font-black text-[#1e40af] mb-[45px] ml-[20px] drop-shadow-md">
+            <span className="text-[80px] font-black text-[#1e40af] mb-[25px] ml-[20px] drop-shadow-md">
               MIL
             </span>
           </div>
