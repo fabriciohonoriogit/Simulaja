@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { GrupoItem } from '@/constants/simulador';
+import type { GrupoItem } from '@/constants/simulador';
 
 interface BannerGeneratorProps {
   grupo: GrupoItem;
