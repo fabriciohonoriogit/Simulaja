@@ -66,12 +66,13 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
     return (
       <div
         ref={ref}
-        className="fixed top-[-9999px] left-[-9999px] w-[1080px] h-[1920px] overflow-hidden flex flex-col font-sans"
+        className="fixed top-0 left-0 w-[1080px] h-[1920px] bg-cover bg-center flex flex-col text-white"
         style={{
           backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          color: 'white'
+          opacity: 0.01,
+          pointerEvents: 'none',
+          zIndex: -9999,
+          transform: 'scale(1)'
         }}
       >
         {/* Gradient Overlay for better readability */}

@@ -448,9 +448,10 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       const { default: html2canvas } = await import("html2canvas");
       
       // Wait a bit to ensure the offscreen DOM is fully painted
-      await new Promise(res => setTimeout(res, 200));
+      await new Promise(res => setTimeout(res, 300));
       
-      const canvas = await html2canvas(bannerRef.current, { scale: 2, useCORS: true });
+      const canvas = await html2canvas(bannerRef.current, { scale: 1, useCORS: true, logging: true });
+      
       
       const link = document.createElement('a');
       link.download = `Simulacao_Banner_${simNome || 'Consorcio'}.png`;
