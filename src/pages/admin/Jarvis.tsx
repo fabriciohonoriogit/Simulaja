@@ -173,16 +173,16 @@ export default function Jarvis() {
         
         // Selecionar uma voz mais natural e humanizada
         const voices = window.speechSynthesis.getVoices();
-        const ptVoice = voices.find(v => v.lang === 'pt-BR' && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Online'))) 
-            || voices.find(v => v.lang === 'pt-BR');
+        const ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Luciana') || v.name.includes('Daniel') || v.name.includes('Thiago') || v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Online'))) 
+            || voices.find(v => v.lang.includes('pt-BR'));
             
         if (ptVoice) {
             msg.voice = ptVoice;
         }
 
-        // Emoção e energia
-        msg.rate = 1.05; // Levemente mais rápido
-        msg.pitch = 1.1; // Levemente mais alto para demonstrar empolgação/emoção
+        // Emoção e energia (Ajustado para evitar robotização no iOS)
+        msg.rate = 1.0; 
+        msg.pitch = 1.05;
         
         setOrbState("speaking");
         
@@ -477,7 +477,9 @@ export default function Jarvis() {
         // Simulações disponíveis (Grupos)
         const gruposInfo = Object.entries(GRUPOS).map(([tipo, lista]) => {
             return `Segmento ${tipo.toUpperCase()}:\n` + (lista as any[]).map(g => {
-                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela: R$ ${g.r50}, Prazo: ${g.prazo}m, Taxa Adm: ${g.tx5050 ?? g.txLinear}%, Fundo de Reserva: ${g.fr5050 ?? g.frLinear}%`;
+                const valorSeguro = (g.credito * (g.seguro || 0)) / 100;
+                const r50SemSeguro = (g.r50 - valorSeguro).toFixed(2);
+                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela C/ Seguro: R$ ${g.r50}, Parcela S/ Seguro: R$ ${r50SemSeguro}, Prazo: ${g.prazo}m, Taxa Adm: ${g.tx5050 ?? g.txLinear}%, Fundo de Reserva: ${g.fr5050 ?? g.frLinear}%`;
             }).join("\n");
         }).join("\n\n");
 
@@ -516,7 +518,9 @@ ${gruposInfo}
 *Instruções de Personalidade (MUITO IMPORTANTE)*: Aja como um assistente super humanizado, empático, motivador e bem-humorado, similar ao J.A.R.V.I.S ou a um parceiro de vendas muito sagaz. Use o clima a seu favor para criar empatia (ex: "Dia chuvoso, perfeito pra ligar pros leads", "Solzão hoje, vamo vender!"). Mantenha a resposta concisa mas cheia de personalidade. Coloque muita emoção na sua fala, vibrando intensamente com as vitórias e incentivando a equipe nas demandas!
 Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o usuário (ex: a roupa dele, a luz do ambiente, sua expressão), para criar um efeito UAU de que você o está enxergando.
 
-*Sobre o Simulador*: Ao informar opções de parcelas, diga ao usuário com muito orgulho que esses valores já são da "Nova Atualização da Tabela" inserida hoje. Se ele perguntar pela taxa, informe a "Taxa Administrativa" e o "Fundo de Reserva" que constam na memória.
+*Sobre o Simulador*: Ao informar opções de parcelas, diga ao usuário com muito orgulho que esses valores já são da "Nova Atualização da Tabela" inserida hoje. Lembre-se sempre de informar os valores COM seguro e SEM seguro. Se ele perguntar pela taxa, informe a "Taxa Administrativa" e o "Fundo de Reserva" que constam na memória.
+
+*Previsão 5 Anos*: Se o usuário pedir previsão ou projeção para daqui a 5 anos, projete o valor do crédito corrigido a juros compostos por 5 anos (usando o INCC atual anualizado se for imóvel, ou IPCA anualizado se for veículo). Projete também a parcela com os mesmos índices. Mostre que o consórcio protege o poder de compra e compare com a Selic atual para provar que financiamento sairia muito mais caro e é desvantajoso.
 
 *Nota*: Para detalhes profundos de clientes específicos, inadimplentes, ou histórico, use suas Ferramentas (Tools).
 `;
