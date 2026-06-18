@@ -448,7 +448,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     if (!bannerElement) {
       toast({
         title: "Erro interno",
-        description: "Referência da imagem não encontrada no DOM.",
+        description: `Ref null. DOM: ${!!document.getElementById('banner-generator-container')}. Res: ${!!resultado}. Body: ${!!document.body}.`,
         variant: "destructive"
       });
       return;
@@ -744,17 +744,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-                  {/* Hidden Banner Generator placed via Portal to avoid ResizeObserver loops */}
-                  {resultado && document.body && createPortal(
-                    <BannerGenerator 
-                      ref={bannerRef}
-                      grupo={resultado}
-                      categoria={categoria}
-                      paymentMode={effectiveMode}
-                      installmentValue={selectedInstallment}
-                    />,
-                    document.body
-                  )}
                   <button onClick={handleGerarPDF} className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[10px] text-[0.8rem] font-bold uppercase tracking-wider text-white transition-all hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, #122040 0%, #060f1e 100%)", boxShadow: "0 4px 20px rgba(6,15,30,0.3)" }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     Gerar PDF
@@ -1003,6 +992,21 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
           </div>
         </div>
       </section>
+      {/* VERSAO INJETADA PARA DEBUG VISUAL */}
+      <div className="text-[10px] text-gray-300 text-center mt-2">v_fix_8_absoluto</div>
+      
+      {/* Hidden Banner Generator placed absolutely to avoid ResizeObserver loops */}
+      {resultado && (
+        <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
+          <BannerGenerator 
+            ref={bannerRef}
+            grupo={resultado}
+            categoria={categoria}
+            paymentMode={effectiveMode}
+            installmentValue={selectedInstallment}
+          />
+        </div>
+      )}
     </div>
   );
 };
