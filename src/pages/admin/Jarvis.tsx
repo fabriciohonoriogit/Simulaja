@@ -173,16 +173,25 @@ export default function Jarvis() {
         
         // Selecionar uma voz mais natural e humanizada
         const voices = window.speechSynthesis.getVoices();
-        const ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Luciana') || v.name.includes('Daniel') || v.name.includes('Thiago') || v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Online'))) 
-            || voices.find(v => v.lang.includes('pt-BR'));
+        
+        // No iOS as vozes básicas são robóticas. Vamos priorizar Premium/Enhanced ou Google/Online.
+        let ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google')));
+        
+        if (!ptVoice) {
+            ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Luciana') || v.name.includes('Daniel') || v.name.includes('Thiago') || v.name.includes('Felipe') || v.name.includes('Letícia')));
+        }
+        
+        if (!ptVoice) {
+            ptVoice = voices.find(v => v.lang.includes('pt-BR'));
+        }
             
         if (ptVoice) {
             msg.voice = ptVoice;
         }
 
         // Emoção e energia (Ajustado para evitar robotização no iOS)
-        msg.rate = 1.0; 
-        msg.pitch = 1.05;
+        msg.rate = window.navigator.userAgent.match(/iPad|iPhone|iPod/) ? 1.0 : 1.0; 
+        msg.pitch = window.navigator.userAgent.match(/iPad|iPhone|iPod/) ? 1.0 : 1.05;
         
         setOrbState("speaking");
         
