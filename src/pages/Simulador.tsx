@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CRMDrawer } from "@/components/admin/CRMDrawer";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { 
   Calculator, 
   ChevronRight, 
@@ -14,8 +15,12 @@ import {
   CircleDollarSign,
   FileText,
   Share2,
-  CheckCircle2
+  CheckCircle2,
+  Image as ImageIcon
 } from "lucide-react";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { BannerGenerator } from "@/components/BannerGenerator";
 
 import { GRUPOS, CATEGORIAS, GrupoItem } from "@/constants/simulador";
 import { createLead } from "@/services/leadService";
@@ -103,6 +108,11 @@ export default function Simulador() {
 
   const resultRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef<HTMLDivElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showSubCategoryDialog, setShowSubCategoryDialog] = useState(false);
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
 
   const lista = GRUPOS[categoria] || GRUPOS["imovel"];
   const g = lista[idx] || lista[0];
@@ -259,6 +269,40 @@ export default function Simulador() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  const triggerImageGeneration = async (subCat: string = "") => {
+    setIsGenerating(true);
+    setShowSubCategoryDialog(false);
+    setSelectedSubCategory(subCat);
+
+    setTimeout(async () => {
+      if (bannerRef.current) {
+        try {
+          const canvas = await html2canvas(bannerRef.current, { scale: 2 });
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+          const link = document.createElement("a");
+          link.href = dataUrl;
+          link.download = `simulacao_${categoria}_${nome || 'cliente'}.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          toast({ title: "Imagem Gerada com Sucesso!" });
+        } catch (error) {
+          toast({ title: "Erro ao gerar imagem", variant: "destructive" });
+        } finally {
+          setIsGenerating(false);
+        }
+      }
+    }, 500);
+  };
+
+  const handleOpenImageDialog = () => {
+    if (categoria === 'imovel' || categoria === 'servicos') {
+      triggerImageGeneration();
+    } else {
+      setShowSubCategoryDialog(true);
+    }
+  };
+
   const wppLockMsg = historico.map((h, i) => `${i + 1}. ${fmt(h.credito)} — ${fmt(h.r50)}`).join("\n");
   const lockWppUrl = `https://wa.me/55${wppDestino}?text=${encodeURIComponent("Simulações:\n" + wppLockMsg)}`;
 
@@ -343,6 +387,9 @@ export default function Simulador() {
               <Button onClick={handleShareWhatsApp} className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold">
                 <Share2 className="mr-2 w-4 h-4" /> WHATSAPP
               </Button>
+              <Button onClick={handleOpenImageDialog} disabled={isGenerating} className="bg-blue-600 hover:bg-blue-700 text-white font-bold col-span-2 shadow-md">
+                <ImageIcon className="mr-2 w-5 h-5" /> {isGenerating ? "GERANDO..." : "GERAR IMAGEM PARA REDES SOCIAIS"}
+              </Button>
             </div>
           </div>
         )}
@@ -359,6 +406,45 @@ export default function Simulador() {
       </div>
 
       <CRMDrawer onLoadLead={handleLoadLead} onSaveSim={handleSaveSimToCRM} />
+
+      {resultado && (
+        <BannerGenerator 
+          ref={bannerRef}
+          grupo={g}
+          categoria={categoria}
+          subCategoria={selectedSubCategory}
+          paymentMode={effectiveMode}
+          installmentValue={selectedInstallment}
+        />
+      )}
+
+      <Dialog open={showSubCategoryDialog} onOpenChange={setShowSubCategoryDialog}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#0f2044]">Qual o tema da imagem?</DialogTitle>
+            <DialogDescription>
+              Selecione o tipo de bem para personalizar o fundo do banner.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {categoria === 'veiculo' && (
+              <>
+                <Button onClick={() => triggerImageGeneration('carro')} variant="outline" className="border-[#0f2044] text-[#0f2044] hover:bg-blue-50 font-bold h-12">Carro</Button>
+                <Button onClick={() => triggerImageGeneration('moto')} variant="outline" className="border-[#0f2044] text-[#0f2044] hover:bg-blue-50 font-bold h-12">Moto</Button>
+                <Button onClick={() => triggerImageGeneration('jet ski')} variant="outline" className="border-[#0f2044] text-[#0f2044] hover:bg-blue-50 font-bold h-12 col-span-2">Jet Ski</Button>
+              </>
+            )}
+            {categoria === 'pesados' && (
+              <>
+                <Button onClick={() => triggerImageGeneration('caminhão')} variant="outline" className="border-[#0f2044] text-[#0f2044] hover:bg-blue-50 font-bold h-12">Caminhão</Button>
+                <Button onClick={() => triggerImageGeneration('vans')} variant="outline" className="border-[#0f2044] text-[#0f2044] hover:bg-blue-50 font-bold h-12">Vans</Button>
+                <Button onClick={() => triggerImageGeneration('carros de luxo')} variant="outline" className="border-[#0f2044] text-[#0f2044] hover:bg-blue-50 font-bold h-12">Carros de Luxo</Button>
+                <Button onClick={() => triggerImageGeneration('tratores')} variant="outline" className="border-[#0f2044] text-[#0f2044] hover:bg-blue-50 font-bold h-12">Tratores</Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Fixed scroll up/down buttons — visible on all devices */}
       <div style={{

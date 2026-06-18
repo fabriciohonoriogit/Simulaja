@@ -26,6 +26,7 @@ import { useSimulador } from "@/hooks/useSimulador";
 import { useSimuladorStore } from "@/stores/simuladorStore";
 import { ResultadosSimulacao } from "./ResultadosSimulacao";
 import { SimulacaoData } from "@/schemas/simulacao";
+import { BannerGenerator } from "@/components/BannerGenerator";
 
 const sliderThumbStyles = `
   input[type=range].custom-slider {
@@ -438,32 +439,21 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   };
 
   const simulatorRef = useRef<HTMLDivElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   const handleGerarImagem = async () => {
-    if (!simulatorRef.current) return;
+    if (!bannerRef.current) return;
     
     try {
       const { default: html2canvas } = await import("html2canvas");
-      const el = simulatorRef.current;
       
-      // Add footer temporarily
-      const footer = document.createElement('div');
-      footer.style.textAlign = 'center';
-      footer.style.padding = '15px';
-      footer.style.marginTop = '15px';
-      footer.style.fontSize = '12px';
-      footer.style.fontWeight = 'bold';
-      footer.style.color = '#1a4080';
-      footer.style.fontFamily = 'sans-serif';
-      footer.innerText = 'www.oespecialistaconsorcio.com.br';
-      el.appendChild(footer);
+      // Wait a bit to ensure the offscreen DOM is fully painted
+      await new Promise(res => setTimeout(res, 200));
       
-      const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-      
-      el.removeChild(footer);
+      const canvas = await html2canvas(bannerRef.current, { scale: 2, useCORS: true });
       
       const link = document.createElement('a');
-      link.download = `Simulacao_${simNome || 'Consorcio'}.png`;
+      link.download = `Simulacao_Banner_${simNome || 'Consorcio'}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
       
@@ -981,6 +971,17 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
           </div>
         </div>
       </section>
+
+      {/* Hidden Banner Generator */}
+      {resultado && (
+        <BannerGenerator 
+          ref={bannerRef}
+          grupo={resultado}
+          categoria={categoria}
+          paymentMode={effectiveMode}
+          installmentValue={selectedInstallment}
+        />
+      )}
     </div>
   );
 };
