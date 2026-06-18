@@ -71,7 +71,7 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
         className="fixed top-0 left-[-9999px] w-[1080px] h-[1920px] bg-cover bg-center flex flex-col text-white"
         style={{
           backgroundImage: `url(${bgImage})`,
-          opacity: 0.01,
+          opacity: 1,
           pointerEvents: 'none',
           zIndex: -9999,
           transform: 'scale(1)'

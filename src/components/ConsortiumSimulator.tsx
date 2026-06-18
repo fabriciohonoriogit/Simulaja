@@ -995,7 +995,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
         </div>
       </section>
       {/* VERSAO INJETADA PARA DEBUG VISUAL */}
-      <div className="text-[10px] text-gray-300 text-center mt-2">v_fix_9_crm_fix</div>
+      <div className="text-[10px] text-gray-300 text-center mt-2">v_fix_10_color</div>
       
       {/* Hidden Banner Generator placed absolutely to avoid ResizeObserver loops */}
       {(resultado || isInternal) && (
