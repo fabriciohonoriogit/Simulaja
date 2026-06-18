@@ -82,6 +82,7 @@ export default function AdminLayout() {
     const [open, setOpen] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
     const [org, setOrg] = useState<OrganizationRow | null>(null);
+    const { hasJarvis } = useSubscription();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
         const saved = localStorage.getItem("admin_sidebar_collapsed");
         return saved === "true";
@@ -180,9 +181,10 @@ export default function AdminLayout() {
 
             <nav className="flex-1 p-2 space-y-1 overflow-y-auto mt-4">
                 {menuGroups.map((group) => {
-                    const groupItems = group.items.filter(item => 
-                        !item.adminOnly || profile?.tipo_acesso === 'admin'
-                    );
+                    const groupItems = group.items.filter(item => {
+                        if (item.path === "/admin/jarvis" && !hasJarvis) return false;
+                        return !item.adminOnly || profile?.tipo_acesso === 'admin';
+                    });
                     if (groupItems.length === 0) return null;
 
                     return (

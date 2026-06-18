@@ -31,6 +31,7 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { useProfile } from "@/hooks/useProfile";
+import { useSubscription } from "@/hooks/useSubscription";
 import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
@@ -651,6 +652,8 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
         analyzeRef.current = handleAnalyze;
     }, [handleAnalyze]);
 
+    const { hasJarvis } = useSubscription();
+
     useEffect(() => {
         isHandsFreeRef.current = isHandsFree;
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -713,6 +716,25 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
     }, [isHandsFree, toast]);
 
     if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
+
+    if (!hasJarvis) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-6 p-8">
+                <div className="h-24 w-24 bg-slate-100 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-12 w-12 text-slate-400" />
+                </div>
+                <div className="space-y-2 max-w-md">
+                    <h2 className="text-2xl font-black text-slate-900">J.A.R.V.I.S indisponível</h2>
+                    <p className="text-slate-600">
+                        O assistente inteligente não está incluído no seu plano atual. Faça o upgrade para o <strong>Plano Pro</strong> para acessar as análises de sentimento e a IA comercial.
+                    </p>
+                </div>
+                <Button onClick={() => window.location.href = '/admin/assinatura'} className="h-12 px-8 rounded-full font-bold">
+                    Fazer Upgrade
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div className="h-[calc(100vh-6rem)] w-full relative overflow-hidden rounded-3xl bg-slate-950 flex flex-col items-center shadow-2xl border border-slate-800 animate-in fade-in zoom-in-95 duration-700">

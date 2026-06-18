@@ -12,6 +12,8 @@ export interface SubscriptionInfo {
   isExpired: boolean;
   isTrialing: boolean;
   isActive: boolean;
+  plano: string | null;
+  hasJarvis: boolean;
 }
 
 export const useSubscription = (): SubscriptionInfo => {
@@ -26,6 +28,8 @@ export const useSubscription = (): SubscriptionInfo => {
     isExpired: false,
     isTrialing: false,
     isActive: false,
+    plano: null,
+    hasJarvis: false,
   });
 
   useEffect(() => {
@@ -47,7 +51,7 @@ export const useSubscription = (): SubscriptionInfo => {
 
       const { data: org } = await (supabase
         .from("organizacoes") as any)
-        .select("id, nome, subscription_status, trial_ends_at")
+        .select("id, nome, subscription_status, trial_ends_at, plano")
         .eq("id", perfil.organizacao_id)
         .single();
 
@@ -64,6 +68,11 @@ export const useSubscription = (): SubscriptionInfo => {
       const isActive = status === "active";
       const isTrialing = status === "trialing" && msLeft > 0;
       const isExpired = !isActive && !isTrialing;
+      
+      const plano = org.plano;
+      // Jarvis liberado no Trial ou se o plano NÃO for o Starter (basico). 
+      // Por padrão orgs nascem como 'pro' no trial.
+      const hasJarvis = isTrialing || (isActive && plano !== 'Starter' && plano !== 'starter');
 
       setData({
         loading: false,
@@ -75,6 +84,8 @@ export const useSubscription = (): SubscriptionInfo => {
         isExpired,
         isTrialing,
         isActive,
+        plano,
+        hasJarvis,
       });
     })();
   }, [user]);
