@@ -12,6 +12,30 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/webp" href="/icon-512.webp" />
     <link rel="shortcut icon" href="/favicon.ico" />
+    <script>
+      // AGGRESSIVE CACHE BUSTER FOR BRICKED PWAS
+      (function() {
+        var version = 'v_2026_06_18_fix2';
+        if (localStorage.getItem('pwa_bricked_fix') !== version) {
+          localStorage.setItem('pwa_bricked_fix', version);
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              for (var i = 0; i < regs.length; i++) {
+                regs[i].unregister();
+              }
+            });
+          }
+          if ('caches' in window) {
+            caches.keys().then(function(keys) {
+              keys.forEach(function(k) { caches.delete(k); });
+            });
+          }
+          setTimeout(function() {
+            window.location.reload(true);
+          }, 500);
+        }
+      })();
+    </script>
     <title>O Especialista Consórcio | Planejamento para Imóveis, Carros, Motos e Investimentos</title>
     <meta name="description" content="Planeje suas conquistas com parcelas acessíveis para imóveis, carros, motos, construção, reforma e investimentos. Faça sua simulação online com atendimento especializado." />
     <meta name="keywords" content="consórcio imóvel, consórcio carro, consórcio moto, planejamento patrimonial, sair do aluguel, investimento imobiliário, parcela reduzida" />
