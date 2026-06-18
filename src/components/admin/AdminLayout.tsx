@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import TrialBanner from "@/components/admin/TrialBanner";
 import TrialGate from "@/components/admin/TrialGate";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface MenuGroup {
     label: string;
