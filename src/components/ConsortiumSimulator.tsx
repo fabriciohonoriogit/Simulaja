@@ -509,7 +509,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
   return (
     <div 
-      className={`min-h-screen flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${!isInternal ? 'bg-[#040B16]' : 'bg-transparent'}`}
+      className={`min-h-screen flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} bg-[#040B16]`}
       onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
@@ -517,45 +517,39 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     >
       <style>{sliderThumbStyles}</style>
 
-      {!isInternal && (
-        <>
-          {/* Background Deep Gradient matching the image */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />
+      {/* Background Deep Gradient matching the image */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />
+      
+      {/* Orbs/Particles in the background */}
+      <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
+          <JarvisOrb state="idle" />
+      </div>
+
+      <section id="simulator" className="relative z-10 flex-1 py-12">
+        <div className={`container mx-auto px-4 flex flex-col items-center ${isInternal ? 'max-w-4xl' : 'max-w-[420px]'}`}>
           
-          {/* Orbs/Particles in the background */}
-          <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
-             <JarvisOrb state="idle" />
-          </div>
-        </>
-      )}
+          <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+              {/* Core Glow */}
+              <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
+              
+              {/* CSS Orbit Rings (Atoms) */}
+              <div className="absolute w-[220%] h-[70%] border border-blue-400/40 rounded-[100%] animate-[spin_10s_linear_infinite]" />
+              <div className="absolute w-[220%] h-[70%] border border-green-400/30 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
+              <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-[spin_20s_linear_infinite]" />
 
-      <section id="simulator" className={`relative z-10 flex-1 ${isInternal ? 'py-4' : 'py-12'}`}>
-        <div className={`container mx-auto px-2 sm:px-4 flex flex-col items-center ${isInternal ? 'max-w-5xl' : 'max-w-xl'}`}>
-          
-          {!isInternal && (
-            <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
-                {/* Core Glow */}
-                <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
-                
-                {/* CSS Orbit Rings (Atoms) */}
-                <div className="absolute w-[220%] h-[70%] border border-blue-400/40 rounded-[100%] animate-[spin_10s_linear_infinite]" />
-                <div className="absolute w-[220%] h-[70%] border border-green-400/30 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
-                <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-[spin_20s_linear_infinite]" />
-
-                {/* Logo Image */}
-                <img src="/icon-512.png" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
-              </div>
-
-              <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
-                <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
-                <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
-              </div>
+              {/* Logo Image */}
+              <img src="/icon-512.png" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
             </div>
-          )}
 
-          <div ref={simulatorRef} className={`w-full bg-white rounded-[24px] shadow-sm p-4 sm:p-8 relative z-10 border border-slate-200 ${isInternal ? 'lg:p-10' : ''}`}>
-            <div className={isInternal ? "grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12" : ""}>
+            <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
+              <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
+              <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
+            </div>
+          </div>
+
+          <div ref={simulatorRef} className="w-full bg-white rounded-[24px] shadow-2xl p-5 sm:p-8 relative z-10 border border-white/10">
+            <div className={isInternal ? "grid grid-cols-1 md:grid-cols-2 gap-8" : ""}>
               
               {/* ESQUERDA: Controles da Simulação */}
               <div className="flex flex-col w-full justify-center">
@@ -654,22 +648,22 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               </div> {/* FIM COLUNA ESQUERDA */}
 
               {/* DIREITA: Resultados & Ações (No CRM) */}
-              <div className={`flex flex-col w-full ${isInternal ? 'bg-slate-50/50 rounded-3xl p-5 sm:p-6 border border-slate-100' : ''}`}>
+              <div className={`flex flex-col w-full ${isInternal ? 'bg-slate-50/50 rounded-2xl p-4 sm:p-5 border border-slate-100' : ''}`}>
                 {isInternal && (
                   <>
 
                 {lista[safeIdx]?.seguro ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
                     <label
                       htmlFor="chk-seguro"
                       style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
                         cursor: 'pointer', userSelect: 'none',
-                        fontSize: '12px', fontWeight: 700,
+                        fontSize: '11px', fontWeight: 700,
                         color: incluirSeguro ? '#15803d' : '#64748b',
                         background: incluirSeguro ? '#f0fdf4' : '#f8fafc',
                         border: `1.5px solid ${incluirSeguro ? '#86efac' : '#cbd5e1'}`,
-                        borderRadius: '999px', padding: '6px 14px 6px 10px',
+                        borderRadius: '999px', padding: '4px 10px',
                         transition: 'all 0.2s'
                       }}
                     >
@@ -679,24 +673,24 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                         checked={incluirSeguro}
                         onChange={() => setIncluirSeguro(!incluirSeguro)}
                         style={{
-                          width: '15px', height: '15px',
+                          width: '13px', height: '13px',
                           accentColor: '#16a34a', cursor: 'pointer', flexShrink: 0
                         }}
                       />
-                      <Shield style={{ width: '13px', height: '13px', flexShrink: 0 }} />
+                      <Shield style={{ width: '12px', height: '12px', flexShrink: 0 }} />
                       {incluirSeguro ? 'Seguro incluso' : 'Sem seguro'}
                     </label>
                   </div>
                 ) : null}
-                <div className="rounded-[14px] p-5 text-center mb-5 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1.5px solid #86efac" }}>
+                <div className="rounded-[12px] p-4 text-center mb-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1.5px solid #86efac" }}>
                   <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: "linear-gradient(90deg,#16a34a,#4ade80)" }} />
-                  <p className="text-[0.65rem] font-bold uppercase tracking-wider mb-1" style={{ color: "#15803d" }}>
+                  <p className="text-[0.6rem] font-bold uppercase tracking-wider mb-0.5" style={{ color: "#15803d" }}>
                     {isLinear ? "Parcela Linear" : "Parcela reduzida 50%"} <span style={{ color: "#4ade80", fontWeight: 400 }}>· {isLinear ? "integral" : "até a contemplação"}</span>
                   </p>
-                  <p className="text-3xl sm:text-4xl font-medium" style={{ fontFamily: "monospace", color: "#16a34a" }}>
+                  <p className="text-3xl sm:text-3xl font-medium" style={{ fontFamily: "monospace", color: "#16a34a" }}>
                     {fmtFull(selectedInstallment)}
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:gap-2 mt-3.5 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:gap-1.5 mt-2 gap-1.5">
                     {[
                       { label: "Crédito", value: fmt(g.credito) },
                       { label: "Prazo", value: `${isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo} meses` },
@@ -705,48 +699,48 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                       ...(isInternal && tx !== undefined ? [{ label: "Tx Adm", value: `${tx}%` }] : []),
                       ...(isInternal && fr !== undefined ? [{ label: "F. Reserva", value: `${fr}%` }] : [])
                     ].map((m) => (
-                      <div key={m.label} className="bg-white rounded-lg py-2 px-2.5 text-center border border-green-100 shadow-sm">
-                        <p className="text-[0.58rem] uppercase tracking-wider mb-0.5 text-muted-foreground whitespace-nowrap">{m.label}</p>
-                        <p className="text-sm font-bold text-foreground" style={{ fontFamily: "monospace" }}>{m.value}</p>
+                      <div key={m.label} className="bg-white rounded py-1.5 px-2 text-center border border-green-100 shadow-sm w-full">
+                        <p className="text-[0.55rem] uppercase tracking-wider mb-0.5 text-muted-foreground whitespace-nowrap">{m.label}</p>
+                        <p className="text-xs font-bold text-foreground" style={{ fontFamily: "monospace" }}>{m.value}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="rounded-[14px] p-5 mb-5 border bg-white shadow-sm border-[#d8e0ee]">
-                  <p className="text-[0.65rem] font-bold tracking-[0.15em] text-[#1a4080] uppercase mb-4 flex items-center gap-2">
-                    <span className="text-base">🏹</span> Simulação de Lance
+                <div className="rounded-[12px] p-4 mb-4 border bg-white shadow-sm border-[#d8e0ee]">
+                  <p className="text-[0.6rem] font-bold tracking-[0.15em] text-[#1a4080] uppercase mb-3 flex items-center gap-1.5">
+                    <span className="text-sm">🏹</span> Simulação de Lance
                   </p>
                   
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                     <div>
-                      <label className="text-[0.6rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Pagos até Contemplar</label>
+                      <label className="text-[0.55rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Pagos até Contemplar</label>
                       <input 
                         type="number" min="0" value={parcelasContemplar} 
                         onChange={(e) => setParcelasContemplar(Number(e.target.value))}
-                        className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-lg px-3 py-2 text-sm font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
+                        className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-md px-2 py-1.5 text-xs font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
                       />
                     </div>
                     <div>
-                      <label className="text-[0.6rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Dinheiro (%)</label>
+                      <label className="text-[0.55rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Dinheiro (%)</label>
                       <div className="relative">
                         <input 
                           type="number" min="0" max="100" value={lanceDinheiroPct} 
                           onChange={(e) => setLanceDinheiroPct(Number(e.target.value))}
-                          className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-lg pl-3 pr-7 py-2 text-sm font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
+                          className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-md pl-2 pr-6 py-1.5 text-xs font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">%</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">%</span>
                       </div>
                     </div>
                     <div>
-                      <label className="text-[0.6rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Embutido (%)</label>
+                      <label className="text-[0.55rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Embutido (%)</label>
                       <div className="relative">
                         <input 
                           type="number" min="0" max="100" value={lanceEmbutidoPct} 
                           onChange={(e) => setLanceEmbutidoPct(Number(e.target.value))}
-                          className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-lg pl-3 pr-7 py-2 text-sm font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
+                          className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-md pl-2 pr-6 py-1.5 text-xs font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">%</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">%</span>
                       </div>
                     </div>
                   </div>
@@ -770,28 +764,28 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   </div>
                 </div>
 
-                <div className="rounded-[14px] p-5 mb-5 relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0c1a30 0%, #122040 100%)", border: "1px solid rgba(26,64,128,0.4)", boxShadow: "0 6px 30px rgba(6,15,30,0.2)" }}>
+                <div className="rounded-[12px] p-4 mb-4 relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0c1a30 0%, #122040 100%)", border: "1px solid rgba(26,64,128,0.4)", boxShadow: "0 6px 30px rgba(6,15,30,0.2)" }}>
                   <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, #1a4080, #e8aa20, #f5c842, #e8aa20, #1a4080)" }} />
-                  <p className="text-[0.65rem] font-bold tracking-[0.15em] uppercase text-white/90 mb-4 flex items-center gap-2">
-                    <span className="text-base opacity-90">✅</span> Resultados da Simulação
+                  <p className="text-[0.6rem] font-bold tracking-[0.15em] uppercase text-white/90 mb-3 flex items-center gap-1.5">
+                    <span className="text-sm opacity-90">✅</span> Resultados da Simulação
                   </p>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white/5 border border-white/10 rounded-[10px] p-3 text-center transition-all hover:bg-white/10" style={{ background: "rgba(200,144,10,0.12)", borderColor: "rgba(200,144,10,0.3)" }}>
-                      <p className="text-[0.55rem] font-bold tracking-wider uppercase text-white/60 mb-1">Parcela Pós-Contemplação</p>
-                      <p className="text-lg sm:text-xl font-bold font-mono text-[#f5c842]">{fmt(parcelaPos > 0 ? parcelaPos : g.r50)}</p>
+                    <div className="bg-white/5 border border-white/10 rounded-md p-2.5 text-center transition-all hover:bg-white/10" style={{ background: "rgba(200,144,10,0.12)", borderColor: "rgba(200,144,10,0.3)" }}>
+                      <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Parcela Pós-Contemplação</p>
+                      <p className="text-base sm:text-lg font-bold font-mono text-[#f5c842]">{fmt(parcelaPos > 0 ? parcelaPos : g.r50)}</p>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-[10px] p-3 text-center transition-all hover:bg-white/10">
-                      <p className="text-[0.55rem] font-bold tracking-wider uppercase text-white/60 mb-1">Crédito Disponível</p>
-                      <p className="text-sm font-medium font-mono text-white/90">{fmt(creditoDisponivel)}</p>
+                    <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
+                      <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Crédito Disponível</p>
+                      <p className="text-xs font-medium font-mono text-white/90">{fmt(creditoDisponivel)}</p>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-[10px] p-3 text-center transition-all hover:bg-white/10">
-                      <p className="text-[0.55rem] font-bold tracking-wider uppercase text-white/60 mb-1">Saldo Devedor</p>
-                      <p className="text-sm font-medium font-mono text-white/90">{fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}</p>
+                    <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
+                      <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Saldo Devedor</p>
+                      <p className="text-xs font-medium font-mono text-white/90">{fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}</p>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-[10px] p-3 text-center transition-all hover:bg-white/10">
-                      <p className="text-[0.55rem] font-bold tracking-wider uppercase text-white/60 mb-1">Prazo Restante</p>
-                      <p className="text-sm font-medium font-mono text-white/90">{prazoRestante} x</p>
+                    <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
+                      <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Prazo Restante</p>
+                      <p className="text-xs font-medium font-mono text-white/90">{prazoRestante} x</p>
                     </div>
                   </div>
                 </div>
@@ -819,28 +813,28 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   </>
                 )}
 
-                <div className={`space-y-3 mb-5 ${!isInternal ? 'mt-4' : ''}`}>
+                <div className={`grid grid-cols-1 ${!isInternal ? 'sm:grid-cols-1' : 'sm:grid-cols-2'} gap-2 mb-4 mt-2`}>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-[16px] w-[16px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
                     <input 
                       placeholder="Seu nome completo *" 
                       value={simNome} 
                       onChange={e => { setSimNome(e.target.value); setErrNome(false); }}
-                      className={`w-full h-12 pl-10 pr-4 rounded-xl bg-white border border-slate-200 text-sm focus:border-[#0D214F] outline-none shadow-sm ${errNome ? "border-red-400" : ""}`}
+                      className={`w-full h-10 pl-9 pr-3 rounded-lg bg-white border border-slate-200 text-xs focus:border-[#0D214F] outline-none shadow-sm ${errNome ? "border-red-400" : ""}`}
                     />
                   </div>
                   
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-[16px] w-[16px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
                     </div>
                     <input 
                       placeholder="Seu WhatsApp *" 
                       value={simWpp} 
                       onChange={e => { mascaraWpp(e.target.value); setErrWpp(false); }}
-                      className={`w-full h-12 pl-10 pr-4 rounded-xl bg-white border border-slate-200 text-sm focus:border-[#0D214F] outline-none shadow-sm ${errWpp ? "border-red-400" : ""}`}
+                      className={`w-full h-10 pl-9 pr-3 rounded-lg bg-white border border-slate-200 text-xs focus:border-[#0D214F] outline-none shadow-sm ${errWpp ? "border-red-400" : ""}`}
                     />
                   </div>
                 </div>
@@ -853,9 +847,9 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                 <button
                   onClick={confirmarSimulacao}
                   disabled={bloqueado}
-                  className={`w-full py-4 rounded-xl text-sm font-black uppercase tracking-[0.1em] flex items-center justify-center gap-3 transition-all disabled:opacity-45 disabled:cursor-not-allowed text-white shadow-lg active:scale-95 ${isInternal ? 'bg-[#0f2044] hover:bg-[#1a3266]' : 'bg-[#FF7A00] hover:bg-[#FF8B1F]'}`}
+                  className={`w-full py-3.5 rounded-xl text-sm font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2 transition-all disabled:opacity-45 disabled:cursor-not-allowed text-white shadow-lg active:scale-95 ${isInternal ? 'bg-[#0f2044] hover:bg-[#1a3266]' : 'bg-[#FF7A00] hover:bg-[#FF8B1F]'}`}
                 >
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4" />
                   {isInternal ? "Registrar Simulação" : "Ver Estratégia"}
                 </button>
                 
