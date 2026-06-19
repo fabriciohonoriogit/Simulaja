@@ -645,13 +645,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               ))}
             </div>
 
-              </div> {/* FIM COLUNA ESQUERDA */}
-
-              {/* DIREITA: Resultados & Ações (No CRM) */}
-              <div className={`flex flex-col w-full ${isInternal ? 'bg-slate-50/50 rounded-2xl p-4 sm:p-5 border border-slate-100' : ''}`}>
-                {isInternal && (
-                  <>
-
+            {isInternal && (
+              <div className="mt-2 w-full max-w-[400px] mx-auto">
                 {lista[safeIdx]?.seguro ? (
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
                     <label
@@ -706,6 +701,15 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+              </div> {/* FIM COLUNA ESQUERDA */}
+
+              {/* DIREITA: Resultados & Ações (No CRM) */}
+              <div className={`flex flex-col w-full ${isInternal ? 'bg-slate-50/50 rounded-2xl p-4 sm:p-5 border border-slate-100' : ''}`}>
+                {isInternal && (
+                  <>
 
                 <div className="rounded-[12px] p-4 mb-4 border bg-white shadow-sm border-[#d8e0ee]">
                   <p className="text-[0.6rem] font-bold tracking-[0.15em] text-[#1a4080] uppercase mb-3 flex items-center gap-1.5">
