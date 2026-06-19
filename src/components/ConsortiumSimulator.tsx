@@ -28,7 +28,6 @@ import { useSimuladorStore } from "@/stores/simuladorStore";
 import { ResultadosSimulacao } from "./ResultadosSimulacao";
 import { SimulacaoData } from "@/schemas/simulacao";
 import { BannerGenerator } from "@/components/BannerGenerator";
-import { JarvisOrb } from "@/components/admin/JarvisOrb";
 
 const sliderThumbStyles = `
   input[type=range].custom-slider {
@@ -509,7 +508,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
   return (
     <div 
-      className={`min-h-screen flex flex-col relative overflow-hidden ${isInternal ? 'bg-transparent' : 'bg-[#040B16]'} ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`min-h-screen flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} bg-transparent`}
       onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
@@ -517,44 +516,13 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     >
       <style>{sliderThumbStyles}</style>
 
-      {!isInternal && (
-        <>
-          {/* Background Deep Gradient matching the image */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />
-          
-          {/* Orbs/Particles in the background */}
-          <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
-             <JarvisOrb state="idle" />
-          </div>
-        </>
-      )}
-
-      <section id="simulator" className="py-12 relative z-10 flex-1">
-        <div className="container max-w-[420px] mx-auto px-4 flex flex-col items-center">
-          
-          {!isInternal && (
-            <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
-                {/* Core Glow */}
-                <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
-                
-                {/* CSS Orbit Rings (Atoms) */}
-                <div className="absolute w-[220%] h-[70%] border border-blue-400/40 rounded-[100%] animate-[spin_10s_linear_infinite]" />
-                <div className="absolute w-[220%] h-[70%] border border-green-400/30 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
-                <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-[spin_20s_linear_infinite]" />
-
-                {/* Logo Image */}
-                <img src="/icon-512.png" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
-              </div>
-
-              <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
-                <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
-                <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
-              </div>
-            </div>
-          )}
-
-          <div ref={simulatorRef} className="w-full bg-white rounded-[20px] shadow-[0_0_40px_rgba(0,0,0,0.3)] p-6 sm:p-8 relative z-10 border border-white/10">
+      <section id="simulator" className={`relative z-10 flex-1 ${isInternal ? 'py-4' : 'py-12'}`}>
+        <div className={`container mx-auto px-2 sm:px-4 flex flex-col items-center ${isInternal ? 'max-w-6xl' : 'max-w-xl'}`}>
+          <div ref={simulatorRef} className={`w-full bg-white rounded-[24px] shadow-sm p-5 sm:p-8 relative z-10 border border-slate-200 ${isInternal ? 'lg:p-10' : ''}`}>
+            <div className={isInternal ? "grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12" : ""}>
+              
+              {/* ESQUERDA: Controles da Simulação */}
+              <div className="flex flex-col w-full">
             <div className="flex justify-center mb-5">
               <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                 <button 
@@ -647,8 +615,12 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               ))}
             </div>
 
-            {isInternal && (
-              <>
+              </div> {/* FIM COLUNA ESQUERDA */}
+
+              {/* DIREITA: Resultados & Ações (No CRM) */}
+              <div className={`flex flex-col w-full ${isInternal ? 'bg-slate-50/50 rounded-3xl p-5 sm:p-6 border border-slate-100' : ''}`}>
+                {isInternal && (
+                  <>
 
                 {lista[safeIdx]?.seguro ? (
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
@@ -807,59 +779,63 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   </button>
                 </div>
 
-                <div className="h-px bg-border mb-5" />
+                <div className="h-px bg-slate-200 mb-5" />
+                  </>
+                )}
 
-              </>
-
-            )}
-
-            <div className="space-y-3 mb-5">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div className={`space-y-3 mb-5 ${!isInternal ? 'mt-4' : ''}`}>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <input 
+                      placeholder="Seu nome completo *" 
+                      value={simNome} 
+                      onChange={e => { setSimNome(e.target.value); setErrNome(false); }}
+                      className={`w-full h-12 pl-10 pr-4 rounded-xl bg-white border border-slate-200 text-sm focus:border-[#0D214F] outline-none shadow-sm ${errNome ? "border-red-400" : ""}`}
+                    />
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                    </div>
+                    <input 
+                      placeholder="Seu WhatsApp *" 
+                      value={simWpp} 
+                      onChange={e => { mascaraWpp(e.target.value); setErrWpp(false); }}
+                      className={`w-full h-12 pl-10 pr-4 rounded-xl bg-white border border-slate-200 text-sm focus:border-[#0D214F] outline-none shadow-sm ${errWpp ? "border-red-400" : ""}`}
+                    />
+                  </div>
                 </div>
-                <input 
-                  placeholder="Seu nome completo *" 
-                  value={simNome} 
-                  onChange={e => { setSimNome(e.target.value); setErrNome(false); }}
-                  className={`w-full h-12 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:border-[#0D214F] outline-none shadow-sm ${errNome ? "border-red-400" : ""}`}
-                />
-              </div>
-              
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+
+                <div className={`flex items-center gap-2 text-xs text-muted-foreground mb-4 ${isInternal ? 'justify-center' : ''}`}>
+                  <Clock className="w-3.5 h-3.5 text-primary opacity-75" />
+                  {isInternal ? "Finalizar simulação" : "Em segundos você verá sua estratégia."}
                 </div>
-                <input 
-                  placeholder="Seu WhatsApp *" 
-                  value={simWpp} 
-                  onChange={e => { mascaraWpp(e.target.value); setErrWpp(false); }}
-                  className={`w-full h-12 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:border-[#0D214F] outline-none shadow-sm ${errWpp ? "border-red-400" : ""}`}
-                />
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-              <Clock className="w-3.5 h-3.5 text-primary opacity-75" />
-              Em segundos você verá sua estratégia personalizada de contemplação.
-            </div>
-
-            <button
-              onClick={confirmarSimulacao}
-              disabled={bloqueado}
-              className="w-full py-5 rounded-2xl text-base font-black uppercase tracking-[0.15em] flex items-center justify-center gap-3 transition-all disabled:opacity-45 disabled:cursor-not-allowed bg-[#FF7A00] hover:bg-[#FF8B1F] text-white shadow-xl hover:shadow-[#FF7A00]/40 hover:scale-[1.03] active:scale-95"
-            >
-              Ver minha simulação
-              <ArrowRight className="w-6 h-6" />
-            </button>
-            <div className="mt-4 flex flex-col items-center gap-1">
-              <p className="text-[10px] font-bold text-[#FF7A00] uppercase tracking-widest">
-                Leva menos de 30 segundos
-              </p>
-              <p className="text-[10px] text-muted-foreground opacity-60">
-                Sem compromisso. Não enviamos spam.
-              </p>
-            </div>
+                <button
+                  onClick={confirmarSimulacao}
+                  disabled={bloqueado}
+                  className={`w-full py-4 rounded-xl text-sm font-black uppercase tracking-[0.1em] flex items-center justify-center gap-3 transition-all disabled:opacity-45 disabled:cursor-not-allowed text-white shadow-lg active:scale-95 ${isInternal ? 'bg-[#0f2044] hover:bg-[#1a3266]' : 'bg-[#FF7A00] hover:bg-[#FF8B1F]'}`}
+                >
+                  <ArrowRight className="w-5 h-5" />
+                  {isInternal ? "Registrar Simulação" : "Ver Estratégia"}
+                </button>
+                
+                {!isInternal && (
+                  <div className="mt-4 flex flex-col items-center gap-1">
+                    <p className="text-[10px] font-bold text-[#FF7A00] uppercase tracking-widest">
+                      Leva menos de 30 segundos
+                    </p>
+                    <p className="text-[10px] text-muted-foreground opacity-60">
+                      Sem compromisso. Não enviamos spam.
+                    </p>
+                  </div>
+                )}
+                
+              </div> {/* FIM COLUNA DIREITA */}
+            </div> {/* FIM GRID DA SECTION */}
 
             {resultado && (
               <div ref={resultRef} className="rounded-[18px] p-0 mt-8 animate-fade-in overflow-hidden border-2 border-primary bg-card shadow-xl">
