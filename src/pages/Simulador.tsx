@@ -56,10 +56,10 @@ const sliderThumbStyles = `
   input[type=range].custom-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     background: #ffffff;
-    border: 4px solid #0057a8;
+    border: 3px solid #0057a8;
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 0 4px rgba(0,0,0,0.1);
@@ -75,10 +75,10 @@ const sliderThumbStyles = `
     border-color: #ffffff;
   }
   input[type=range].custom-slider::-moz-range-thumb {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     background: #ffffff;
-    border: 4px solid #0057a8;
+    border: 3px solid #0057a8;
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 0 4px rgba(0,0,0,0.1);
@@ -353,7 +353,7 @@ export default function Simulador() {
   const lockWppUrl = `https://wa.me/55${wppDestino}?text=${encodeURIComponent("Simulações:\n" + wppLockMsg)}`;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden bg-[#040B16]">
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#040B16]">
       <style>{sliderThumbStyles}</style>
       <style>{customAnimations}</style>
       
@@ -365,11 +365,11 @@ export default function Simulador() {
          <JarvisOrb state="idle" />
       </div>
 
-      <div className="w-full max-w-[580px] animate-in fade-in duration-1000 z-10 flex flex-col items-center mt-4 sm:mt-8">
+      <div className="w-full max-w-[420px] animate-in fade-in duration-1000 z-10 flex flex-col items-center mt-4 sm:mt-8 pb-16">
         
         {/* Logo Section with Atom Rings */}
         <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
-          <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center">
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
             {/* Core Glow */}
             <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
             
@@ -379,110 +379,144 @@ export default function Simulador() {
             <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-orbit-3" />
 
             {/* Logo Image */}
-            <img src="/icon-512.png" alt="Logo Contemplar" className="h-28 sm:h-32 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
+            <img src="/icon-512.png" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
           </div>
 
-          <div className="flex flex-col items-center leading-tight mt-8 relative z-10">
-            <span className="text-[32px] sm:text-[36px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
-            <span className="text-[20px] sm:text-[22px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
+          <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
+            <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
+            <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
           </div>
           
-          <p className="text-slate-200 text-[13px] sm:text-sm mt-4 font-medium text-center leading-relaxed max-w-[340px] relative z-10 drop-shadow-md">
-            Simule seu Consórcio <span className="text-[#f47920] font-bold">em segundos</span>
+          <p className="text-slate-200 text-[12px] sm:text-[13px] mt-3 font-medium text-center leading-relaxed max-w-[300px] relative z-10 drop-shadow-md">
+            Simule seu Consórcio <span className="text-[#84CC16] font-bold">em segundos</span>
           </p>
         </div>
 
-        <div className="w-full bg-white rounded-[22px] p-8 shadow-[0_0_40px_rgba(0,0,0,0.3)] border border-white/10 relative z-10 mb-8">
-        <div className="text-center mb-8">
-          <p className="text-xs font-bold text-gray-400 uppercase mb-2">Crédito Desejado</p>
-          <p className="text-4xl font-black text-[#0f2044]">{fmt(g.credito)}</p>
-        </div>
+        {/* Card Principal (Idêntico ao Login) */}
+        <div className="w-full bg-white rounded-[20px] shadow-[0_0_40px_rgba(0,0,0,0.3)] p-6 sm:p-8 relative z-10 border border-white/10">
+          
+          <div className="text-center mb-5">
+            <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Crédito Desejado</h2>
+            <p className="text-3xl sm:text-4xl font-black text-[#0f2044]">{fmt(g.credito)}</p>
+          </div>
 
-        <input
-          type="range"
-          min={0}
-          max={lista.length - 1}
-          value={idx}
-          onChange={(e) => setIdx(Number(e.target.value))}
-          className="custom-slider w-full h-2 rounded-full appearance-none mb-8"
-          style={{ background: `linear-gradient(to right, #0057a8 ${pct}%, #e2e8f0 ${pct}%)` }}
-        />
+          <input
+            type="range"
+            min={0}
+            max={lista.length - 1}
+            value={idx}
+            onChange={(e) => setIdx(Number(e.target.value))}
+            className="custom-slider w-full h-1.5 rounded-full appearance-none mb-6 bg-slate-100"
+            style={{ background: `linear-gradient(to right, #0057a8 ${pct}%, #e2e8f0 ${pct}%)` }}
+          />
 
-        <div className="flex flex-wrap gap-2 justify-center mb-8">
-          {CATEGORIAS.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setCategoria(cat.id)}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${categoria === cat.id ? 'bg-[#0f2044] text-white' : 'bg-gray-50 text-gray-400 border-gray-100'}`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {hasBothPlans && (
-          <div className="flex justify-center mb-8 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex bg-slate-100/80 backdrop-blur p-1 rounded-2xl border border-slate-200/50">
-              <button 
-                onClick={() => setPaymentMode('reduzido')}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+          <div className="flex flex-wrap gap-1.5 justify-center mb-5">
+            {CATEGORIAS.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCategoria(cat.id)}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${categoria === cat.id ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-[#0f2044] hover:text-[#0f2044]'}`}
               >
-                Reduzido (50/50)
+                {cat.label}
               </button>
-              <button 
-                onClick={() => setPaymentMode('linear')}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                Linear (Integral)
-              </button>
+            ))}
+          </div>
+
+          {hasBothPlans && (
+            <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
+                <button 
+                  onClick={() => setPaymentMode('reduzido')}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Reduzido (50%)
+                </button>
+                <button 
+                  onClick={() => setPaymentMode('linear')}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Linear
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4 flex flex-col items-center justify-center mb-6">
+            <p className="text-[9px] font-bold text-green-600 uppercase tracking-widest mb-1">
+              {effectiveMode === "linear" ? "Parcela Linear" : "Parcela Reduzida (50%)"}
+            </p>
+            <p className="text-2xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
+          </div>
+
+          <div className="space-y-3 mb-5">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <Input 
+                placeholder="Seu nome completo *" 
+                value={nome} 
+                onChange={e => setNome(e.target.value)}
+                className={`h-12 pl-10 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm ${errNome ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+              />
+            </div>
+            
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+              </div>
+              <Input 
+                placeholder="Seu WhatsApp *" 
+                value={wpp} 
+                onChange={e => mascaraWpp(e.target.value)}
+                className={`h-12 pl-10 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm ${errWpp ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+              />
             </div>
           </div>
-        )}
 
-        <div className="bg-green-50 border border-green-100 rounded-2xl p-6 text-center mb-8">
-          <p className="text-[10px] font-bold text-green-600 uppercase mb-1">
-            {effectiveMode === "linear" ? "Parcela Linear (Integral)" : "Parcela Reduzida (50/50)"}
-          </p>
-          <p className="text-4xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
-        </div>
+          <Button onClick={confirmar} className="w-full h-12 rounded-xl font-bold text-[15px] bg-[#051125] hover:bg-[#0a1e3f] text-white shadow-lg transition-all">
+            Simular Agora <ChevronRight className="ml-2 w-4 h-4" />
+          </Button>
 
-        <div className="space-y-4 mb-8">
-          <Input placeholder="Nome Completo *" value={nome} onChange={e => setNome(e.target.value)} />
-          <Input placeholder="WhatsApp *" value={wpp} onChange={e => mascaraWpp(e.target.value)} />
-        </div>
+          {resultado && (
+            <div className="mt-6 p-5 border border-slate-200 rounded-xl animate-in fade-in slide-in-from-bottom-4 bg-slate-50">
+              <h3 className="font-bold text-slate-800 mb-4 text-center text-sm">Resultado Gerado</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-10 text-[11px] bg-white">
+                  <FileText className="mr-2 w-3.5 h-3.5" /> Baixar PDF
+                </Button>
+                <Button onClick={handleShareWhatsApp} className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold h-10 text-[11px] shadow-sm">
+                  <Share2 className="mr-2 w-3.5 h-3.5" /> Enviar
+                </Button>
+              </div>
+            </div>
+          )}
 
-        <Button onClick={confirmar} className="w-full h-14 bg-[#f47920] hover:bg-[#e66a10] text-white font-black uppercase text-lg rounded-xl shadow-lg shadow-orange-200">
-          Simular Agora <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-
-        {resultado && (
-          <div className="mt-8 p-6 border-2 border-[#0f2044] rounded-2xl animate-in fade-in slide-in-from-bottom-4">
-            <h3 className="font-bold text-[#0f2044] mb-4">Resultado da Simulação</h3>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <Button onClick={handleExportPDF} variant="outline" className="border-[#0f2044] text-[#0f2044] font-bold">
-                <FileText className="mr-2 w-4 h-4" /> PDF
-              </Button>
-              <Button onClick={handleShareWhatsApp} className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold">
-                <Share2 className="mr-2 w-4 h-4" /> WHATSAPP
+          {bloqueado && (
+            <div className="mt-6 p-5 border border-orange-200 rounded-xl text-center bg-orange-50">
+              <p className="text-xl mb-1">🔐</p>
+              <p className="font-bold text-slate-800 mb-3 text-sm">Limite Atingido</p>
+              <Button asChild className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold w-full h-10 text-[11px]">
+                <a href={lockWppUrl} target="_blank" rel="noreferrer">Falar com Especialista</a>
               </Button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {bloqueado && (
-          <div className="mt-8 p-8 border-2 border-orange-500 rounded-2xl text-center bg-orange-50">
-            <p className="text-2xl mb-2">🔐</p>
-            <p className="font-bold text-[#0f2044] mb-4">Limite de Simulações Atingido</p>
-            <Button asChild className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold w-full h-12">
-              <a href={lockWppUrl} target="_blank" rel="noreferrer">Falar com Especialista</a>
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <CRMDrawer onLoadLead={handleLoadLead} onSaveSim={handleSaveSimToCRM} />
+        <CRMDrawer onLoadLead={handleLoadLead} onSaveSim={handleSaveSimToCRM} />
 
       </div>
+      
+      {/* Footer Powered by Jarvis */}
+      <div className="absolute bottom-4 flex items-center justify-center space-x-2 z-10 pointer-events-none">
+        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-900/40 border border-blue-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#4ca8e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        </div>
+        <p className="text-white/70 text-[12px] font-medium uppercase tracking-wider">
+          Powered by <span className="text-[#84CC16] font-bold">Jarvis AI</span>
+        </p>
+      </div>
+
     </div>
   );
 }
