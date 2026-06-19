@@ -160,11 +160,11 @@ export default function AdminLayout() {
             }`}>
                 {!collapsed ? (
                     <div className="flex flex-col items-center">
-                        <img src="/icon-512.png" alt="Logo" className="h-8 w-auto mb-1" />
+                        <img src="/icon-512.webp" alt="Logo" className="h-8 w-auto mb-1" />
                         <span className="text-[10px] font-black tracking-widest text-[#84CC16]">CONTEMPLAR CRM</span>
                     </div>
                 ) : (
-                    <img src="/icon-512.png" alt="Logo" className="h-8 w-auto" />
+                    <img src="/icon-512.webp" alt="Logo" className="h-8 w-auto" />
                 )}
             </div>
 
@@ -266,7 +266,7 @@ export default function AdminLayout() {
                 <header className={`lg:hidden flex items-center justify-between px-4 h-16 shadow-sm z-30 transition-colors ${
                     isDayTime ? 'bg-white text-slate-900 border-b border-slate-100' : 'bg-[#001E3C] text-white border-b border-white/5'
                 }`}>
-                    <img src="/icon-512.png" alt="Logo" className="h-8 w-auto" />
+                    <img src="/icon-512.webp" alt="Logo" className="h-8 w-auto" />
                     <Sheet open={open} onOpenChange={setOpen}>
                         <SheetTrigger asChild>
                             <Button variant="ghost" size="icon" className={isDayTime ? "text-slate-900" : "text-white"}>

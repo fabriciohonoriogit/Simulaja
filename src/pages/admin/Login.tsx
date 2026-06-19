@@ -116,7 +116,7 @@ export default function Login() {
             <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-orbit-3" />
 
             {/* Logo Image */}
-            <img src="/icon-512.png" alt="Logo Contemplar" className="h-28 sm:h-32 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
+            <img src="/icon-512.webp" alt="Logo Contemplar" className="h-28 sm:h-32 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
           </div>
 
           <div className="flex flex-col items-center leading-tight mt-8 relative z-10">
