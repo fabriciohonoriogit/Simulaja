@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/hooks/use-toast";
 import { gerarPDF } from "@/lib/pdfGenerator";
+import { useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
   CheckCircle2,
@@ -113,6 +114,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const { categorias: hookCategorias, grupos: hookGrupos, isLoading } = useSimulador();
   const salvarSimulacao = useSimuladorStore((state) => state.salvarSimulacao);
   const historicoZustand = useSimuladorStore((state) => state.historico) || [];
+  const [searchParams] = useSearchParams();
 
   const dynamicCategorias = overrideConfig?.categorias || hookCategorias;
   const dynamicGrupos = overrideConfig?.grupos || hookGrupos;
@@ -402,7 +404,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       saldoDevedor: saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto,
       prazoRestante: prazoRestante,
       parcelaPosContemp: parcelaPos > 0 ? parcelaPos : g.r50,
-      consultorNome: profile?.nome || 'Consultor'
+      consultorNome: profile?.nome || searchParams.get("nome") || 'Fabricio Honório'
     });
   };
 
@@ -420,7 +422,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     const tipoParcelaStr = isLinear ? 'Linear' : 'Reduzida 50%';
     const prazo = isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
     const grupo = isSelectedLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
-    const consultor = profile?.nome || 'Consultor';
+    const consultor = profile?.nome || searchParams.get("nome") || 'Fabricio Honório';
 
     const msg = [
       `📅 ${dataStr}`,
