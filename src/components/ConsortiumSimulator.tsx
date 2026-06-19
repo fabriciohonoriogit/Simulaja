@@ -28,6 +28,7 @@ import { useSimuladorStore } from "@/stores/simuladorStore";
 import { ResultadosSimulacao } from "./ResultadosSimulacao";
 import { SimulacaoData } from "@/schemas/simulacao";
 import { BannerGenerator } from "@/components/BannerGenerator";
+import JarvisOrb from "@/components/admin/JarvisOrb";
 
 const sliderThumbStyles = `
   input[type=range].custom-slider {
@@ -508,47 +509,75 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
   return (
     <div 
-      className={`min-h-screen flex flex-col bg-transparent ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`min-h-screen flex flex-col relative overflow-hidden ${isInternal ? 'bg-transparent' : 'bg-[#040B16]'} ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
       onMouseMove={handleMouseMove}
     >
       <style>{sliderThumbStyles}</style>
-      <section id="simulator" className="py-20 bg-transparent">
-        <div className="container max-w-[620px] mx-auto px-2 sm:px-4">
-          <p className="text-[0.65rem] font-black tracking-[0.25em] uppercase text-center mb-3 text-[#FF7A00]">Estratégia</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center mb-2 text-foreground">
-            Descubra <span className="text-primary">seu plano de contemplação</span>
-          </h2>
-          <p className="text-sm text-center text-muted-foreground max-w-md mx-auto mb-8 leading-relaxed">
-            Em poucos segundos você visualiza crédito, parcela e prazo ideais para o seu objetivo.
-          </p>
 
-          <div ref={simulatorRef} className="rounded-[22px] p-4 sm:p-8 bg-card border border-border shadow-xl">
-            <div className="flex justify-center mb-6">
-              <div className="flex bg-muted p-1 rounded-xl border border-border">
+      {!isInternal && (
+        <>
+          {/* Background Deep Gradient matching the image */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />
+          
+          {/* Orbs/Particles in the background */}
+          <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
+             <JarvisOrb state="idle" />
+          </div>
+        </>
+      )}
+
+      <section id="simulator" className="py-12 relative z-10 flex-1">
+        <div className="container max-w-[420px] mx-auto px-4 flex flex-col items-center">
+          
+          {!isInternal && (
+            <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+                {/* Core Glow */}
+                <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
+                
+                {/* CSS Orbit Rings (Atoms) */}
+                <div className="absolute w-[220%] h-[70%] border border-blue-400/40 rounded-[100%] animate-[spin_10s_linear_infinite]" />
+                <div className="absolute w-[220%] h-[70%] border border-green-400/30 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
+                <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-[spin_20s_linear_infinite]" />
+
+                {/* Logo Image */}
+                <img src="/icon-512.png" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
+              </div>
+
+              <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
+                <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
+                <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
+              </div>
+            </div>
+          )}
+
+          <div ref={simulatorRef} className="w-full bg-white rounded-[20px] shadow-[0_0_40px_rgba(0,0,0,0.3)] p-6 sm:p-8 relative z-10 border border-white/10">
+            <div className="flex justify-center mb-5">
+              <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                 <button 
                   onClick={() => setSimulationMode('credit')}
-                  className={`px-2 py-2 sm:px-4 sm:py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all ${simulationMode === 'credit' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all ${simulationMode === 'credit' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   Por valor a conquistar
                 </button>
                 <button 
                   onClick={() => setSimulationMode('installment')}
-                  className={`px-2 py-2 sm:px-4 sm:py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all ${simulationMode === 'installment' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all ${simulationMode === 'installment' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                  Por valor mensal
+                  Mensalidade
                 </button>
               </div>
             </div>
 
-            <p className="text-xs font-semibold text-center mb-2 text-muted-foreground">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-center">
               {simulationMode === "credit" ? "Quanto você quer conquistar?" : "Quanto você pode investir por mês?"}
             </p>
-            <div className="text-center mb-6">
-              <span className="text-sm font-bold mr-1 text-muted-foreground/60">R$</span>
-              <span className="text-4xl sm:text-5xl font-black text-[#0D214F] tracking-tighter">
+            <div className="text-center mb-5">
+              <span className="text-sm font-bold mr-1 text-slate-400">R$</span>
+              <span className="text-3xl sm:text-4xl font-black text-[#0f2044]">
                 {simulationMode === "credit" ? g.credito.toLocaleString("pt-BR") : selectedInstallment.toLocaleString("pt-BR")}
               </span>
             </div>
@@ -581,37 +610,39 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             {(() => {
               if (!hasBothPlans) return null;
               return (
-                <div className="flex justify-center mb-8 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="flex bg-slate-100/80 backdrop-blur p-1 rounded-2xl border border-slate-200/50">
+                <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                     <button 
                       onClick={() => setPaymentMode('reduzido')}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#FF7A00] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                     >
-                      Reduzido (50/50)
+                      Reduzido (50%)
                     </button>
                     <button 
                       onClick={() => setPaymentMode('linear')}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#FF7A00] text-white shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                     >
-                      Linear (Integral)
+                      Linear
                     </button>
                   </div>
                 </div>
               );
             })()}
 
-            <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center mb-6">
+            <div className="flex flex-wrap gap-1.5 justify-center mb-5">
               {dynamicCategorias.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setCategoria(cat.id)}
-                  className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-full text-[10px] font-black uppercase tracking-wider transition-all border-2 ${categoria === cat.id
-                    ? "bg-[#0D214F] text-white border-[#0D214F] shadow-lg scale-105"
-                    : "bg-white text-muted-foreground border-slate-100 hover:border-[#FF7A00] hover:text-[#FF7A00]"
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${categoria === cat.id
+                    ? 'bg-[#0f2044] text-white border-[#0f2044]' 
+                    : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-[#0f2044] hover:text-[#0f2044]'
                     }`}
                 >
-                  <span className="text-base group-hover:scale-125 transition-transform">{cat.icon}</span>
-                  {cat.label}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px]">{cat.icon}</span>
+                    {cat.label}
+                  </div>
                 </button>
               ))}
             </div>
@@ -782,25 +813,31 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
             )}
 
-            <input
-              type="text"
-              placeholder="Seu nome completo *"
-              value={simNome}
-              onChange={(e) => { setSimNome(e.target.value); setErrNome(false); }}
-              className={`w-full px-4 py-[15px] rounded-[10px] text-sm outline-none mb-1 transition-all bg-background text-foreground border ${errNome ? "border-destructive" : "border-border"} focus:border-primary focus:ring-1 focus:ring-primary/20`}
-            />
-            {errNome && <p className="text-xs text-destructive mb-2 ml-0.5">Por favor, informe seu nome.</p>}
-            {!errNome && <div className="mb-2.5" />}
-
-            <input
-              type="tel"
-              placeholder="Seu WhatsApp *"
-              value={simWpp}
-              onChange={(e) => { mascaraWpp(e.target.value); setErrWpp(false); }}
-              className={`w-full px-4 py-[15px] rounded-[10px] text-sm outline-none mb-1 transition-all bg-background text-foreground border ${errWpp ? "border-destructive" : "border-border"} focus:border-primary focus:ring-1 focus:ring-primary/20`}
-            />
-            {errWpp && <p className="text-xs text-destructive mb-2 ml-0.5">Por favor, informe um WhatsApp válido.</p>}
-            {!errWpp && <div className="mb-2.5" />}
+            <div className="space-y-3 mb-5">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <input 
+                  placeholder="Seu nome completo *" 
+                  value={simNome} 
+                  onChange={e => { setSimNome(e.target.value); setErrNome(false); }}
+                  className={`w-full h-12 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:border-[#0D214F] outline-none shadow-sm ${errNome ? "border-red-400" : ""}`}
+                />
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                </div>
+                <input 
+                  placeholder="Seu WhatsApp *" 
+                  value={simWpp} 
+                  onChange={e => { mascaraWpp(e.target.value); setErrWpp(false); }}
+                  className={`w-full h-12 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:border-[#0D214F] outline-none shadow-sm ${errWpp ? "border-red-400" : ""}`}
+                />
+              </div>
+            </div>
 
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
               <Clock className="w-3.5 h-3.5 text-primary opacity-75" />
