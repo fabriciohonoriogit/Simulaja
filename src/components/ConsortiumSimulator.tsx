@@ -407,34 +407,47 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
   const handleEnviarWpp = () => {
     const dataStr = new Date().toLocaleDateString('pt-BR');
+    const segmentLabel = dynamicCategorias.find(c => c.id === categoria)?.label || categoria;
+    
+    let emojiBem = "🏠";
+    if (categoria === "veiculo") emojiBem = "🚗";
+    else if (categoria === "pesados") emojiBem = "🚛";
+    else if (categoria === "servicos") emojiBem = "🎓";
+    else if (categoria === "eletro") emojiBem = "💻";
+
+    const isIm = categoria === 'imovel';
+    const tipoParcelaStr = isLinear ? 'Linear' : 'Reduzida 50%';
+    const prazo = isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
+    const grupo = isSelectedLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
+    const consultor = profile?.nome || 'Consultor';
+
     const msg = [
-      `🏆 *CONTEMPLAR | Simulador de Lance*`,
       `📅 ${dataStr}`,
       ``,
-      `👤 *Cliente:* ${simNome || 'Não informado'}`,
-      `📋 *SIMULAÇÃO DE CONSÓRCIO*`,
+      `👤 Cliente: ${simNome || 'Não informado'}`,
+      `📋 SIMULAÇÃO DE CONSÓRCIO`,
       `─────────────────────────`,
-      `🚗 *Bem:* ${dynamicCategorias.find(c => c.id === categoria)?.label || categoria} | Grupo ${isSelectedLinear ? (g.grupoLinear ?? g.grupo) : g.grupo}`,
-      `💳 *Carta de Crédito:* ${fmt(g.credito)}`,
-      `📆 *Prazo:* ${isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo} meses`,
-      `📊 *Tipo de Parcela:* ${isLinear ? 'Linear' : 'Reduzida 50%'}`,
+      `${emojiBem} Bem: ${segmentLabel} | Grupo ${grupo}`,
+      `💰 Carta de Crédito: ${fmt(g.credito)}`,
+      `⏱️ Prazo: ${prazo} meses`,
+      `📉 Tipo de Parcela: ${tipoParcelaStr}`,
       ``,
-      `🏹 *LANCE*`,
+      `🚀 LANCE`,
       `─────────────────────────`,
       `💵 Dinheiro: ${lanceDinheiroPct}%`,
-      `💡 Embutido: ${lanceEmbutidoPct}%`,
-      `💰 *Total do Lance:* ${lanceTotalPct}% → ${fmt(lanceTotalRS)}`,
+      `🔄 Embutido: ${lanceEmbutidoPct}%`,
+      `🎯 Total do Lance: ${lanceTotalPct}% → ${fmt(lanceTotalRS)}`,
       ``,
-      `✅ *RESULTADOS PÓS-CONTEMPLAÇÃO*`,
+      `📊 VALOR PARCELA`,
       `─────────────────────────`,
-      `📌 *Valor da Parcela Atual:* ${fmt(g.r50)}`,
-      `💳 Crédito Disponível: ${fmt(creditoDisponivel)}`,
+      `💵 Valor da Parcela Atual: ${fmt(g.r50)}`,
+      `💰 Crédito Disponível: ${fmt(creditoDisponivel)}`,
       `📉 Saldo Devedor: ${fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}`,
-      `🗓️ Prazo Restante: ${prazoRestante} meses`,
-      `📊 *Parcela Pós-Contemplação:* ${fmt(parcelaPos > 0 ? parcelaPos : g.r50)}`,
+      `⏱️ Prazo Restante: ${prazoRestante} meses`,
+      `📉 Parcela Pós-Contemplação: ${fmt(parcelaPos > 0 ? parcelaPos : g.r50)}`,
       ``,
       `─────────────────────────`,
-      `📲 _Simulação realizada por ${profile?.nome || 'Consultor'}_`
+      `👨‍💼 Simulação realizada por ${consultor}`
     ].join('\n');
 
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
@@ -903,25 +916,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border mt-4">
                     <button
-                      onClick={() => {
-                        const res = resultado || g;
-                        const currentInstallment = isLinear ? (res.r100 ?? res.r50) : res.r50;
-                        let msg = `*Simulação de Consórcio*\n\n`;
-                        msg += `*Crédito:* ${fmtFull(res.credito)}\n`;
-                        const resPrazoWpp = isLinear ? (res.prazoLinear ?? res.prazo) : res.prazo;
-                        msg += `*Prazo:* ${resPrazoWpp} meses\n`;
-                        msg += `*${isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}:* ${fmtFull(currentInstallment)}\n\n`;
-                        const resIsLinear = isLinear;
-                        const resTx = resIsLinear ? (res.txLinear ?? res.tx ?? 20) : (res.tx5050 ?? res.tx ?? 20);
-                        const resFr = resIsLinear ? (res.frLinear ?? res.fr ?? 1) : (res.fr5050 ?? res.fr ?? 1);
-                        if (resTx !== undefined) msg += `*Taxa Adm:* ${resTx}%\n`;
-                        if (resFr !== undefined) msg += `*Fundo Reserva:* ${resFr}%\n`;
-                        if (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) {
-                            msg += `*Estratégia de Lance:* ${lanceDinheiroPct + lanceEmbutidoPct}%\n`;
-                        }
-                        msg += `\n_Para mais detalhes, visite: oespecialistaconsorcio.com.br_`;
-                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-                      }}
+                      onClick={handleEnviarWpp}
                       className="flex-1 py-3.5 rounded-[10px] text-sm font-extrabold flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-lg transition-all"
                     >
                       <WhatsAppIcon className="w-5 h-5 shrink-0" />

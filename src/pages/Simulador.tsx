@@ -19,6 +19,38 @@ import {
 
 import { GRUPOS, CATEGORIAS, GrupoItem } from "@/constants/simulador";
 import { createLead } from "@/services/leadService";
+import { JarvisOrb } from "@/components/admin/JarvisOrb";
+
+const customAnimations = `
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+@keyframes orbit-1 {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1); }
+}
+.animate-orbit-1 {
+  animation: orbit-1 12s linear infinite;
+}
+@keyframes orbit-2 {
+  from { transform: rotate(120deg) scale(1); }
+  to { transform: rotate(480deg) scale(1); }
+}
+.animate-orbit-2 {
+  animation: orbit-2 15s linear infinite;
+}
+@keyframes orbit-3 {
+  from { transform: rotate(240deg) scale(1); }
+  to { transform: rotate(600deg) scale(1); }
+}
+.animate-orbit-3 {
+  animation: orbit-3 18s linear infinite;
+}
+`;
 
 const sliderThumbStyles = `
   input[type=range].custom-slider::-webkit-slider-thumb {
@@ -252,25 +284,115 @@ export default function Simulador() {
 
   const handleShareWhatsApp = () => {
     if (!resultado) return;
-    const text = `*📋 SIMULAÇÃO - O ESPECIALISTA*
-*Crédito:* ${fmt(g.credito)}
-*Parcela:* ${fmt(selectedInstallment)} (${paymentMode === 'linear' ? 'Linear' : 'Reduzida 50/50'})
-*Prazo:* ${g.prazo} meses`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+
+    const dataStr = new Date().toLocaleDateString('pt-BR');
+    const segmentLabel = CATEGORIAS.find(c => c.id === categoria)?.label || categoria;
+    
+    let emojiBem = "🏠";
+    if (categoria === "veiculo") emojiBem = "🚗";
+    else if (categoria === "pesados") emojiBem = "🚛";
+    else if (categoria === "servicos") emojiBem = "🎓";
+    else if (categoria === "eletro") emojiBem = "💻";
+
+    const isLinear = effectiveMode === 'linear';
+    const tipoParcelaStr = isLinear ? 'Linear' : 'Reduzida 50%';
+    const prazo = isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
+    const grupo = isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
+    const consultor = refNome || 'O Especialista Consórcio';
+
+    const tx = isLinear ? (g.txLinear ?? g.tx ?? 20) : (g.tx5050 ?? g.tx ?? 20);
+    const fr = isLinear ? (g.frLinear ?? g.fr ?? 1) : (g.fr5050 ?? g.fr ?? 1);
+    
+    const lDinheiroRS = g.credito * (lanceDinheiroPct / 100);
+    const lEmbutidoRS = g.credito * (lanceEmbutidoPct / 100);
+    const lanceTotalPct = lanceDinheiroPct + lanceEmbutidoPct;
+    const lanceTotalRS = lDinheiroRS + lEmbutidoRS;
+    const creditoDisponivel = g.credito - lEmbutidoRS;
+
+    const saldoDevedorBruto = g.credito + (g.credito * (tx / 100)) + (g.credito * (fr / 100));
+    
+    // We assume 1 portion paid by default for simplistic 'Simulador.tsx' unless modified
+    const parcelasContemplar = 1; 
+    const saldoDevedorPosLance = saldoDevedorBruto - (parcelasContemplar * selectedInstallment) - lanceTotalRS;
+    const prazoRestante = prazo - parcelasContemplar;
+    const parcelaPos = prazoRestante > 0 && saldoDevedorPosLance > 0 ? saldoDevedorPosLance / prazoRestante : 0;
+
+    const msg = [
+      `📅 ${dataStr}`,
+      ``,
+      `👤 Cliente: ${nome || 'Não informado'}`,
+      `📋 SIMULAÇÃO DE CONSÓRCIO`,
+      `─────────────────────────`,
+      `${emojiBem} Bem: ${segmentLabel} | Grupo ${grupo}`,
+      `💰 Carta de Crédito: ${fmt(g.credito)}`,
+      `⏱️ Prazo: ${prazo} meses`,
+      `📉 Tipo de Parcela: ${tipoParcelaStr}`,
+      ``,
+      `🚀 LANCE`,
+      `─────────────────────────`,
+      `💵 Dinheiro: ${lanceDinheiroPct}%`,
+      `🔄 Embutido: ${lanceEmbutidoPct}%`,
+      `🎯 Total do Lance: ${lanceTotalPct}% → ${fmt(lanceTotalRS)}`,
+      ``,
+      `📊 VALOR PARCELA`,
+      `─────────────────────────`,
+      `💵 Valor da Parcela Atual: ${fmt(selectedInstallment)}`,
+      `💰 Crédito Disponível: ${fmt(creditoDisponivel)}`,
+      `📉 Saldo Devedor: ${fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}`,
+      `⏱️ Prazo Restante: ${prazoRestante} meses`,
+      `📉 Parcela Pós-Contemplação: ${fmt(parcelaPos > 0 ? parcelaPos : selectedInstallment)}`,
+      ``,
+      `─────────────────────────`,
+      `👨‍💼 Simulação realizada por ${consultor}`
+    ].join('\n');
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const wppLockMsg = historico.map((h, i) => `${i + 1}. ${fmt(h.credito)} — ${fmt(h.r50)}`).join("\n");
   const lockWppUrl = `https://wa.me/55${wppDestino}?text=${encodeURIComponent("Simulações:\n" + wppLockMsg)}`;
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-12" style={{ background: "#f0f2f5" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden bg-[#040B16]">
       <style>{sliderThumbStyles}</style>
+      <style>{customAnimations}</style>
       
-      <h1 className="text-3xl font-extrabold text-center mb-8" style={{ color: "#0f2044" }}>
-        Simule seu Consórcio <span style={{ color: "#f47920" }}>em segundos</span>
-      </h1>
+      {/* Background Deep Gradient matching the image */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0" />
+      
+      {/* Orbs/Particles in the background (using JarvisOrb scaled up and subtle) */}
+      <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
+         <JarvisOrb state="idle" />
+      </div>
 
-      <div className="w-full max-w-[580px] bg-white rounded-[22px] p-8 shadow-xl">
+      <div className="w-full max-w-[580px] animate-in fade-in duration-1000 z-10 flex flex-col items-center mt-4 sm:mt-8">
+        
+        {/* Logo Section with Atom Rings */}
+        <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center">
+            {/* Core Glow */}
+            <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
+            
+            {/* CSS Orbit Rings (Atoms) */}
+            <div className="absolute w-[220%] h-[70%] border border-blue-400/40 rounded-[100%] animate-orbit-1" />
+            <div className="absolute w-[220%] h-[70%] border border-green-400/30 rounded-[100%] animate-orbit-2" />
+            <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-orbit-3" />
+
+            {/* Logo Image */}
+            <img src="/icon-512.png" alt="Logo Contemplar" className="h-28 sm:h-32 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
+          </div>
+
+          <div className="flex flex-col items-center leading-tight mt-8 relative z-10">
+            <span className="text-[32px] sm:text-[36px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
+            <span className="text-[20px] sm:text-[22px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
+          </div>
+          
+          <p className="text-slate-200 text-[13px] sm:text-sm mt-4 font-medium text-center leading-relaxed max-w-[340px] relative z-10 drop-shadow-md">
+            Simule seu Consórcio <span className="text-[#f47920] font-bold">em segundos</span>
+          </p>
+        </div>
+
+        <div className="w-full bg-white rounded-[22px] p-8 shadow-[0_0_40px_rgba(0,0,0,0.3)] border border-white/10 relative z-10 mb-8">
         <div className="text-center mb-8">
           <p className="text-xs font-bold text-gray-400 uppercase mb-2">Crédito Desejado</p>
           <p className="text-4xl font-black text-[#0f2044]">{fmt(g.credito)}</p>
@@ -360,42 +482,6 @@ export default function Simulador() {
 
       <CRMDrawer onLoadLead={handleLoadLead} onSaveSim={handleSaveSimToCRM} />
 
-      {/* Fixed scroll up/down buttons — visible on all devices */}
-      <div style={{
-        position: 'fixed', bottom: '24px', right: '20px',
-        display: 'flex', flexDirection: 'column', gap: '8px',
-        zIndex: 50
-      }}>
-        <button
-          onClick={() => window.scrollBy({ top: -400, behavior: 'smooth' })}
-          title="Rolar para cima"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: '44px', height: '44px', borderRadius: '50%',
-            background: '#ffffff', border: '1.5px solid #e2e8f0',
-            color: '#475569', cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="18 15 12 9 6 15" />
-          </svg>
-        </button>
-        <button
-          onClick={() => window.scrollBy({ top: 400, behavior: 'smooth' })}
-          title="Rolar para baixo"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: '44px', height: '44px', borderRadius: '50%',
-            background: '#ffffff', border: '1.5px solid #e2e8f0',
-            color: '#475569', cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
       </div>
     </div>
   );
