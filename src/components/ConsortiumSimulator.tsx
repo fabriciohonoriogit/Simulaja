@@ -28,7 +28,7 @@ import { useSimuladorStore } from "@/stores/simuladorStore";
 import { ResultadosSimulacao } from "./ResultadosSimulacao";
 import { SimulacaoData } from "@/schemas/simulacao";
 import { BannerGenerator } from "@/components/BannerGenerator";
-import JarvisOrb from "@/components/admin/JarvisOrb";
+import { JarvisOrb } from "@/components/admin/JarvisOrb";
 
 const sliderThumbStyles = `
   input[type=range].custom-slider {
