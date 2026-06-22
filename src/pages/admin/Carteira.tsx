@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +52,7 @@ import { HistoricoModal } from "@/components/admin/funil/HistoricoModal";
 import { Lead } from "@/types/funil";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import confetti from "canvas-confetti";
+import { BulkWhatsAppModal } from "@/components/admin/funil/BulkWhatsAppModal";
 
 interface Cliente {
   id: string;
@@ -89,6 +91,10 @@ export default function Carteira() {
   const [todasCotasContempladas, setTodasCotasContempladas] = useState<any[]>([]);
   const [selectedLeadForHistory, setSelectedLeadForHistory] = useState<Lead | null>(null);
   const [leadsComLance, setLeadsComLance] = useState<Set<string>>(new Set());
+  
+  // States para seleção e disparo em massa
+  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
+  const [showBulkMessageModal, setShowBulkMessageModal] = useState(false);
   
   // States para editar data
   const [editingDateId, setEditingDateId] = useState<string | null>(null);
@@ -863,6 +869,23 @@ export default function Carteira() {
               <option value="grupo-desc">Grupo (Maior ➡️ Menor)</option>
            </select>
         </div>
+
+        <Button
+          variant={selectedClients.size === filteredAndSorted.length && filteredAndSorted.length > 0 ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            if (selectedClients.size === filteredAndSorted.length && filteredAndSorted.length > 0) {
+              setSelectedClients(new Set());
+            } else {
+              setSelectedClients(new Set(filteredAndSorted.map(c => c.id)));
+            }
+          }}
+          className={`h-12 gap-2 rounded-xl px-4 font-black uppercase text-xs ${selectedClients.size === filteredAndSorted.length && filteredAndSorted.length > 0 ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-white text-slate-600 border-slate-100 hover:bg-slate-50"}`}
+        >
+          <ClipboardList className="h-4 w-4" />
+          {selectedClients.size === filteredAndSorted.length && filteredAndSorted.length > 0 ? "Desmarcar Todos" : "Selecionar Todos"}
+        </Button>
+
         <Button
           variant="outline"
           size="sm"
@@ -1036,7 +1059,17 @@ export default function Carteira() {
               <div key={nomeKey} className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all">
                 <div className="flex items-start justify-between mb-3 gap-2">
                   <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        checked={selectedClients.has(c.id)}
+                        onCheckedChange={(checked) => {
+                          const newSet = new Set(selectedClients);
+                          if (checked) newSet.add(c.id);
+                          else newSet.delete(c.id);
+                          setSelectedClients(newSet);
+                        }}
+                        className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                      />
                       {getSegmentIcon(c.tipo_consorcio)}
                       <h4 className="font-black text-slate-900 truncate">{formatToUpper(c.nome)}</h4>
                     </div>
@@ -1084,7 +1117,17 @@ export default function Carteira() {
                   <div key={c.id} className="p-4 rounded-2xl bg-white border border-indigo-100 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-start justify-between mb-3 gap-2">
                       <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <Checkbox 
+                            checked={selectedClients.has(c.id)}
+                            onCheckedChange={(checked) => {
+                              const newSet = new Set(selectedClients);
+                              if (checked) newSet.add(c.id);
+                              else newSet.delete(c.id);
+                              setSelectedClients(newSet);
+                            }}
+                            className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                          />
                           <span className="text-[9px] font-black text-indigo-400 bg-indigo-50 px-1.5 py-0.5 rounded uppercase">Cota {idx + 1}</span>
                         </div>
                         {c.administradora && <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded uppercase w-fit mt-1">{formatToUpper(c.administradora)}</span>}
@@ -1114,7 +1157,49 @@ export default function Carteira() {
       })()}
       </div>
 
+      {/* Floating Action Bar para Disparo em Massa */}
+      {selectedClients.size > 0 && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white px-6 py-4 rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-indigo-100 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-black text-lg">
+              {selectedClients.size}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-black text-slate-900">Clientes Selecionados</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Prontos para envio</span>
+            </div>
+          </div>
+          <div className="h-10 w-px bg-slate-200"></div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedClients(new Set())}
+              className="font-bold text-slate-500 hover:text-slate-700"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => setShowBulkMessageModal(true)}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest gap-2 shadow-lg shadow-emerald-500/20"
+            >
+              <Zap className="h-4 w-4 fill-white" /> Disparo em Massa
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Modal Nova Cota */}
+      <BulkWhatsAppModal
+        open={showBulkMessageModal}
+        onOpenChange={setShowBulkMessageModal}
+        selectedClients={clientes.filter(c => selectedClients.has(c.id))}
+        organizacaoId={profile?.organizacao_id}
+        onComplete={() => {
+          setShowBulkMessageModal(false);
+          setSelectedClients(new Set());
+        }}
+      />
+
       <Dialog open={!!newCotaCliente} onOpenChange={(open) => { if (!open) setNewCotaCliente(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
