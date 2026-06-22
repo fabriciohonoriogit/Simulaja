@@ -19,6 +19,11 @@ interface RequestBody {
   organizacaoId: string;
   clients: ClientData[];
   template: string;
+  media?: {
+    base64: string;
+    mimeType: string;
+    fileName: string;
+  };
 }
 
 const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
@@ -43,9 +48,9 @@ serve(async (req) => {
       }
     );
 
-    const { organizacaoId, clients, template }: RequestBody = await req.json();
+    const { organizacaoId, clients, template, media }: RequestBody = await req.json();
 
-    if (!organizacaoId || !clients || !template) {
+    if (!organizacaoId || !clients || (!template && !media)) {
       throw new Error("Missing required fields");
     }
 
@@ -87,24 +92,46 @@ serve(async (req) => {
       const formattedPhone = digits.startsWith("55") ? digits : `55${digits}`;
 
       // Replace variables
-      const message = template
+      const message = (template || "")
         .replace(/{{nome}}/gi, client.nome.split(" ")[0] || "")
         .replace(/{{grupo}}/gi, client.grupo || "")
         .replace(/{{cota}}/gi, client.cota || "")
         .replace(/{{administradora}}/gi, client.administradora || "");
 
       try {
-        const response = await fetch(`${EVOLUTION_API_URL}/message/sendText/${instanceName}`, {
+        let endpoint = `${EVOLUTION_API_URL}/message/sendText/${instanceName}`;
+        let payload: any = {
+          number: formattedPhone,
+          text: message,
+          delay: 1200
+        };
+
+        if (media && media.base64) {
+          endpoint = `${EVOLUTION_API_URL}/message/sendMedia/${instanceName}`;
+          
+          let mediaType = "document";
+          if (media.mimeType.startsWith("image/")) mediaType = "image";
+          else if (media.mimeType.startsWith("video/")) mediaType = "video";
+          else if (media.mimeType.startsWith("audio/")) mediaType = "audio";
+
+          payload = {
+            number: formattedPhone,
+            mediatype: mediaType,
+            mimetype: media.mimeType,
+            caption: message, // Envia o texto como legenda
+            media: media.base64,
+            fileName: media.fileName || "arquivo",
+            delay: 1200
+          };
+        }
+
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             apikey: EVOLUTION_GLOBAL_API_KEY || "",
           },
-          body: JSON.stringify({
-            number: formattedPhone,
-            text: message,
-            delay: 1200 // Add a minor delay natively supported by evolution
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
