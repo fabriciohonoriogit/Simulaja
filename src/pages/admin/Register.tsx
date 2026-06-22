@@ -132,6 +132,11 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-md border-none shadow-2xl rounded-[28px] p-8 space-y-6">
         <div className="text-center space-y-2">
+          <div className="flex flex-col items-center justify-center mb-6">
+            <img src="/icon-512.webp" alt="Contemplar CRM" className="h-16 w-auto mb-2 object-contain drop-shadow-md" />
+            <h1 className="text-xl font-black tracking-tight text-slate-800 uppercase">CONTEMPLAR CRM</h1>
+          </div>
+          
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
             <Sparkles className="h-3.5 w-3.5" />
             {isNovoTenant ? "30 dias grátis" : `Entrar na equipe ${invitationData?.organizacoes?.nome || ""}`}
