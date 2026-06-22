@@ -148,7 +148,7 @@ export default function Register() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled required className="h-12 rounded-xl" />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={!!invitationToken} required className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Crie uma senha forte</Label>
