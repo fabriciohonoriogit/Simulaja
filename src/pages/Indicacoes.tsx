@@ -118,19 +118,50 @@ export default function Indicacoes() {
   const [bloqueado, setBloqueado] = useState(false);
 
   const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
+  const [incluirSeguro, setIncluirSeguro] = useState(true);
+  const [lanceDinheiroPct, setLanceDinheiroPct] = useState(0);
+  const [lanceEmbutidoPct, setLanceEmbutidoPct] = useState(25);
+  const [parcelasContemplar, setParcelasContemplar] = useState(1);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const lista = GRUPOS[categoria] || GRUPOS["imovel"];
-  const g = lista[idx] || lista[0];
+  const _g = lista[idx] || lista[0];
 
   useEffect(() => {
     setIdx(Math.min(4, lista.length - 1));
   }, [categoria, lista]);
 
-  const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
+  const hasBothPlans = _g.r100 !== undefined && _g.r50 !== _g.r100;
   const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";
   const isLinear = effectiveMode === "linear";
+
+  const valorSeguroMensal = (_g.credito * (_g.seguro ?? 0)) / 100;
+  
+  const g = {
+    ..._g,
+    prazo: isLinear && _g.prazoLinear ? _g.prazoLinear : _g.prazo,
+    grupo: isLinear && _g.grupoLinear ? _g.grupoLinear : _g.grupo,
+    r50: incluirSeguro ? _g.r50 : _g.r50 - valorSeguroMensal,
+    r100: _g.r100 !== undefined ? (incluirSeguro ? _g.r100 : _g.r100 - valorSeguroMensal) : undefined,
+    seguro: incluirSeguro ? _g.seguro : 0,
+  };
+
   const selectedInstallment = isLinear ? (g.r100 ?? g.r50) : g.r50;
+
+  const lDinheiroRS = g.credito * (lanceDinheiroPct / 100);
+  const lEmbutidoRS = g.credito * (lanceEmbutidoPct / 100);
+  const lanceTotalPct = lanceDinheiroPct + lanceEmbutidoPct;
+  const lanceTotalRS = lDinheiroRS + lEmbutidoRS;
+  const creditoDisponivel = g.credito - lEmbutidoRS;
+
+  const tx = isLinear ? (g.txLinear ?? g.tx ?? 20) : (g.tx5050 ?? g.tx ?? 20);
+  const fr = isLinear ? (g.frLinear ?? g.fr ?? 1) : (g.fr5050 ?? g.fr ?? 1);
+  const seguro = g.seguro ?? 0;
+  const saldoDevedorBruto = g.credito + (g.credito * (tx / 100)) + (g.credito * (fr / 100));
+  
+  const saldoDevedorPosLance = saldoDevedorBruto - (parcelasContemplar * selectedInstallment) - lanceTotalRS;
+  const prazoRestante = g.prazo - parcelasContemplar;
+  const parcelaPos = prazoRestante > 0 && saldoDevedorPosLance > 0 ? saldoDevedorPosLance / prazoRestante : 0;
 
   const mascaraWpp = (value: string, setter: (v: string) => void) => {
     let v = value.replace(/D/g, "");
@@ -281,7 +312,11 @@ export default function Indicacoes() {
       ``,
       `📊 VALOR PARCELA`,
       `─────────────────────────`,
-      `💵 Valor da Parcela: ${fmt(selectedInstallment)}`,
+      `💵 Valor da Parcela Atual: ${fmt(selectedInstallment)}`,
+      `💰 Crédito Disponível: ${fmt(creditoDisponivel)}`,
+      `📉 Saldo Devedor: ${fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}`,
+      `⏱️ Prazo Restante: ${prazoRestante} meses`,
+      `📉 Parcela Pós-Contemplação: ${fmt(parcelaPos > 0 ? parcelaPos : g.r50)}`,
       ``,
       `─────────────────────────`,
       `👨‍💼 Simulação indicada por ${consultor}`
@@ -391,6 +426,7 @@ export default function Indicacoes() {
             ))}
           </div>
 
+          
           {hasBothPlans && (
             <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
@@ -410,12 +446,128 @@ export default function Indicacoes() {
             </div>
           )}
 
+          {_g?.seguro ? (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+              <label
+                htmlFor="chk-seguro"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  cursor: 'pointer', userSelect: 'none',
+                  fontSize: '11px', fontWeight: 700,
+                  color: incluirSeguro ? '#15803d' : '#64748b',
+                  background: incluirSeguro ? '#f0fdf4' : '#f8fafc',
+                  border: `1.5px solid ${incluirSeguro ? '#86efac' : '#cbd5e1'}`,
+                  borderRadius: '999px', padding: '4px 10px',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <input
+                  id="chk-seguro"
+                  type="checkbox"
+                  checked={incluirSeguro}
+                  onChange={() => setIncluirSeguro(!incluirSeguro)}
+                  style={{
+                    width: '13px', height: '13px',
+                    accentColor: '#16a34a', cursor: 'pointer', flexShrink: 0
+                  }}
+                />
+                <Shield style={{ width: '12px', height: '12px', flexShrink: 0 }} />
+                {incluirSeguro ? 'Seguro incluso' : 'Sem seguro'}
+              </label>
+            </div>
+          ) : null}
+
           <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4 flex flex-col items-center justify-center mb-6">
             <p className="text-[9px] font-bold text-green-600 uppercase tracking-widest mb-1">
               {isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}
             </p>
             <p className="text-2xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
           </div>
+
+          {/* Lance Box */}
+          <div className="rounded-[12px] p-4 mb-4 border bg-white shadow-sm border-[#d8e0ee]">
+            <p className="text-[0.6rem] font-bold tracking-[0.15em] text-[#1a4080] uppercase mb-3 flex items-center gap-1.5">
+              <span className="text-sm">🏹</span> Simulação de Lance
+            </p>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+              <div>
+                <label className="text-[0.55rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Pagos até Contemplar</label>
+                <input 
+                  type="number" min="0" value={parcelasContemplar} 
+                  onChange={(e) => setParcelasContemplar(Number(e.target.value))}
+                  className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-md px-2 py-1.5 text-xs font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
+                />
+              </div>
+              <div>
+                <label className="text-[0.55rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Dinheiro (%)</label>
+                <div className="relative">
+                  <input 
+                    type="number" min="0" max="100" value={lanceDinheiroPct} 
+                    onChange={(e) => setLanceDinheiroPct(Number(e.target.value))}
+                    className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-md pl-2 pr-6 py-1.5 text-xs font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">%</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-[0.55rem] font-bold tracking-wider uppercase text-muted-foreground mb-1 block">Embutido (%)</label>
+                <div className="relative">
+                  <input 
+                    type="number" min="0" max="100" value={lanceEmbutidoPct} 
+                    onChange={(e) => setLanceEmbutidoPct(Number(e.target.value))}
+                    className="w-full bg-[#f8fafd] border border-[#d8e0ee] rounded-md pl-2 pr-6 py-1.5 text-xs font-medium font-mono text-foreground outline-none focus:border-[#1a4080]"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#f8fafd] border border-[#d8e0ee] rounded-[10px] p-3">
+              <div className="flex justify-between items-center py-1.5 border-b border-[#d8e0ee]/60">
+                <span className="text-xs font-medium text-muted-foreground">Dinheiro (R$)</span>
+                <span className="text-sm font-mono text-foreground">{fmt(lDinheiroRS)}</span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 border-b border-[#d8e0ee]/60">
+                <span className="text-xs font-medium text-muted-foreground">Embutido (R$)</span>
+                <span className="text-sm font-mono text-foreground">{fmt(lEmbutidoRS)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2.5 mt-1">
+                <span className="text-xs font-bold text-[#122040]">TOTAL DO LANCE</span>
+                <div className="text-right">
+                  <div className="text-[0.65rem] text-muted-foreground font-bold mb-0.5">{lanceTotalPct.toFixed(1)}%</div>
+                  <div className="text-[0.95rem] font-bold text-[#1a4080] font-mono">{fmt(lanceTotalRS)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[12px] p-4 mb-4 relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0c1a30 0%, #122040 100%)", border: "1px solid rgba(26,64,128,0.4)", boxShadow: "0 6px 30px rgba(6,15,30,0.2)" }}>
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, #1a4080, #e8aa20, #f5c842, #e8aa20, #1a4080)" }} />
+            <p className="text-[0.6rem] font-bold tracking-[0.15em] uppercase text-white/90 mb-3 flex items-center gap-1.5">
+              <span className="text-sm opacity-90">✅</span> Resultados da Simulação
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/5 border border-white/10 rounded-md p-2.5 text-center transition-all hover:bg-white/10" style={{ background: "rgba(200,144,10,0.12)", borderColor: "rgba(200,144,10,0.3)" }}>
+                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Parcela Pós-Contemplação</p>
+                <p className="text-base sm:text-lg font-bold font-mono text-[#f5c842]">{fmt(parcelaPos > 0 ? parcelaPos : g.r50)}</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Crédito Disponível</p>
+                <p className="text-xs font-medium font-mono text-white/90">{fmt(creditoDisponivel)}</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Saldo Devedor</p>
+                <p className="text-xs font-medium font-mono text-white/90">{fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Prazo Restante</p>
+                <p className="text-xs font-medium font-mono text-white/90">{prazoRestante} x</p>
+              </div>
+            </div>
+          </div>
+
 
           <div className="space-y-3 mb-5">
             <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">📋 Dados do Cliente</p>
