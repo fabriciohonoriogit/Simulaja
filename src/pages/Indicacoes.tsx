@@ -1,13 +1,60 @@
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { WhatsAppIcon } from "@/components/SocialIcons";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { jsPDF } from "jspdf";
+import { 
+  ChevronRight, 
+  FileText,
+  Share2,
+  UserCheck
+} from "lucide-react";
+
+import { GRUPOS, CATEGORIAS, GrupoItem } from "@/constants/simulador";
+import { JarvisOrb } from "@/components/admin/JarvisOrb";
+
+const customAnimations = `
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+@keyframes orbit-1 {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1); }
+}
+.animate-orbit-1 {
+  animation: orbit-1 12s linear infinite;
+}
+@keyframes orbit-2 {
+  from { transform: rotate(120deg) scale(1); }
+  to { transform: rotate(480deg) scale(1); }
+}
+.animate-orbit-2 {
+  animation: orbit-2 15s linear infinite;
+}
+@keyframes orbit-3 {
+  from { transform: rotate(240deg) scale(1); }
+  to { transform: rotate(600deg) scale(1); }
+}
+.animate-orbit-3 {
+  animation: orbit-3 18s linear infinite;
+}
+`;
 
 const sliderThumbStyles = `
   input[type=range].custom-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     background: #ffffff;
-    border: 4px solid #0057a8;
+    border: 3px solid #0057a8;
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 0 4px rgba(0,0,0,0.1);
@@ -23,96 +70,34 @@ const sliderThumbStyles = `
     border-color: #ffffff;
   }
   input[type=range].custom-slider::-moz-range-thumb {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     background: #ffffff;
-    border: 4px solid #0057a8;
+    border: 3px solid #0057a8;
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 0 4px rgba(0,0,0,0.1);
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  input[type=range].custom-slider::-moz-range-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2), inset 0 0 4px rgba(0,0,0,0.1);
-  }
-  input[type=range].custom-slider:active::-moz-range-thumb {
-    transform: scale(0.95);
-  }
 `;
-
-import { supabase } from "@/integrations/supabase/client";
-import { WhatsAppIcon } from "@/components/SocialIcons";
-import { UserCheck } from "lucide-react";
-import { toast } from "sonner";
-
-type GrupoItem = { grupo: string; credito: number; r50: number; prazo: number; tx?: number; fr?: number; };
-
-const GRUPOS: Record<string, GrupoItem[]> = {
-  imovel: [
-    { grupo: "6043", credito: 110000, r50: 388.51, prazo: 220, tx: 20, fr: 1 },
-    { grupo: "6043", credito: 120000, r50: 423.83, prazo: 220, tx: 20, fr: 1 },
-    { grupo: "6041", credito: 130000, r50: 479.69, prazo: 216 },
-    { grupo: "6041", credito: 140000, r50: 516.59, prazo: 216 },
-    { grupo: "6041", credito: 150000, r50: 553.49, prazo: 216 },
-    { grupo: "6041", credito: 160000, r50: 590.39, prazo: 216 },
-    { grupo: "6043", credito: 170000, r50: 600.43, prazo: 220, tx: 20, fr: 1 },
-    { grupo: "6041", credito: 180000, r50: 664.19, prazo: 216 },
-    { grupo: "6041", credito: 190000, r50: 701.09, prazo: 216 },
-    { grupo: "6041", credito: 200000, r50: 737.99, prazo: 216 },
-    { grupo: "6030", credito: 250000, r50: 1008.49, prazo: 196, tx: 22, fr: 1 },
-    { grupo: "6030", credito: 300000, r50: 1210.19, prazo: 196, tx: 22, fr: 1 },
-    { grupo: "6042", credito: 350000, r50: 1141.67, prazo: 240, tx: 20, fr: 1 },
-    { grupo: "6042", credito: 400000, r50: 1304.77, prazo: 240, tx: 20, fr: 1 },
-    { grupo: "6042", credito: 450000, r50: 1467.86, prazo: 240, tx: 20, fr: 1 },
-    { grupo: "6042", credito: 500000, r50: 1478.50, prazo: 240, tx: 20, fr: 1 },
-    { grupo: "6042", credito: 600000, r50: 1957.15, prazo: 240, tx: 20, fr: 1 },
-    { grupo: "6042", credito: 700000, r50: 2069.90, prazo: 240, tx: 20, fr: 1 },
-    { grupo: "6043", credito: 1000000, r50: 3263.26, prazo: 240, tx: 20, fr: 1 },
-  ],
-  veiculo: [
-    { grupo: "5293", credito: 20000, r50: 220.02, prazo: 74, tx: 27, fr: 2 },
-    { grupo: "5294", credito: 37000, r50: 276.62, prazo: 100 },
-    { grupo: "5294", credito: 40000, r50: 299.04, prazo: 100 },
-    { grupo: "5294", credito: 50000, r50: 373.80, prazo: 100 },
-    { grupo: "5294", credito: 60000, r50: 448.56, prazo: 100 },
-    { grupo: "5294", credito: 70000, r50: 523.31, prazo: 100 },
-    { grupo: "5295", credito: 80000, r50: 575.99, prazo: 100 },
-    { grupo: "5295", credito: 90000, r50: 647.99, prazo: 100 },
-    { grupo: "5295", credito: 100000, r50: 719.99, prazo: 100 },
-    { grupo: "5295", credito: 110000, r50: 791.99, prazo: 100 },
-    { grupo: "5295", credito: 120000, r50: 863.99, prazo: 100 },
-    { grupo: "5295", credito: 130000, r50: 935.98, prazo: 100 },
-    { grupo: "5286", credito: 140000, r50: 1259.99, prazo: 100 },
-    { grupo: "5282", credito: 150000, r50: 1290.74, prazo: 88, tx: 22, fr: 1 },
-    { grupo: "5286", credito: 160000, r50: 1439.99, prazo: 100 },
-  ],
-  pesados: [
-    { grupo: "5996", credito: 180000, r50: 932.64, prazo: 135 },
-    { grupo: "5996", credito: 200000, r50: 1036.26, prazo: 135 },
-    { grupo: "5996", credito: 250000, r50: 1295.33, prazo: 135 },
-    { grupo: "5996", credito: 280000, r50: 1450.77, prazo: 135 },
-    { grupo: "5996", credito: 300000, r50: 1554.4, prazo: 135 },
-    { grupo: "5996", credito: 400000, r50: 2072.52, prazo: 135 },
-    { grupo: "5996", credito: 500000, r50: 2590.66, prazo: 135 },
-  ],
-};
-
-const CATEGORIAS = [
-  { id: "imovel", label: "Imóvel / Investimento", icon: "🏠" },
-  { id: "veiculo", label: "Moto / Veículos / Náutico", icon: "🚗" },
-  { id: "pesados", label: "Pesados / Agrícola", icon: "🚛" },
-];
 
 const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const MAX_CONSULTAS = 5;
 
 type HistItem = {
-  credito: number; grupo: string; prazo: number; r50: number;
-  nomeCliente: string; ts: string;
+  credito: number;
+  grupo: string;
+  prazo: number;
+  r50: number;
+  nomeCliente: string;
+  ts: string;
 };
 
 export default function Indicacoes() {
+  const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const orgParam = searchParams.get("org") || searchParams.get("organizacao_id") || undefined;
+
   // Partner
   const [pNome, setPNome] = useState("");
   const [pWpp, setPWpp] = useState("");
@@ -126,22 +111,32 @@ export default function Indicacoes() {
   const [wppCliente, setWppCliente] = useState("");
   const [errNomeC, setErrNomeC] = useState(false);
   const [errWppC, setErrWppC] = useState(false);
+  
   const [consultas, setConsultas] = useState(0);
   const [resultado, setResultado] = useState<GrupoItem | null>(null);
   const [historico, setHistorico] = useState<HistItem[]>([]);
   const [bloqueado, setBloqueado] = useState(false);
+
+  const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const lista = GRUPOS[categoria];
-  const g = lista[idx];
+  const lista = GRUPOS[categoria] || GRUPOS["imovel"];
+  const g = lista[idx] || lista[0];
 
-  useEffect(() => { setIdx(Math.min(4, lista.length - 1)); }, [categoria]);
+  useEffect(() => {
+    setIdx(Math.min(4, lista.length - 1));
+  }, [categoria, lista]);
+
+  const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
+  const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";
+  const isLinear = effectiveMode === "linear";
+  const selectedInstallment = isLinear ? (g.r100 ?? g.r50) : g.r50;
 
   const mascaraWpp = (value: string, setter: (v: string) => void) => {
-    let v = value.replace(/\D/g, "");
+    let v = value.replace(/\\D/g, "");
     if (v.length > 11) v = v.slice(0, 11);
-    if (v.length > 7) v = v.replace(/(\d{2})(\d{5})(\d*)/, "($1) $2-$3");
-    else if (v.length > 2) v = v.replace(/(\d{2})(\d*)/, "($1) $2");
+    if (v.length > 7) v = v.replace(/(\\d{2})(\\d{5})(\\d*)/, "($1) $2-$3");
+    else if (v.length > 2) v = v.replace(/(\\d{2})(\\d*)/, "($1) $2");
     setter(v);
   };
 
@@ -150,13 +145,13 @@ export default function Indicacoes() {
   const simular = async () => {
     // Validate partner
     const pNomeOk = pNome.trim().length > 0;
-    const pWppOk = pWpp.replace(/\D/g, "").length >= 10;
+    const pWppOk = pWpp.replace(/\\D/g, "").length >= 10;
     setErrPNome(!pNomeOk);
     setErrPWpp(!pWppOk);
 
     // Validate client
     const nomeOk = nomeCliente.trim().length > 0;
-    const wppOk = wppCliente.replace(/\D/g, "").length >= 10;
+    const wppOk = wppCliente.replace(/\\D/g, "").length >= 10;
     setErrNomeC(!nomeOk);
     setErrWppC(!wppOk);
 
@@ -168,7 +163,7 @@ export default function Indicacoes() {
     setResultado(g);
 
     setHistorico(prev => [...prev, {
-      credito: g.credito, grupo: g.grupo, prazo: g.prazo, r50: g.r50,
+      credito: g.credito, grupo: g.grupo, prazo: g.prazo, r50: selectedInstallment,
       nomeCliente: nomeCliente.trim(),
       ts: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
     }]);
@@ -178,14 +173,11 @@ export default function Indicacoes() {
     else if (g.credito >= 200000) leadScoreValor = "alto";
     else if (g.credito >= 80000) leadScoreValor = "medio";
 
-    const searchParams = new URLSearchParams(window.location.search);
-    const orgParam = searchParams.get("org") || searchParams.get("organizacao_id") || undefined;
-
     try {
-      await (supabase.from("leads") as any).insert({
+      await supabase.from("leads").insert({
         nome: nomeCliente.trim(),
-        celular: wppCliente.replace(/\D/g, ""),
-        tipo_consorcio: `${CATEGORIAS.find(c => c.id === categoria)?.label || categoria} (G: ${g.grupo})`,
+        celular: wppCliente.replace(/\\D/g, ""),
+        tipo_consorcio: `${CATEGORIAS.find(c => c.id === categoria)?.label || categoria} (G: ${g.grupo} - ${isLinear ? 'Linear' : '50/50'})`,
         valor_credito: g.credito,
         prazo_meses: g.prazo,
         status: "novo",
@@ -193,7 +185,8 @@ export default function Indicacoes() {
         lead_temperatura: "quente",
         organizacao_id: orgParam,
         indicador_nome: pNome.trim(),
-        indicador_celular: pWpp.replace(/\D/g, ""),
+        indicador_celular: pWpp.replace(/\\D/g, ""),
+        origem: "indicacao"
       });
     } catch (e) { console.warn("Supabase:", e); }
 
@@ -205,260 +198,291 @@ export default function Indicacoes() {
           nome: nomeCliente.trim(),
           celular: wppCliente,
           valor_credito: fmt(g.credito),
-          tipo_consorcio: `${CATEGORIAS.find(c => c.id === categoria)?.label || categoria} (G: ${g.grupo})`,
+          tipo_consorcio: `${CATEGORIAS.find(c => c.id === categoria)?.label || categoria} (G: ${g.grupo} - ${isLinear ? 'Linear' : '50/50'})`,
           pagina: window.location.href,
           origem: "indicacao",
           score: leadScoreValor,
-          indicador_celular: pWpp.replace(/\D/g, ""),
+          indicador_celular: pWpp.replace(/\\D/g, ""),
           indicador_nome: pNome.trim(),
         }),
       });
     } catch (e) { console.warn("Webhook:", e); }
 
-    toast.success("Em breve o especialista entrará em contato.", { duration: 5000 });
+    toast({ 
+      title: "✅ Simulação Realizada!", 
+      description: "Em breve o especialista entrará em contato com o cliente." 
+    });
 
     if (novaConsulta >= MAX_CONSULTAS) setTimeout(() => setBloqueado(true), 700);
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
   };
 
-  const wppLockMsg = historico.map((h, i) => `${i + 1}. ${fmt(h.credito)} — ${fmt(h.r50)} / ${h.prazo}m (${h.nomeCliente})`).join("\n");
-  const lockWppUrl = `https://wa.me/55${pWpp.replace(/\D/g, "") || "5541997925357"}?text=${encodeURIComponent("Olá! Simulei para clientes:\n\n" + wppLockMsg + "\n\nQuero dar andamento!")}`;
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const navy = [15, 30, 60];
+    
+    doc.setFillColor(navy[0], navy[1], navy[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.text("PROPOSTA DE CONSÓRCIO", 20, 25);
+    
+    doc.setTextColor(navy[0], navy[1], navy[2]);
+    doc.setFontSize(16);
+    doc.text("SIMULAÇÃO DE CONSÓRCIO", 20, 55);
+    doc.setFontSize(12);
+    doc.text(`Cliente: ${nomeCliente || 'Não informado'}`, 20, 65);
+    doc.text(`Indicado por: ${pNome || 'Não informado'}`, 20, 75);
+    
+    let y = 90;
+    const addRow = (label: string, value: string, isBold = false) => {
+      doc.setFont("helvetica", isBold ? "bold" : "normal");
+      doc.text(label, 20, y);
+      doc.text(value, 120, y);
+      y += 10;
+    };
+    
+    addRow("Tipo de Bem:", CATEGORIAS.find(c => c.id === categoria)?.label  || "");
+    addRow("Crédito:", fmt(g.credito), true);
+    addRow("Prazo:", `${g.prazo} meses`);
+    addRow(isLinear ? "Parcela Linear:" : "Parcela 50%:", fmt(selectedInstallment), true);
+    
+    doc.save(`simulacao_${nomeCliente.split(' ')[0] || 'cliente'}.pdf`);
+    toast({ title: "PDF Gerado!" });
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!resultado) return;
+
+    const dataStr = new Date().toLocaleDateString('pt-BR');
+    const segmentLabel = CATEGORIAS.find(c => c.id === categoria)?.label || categoria;
+    
+    let emojiBem = "🏠";
+    if (categoria === "veiculo") emojiBem = "🚗";
+    else if (categoria === "pesados") emojiBem = "🚛";
+    else if (categoria === "servicos") emojiBem = "🎓";
+    else if (categoria === "eletro") emojiBem = "💻";
+
+    const tipoParcelaStr = isLinear ? 'Linear' : 'Reduzida 50%';
+    const prazo = isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
+    const grupo = isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
+    const consultor = pNome || 'O Especialista Consórcio';
+
+    const msg = [
+      `📅 ${dataStr}`,
+      ``,
+      `👤 Cliente: ${nomeCliente || 'Não informado'}`,
+      `📋 SIMULAÇÃO DE CONSÓRCIO`,
+      `─────────────────────────`,
+      `${emojiBem} Bem: ${segmentLabel} | Grupo ${grupo}`,
+      `💰 Carta de Crédito: ${fmt(g.credito)}`,
+      `⏱️ Prazo: ${prazo} meses`,
+      `📉 Tipo de Parcela: ${tipoParcelaStr}`,
+      ``,
+      `📊 VALOR PARCELA`,
+      `─────────────────────────`,
+      `💵 Valor da Parcela: ${fmt(selectedInstallment)}`,
+      ``,
+      `─────────────────────────`,
+      `👨‍💼 Simulação indicada por ${consultor}`
+    ].join('\\n');
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  const wppLockMsg = historico.map((h, i) => `${i + 1}. ${fmt(h.credito)} — ${fmt(h.r50)} / ${h.prazo}m (${h.nomeCliente})`).join("\\n");
+  const lockWppUrl = `https://wa.me/55${pWpp.replace(/\\D/g, "") || "5541997925357"}?text=${encodeURIComponent("Olá! Simulei para clientes:\n\n" + wppLockMsg + "\n\nQuero dar andamento!")}`;
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-12 md:py-16" style={{ background: "#f0f2f5", fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#040B16]">
       <style>{sliderThumbStyles}</style>
-      {/* Hero */}
-      <p className="text-xs font-bold tracking-[0.16em]" style={{ color: "#f47920" }}>Área do Parceiro</p>
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center mt-2 mb-2" style={{ color: "#0f2044", lineHeight: 1.18 }}>
-        Simule para seu <em className="not-italic" style={{ color: "#f47920" }}>Cliente</em>
-      </h1>
-      <p className="text-sm text-center max-w-md mb-8" style={{ color: "#6b7a99", lineHeight: 1.65 }}>
-        Identifique-se, preencha os dados do cliente e simule. O lead será atribuído ao seu nome automaticamente.
-      </p>
-
-      {/* Partner identification — compact */}
-      <div className="w-full max-w-[580px] rounded-[22px] p-5 sm:p-6 mb-5" style={{ background: "#fff", boxShadow: "0 4px 40px rgba(15,32,68,.10)" }}>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fff7ed" }}>
-            <UserCheck className="w-4 h-4" style={{ color: "#f47920" }} />
-          </div>
-          <div>
-            <p className="text-sm font-bold" style={{ color: "#0f2044" }}>Seus dados (indicador)</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div>
-            <input
-              type="text"
-              placeholder="Seu nome completo *"
-              value={pNome}
-              onChange={(e) => { setPNome(e.target.value); setErrPNome(false); }}
-              className="w-full px-4 py-[13px] rounded-[10px] text-sm outline-none transition-all"
-              style={{ border: `1.5px solid ${errPNome ? "#dc2626" : "#e4e9f2"}`, color: "#0f2044" }}
-            />
-            {errPNome && <p className="text-[0.7rem] mt-1 ml-0.5" style={{ color: "#dc2626" }}>Informe seu nome.</p>}
-          </div>
-          <div>
-            <input
-              type="tel"
-              placeholder="Seu WhatsApp *"
-              value={pWpp}
-              onChange={(e) => { mascaraWpp(e.target.value, setPWpp); setErrPWpp(false); }}
-              className="w-full px-4 py-[13px] rounded-[10px] text-sm outline-none transition-all"
-              style={{ border: `1.5px solid ${errPWpp ? "#dc2626" : "#e4e9f2"}`, color: "#0f2044" }}
-            />
-            {errPWpp && <p className="text-[0.7rem] mt-1 ml-0.5" style={{ color: "#dc2626" }}>WhatsApp inválido.</p>}
-          </div>
-        </div>
+      <style>{customAnimations}</style>
+      
+      {/* Background Deep Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0" />
+      
+      {/* Orbs/Particles in the background */}
+      <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
+         <JarvisOrb state="idle" />
       </div>
 
-      {/* ─── Simulator Card (same as main page) ─── */}
-      <div className="w-full max-w-[580px] rounded-[22px] p-4 sm:p-8" style={{ background: "#fff", boxShadow: "0 4px 40px rgba(15,32,68,.10)" }}>
-        {/* Slider */}
-        <p className="text-xs font-semibold text-center mb-2" style={{ color: "#6b7a99" }}>Valor do crédito desejado</p>
-        <div className="text-center mb-5">
-          <span className="text-sm font-bold mr-1" style={{ color: "#6b7a99" }}>R$</span>
-          <span className="text-3xl sm:text-4xl font-extrabold" style={{ color: "#0f2044", letterSpacing: "-0.03em" }}>
-            {g.credito.toLocaleString("pt-BR")}
-          </span>
-        </div>
+      <div className="w-full max-w-[480px] animate-in fade-in duration-1000 z-10 flex flex-col items-center mt-4 sm:mt-8 pb-16 px-4">
+        
+        {/* Logo Section */}
+        <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+            <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
+            <div className="absolute w-[220%] h-[70%] border border-blue-400/40 rounded-[100%] animate-orbit-1" />
+            <div className="absolute w-[220%] h-[70%] border border-green-400/30 rounded-[100%] animate-orbit-2" />
+            <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-orbit-3" />
+            <img src="/icon-512.webp" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
+          </div>
 
-        <input
-          type="range" min={0} max={lista.length - 1} step={1} value={idx}
-          onChange={(e) => setIdx(Number(e.target.value))}
-          className="custom-slider w-full h-3 rounded-full cursor-pointer appearance-none mb-2"
-          style={{ background: `linear-gradient(to right, #0057a8 0%, #0057a8 ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)` }}
-        />
-        <div className="flex justify-between text-xs mb-6" style={{ color: "#6b7a99" }}>
-          <span>R$ {lista[0].credito.toLocaleString("pt-BR")}</span>
-          <span>R$ {lista[lista.length - 1].credito.toLocaleString("pt-BR")}</span>
-        </div>
-
-        {/* Segments */}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center mb-6">
-          {CATEGORIAS.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setCategoria(cat.id)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-[14px] sm:rounded-full text-xs font-semibold transition-all"
-              style={{
-                background: categoria === cat.id ? "#0f2044" : "#f8fafd",
-                color: categoria === cat.id ? "#fff" : "#6b7a99",
-                border: `1.5px solid ${categoria === cat.id ? "#0f2044" : "#e4e9f2"}`,
-                boxShadow: categoria === cat.id ? "0 4px 14px rgba(15,32,68,.18)" : "none",
-              }}
-            >
-              <span>{cat.icon}</span>
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Green installment card */}
-        <div className="rounded-[14px] p-5 text-center mb-5 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1.5px solid #86efac" }}>
-          <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: "linear-gradient(90deg,#16a34a,#4ade80)" }} />
-          <p className="text-[0.65rem] font-bold tracking-wider mb-1" style={{ color: "#15803d" }}>
-            Parcela reduzida 50% <span style={{ color: "#4ade80", fontWeight: 400 }}>· até a contemplação</span>
+          <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
+            <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
+            <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">ÁREA DO PARCEIRO</span>
+          </div>
+          
+          <p className="text-slate-200 text-[12px] sm:text-[13px] mt-3 font-medium text-center leading-relaxed max-w-[300px] relative z-10 drop-shadow-md">
+            Simule para seus <span className="text-[#84CC16] font-bold">Clientes</span>
           </p>
-          <p className="text-3xl sm:text-4xl font-medium" style={{ fontFamily: "'DM Mono', monospace", color: "#16a34a" }}>
-            {fmt(g.r50)}
-          </p>
-          <div className="flex gap-2 mt-3.5">
-            {[
-              { label: "Crédito", value: fmt(g.credito) },
-              { label: "Prazo", value: `${g.prazo} meses` },
-              { label: "Grupo", value: g.grupo },
-            ].map((m) => (
-              <div key={m.label} className="flex-1 bg-white rounded-lg py-2 px-2.5 text-center" style={{ border: "1px solid #d1fae5" }}>
-                <p className="text-[0.58rem] tracking-wider mb-0.5" style={{ color: "#6b7a99" }}>{m.label}</p>
-                <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#0f2044" }}>{m.value}</p>
+        </div>
+
+        {/* Card Principal */}
+        <div className="w-full bg-white rounded-[20px] shadow-[0_0_40px_rgba(0,0,0,0.3)] p-6 sm:p-8 relative z-10 border border-white/10">
+          
+          {/* Partner identification */}
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-orange-100">
+                <UserCheck className="w-4 h-4 text-orange-600" />
               </div>
+              <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Seus dados (Indicador)</p>
+            </div>
+            
+            <div className="space-y-2.5">
+              <div className="relative">
+                <Input 
+                  placeholder="Seu nome completo *" 
+                  value={pNome} 
+                  onChange={e => { setPNome(e.target.value); setErrPNome(false); }}
+                  className={\`h-11 rounded-lg bg-white border-slate-200 text-sm focus-visible:ring-orange-500 shadow-sm \${errPNome ? "border-red-400 focus-visible:ring-red-400" : ""}\`}
+                />
+              </div>
+              <div className="relative">
+                <Input 
+                  type="tel"
+                  placeholder="Seu WhatsApp *" 
+                  value={pWpp} 
+                  onChange={e => { mascaraWpp(e.target.value, setPWpp); setErrPWpp(false); }}
+                  className={\`h-11 rounded-lg bg-white border-slate-200 text-sm focus-visible:ring-orange-500 shadow-sm \${errPWpp ? "border-red-400 focus-visible:ring-red-400" : ""}\`}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="h-px w-full bg-slate-200 mb-6" />
+
+          {/* Simulator */}
+          <div className="text-center mb-5">
+            <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Crédito Desejado</h2>
+            <p className="text-3xl sm:text-4xl font-black text-[#0f2044]">{fmt(g.credito)}</p>
+          </div>
+
+          <input
+            type="range"
+            min={0}
+            max={lista.length - 1}
+            value={idx}
+            onChange={(e) => setIdx(Number(e.target.value))}
+            className="custom-slider w-full h-1.5 rounded-full appearance-none mb-6 bg-slate-100"
+            style={{ background: \`linear-gradient(to right, #0057a8 \${pct}%, #e2e8f0 \${pct}%)\` }}
+          />
+
+          <div className="flex flex-wrap gap-1.5 justify-center mb-5">
+            {CATEGORIAS.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCategoria(cat.id)}
+                className={\`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border \${categoria === cat.id ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-[#0f2044] hover:text-[#0f2044]'}\`}
+              >
+                {cat.label}
+              </button>
             ))}
           </div>
-        </div>
 
-        <div className="h-px mb-5" style={{ background: "#e4e9f2" }} />
-
-        {/* Client form */}
-        <p className="text-xs font-bold tracking-wider mb-3" style={{ color: "#0f2044" }}>📋 Dados do Cliente</p>
-
-        <input
-          type="text" placeholder="Nome do cliente *"
-          value={nomeCliente}
-          onChange={(e) => { setNomeCliente(e.target.value); setErrNomeC(false); }}
-          className="w-full px-4 py-[15px] rounded-[10px] text-sm outline-none mb-1 transition-all"
-          style={{ border: `1.5px solid ${errNomeC ? "#dc2626" : "#e4e9f2"}`, color: "#0f2044" }}
-        />
-        {errNomeC && <p className="text-[0.7rem] mb-2 ml-0.5" style={{ color: "#dc2626" }}>Informe o nome do cliente.</p>}
-        {!errNomeC && <div className="mb-2.5" />}
-
-        <input
-          type="tel" placeholder="WhatsApp do cliente *"
-          value={wppCliente}
-          onChange={(e) => { mascaraWpp(e.target.value, setWppCliente); setErrWppC(false); }}
-          className="w-full px-4 py-[15px] rounded-[10px] text-sm outline-none mb-1 transition-all"
-          style={{ border: `1.5px solid ${errWppC ? "#dc2626" : "#e4e9f2"}`, color: "#0f2044" }}
-        />
-        {errWppC && <p className="text-[0.7rem] mb-2 ml-0.5" style={{ color: "#dc2626" }}>WhatsApp do cliente inválido.</p>}
-        {!errWppC && <div className="mb-2.5" />}
-
-        <div className="flex items-center gap-2 text-xs mb-4" style={{ color: "#6b7a99" }}>
-          <span style={{ color: "#0057a8", opacity: 0.75 }}>🕐</span>
-          Saiba o valor da sua parcela após a contemplação.
-        </div>
-
-        <button
-          onClick={simular}
-          disabled={bloqueado}
-          className="w-full py-4 rounded-[10px] text-base font-extrabold tracking-wider flex items-center justify-center gap-2.5 transition-all disabled:opacity-45 disabled:cursor-not-allowed"
-          style={{ background: "#f47920", color: "#fff", border: "none", boxShadow: "0 4px 20px rgba(244,121,32,.35)" }}
-        >
-          Simule Já
-          <span>→</span>
-        </button>
-
-        <p className="text-center text-xs mt-3.5" style={{ color: "#6b7a99" }}>
-          {pNome.trim() ? (
-            <>Lead atribuído a <strong style={{ color: "#f47920" }}>{pNome.trim()}</strong></>
-          ) : (
-            <>Ao simular, você concorda com nossa <a href="#" className="underline" style={{ color: "#0057a8" }}>Política de Privacidade</a></>
+          {hasBothPlans && (
+            <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
+                <button 
+                  onClick={() => setPaymentMode('reduzido')}
+                  className={\`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 \${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}\`}
+                >
+                  Reduzido (50%)
+                </button>
+                <button 
+                  onClick={() => setPaymentMode('linear')}
+                  className={\`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 \${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}\`}
+                >
+                  Linear
+                </button>
+              </div>
+            </div>
           )}
-        </p>
 
-        {/* Result */}
-        {resultado && (
-          <div ref={resultRef} className="rounded-[14px] p-5 mt-5 animate-fade-in" style={{ background: "#0f2044" }}>
-            <div className="text-[0.58rem] tracking-[0.12em] mb-3 flex items-center gap-2" style={{ color: "rgba(255,255,255,0.38)" }}>
-              ✅ Proposta confirmada
-              <span className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-            </div>
-            <div className="grid grid-cols-1 gap-2 rounded-[10px] overflow-hidden">
-              <div className="py-3 px-3 text-center rounded-lg" style={{ background: "rgba(74,222,128,0.12)" }}>
-                <p className="text-[0.65rem] tracking-wider mb-1 font-semibold" style={{ color: "#fff" }}>Parcela 50%</p>
-                <p className="text-2xl font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#4ade80" }}>{fmt(resultado.r50)}</p>
-                <p className="text-[0.6rem] mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>até contemplação</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="py-3 px-3 text-center rounded-lg" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <p className="text-[0.65rem] tracking-wider mb-1 font-semibold" style={{ color: "#fff" }}>Crédito</p>
-                  <p className="text-base font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#fff" }}>{fmt(resultado.credito)}</p>
-                </div>
-                <div className="py-3 px-3 text-center rounded-lg" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <p className="text-[0.65rem] tracking-wider mb-1 font-semibold" style={{ color: "#fff" }}>Prazo</p>
-                  <p className="text-base font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#fff" }}>{resultado.prazo} meses</p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-3 py-2.5 px-3 rounded-lg text-center text-xs font-semibold" style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}>
-              👨‍💼 Você será atendido pelo Especialista
-            </div>
-            <div className="mt-1.5 py-2 px-3 rounded-lg text-center text-[0.7rem]" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)" }}>
-              Lead atribuído a <strong style={{ color: "#ffa040" }}>{pNome.trim()}</strong> ✅
-            </div>
-          </div>
-        )}
-
-        {/* History */}
-        {historico.length > 0 && (
-          <div className="mt-4">
-            <p className="text-[0.64rem] font-bold tracking-[0.1em] mb-2" style={{ color: "#6b7a99" }}>Suas simulações</p>
-            {historico.map((h, i) => (
-              <div key={i} className="flex items-center justify-between p-2.5 rounded-[10px] mb-1.5 flex-wrap gap-2" style={{ background: "#fff", border: "1.5px solid #e4e9f2", borderLeft: "3px solid #f47920" }}>
-                <div>
-                  <p className="font-bold text-sm" style={{ color: "#0f2044" }}>{fmt(h.credito)}</p>
-                  <p className="text-[0.67rem]" style={{ color: "#6b7a99" }}>Grupo {h.grupo} · {h.prazo} meses · {h.nomeCliente}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-sm" style={{ fontFamily: "'DM Mono', monospace", color: "#16a34a" }}>{fmt(h.r50)}</p>
-                  <p className="text-[0.67rem]" style={{ color: "#6b7a99" }}>Reduzida 50%</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Lock */}
-        {bloqueado && (
-          <div className="rounded-[14px] p-7 text-center mt-5 animate-fade-in" style={{ background: "#fff", border: "2px solid #f47920", boxShadow: "0 4px 24px rgba(244,121,32,.1)" }}>
-            <p className="text-3xl mb-2">🔐</p>
-            <p className="text-lg font-extrabold mb-1.5" style={{ color: "#0f2044" }}>Limite atingido</p>
-            <div className="rounded-lg py-2 px-3.5 mb-3 text-sm font-semibold" style={{ background: "#fff7ed", border: "1px solid #fed7aa", color: "#c2410c" }}>
-              ⏰ As melhores cotas são contempladas rapidamente!
-            </div>
-            <p className="text-sm mb-4" style={{ color: "#6b7a99", lineHeight: 1.6 }}>
-              Você utilizou suas 5 simulações gratuitas.<br />Fale agora com o especialista!
+          <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4 flex flex-col items-center justify-center mb-6">
+            <p className="text-[9px] font-bold text-green-600 uppercase tracking-widest mb-1">
+              {isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}
             </p>
-            <a
-              href={lockWppUrl} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 py-3.5 px-7 rounded-full text-sm font-extrabold tracking-wider text-white"
-              style={{ background: "#25D366" }}
-            >
-              <WhatsAppIcon className="w-4 h-4" />
-              🔥 Falar no WhatsApp
-            </a>
+            <p className="text-2xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
           </div>
-        )}
+
+          <div className="space-y-3 mb-5">
+            <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">📋 Dados do Cliente</p>
+            <div className="relative">
+              <Input 
+                placeholder="Nome do cliente *" 
+                value={nomeCliente} 
+                onChange={e => { setNomeCliente(e.target.value); setErrNomeC(false); }}
+                className={\`h-12 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm \${errNomeC ? "border-red-400 focus-visible:ring-red-400" : ""}\`}
+              />
+            </div>
+            
+            <div className="relative">
+              <Input 
+                type="tel"
+                placeholder="WhatsApp do cliente *" 
+                value={wppCliente} 
+                onChange={e => { mascaraWpp(e.target.value, setWppCliente); setErrWppC(false); }}
+                className={\`h-12 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm \${errWppC ? "border-red-400 focus-visible:ring-red-400" : ""}\`}
+              />
+            </div>
+          </div>
+
+          <Button onClick={simular} disabled={bloqueado} className="w-full h-12 rounded-xl font-bold text-[15px] bg-[#f47920] hover:bg-[#e06a1b] text-white shadow-lg transition-all disabled:opacity-50">
+            Simule Já <ChevronRight className="ml-2 w-4 h-4" />
+          </Button>
+
+          {resultado && (
+            <div ref={resultRef} className="mt-6 p-5 border border-slate-200 rounded-xl animate-in fade-in slide-in-from-bottom-4 bg-slate-50">
+              <h3 className="font-bold text-slate-800 mb-4 text-center text-sm">Resultado Gerado</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-10 text-[11px] bg-white">
+                  <FileText className="mr-2 w-3.5 h-3.5" /> Baixar PDF
+                </Button>
+                <Button onClick={handleShareWhatsApp} className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold h-10 text-[11px] shadow-sm">
+                  <Share2 className="mr-2 w-3.5 h-3.5" /> Enviar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {bloqueado && (
+            <div className="mt-6 p-5 border border-orange-200 rounded-xl text-center bg-orange-50 animate-in fade-in slide-in-from-bottom-4">
+              <p className="text-xl mb-1">🔐</p>
+              <p className="font-bold text-slate-800 mb-3 text-sm">Limite Atingido</p>
+              <Button asChild className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold w-full h-10 text-[11px]">
+                <a href={lockWppUrl} target="_blank" rel="noreferrer">
+                  <WhatsAppIcon className="w-4 h-4 mr-2" />
+                  Dar andamento
+                </a>
+              </Button>
+            </div>
+          )}
+        </div>
+
       </div>
+      
+      {/* Footer Powered by Jarvis */}
+      <div className="absolute bottom-4 flex items-center justify-center space-x-2 z-10 pointer-events-none">
+        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-900/40 border border-blue-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#4ca8e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        </div>
+        <p className="text-white/70 text-[12px] font-medium uppercase tracking-wider">
+          Powered by <span className="text-[#84CC16] font-bold">Jarvis AI</span>
+        </p>
+      </div>
+
     </div>
   );
 }
