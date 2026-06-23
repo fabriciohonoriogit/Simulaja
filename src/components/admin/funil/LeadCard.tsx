@@ -170,7 +170,7 @@ export function LeadCard({
   const vencAtrasado = isPastDue(lead.data_vencimento);
 
   const dataReferenciaDias = isFechado && lead.status_updated_at ? parseISO(lead.status_updated_at) : new Date();
-  const diasNaEtapa = lead.status_updated_at ? Math.max(0, differenceInDays(dataReferenciaDias, parseISO(lead.status_updated_at))) : (lead.created_at ? Math.max(0, differenceInDays(dataReferenciaDias, parseISO(lead.created_at))) : 0);
+  const diasNoCrm = lead.created_at ? Math.max(0, differenceInDays(dataReferenciaDias, parseISO(lead.created_at))) : 0;
 
   const timeInfoText = () => {
     if (statusNormalized === "novo_lead") {
@@ -193,7 +193,7 @@ export function LeadCard({
     }
     return (
       <span className="flex items-center gap-1 text-red-600 bg-red-50 px-1 py-0.5 rounded font-black uppercase tracking-tighter border border-red-100 text-[8px]">
-        <Clock className="w-2 h-2" /> {diasNaEtapa} {diasNaEtapa === 1 ? 'dia' : 'dias'}
+        <Clock className="w-2 h-2" /> {diasNoCrm} {diasNoCrm === 1 ? 'dia' : 'dias'}
       </span>
     );
   };
@@ -232,12 +232,12 @@ export function LeadCard({
       {/* Badge urgência circular — canto superior direito (PADRONIZADO) */}
       {statusNormalized !== "fechado" && (
         <div className={`absolute top-1.5 right-1.5 flex items-center justify-center rounded-full text-[7px] font-black leading-none w-6 h-6 z-10 border-2 border-white shadow-sm ${
-          diasNaEtapa > 30 ? "bg-red-500 text-white animate-pulse" :
-          diasNaEtapa > 14 ? "bg-orange-500 text-white" :
-          diasNaEtapa > 5 ? "bg-amber-100 text-amber-700 border-amber-200" :
+          diasNoCrm > 30 ? "bg-red-500 text-white animate-pulse" :
+          diasNoCrm > 14 ? "bg-orange-500 text-white" :
+          diasNoCrm > 5 ? "bg-amber-100 text-amber-700 border-amber-200" :
           "bg-slate-100 text-slate-500 border-slate-200"
         }`}>
-          {diasNaEtapa > 99 ? "99+" : diasNaEtapa}d
+          {diasNoCrm > 99 ? "99+" : diasNoCrm}d
         </div>
       )}
 
