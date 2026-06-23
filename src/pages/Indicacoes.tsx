@@ -10,7 +10,8 @@ import {
   ChevronRight, 
   FileText,
   Share2,
-  UserCheck
+  UserCheck,
+  Shield
 } from "lucide-react";
 
 import { GRUPOS, CATEGORIAS, GrupoItem } from "@/constants/simulador";
