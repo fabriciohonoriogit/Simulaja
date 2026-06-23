@@ -133,10 +133,10 @@ export default function Indicacoes() {
   const selectedInstallment = isLinear ? (g.r100 ?? g.r50) : g.r50;
 
   const mascaraWpp = (value: string, setter: (v: string) => void) => {
-    let v = value.replace(/\\D/g, "");
+    let v = value.replace(/D/g, "");
     if (v.length > 11) v = v.slice(0, 11);
-    if (v.length > 7) v = v.replace(/(\\d{2})(\\d{5})(\\d*)/, "($1) $2-$3");
-    else if (v.length > 2) v = v.replace(/(\\d{2})(\\d*)/, "($1) $2");
+    if (v.length > 7) v = v.replace(/(d{2})(d{5})(d*)/, "($1) $2-$3");
+    else if (v.length > 2) v = v.replace(/(d{2})(d*)/, "($1) $2");
     setter(v);
   };
 
@@ -145,13 +145,13 @@ export default function Indicacoes() {
   const simular = async () => {
     // Validate partner
     const pNomeOk = pNome.trim().length > 0;
-    const pWppOk = pWpp.replace(/\\D/g, "").length >= 10;
+    const pWppOk = pWpp.replace(/D/g, "").length >= 10;
     setErrPNome(!pNomeOk);
     setErrPWpp(!pWppOk);
 
     // Validate client
     const nomeOk = nomeCliente.trim().length > 0;
-    const wppOk = wppCliente.replace(/\\D/g, "").length >= 10;
+    const wppOk = wppCliente.replace(/D/g, "").length >= 10;
     setErrNomeC(!nomeOk);
     setErrWppC(!wppOk);
 
@@ -176,7 +176,7 @@ export default function Indicacoes() {
     try {
       await supabase.from("leads").insert({
         nome: nomeCliente.trim(),
-        celular: wppCliente.replace(/\\D/g, ""),
+        celular: wppCliente.replace(/D/g, ""),
         tipo_consorcio: `${CATEGORIAS.find(c => c.id === categoria)?.label || categoria} (G: ${g.grupo} - ${isLinear ? 'Linear' : '50/50'})`,
         valor_credito: g.credito,
         prazo_meses: g.prazo,
@@ -185,7 +185,7 @@ export default function Indicacoes() {
         lead_temperatura: "quente",
         organizacao_id: orgParam,
         indicador_nome: pNome.trim(),
-        indicador_celular: pWpp.replace(/\\D/g, ""),
+        indicador_celular: pWpp.replace(/D/g, ""),
         origem: "indicacao"
       });
     } catch (e) { console.warn("Supabase:", e); }
@@ -202,7 +202,7 @@ export default function Indicacoes() {
           pagina: window.location.href,
           origem: "indicacao",
           score: leadScoreValor,
-          indicador_celular: pWpp.replace(/\\D/g, ""),
+          indicador_celular: pWpp.replace(/D/g, ""),
           indicador_nome: pNome.trim(),
         }),
       });
@@ -285,13 +285,13 @@ export default function Indicacoes() {
       ``,
       `─────────────────────────`,
       `👨‍💼 Simulação indicada por ${consultor}`
-    ].join('\\n');
+    ].join('n');
 
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  const wppLockMsg = historico.map((h, i) => `${i + 1}. ${fmt(h.credito)} — ${fmt(h.r50)} / ${h.prazo}m (${h.nomeCliente})`).join("\\n");
-  const lockWppUrl = `https://wa.me/55${pWpp.replace(/\\D/g, "") || "5541997925357"}?text=${encodeURIComponent("Olá! Simulei para clientes:\n\n" + wppLockMsg + "\n\nQuero dar andamento!")}`;
+  const wppLockMsg = historico.map((h, i) => `${i + 1}. ${fmt(h.credito)} — ${fmt(h.r50)} / ${h.prazo}m (${h.nomeCliente})`).join("n");
+  const lockWppUrl = `https://wa.me/55${pWpp.replace(/D/g, "") || "5541997925357"}?text=${encodeURIComponent("Olá! Simulei para clientes:nn" + wppLockMsg + "nnQuero dar andamento!")}`;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#040B16]">
@@ -346,7 +346,7 @@ export default function Indicacoes() {
                   placeholder="Seu nome completo *" 
                   value={pNome} 
                   onChange={e => { setPNome(e.target.value); setErrPNome(false); }}
-                  className={\`h-11 rounded-lg bg-white border-slate-200 text-sm focus-visible:ring-orange-500 shadow-sm \${errPNome ? "border-red-400 focus-visible:ring-red-400" : ""}\`}
+                  className={`h-11 rounded-lg bg-white border-slate-200 text-sm focus-visible:ring-orange-500 shadow-sm ${errPNome ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                 />
               </div>
               <div className="relative">
@@ -355,7 +355,7 @@ export default function Indicacoes() {
                   placeholder="Seu WhatsApp *" 
                   value={pWpp} 
                   onChange={e => { mascaraWpp(e.target.value, setPWpp); setErrPWpp(false); }}
-                  className={\`h-11 rounded-lg bg-white border-slate-200 text-sm focus-visible:ring-orange-500 shadow-sm \${errPWpp ? "border-red-400 focus-visible:ring-red-400" : ""}\`}
+                  className={`h-11 rounded-lg bg-white border-slate-200 text-sm focus-visible:ring-orange-500 shadow-sm ${errPWpp ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                 />
               </div>
             </div>
@@ -376,7 +376,7 @@ export default function Indicacoes() {
             value={idx}
             onChange={(e) => setIdx(Number(e.target.value))}
             className="custom-slider w-full h-1.5 rounded-full appearance-none mb-6 bg-slate-100"
-            style={{ background: \`linear-gradient(to right, #0057a8 \${pct}%, #e2e8f0 \${pct}%)\` }}
+            style={{ background: `linear-gradient(to right, #0057a8 ${pct}%, #e2e8f0 ${pct}%)` }}
           />
 
           <div className="flex flex-wrap gap-1.5 justify-center mb-5">
@@ -384,7 +384,7 @@ export default function Indicacoes() {
               <button
                 key={cat.id}
                 onClick={() => setCategoria(cat.id)}
-                className={\`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border \${categoria === cat.id ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-[#0f2044] hover:text-[#0f2044]'}\`}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${categoria === cat.id ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-[#0f2044] hover:text-[#0f2044]'}`}
               >
                 {cat.label}
               </button>
@@ -396,13 +396,13 @@ export default function Indicacoes() {
               <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                 <button 
                   onClick={() => setPaymentMode('reduzido')}
-                  className={\`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 \${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}\`}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   Reduzido (50%)
                 </button>
                 <button 
                   onClick={() => setPaymentMode('linear')}
-                  className={\`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 \${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}\`}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   Linear
                 </button>
@@ -424,7 +424,7 @@ export default function Indicacoes() {
                 placeholder="Nome do cliente *" 
                 value={nomeCliente} 
                 onChange={e => { setNomeCliente(e.target.value); setErrNomeC(false); }}
-                className={\`h-12 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm \${errNomeC ? "border-red-400 focus-visible:ring-red-400" : ""}\`}
+                className={`h-12 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm ${errNomeC ? "border-red-400 focus-visible:ring-red-400" : ""}`}
               />
             </div>
             
@@ -434,7 +434,7 @@ export default function Indicacoes() {
                 placeholder="WhatsApp do cliente *" 
                 value={wppCliente} 
                 onChange={e => { mascaraWpp(e.target.value, setWppCliente); setErrWppC(false); }}
-                className={\`h-12 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm \${errWppC ? "border-red-400 focus-visible:ring-red-400" : ""}\`}
+                className={`h-12 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm ${errWppC ? "border-red-400 focus-visible:ring-red-400" : ""}`}
               />
             </div>
           </div>
