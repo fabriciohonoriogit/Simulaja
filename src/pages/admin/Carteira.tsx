@@ -83,7 +83,7 @@ export default function Carteira() {
   const [cotasContempladas, setCotasContempladas] = useState<any[]>([]);
   const [loadingContemplations, setLoadingContemplations] = useState(false);
   const [newCota, setNewCota] = useState("");
-  const [lotteryNumber, setLotteryNumber] = useState("");
+  const [lotteryNumber, setLotteryNumber] = useState(() => localStorage.getItem("especialista_loteria_federal") || "");
   const [lotteryAdmin, setLotteryAdmin] = useState<string>("TODAS"); // NOVO STATE
   const [lotteryWinners, setLotteryWinners] = useState<Cliente[]>([]);
   const [lotteryChecked, setLotteryChecked] = useState(false);
@@ -573,6 +573,8 @@ export default function Carteira() {
   const checkLotteryGlobal = () => {
     if (!lotteryNumber) return;
     const winners: any[] = [];
+    const closeClientsToNotify: any[] = [];
+
     clientes.forEach(c => {
       if (!c.grupo) return;
       
@@ -589,6 +591,7 @@ export default function Carteira() {
       if (status && status.winCota > 0) {
         const isSorteio = status.winCota === clientCotaNum;
         const isLanceFixoMatch = status.diff !== null && status.diff <= 10 && c.protocolo_lance_fixo === "SIM";
+        const isCloseMatch = status.diff !== null && status.diff <= 10;
         
         if (isSorteio) {
           winners.push({
@@ -602,6 +605,14 @@ export default function Carteira() {
             tipoGanhador: "lance_fixo",
             cotaSorteada: status.winCota
           });
+        } else if (isCloseMatch) {
+          winners.push({
+            ...c,
+            tipoGanhador: "probabilidade_alta",
+            cotaSorteada: status.winCota,
+            diffCotas: status.diff
+          });
+          closeClientsToNotify.push({ client: c, diff: status.diff, winCota: status.winCota });
         } else if (historicFound) {
           winners.push({
             ...c,
@@ -619,9 +630,20 @@ export default function Carteira() {
     });
     setLotteryWinners(winners);
     setLotteryChecked(true);
+
+    // Trigger toast notification for close clients
+    if (closeClientsToNotify.length > 0) {
+      closeClientsToNotify.forEach(({ client, diff, winCota }) => {
+        toast({
+          title: "⚡ Probabilidade de Contemplação!",
+          description: `O cliente ${client.nome} (Grupo ${client.grupo}, Cota ${client.cota}) está a apenas ${diff} número(s) do sorteado (${winCota}).`
+        });
+      });
+    }
   };
 
   useEffect(() => {
+    localStorage.setItem("especialista_loteria_federal", lotteryNumber);
     if (lotteryNumber && lotteryNumber.replace(/\D/g, '').length >= 4) {
       checkLotteryGlobal();
     } else {
@@ -882,9 +904,17 @@ export default function Carteira() {
                          <span className="font-bold flex-1 truncate">{w.nome}</span>
                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-200 shrink-0">{w.administradora}</span>
                          <span className="text-xs font-black bg-emerald-500 px-2 py-0.5 rounded shrink-0">G: {w.grupo} | C: {w.cota}</span>
-                         <Badge className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${(w as any).tipoGanhador === "sorteio" ? "bg-blue-600 text-white hover:bg-blue-700" : (w as any).tipoGanhador === "lance_fixo" ? "bg-amber-500 text-white hover:bg-amber-600 animate-pulse" : "bg-slate-600 text-white hover:bg-slate-700"}`}>
-                           {(w as any).tipoGanhador === "sorteio" ? "Sorteio" : (w as any).tipoGanhador === "lance_fixo" ? "Lance Fixo" : "Histórico"}
-                         </Badge>
+                          <Badge className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${
+                            (w as any).tipoGanhador === "sorteio" ? "bg-blue-600 text-white hover:bg-blue-700" :
+                            (w as any).tipoGanhador === "lance_fixo" ? "bg-amber-500 text-white hover:bg-amber-600 animate-pulse" :
+                            (w as any).tipoGanhador === "probabilidade_alta" ? "bg-rose-500 text-white hover:bg-rose-600 animate-pulse" :
+                            "bg-slate-600 text-white hover:bg-slate-700"
+                          }`}>
+                            {(w as any).tipoGanhador === "sorteio" ? "Sorteio" :
+                             (w as any).tipoGanhador === "lance_fixo" ? "Lance Fixo" :
+                             (w as any).tipoGanhador === "probabilidade_alta" ? "Próximo (Margem 10)" :
+                             "Histórico"}
+                          </Badge>
                       </div>
                     ))}
                   </div>
@@ -1053,14 +1083,26 @@ export default function Carteira() {
             );
             const wait = getWaitTime(c.data_adesao, c.cota_contemplada);
             const isIn = c.status === "inadimplente"; const isCon = !!c.cota_contemplada;
+            
+            // Calculate real-time closeness to lottery draw
+            const lotStatus = lotteryNumber ? getLoteriaStatus(lotteryNumber, c.cota, c.grupo, c.administradora, c.tipo_consorcio) : null;
+            const isCloseToDraw = lotStatus && lotStatus.diff !== null && lotStatus.diff <= 10 && !isCon;
+
             return (
-              <div className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg border relative ${ isIn ? "bg-rose-50 text-rose-700 border-rose-200" : isCon ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-amber-50 text-amber-700 border-amber-100" }`}>
-                <Clock className="h-3 w-3 shrink-0" />
-                <div className="flex-1">
-                  <p className="text-[9px] font-black uppercase text-center opacity-80 tracking-widest">{isIn ? "Cliente Inadimplente" : isCon ? "Cota Contemplada" : "Aguardando contemplação"}</p>
-                  <p className={`text-[12px] font-black uppercase tracking-wider text-center ${ isIn ? "text-rose-700" : isCon ? "text-blue-700" : "text-amber-700" }`}>{isIn ? `Total: ${wait.label}` : wait.label}</p>
+              <div className="space-y-2 w-full">
+                {isCloseToDraw && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-lg animate-pulse text-[10px] font-black uppercase justify-center w-full">
+                    <span>⚡ Próximo do Sorteado: {lotStatus.winCota} (Dif: {lotStatus.diff})</span>
+                  </div>
+                )}
+                <div className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg border relative ${ isIn ? "bg-rose-50 text-rose-700 border-rose-200" : isCon ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-amber-50 text-amber-700 border-amber-100" }`}>
+                  <Clock className="h-3 w-3 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-[9px] font-black uppercase text-center opacity-80 tracking-widest">{isIn ? "Cliente Inadimplente" : isCon ? "Cota Contemplada" : "Aguardando contemplação"}</p>
+                    <p className={`text-[12px] font-black uppercase tracking-wider text-center ${ isIn ? "text-rose-700" : isCon ? "text-blue-700" : "text-amber-700" }`}>{isIn ? `Total: ${wait.label}` : wait.label}</p>
+                  </div>
+                  <button onClick={() => { setEditingDateId(c.id); setEditDateValue(c.data_adesao ? new Date(c.data_adesao).toISOString().split('T')[0] : ''); }} className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md bg-white/50 hover:bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 shadow-sm" title="Corrigir Data de Adesão"><Pencil className="h-3 w-3" /></button>
                 </div>
-                <button onClick={() => { setEditingDateId(c.id); setEditDateValue(c.data_adesao ? new Date(c.data_adesao).toISOString().split('T')[0] : ''); }} className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md bg-white/50 hover:bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 shadow-sm" title="Corrigir Data de Adesão"><Pencil className="h-3 w-3" /></button>
               </div>
             );
           };
