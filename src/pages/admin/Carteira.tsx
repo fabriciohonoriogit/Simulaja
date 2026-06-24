@@ -571,15 +571,28 @@ export default function Carteira() {
   };
 
   const checkLotteryGlobal = () => {
-    if (!lotteryNumber) return;
+    console.log("[Lottery Audit] Iniciando auditoria para o número:", lotteryNumber, "Administradora:", lotteryAdmin);
+    if (!lotteryNumber) {
+      console.log("[Lottery Audit] Nenhum número de loteria informado.");
+      return;
+    }
+    
     const winners: any[] = [];
-    const closeClientsToNotify: any[] = [];
+    const notificationsToTrigger: { title: string; description: string }[] = [];
+
+    console.log(`[Lottery Audit] Total de clientes na carteira: ${clientes.length}`);
 
     clientes.forEach(c => {
       if (!c.grupo) return;
       
       const adminName = formatToUpper(c.administradora) || "NÃO INFORMADA";
-      if (lotteryAdmin !== "TODAS" && adminName !== lotteryAdmin) return;
+      const matchesAdmin = lotteryAdmin === "TODAS" || 
+        adminName.includes(lotteryAdmin) || 
+        lotteryAdmin.includes(adminName);
+        
+      if (!matchesAdmin) {
+        return;
+      }
       
       const clientCotaNum = Number(c.cota?.replace(/\D/g, '') || "0");
       if (clientCotaNum === 0) return;
@@ -588,10 +601,14 @@ export default function Carteira() {
       const historicFound = todasCotasContempladas.find(t => t.grupo === c.grupo && Number(t.cota) === clientCotaNum);
       
       const status = getLoteriaStatus(lotteryNumber, c.cota, c.grupo, c.administradora, c.tipo_consorcio);
+      
+      console.log(`[Lottery Audit] Verificando cliente: ${c.nome} | Grupo: ${c.grupo} | Cota: ${c.cota} | Admin: ${adminName} | Sorteada: ${status?.winCota} | Diff: ${status?.diff}`);
+
       if (status && status.winCota > 0) {
         const isSorteio = status.winCota === clientCotaNum;
         const isLanceFixoMatch = status.diff !== null && status.diff <= 10 && c.protocolo_lance_fixo === "SIM";
         const isCloseMatch = status.diff !== null && status.diff <= 10;
+        const isCon = !!c.cota_contemplada;
         
         if (isSorteio) {
           winners.push({
@@ -599,12 +616,24 @@ export default function Carteira() {
             tipoGanhador: "sorteio",
             cotaSorteada: status.winCota
           });
+          if (!isCon) {
+            notificationsToTrigger.push({
+              title: "🎉 COTA CONTEMPLADA!",
+              description: `O cliente ${c.nome} (Grupo ${c.grupo}, Cota ${c.cota}) foi contemplado diretamente no sorteio!`
+            });
+          }
         } else if (isLanceFixoMatch) {
           winners.push({
             ...c,
             tipoGanhador: "lance_fixo",
             cotaSorteada: status.winCota
           });
+          if (!isCon) {
+            notificationsToTrigger.push({
+              title: "🎯 LANCE FIXO CONTEMPLADO!",
+              description: `O cliente ${c.nome} (Grupo ${c.grupo}, Cota ${c.cota}) está na margem de 10 números do sorteado (${status.winCota}) com Lance Fixo ativo!`
+            });
+          }
         } else if (isCloseMatch) {
           winners.push({
             ...c,
@@ -612,7 +641,12 @@ export default function Carteira() {
             cotaSorteada: status.winCota,
             diffCotas: status.diff
           });
-          closeClientsToNotify.push({ client: c, diff: status.diff, winCota: status.winCota });
+          if (!isCon) {
+            notificationsToTrigger.push({
+              title: "⚡ Probabilidade de Contemplação!",
+              description: `O cliente ${c.nome} (Grupo ${c.grupo}, Cota ${c.cota}) está a apenas ${status.diff} número(s) do sorteado (${status.winCota}).`
+            });
+          }
         } else if (historicFound) {
           winners.push({
             ...c,
@@ -628,16 +662,16 @@ export default function Carteira() {
         });
       }
     });
+    
+    console.log(`[Lottery Audit] Ganhadores/Destaques encontrados: ${winners.length}`, winners);
     setLotteryWinners(winners);
     setLotteryChecked(true);
 
-    // Trigger toast notification for close clients
-    if (closeClientsToNotify.length > 0) {
-      closeClientsToNotify.forEach(({ client, diff, winCota }) => {
-        toast({
-          title: "⚡ Probabilidade de Contemplação!",
-          description: `O cliente ${client.nome} (Grupo ${client.grupo}, Cota ${client.cota}) está a apenas ${diff} número(s) do sorteado (${winCota}).`
-        });
+    // Trigger toast notifications
+    if (notificationsToTrigger.length > 0) {
+      console.log(`[Lottery Audit] Disparando ${notificationsToTrigger.length} notificações.`);
+      notificationsToTrigger.forEach(({ title, description }) => {
+        toast({ title, description });
       });
     }
   };
@@ -656,7 +690,9 @@ export default function Carteira() {
     .filter(c => {
       const matchesSearch = (c.nome || "").toLowerCase().includes(searchTerm.toLowerCase()) || (c.grupo || "").includes(searchTerm);
       const adminName = formatToUpper(c.administradora) || "NÃO INFORMADA";
-      const matchesAdmin = lotteryAdmin === "TODAS" || adminName === lotteryAdmin;
+      const matchesAdmin = lotteryAdmin === "TODAS" || 
+        adminName.includes(lotteryAdmin) || 
+        lotteryAdmin.includes(adminName);
       const matchesStatus = sortOrder === "inadimplentes" ? c.status === "inadimplente" : true;
       return matchesSearch && matchesAdmin && matchesStatus;
     })
@@ -870,7 +906,10 @@ export default function Carteira() {
                       clientes.forEach(c => {
                         if (!c.grupo) return;
                         const adminName = formatToUpper(c.administradora) || "NÃO INFORMADA";
-                        if (lotteryAdmin !== "TODAS" && adminName !== lotteryAdmin) return;
+                        const matchesAdmin = lotteryAdmin === "TODAS" || 
+                          adminName.includes(lotteryAdmin) || 
+                          lotteryAdmin.includes(adminName);
+                        if (!matchesAdmin) return;
                         
                         if (!uniqueGroups.has(c.grupo)) {
                            const status = getLoteriaStatus(lotteryNumber, "1", c.grupo, c.administradora, c.tipo_consorcio);
