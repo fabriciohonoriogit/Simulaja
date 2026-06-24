@@ -30,4 +30,11 @@ describe("getLoteriaStatus", () => {
     expect(result?.participants).toBe(600);
     expect(result?.isWinner).toBe(true);
   });
+
+  it("retorna isWinner: false e isClose: false se clientCota > participants", () => {
+    const result = getLoteriaStatus("600", "700", "9999", "MAGALU");
+    expect(result?.isWinner).toBe(false);
+    expect(result?.isClose).toBe(false);
+    expect(result?.diff).toBeNull();
+  });
 });

@@ -1,4 +1,5 @@
 export const groupQuotaMap: Record<string, number> = {
+  "5272": 1800,
   "5290": 1800,
   "5292": 2500,
   "5291": 1800,
@@ -9,6 +10,7 @@ export const groupQuotaMap: Record<string, number> = {
   "1703": 2000,
   "6035": 2500,
   "6039": 3100,
+  "6043": 5000,
 };
 
 export const getAdemiconParticipants = (grupoStr: string | null, tipoConsorcio: string | null): number => {
@@ -127,6 +129,10 @@ export const getLoteriaStatus = (
   const clientCota = parseInt(cotaStr?.replace(/\D/g, '') || "0");
   
   if (!clientCota) return { winCota, isWinner: false, isClose: false, diff: null, participants };
+
+  if (clientCota > participants) {
+    return { winCota, isWinner: false, isClose: false, diff: null, participants };
+  }
 
   const diff = Math.min(
     Math.abs(clientCota - winCota),
