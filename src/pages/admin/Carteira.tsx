@@ -951,7 +951,7 @@ export default function Carteira() {
                           }`}>
                             {(w as any).tipoGanhador === "sorteio" ? "Sorteio" :
                              (w as any).tipoGanhador === "lance_fixo" ? "Lance Fixo" :
-                             (w as any).tipoGanhador === "probabilidade_alta" ? "Próximo (Margem 10)" :
+                             (w as any).tipoGanhador === "probabilidade_alta" ? "Probabilidade de Contemplação" :
                              "Histórico"}
                           </Badge>
                       </div>
@@ -1125,15 +1125,39 @@ export default function Carteira() {
             
             // Calculate real-time closeness to lottery draw
             const lotStatus = lotteryNumber ? getLoteriaStatus(lotteryNumber, c.cota, c.grupo, c.administradora, c.tipo_consorcio) : null;
-            const isCloseToDraw = lotStatus && lotStatus.diff !== null && lotStatus.diff <= 10 && !isCon;
+
+            const renderCloseWarning = () => {
+              if (!lotStatus || lotStatus.diff === null || lotStatus.diff > 10 || isCon) return null;
+              
+              const isExact = lotStatus.diff === 0;
+              const isLF = lotStatus.diff <= 10 && c.protocolo_lance_fixo === "SIM";
+              
+              if (isExact) {
+                return (
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg animate-pulse text-[10px] font-black uppercase justify-center w-full">
+                    <span>🏆 Contemplado no Sorteio!</span>
+                  </div>
+                );
+              }
+              
+              if (isLF) {
+                return (
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-lg animate-pulse text-[10px] font-black uppercase justify-center w-full">
+                    <span>🏹 Margem de Contemplação: Lance Fixo (Dif: {lotStatus.diff})</span>
+                  </div>
+                );
+              }
+              
+              return (
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-lg animate-pulse text-[10px] font-black uppercase justify-center w-full">
+                  <span>⚡ Probabilidade de Contemplação (Dif: {lotStatus.diff})</span>
+                </div>
+              );
+            };
 
             return (
               <div className="space-y-2 w-full">
-                {isCloseToDraw && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-lg animate-pulse text-[10px] font-black uppercase justify-center w-full">
-                    <span>⚡ Próximo do Sorteado: {lotStatus.winCota} (Dif: {lotStatus.diff})</span>
-                  </div>
-                )}
+                {renderCloseWarning()}
                 <div className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg border relative ${ isIn ? "bg-rose-50 text-rose-700 border-rose-200" : isCon ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-amber-50 text-amber-700 border-amber-100" }`}>
                   <Clock className="h-3 w-3 shrink-0" />
                   <div className="flex-1">
