@@ -10,7 +10,7 @@ export const groupQuotaMap: Record<string, number> = {
   "1703": 2000,
   "6035": 2500,
   "6039": 3100,
-  "6043": 5000,
+  "6043": 4300,
 };
 
 export const getAdemiconParticipants = (grupoStr: string | null, tipoConsorcio: string | null): number => {
