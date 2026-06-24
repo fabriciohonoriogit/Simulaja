@@ -312,6 +312,18 @@ export default function Carteira() {
     }
   };
 
+  const handleToggleLanceFixo = async (id: string, currentVal: string | null) => {
+    try {
+      const newVal = currentVal === "SIM" ? null : "SIM";
+      const { error } = await supabase.from("carteira").update({ protocolo_lance_fixo: newVal }).eq("id", id);
+      if (error) throw error;
+      setClientes(prev => prev.map(c => c.id === id ? { ...c, protocolo_lance_fixo: newVal } : c));
+      toast({ title: newVal ? "Lance fixo ativado!" : "Lance fixo desativado!" });
+    } catch (e) {
+      toast({ title: "Erro ao atualizar lance fixo", variant: "destructive" });
+    }
+  };
+
   const handleDeleteContemplation = async (id: string) => {
     await supabase.from("cotas_contempladas").delete().eq("id", id);
     if (selectedGrupo) fetchContemplations(selectedGrupo);
@@ -560,24 +572,63 @@ export default function Carteira() {
 
   const checkLotteryGlobal = () => {
     if (!lotteryNumber) return;
-    const winners: Cliente[] = [];
+    const winners: any[] = [];
     clientes.forEach(c => {
       if (!c.grupo) return;
       
       const adminName = formatToUpper(c.administradora) || "NÃO INFORMADA";
       if (lotteryAdmin !== "TODAS" && adminName !== lotteryAdmin) return;
       
+      const clientCotaNum = Number(c.cota?.replace(/\D/g, '') || "0");
+      if (clientCotaNum === 0) return;
+      
       // Auto-check against the historical contemplated data we already restored
-      const historicFound = todasCotasContempladas.find(t => t.grupo === c.grupo && Number(t.cota) === Number(c.cota?.replace(/\D/g, '')||"0"));
+      const historicFound = todasCotasContempladas.find(t => t.grupo === c.grupo && Number(t.cota) === clientCotaNum);
       
       const status = getLoteriaStatus(lotteryNumber, c.cota, c.grupo, c.administradora, c.tipo_consorcio);
-      if ((status && status.winCota > 0 && status.winCota === Number(c.cota?.replace(/\D/g, '') || "0")) || historicFound) {
-            winners.push(c);
+      if (status && status.winCota > 0) {
+        const isSorteio = status.winCota === clientCotaNum;
+        const isLanceFixoMatch = status.diff !== null && status.diff <= 10 && c.protocolo_lance_fixo === "SIM";
+        
+        if (isSorteio) {
+          winners.push({
+            ...c,
+            tipoGanhador: "sorteio",
+            cotaSorteada: status.winCota
+          });
+        } else if (isLanceFixoMatch) {
+          winners.push({
+            ...c,
+            tipoGanhador: "lance_fixo",
+            cotaSorteada: status.winCota
+          });
+        } else if (historicFound) {
+          winners.push({
+            ...c,
+            tipoGanhador: "historico",
+            cotaSorteada: status.winCota
+          });
+        }
+      } else if (historicFound) {
+        winners.push({
+          ...c,
+          tipoGanhador: "historico",
+          cotaSorteada: clientCotaNum
+        });
       }
     });
     setLotteryWinners(winners);
     setLotteryChecked(true);
   };
+
+  useEffect(() => {
+    if (lotteryNumber && lotteryNumber.replace(/\D/g, '').length >= 4) {
+      checkLotteryGlobal();
+    } else {
+      setLotteryChecked(false);
+      setLotteryWinners([]);
+    }
+  }, [lotteryNumber, clientes, lotteryAdmin]);
 
   const filteredAndSorted = clientes
     .filter(c => {
@@ -831,6 +882,9 @@ export default function Carteira() {
                          <span className="font-bold flex-1 truncate">{w.nome}</span>
                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-200 shrink-0">{w.administradora}</span>
                          <span className="text-xs font-black bg-emerald-500 px-2 py-0.5 rounded shrink-0">G: {w.grupo} | C: {w.cota}</span>
+                         <Badge className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${(w as any).tipoGanhador === "sorteio" ? "bg-blue-600 text-white hover:bg-blue-700" : (w as any).tipoGanhador === "lance_fixo" ? "bg-amber-500 text-white hover:bg-amber-600 animate-pulse" : "bg-slate-600 text-white hover:bg-slate-700"}`}>
+                           {(w as any).tipoGanhador === "sorteio" ? "Sorteio" : (w as any).tipoGanhador === "lance_fixo" ? "Lance Fixo" : "Histórico"}
+                         </Badge>
                       </div>
                     ))}
                   </div>
@@ -1089,6 +1143,17 @@ export default function Carteira() {
                     <p className="font-black text-blue-600">{formatCurrency(Number(c.valor_credito || 0))}</p>
                   </div>
                 </div>
+                <div className="mb-3 flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100 hover:bg-slate-100 transition-colors">
+                  <Checkbox 
+                    id={`lance-fixo-${c.id}`}
+                    checked={c.protocolo_lance_fixo === "SIM"}
+                    onCheckedChange={() => handleToggleLanceFixo(c.id, c.protocolo_lance_fixo)}
+                    className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600 cursor-pointer"
+                  />
+                  <label htmlFor={`lance-fixo-${c.id}`} className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                    🏹 Lance Fixo Ativo
+                  </label>
+                </div>
                 <div className="mb-4">{renderCotaStatus(c)}</div>
                 <div className="flex gap-2">
                   {renderCotaActions(c)}
@@ -1145,6 +1210,17 @@ export default function Carteira() {
                         <p className="text-slate-400 font-bold uppercase text-[9px]">Crédito</p>
                         <p className="font-black text-blue-600">{formatCurrency(Number(c.valor_credito || 0))}</p>
                       </div>
+                    </div>
+                    <div className="mb-3 flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100 hover:bg-slate-100 transition-colors">
+                      <Checkbox 
+                        id={`lance-fixo-${c.id}`}
+                        checked={c.protocolo_lance_fixo === "SIM"}
+                        onCheckedChange={() => handleToggleLanceFixo(c.id, c.protocolo_lance_fixo)}
+                        className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600 cursor-pointer"
+                      />
+                      <label htmlFor={`lance-fixo-${c.id}`} className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                        🏹 Lance Fixo Ativo
+                      </label>
                     </div>
                     <div className="mb-4">{renderCotaStatus(c)}</div>
                     {renderCotaActions(c)}

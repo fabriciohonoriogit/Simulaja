@@ -20,7 +20,8 @@ describe("getLoteriaStatus", () => {
 
   it("usa regra especial para Ademicon Veículo (módulo 10000)", () => {
     // Para Ademicon veículo, usa lotId % 10000 como base
-    const result = getLoteriaStatus("21800", "1800", "5290", "ADEMICON", "veiculos");
+    // Grupo 1681 possui 1000 participantes. Base 1800 % 1000 = 800.
+    const result = getLoteriaStatus("21800", "800", "1681", "ADEMICON", "veiculos");
     expect(result?.isWinner).toBe(true);
   });
 
