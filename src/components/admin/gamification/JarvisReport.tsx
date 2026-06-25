@@ -11,8 +11,12 @@ interface JarvisReportProps {
 }
 
 export function JarvisReport({ leads, carteira, inadimplentes, realizadoMes, metaMensal }: JarvisReportProps) {
+  const totalClientes = carteira.length;
+  const totalContemplados = carteira.filter(c => !!c.cota_contemplada || c.status === "contemplada" || !!c.data_contemplacao).length;
+  const percentContemplados = totalClientes > 0 ? (totalContemplados / totalClientes) * 100 : 0;
+
   const inadimplentesAtivos = inadimplentes.filter(i => i.status !== 'regularizado').length;
-  const percentInadimplencia = carteira.length > 0 ? (inadimplentesAtivos / carteira.length) * 100 : 0;
+  const percentInadimplencia = totalClientes > 0 ? (inadimplentesAtivos / totalClientes) * 100 : 0;
   const faltanteMeta = Math.max(0, metaMensal - realizadoMes);
   const progresso = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
 
@@ -48,6 +52,9 @@ export function JarvisReport({ leads, carteira, inadimplentes, realizadoMes, met
               <p>
                 ⚠️ <strong className="text-white">Carteira:</strong> A inadimplência está em <strong className={percentInadimplencia > 5 ? "text-red-400" : "text-emerald-400"}>{percentInadimplencia.toFixed(1)}%</strong> ({inadimplentesAtivos} contratos em risco). 
                 {percentInadimplencia > 5 ? ' Ação imediata de cobrança necessária para evitar perdas.' : ' Taxa controlada, mantenha o bom relacionamento.'}
+              </p>
+              <p>
+                🏆 <strong className="text-white">Contemplações:</strong> Temos <strong className="text-violet-400">{totalClientes} clientes na carteira</strong>, dos quais <strong className="text-emerald-400">{totalContemplados} estão contemplados</strong> ({percentContemplados.toFixed(1)}% de índice).
               </p>
             </div>
           </div>
