@@ -52,6 +52,9 @@ interface CarteiraItem {
   celular: string | null;
   administradora: string | null;
   tipo_consorcio: string | null;
+  cota_contemplada?: string | null;
+  data_contemplacao?: string | null;
+  status?: string | null;
 }
 
 
@@ -116,7 +119,7 @@ export default function Dashboard() {
 
       (supabase as any)
         .from("carteira")
-        .select("id, nome, grupo, cota, valor_credito, celular, administradora, tipo_consorcio")
+        .select("id, nome, grupo, cota, valor_credito, celular, administradora, tipo_consorcio, cota_contemplada, data_contemplacao, status")
         .eq("organizacao_id", profile.organizacao_id)
         .then(({ data }: any) => {
           setCarteira((data as any[]) || []);
@@ -218,6 +221,8 @@ export default function Dashboard() {
 
   // New Metrics
   const totalClientes = carteira.length;
+  const totalContemplados = carteira.filter(c => !!c.cota_contemplada || c.status === "contemplada" || !!c.data_contemplacao).length;
+  const percentContemplados = totalClientes > 0 ? (totalContemplados / totalClientes) * 100 : 0;
   const inadimplentesAtivos = inadimplentes.filter(i => i.status !== 'regularizado').length;
   const percentInadimplencia = totalClientes > 0 ? (inadimplentesAtivos / totalClientes) * 100 : 0;
   const percentRetencao = totalClientes > 0 ? ((totalClientes - inadimplentesAtivos) / totalClientes) * 100 : 0;
@@ -369,7 +374,7 @@ export default function Dashboard() {
         </div>
 
         {/* MÉTRICAS CLÁSSICAS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {/* Card 1: Clientes na Carteira */}
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02]">
           <div className="flex items-center gap-3">
@@ -386,7 +391,23 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Card 2: % Inadimplência */}
+        {/* Card 2: % Indice de clientes contemplados */}
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-violet-600 to-violet-800 text-white shadow-lg shadow-violet-500/20 transition-all hover:scale-[1.02]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-white/20">
+              <Trophy className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase opacity-80 tracking-widest leading-tight">Clientes Contemplados</p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-black">{percentContemplados.toFixed(1)}%</p>
+                <span className="text-[9px] opacity-80 font-bold uppercase tracking-tighter">{totalContemplados} contemplados</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: % Inadimplência */}
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-lg shadow-rose-500/20 transition-all hover:scale-[1.02]">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-white/20">
@@ -402,7 +423,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Card 3: Retenção */}
+        {/* Card 4: Retenção */}
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02]">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-white/20">
@@ -418,7 +439,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Card 4: Comissões */}
+        {/* Card 5: Comissões */}
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02]">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
