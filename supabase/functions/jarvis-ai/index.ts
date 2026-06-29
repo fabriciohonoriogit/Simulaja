@@ -59,29 +59,56 @@ const tools = [
 
 async function executeTool(supabase: any, name: string, args: any) {
   try {
+    // Busca a organização do usuário logado via RLS (seguro)
+    const { data: profile } = await supabase.from('perfis').select('organizacao_id').single();
+    const orgId = profile?.organizacao_id;
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+    // Se temos a chave de admin e a org, criamos um cliente com privilégios de admin
+    // que ignora as restrições normais de RLS do vendedor, mas filtra pela mesma organização.
+    const useAdmin = !!(supabaseServiceRole && orgId);
+    const client = useAdmin 
+      ? createClient(supabaseUrl, supabaseServiceRole) 
+      : supabase;
+
     if (name === "get_dashboard_metrics") {
-      const { count: leadsCount } = await supabase.from('leads').select('*', { count: 'exact', head: true });
-      const { data: inadimplentes } = await supabase.from('inadimplentes').select('valor_parcela, parcelas_atrasadas');
+      let leadsQuery = client.from('leads').select('*', { count: 'exact', head: true });
+      if (useAdmin) leadsQuery = leadsQuery.eq('organizacao_id', orgId);
+      const { count: leadsCount } = await leadsQuery;
+
+      let inadQuery = client.from('inadimplentes').select('valor_parcela, parcelas_atrasadas');
+      if (useAdmin) inadQuery = inadQuery.eq('organizacao_id', orgId);
+      const { data: inadimplentes } = await inadQuery;
+
       const dividaTotal = (inadimplentes || []).reduce((acc: number, i: any) => acc + (i.valor_parcela * i.parcelas_atrasadas), 0);
       return { leadsCount, dividaTotal, message: "Métricas gerais retornadas com sucesso." };
     }
     if (name === "search_leads") {
-      let query = supabase.from('leads').select('id, nome, telefone, status, valor_credito, created_at, lead_temperatura, cidade, tipo_consorcio');
+      let query = client.from('leads').select('id, nome, telefone, status, valor_credito, created_at, lead_temperatura, cidade, tipo_consorcio');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
       if (args.nome) query = query.ilike('nome', `%${args.nome}%`);
       if (args.status) query = query.eq('status', args.status);
       const { data } = await query.limit(20);
       return { results: data || [] };
     }
     if (name === "get_carteira") {
-      const { data } = await supabase.from('carteira').select('id, nome, grupo, cota, data_adesao, status').limit(20);
+      let query = client.from('carteira').select('id, nome, grupo, cota, data_adesao, status');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const { data } = await query.limit(20);
       return { results: data || [] };
     }
     if (name === "get_inadimplentes") {
-      const { data } = await supabase.from('inadimplentes').select('id, nome, valor_parcela, parcelas_atrasadas, status').limit(20);
+      let query = client.from('inadimplentes').select('id, nome, valor_parcela, parcelas_atrasadas, status');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const { data } = await query.limit(20);
       return { results: data || [] };
     }
     if (name === "get_metas") {
-      const { data } = await supabase.from('meta').select('*').limit(10);
+      let query = client.from('meta').select('*');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const { data } = await query.limit(10);
       return { results: data || [] };
     }
     if (name === "search_web") {
