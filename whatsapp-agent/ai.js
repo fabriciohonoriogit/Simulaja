@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { OpenAI } = require('openai');
+const axios = require('axios');
 
 // Inicializa a OpenAI apenas se a chave estiver configurada
 const openai = process.env.OPENAI_API_KEY 
@@ -27,11 +28,30 @@ async function generateAIResponse(userMessage, remoteJid) {
     return "Olá! Sou o assistente do Fabrício. No momento meu cérebro de IA está desligado (falta a chave da API), mas logo estarei 100%!";
   }
 
+  // Tenta buscar contexto dinâmico do 3cerebros
+  let localContext = "";
+  try {
+    const res = await axios.get(`http://localhost:8008/context?query=${encodeURIComponent(userMessage)}&who=${encodeURIComponent(remoteJid)}`);
+    localContext = res.data.context || "";
+  } catch (e) {
+    // Ignora silenciosamente se o servidor local do cérebro estiver offline
+  }
+
   try {
     // Busca histórico da conversa ou cria um novo
     let conversationHistory = memoryCache.get(remoteJid) || [
       { role: "system", content: SYSTEM_PROMPT }
     ];
+
+    // Se tivermos contexto local adicional, injetamos no system prompt
+    if (localContext) {
+      conversationHistory[0] = {
+        role: "system",
+        content: `${SYSTEM_PROMPT}\n\n--- CONTEXTO ADICIONAL DO SEGUNDO CÉREBRO (3CEREBROS) ---\n${localContext}`
+      };
+    } else {
+      conversationHistory[0] = { role: "system", content: SYSTEM_PROMPT };
+    }
 
     // Adiciona a nova mensagem do usuário
     conversationHistory.push({ role: "user", content: userMessage });
@@ -57,6 +77,17 @@ async function generateAIResponse(userMessage, remoteJid) {
     // Salva a resposta da IA no histórico
     conversationHistory.push({ role: "assistant", content: aiMessage });
     memoryCache.set(remoteJid, conversationHistory);
+
+    // Salva a interação no 3cerebros local se ativo
+    try {
+      await axios.post("http://localhost:8008/observe", {
+        who: remoteJid,
+        user_msg: userMessage,
+        ai_reply: aiMessage
+      });
+    } catch (e) {
+      // Ignora silenciosamente se o servidor local estiver offline
+    }
 
     return aiMessage;
 

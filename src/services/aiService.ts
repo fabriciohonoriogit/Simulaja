@@ -54,6 +54,17 @@ Responda apenas com o texto da mensagem.`;
   },
 
   async askJarvis(context: string, question: string, history?: Array<{role: string, text: string}>, imageBase64?: string) {
+    let localContext = "";
+    try {
+      const res = await fetch(`http://localhost:8008/context?query=${encodeURIComponent(question)}&who=vendedor`);
+      if (res.ok) {
+        const data = await res.json();
+        localContext = data.context || "";
+      }
+    } catch (e) {
+      console.warn("[3Cerebros] Servidor local não está rodando. Usando memória padrão do sistema.");
+    }
+
     const prompt = `Você é o Jarvis, diretor comercial parceiro de vendas.
 Você tem acesso a Ferramentas (Tools) para consultar o banco de dados do CRM em tempo real.
 Se o usuário perguntar sobre leads, metas, inadimplência ou carteira, USE AS FERRAMENTAS para buscar a informação antes de responder.
@@ -80,11 +91,27 @@ INFORMAÇÃO FIXA (MEMÓRIA):
 - Se perguntarem quais são os clientes EP (ou EP do mês de junho), responda que são: Emily Oliveira da Luz, João Batista Pereira, Alessandro Moreira e Leonardo Alves de Arruda.
 - Se perguntarem sobre o índice QV8 (Qualidade da Venda no Oitavo Mês) de junho: a meta era 71.00%, mas o Resultado Atual foi 100.00% (Meta Atingida), com Crédito Gerado de R$ 310.000,00.
 
+${localContext ? `\n--- CONTEXTO ADICIONAL DO SEGUNDO CÉREBRO (3CEREBROS) ---\n${localContext}\n` : ""}
+
 CONTEXTO DA TELA ATUAL:
 ${context}
 
 PERGUNTA: "${question}"`;
     const { text, error } = await callAI(prompt, 500, history, imageBase64);
+
+    // Registra a interação no cérebro se a chamada deu certo
+    if (text && !error) {
+      try {
+        await fetch("http://localhost:8008/observe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ who: "vendedor", user_msg: question, ai_reply: text })
+        });
+      } catch (e) {
+        // Ignora silenciosamente se o servidor local do cérebro estiver offline
+      }
+    }
+
     return {
       answer: text || "Desculpe, ocorreu um erro de conexão. Tente novamente em instantes.",
       error,
