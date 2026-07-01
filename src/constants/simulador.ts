@@ -83,16 +83,19 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "5997", credito: 350000, prazo: 111, r50: 2182.58, r100: 3727.78, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.029, isPromo: true },
   ],
   servicos: [
-    { grupo: "Magalu", credito: 8000, r50: 502.52, prazo: 20 },
+    { grupo: "4150", credito: 6000, prazo: 48, r50: 167.00, txLinear: 28, frLinear: 4, seguro: 0.0333 },
+    { grupo: "4150", credito: 7000, prazo: 48, r50: 194.83, txLinear: 28, frLinear: 4, seguro: 0.0333 },
+    { grupo: "4150", credito: 8000, prazo: 48, r50: 222.66, txLinear: 28, frLinear: 4, seguro: 0.0333 },
     { grupo: "Magalu", credito: 9000, r50: 565.35, prazo: 20 },
-    { grupo: "Magalu", credito: 10000, r50: 628.15, prazo: 20 },
+    { grupo: "4150", credito: 10000, prazo: 48, r50: 278.33, txLinear: 28, frLinear: 4, seguro: 0.0333 },
     { grupo: "Magalu", credito: 12000, r50: 753.78, prazo: 20 },
     { grupo: "Magalu", credito: 13000, r50: 816.60, prazo: 20 },
     { grupo: "Magalu", credito: 14000, r50: 879.42, prazo: 20 },
+    { grupo: "7120", credito: 15000, prazo: 60, r50: 312.16, txLinear: 21, frLinear: 2, seguro: 0.0311 },
     { grupo: "Magalu", credito: 18000, r50: 520.47, prazo: 43 },
-    { grupo: "Magalu", credito: 20000, r50: 578.30, prazo: 43 },
+    { grupo: "7120", credito: 20000, prazo: 60, r50: 416.20, txLinear: 21, frLinear: 2, seguro: 0.031 },
     { grupo: "Magalu", credito: 25000, r50: 722.89, prazo: 43 },
-    { grupo: "Magalu", credito: 30000, r50: 867.45, prazo: 43 },
+    { grupo: "7119", credito: 30000, prazo: 41, r50: 909.27, txLinear: 21, frLinear: 2, seguro: 0.0309 },
   ]
 };
 
