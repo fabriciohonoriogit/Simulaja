@@ -712,7 +712,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
   ],
   pesados: [
     { grupo: "5996", credito: 180000, prazo: 132, r50: 945.36, r100: 1613.54, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5997", credito: 190000, prazo: 111, r50: 1184.83, r100: 2023.65, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.029, isPromo: true },
+    { grupo: "5996", credito: 190000, prazo: 131, r50: 1012.76, r100: 1737.95, txLinear: 15, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0292, isPromo: true },
     { grupo: "5997", credito: 200000, prazo: 111, r50: 1247.19, r100: 2130.16, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.029, isPromo: true },
     { grupo: "5996", credito: 220000, prazo: 132, r50: 1164.31, r100: 1980.42, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "5997", credito: 250000, prazo: 111, r50: 1558.99, r100: 2662.70, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.029, isPromo: true },
