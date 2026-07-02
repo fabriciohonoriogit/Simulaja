@@ -78,16 +78,16 @@ export function LevelUpModal() {
 
               <h2 className="text-4xl font-extrabold text-white mb-2 tracking-tight">PARABÉNS!</h2>
               <p className="text-xl text-zinc-300 mb-6">
-                Você evoluiu para <span className={`font-bold uppercase ${config?.cor ? config.cor.replace('bg-', 'text-') : 'text-yellow-500'}`}>{patenteAtual}</span>.
+                Você evoluiu para <span className={`inline-block px-3.5 py-1.5 rounded-md text-white font-black uppercase ${config?.cor || 'bg-yellow-500'}`}>{patenteAtual === 'STONE' ? 'STONE (PEDRA)' : patenteAtual === 'GOLD' ? 'GOLD (OURO)' : patenteAtual}</span>.
               </p>
 
               <div className="bg-black/30 rounded-lg p-6 mb-8 w-full border border-zinc-800/50">
                 <p className="text-zinc-400 mb-2">
-                  Sua comissão recorrente superou sua meta anterior!
+                  Suas vendas mensais superaram a meta anterior!
                 </p>
                 {config?.next && (
                   <p className="text-sm font-medium text-white">
-                    Continue avançando rumo ao nível <span className="text-orange-500 font-bold">{config.next}</span>.
+                    Continue avançando rumo ao nível <span className="text-orange-500 font-bold">{config.next === 'STONE' ? 'STONE (PEDRA)' : config.next === 'GOLD' ? 'GOLD (OURO)' : config.next}</span>.
                   </p>
                 )}
               </div>

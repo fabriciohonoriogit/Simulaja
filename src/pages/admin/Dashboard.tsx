@@ -22,6 +22,7 @@ import { AICoachMessage } from "@/components/admin/gamification/AICoachMessage";
 import { BossOfTheWeek } from "@/components/admin/gamification/BossOfTheWeek";
 import { HallOfFame } from "@/components/admin/gamification/HallOfFame";
 import { JarvisReport } from "@/components/admin/gamification/JarvisReport";
+import { EliteRewardsPanel } from "@/components/admin/gamification/EliteRewardsPanel";
 import { useGamificationStore } from "@/stores/gamificationStore";
 import { calcularComissaoRecorrenteLead } from "@/lib/gamificationUtils";
 import { WeatherWidget } from "@/components/admin/WeatherWidget";
@@ -363,6 +364,12 @@ export default function Dashboard() {
           </div>
           <AICoachMessage />
           <DashboardHero />
+          <EliteRewardsPanel 
+            leads={leads} 
+            totalClientes={totalClientes} 
+            percentRetencao={percentRetencao} 
+            percentContemplados={percentContemplados} 
+          />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="lg:col-span-1">
               <BossOfTheWeek />

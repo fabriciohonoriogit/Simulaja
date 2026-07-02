@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Patente, UserGamificationState, BossDaSemana } from '../types/gamification';
-import { obterPatentePorComissao } from '../lib/gamificationUtils';
+import { obterPatentePorVenda } from '../lib/gamificationUtils';
 
 interface GamificationStore extends UserGamificationState {
   showLevelUpModal: boolean;
@@ -19,7 +19,7 @@ interface GamificationStore extends UserGamificationState {
 export const useGamificationStore = create<GamificationStore>()(
   persist(
     (set, get) => ({
-      patenteAtual: 'BABY',
+      patenteAtual: 'STONE',
       previousPatente: null,
       comissaoMensalAtual: 0,
       producaoMes: 0,
@@ -47,26 +47,31 @@ export const useGamificationStore = create<GamificationStore>()(
       },
 
       setComissaoAtual: (comissao: number) => {
+        set({ comissaoMensalAtual: comissao });
+      },
+
+      setProducaoMes: (producao: number) => {
         const { patenteAtual } = get();
-        const novaPatente = obterPatentePorComissao(comissao);
+        const novaPatente = obterPatentePorVenda(producao);
         
         let showModal = false;
         let previous = patenteAtual;
 
         // Se subiu de patente
-        if (novaPatente !== patenteAtual && comissao > get().comissaoMensalAtual) {
-          showModal = true;
+        if (novaPatente !== patenteAtual && producao > get().producaoMes) {
+          const order: Patente[] = ['STONE', 'GOLD', 'CROMO', 'TITÂNIO', 'PLATINA', 'DIAMANTE'];
+          if (order.indexOf(novaPatente) > order.indexOf(patenteAtual)) {
+            showModal = true;
+          }
         }
 
         set({
-          comissaoMensalAtual: comissao,
+          producaoMes: producao,
           patenteAtual: novaPatente,
           showLevelUpModal: showModal,
           previousPatente: showModal ? previous : get().previousPatente
         });
       },
-
-      setProducaoMes: (producao: number) => set({ producaoMes: producao }),
       
       closeLevelUpModal: () => set({ showLevelUpModal: false, previousPatente: null }),
       

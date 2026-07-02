@@ -6,21 +6,21 @@ import { Card } from '../../ui/card';
 import { Progress } from '../../ui/progress';
 
 const PATENTE_EMOJIS: Record<string, string> = {
-  'BABY': '👶',
-  'JÚNIOR': '👦🏻',
-  'PRO': '💼',
-  'ESPECIALISTA': '🎓',
-  'ELITE': '💎',
-  'LENDA': '👑'
+  'STONE': '🪨',
+  'GOLD': '👑',
+  'CROMO': '🥈',
+  'TITÂNIO': '🛡️',
+  'PLATINA': '💿',
+  'DIAMANTE': '💎'
 };
 
 export function DashboardHero() {
   const { patenteAtual, comissaoMensalAtual, producaoMes } = useGamificationStore();
   const config = PATENTES_CONFIG[patenteAtual];
   const proximaPatente = config.next;
-  const progresso = calcularProgressoProximaPatente(comissaoMensalAtual, patenteAtual);
+  const progresso = calcularProgressoProximaPatente(producaoMes, patenteAtual);
   
-  const faltam = config.next ? PATENTES_CONFIG[config.next].min - comissaoMensalAtual : 0;
+  const faltam = config.next ? PATENTES_CONFIG[config.next].min - producaoMes : 0;
 
   return (
     <Card className="relative overflow-hidden border border-border bg-card text-card-foreground shadow-sm">
@@ -36,8 +36,8 @@ export function DashboardHero() {
               Patente Atual
             </span>
             <div className="flex items-center gap-2">
-              <span className={`px-3 py-1.5 rounded-md text-sm font-black uppercase tracking-wider ${config.cor} text-white flex items-center gap-2 shadow-sm`}>
-                <span className="text-lg leading-none">{PATENTE_EMOJIS[patenteAtual] || '⭐'}</span> {patenteAtual}
+              <span className={`px-3 py-1.5 rounded-md text-sm font-black uppercase tracking-wider ${config.cor} flex items-center gap-2 shadow-sm`}>
+                <span className="text-lg leading-none">{PATENTE_EMOJIS[patenteAtual] || '⭐'}</span> {patenteAtual === 'STONE' ? 'STONE (PEDRA)' : patenteAtual === 'GOLD' ? 'GOLD (OURO)' : patenteAtual}
               </span>
             </div>
           </div>
@@ -58,7 +58,7 @@ export function DashboardHero() {
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-blue-500" />
-              Produção do Mês
+              Vendas do Mês (Realizado)
             </span>
             <span className="text-2xl font-bold text-foreground">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(producaoMes)}
@@ -72,18 +72,18 @@ export function DashboardHero() {
                 <div className="flex justify-between items-end">
                   <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Target className="w-4 h-4 text-orange-500" />
-                    Rumo a {proximaPatente}
+                    Rumo a {proximaPatente === 'STONE' ? 'STONE (PEDRA)' : proximaPatente === 'GOLD' ? 'GOLD (OURO)' : proximaPatente}
                   </span>
                   <span className="text-xs text-muted-foreground font-bold">{progresso}%</span>
                 </div>
                 <Progress value={progresso} className="h-2 bg-secondary" indicatorClassName={config.cor} />
                 <span className="text-xs text-muted-foreground">
-                  Faltam <strong className="text-foreground">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(faltam)}/mês</strong>
+                  Faltam <strong className="text-foreground">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(faltam)} em Vendas</strong>
                 </span>
               </>
             ) : (
               <div className="flex flex-col gap-2 items-center justify-center h-full">
-                <span className="text-3xl">👑</span>
+                <span className="text-3xl">💎</span>
                 <span className="text-sm font-bold text-amber-600">Nível Máximo Alcançado</span>
               </div>
             )}

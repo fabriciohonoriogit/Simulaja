@@ -3,7 +3,7 @@ import { PATENTES_CONFIG } from '../../../types/gamification';
 import { Sparkles } from 'lucide-react';
 
 export function AICoachMessage() {
-  const { patenteAtual, comissaoMensalAtual } = useGamificationStore();
+  const { patenteAtual, producaoMes } = useGamificationStore();
   const config = PATENTES_CONFIG[patenteAtual];
   const proximaPatente = config.next;
   
@@ -14,16 +14,17 @@ export function AICoachMessage() {
           <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
         </div>
         <div>
-          <h4 className="font-bold text-amber-900 dark:text-amber-100">Bom dia!</h4>
+          <h4 className="font-bold text-amber-900 dark:text-amber-100">Parabéns!</h4>
           <p className="text-amber-800 dark:text-amber-200 text-sm mt-1">
-            Você atingiu o nível máximo <strong className="text-amber-900 dark:text-amber-400">LENDA</strong>. Continue fechando vendas para manter seu legado!
+            Você atingiu o nível máximo <strong className="text-amber-900 dark:text-amber-400">DIAMANTE</strong> no Ranking de Excelência Varejo! Continue mantendo esse padrão de excelência nas suas entregas.
           </p>
         </div>
       </div>
     );
   }
 
-  const faltam = PATENTES_CONFIG[proximaPatente].min - comissaoMensalAtual;
+  const faltam = PATENTES_CONFIG[proximaPatente].min - producaoMes;
+  const corTextColor = PATENTES_CONFIG[proximaPatente].cor.split(' ')[0].replace('bg-', 'text-').replace('from-', 'text-');
   
   return (
     <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 rounded-xl p-4 flex gap-4 items-start shadow-sm">
@@ -31,11 +32,11 @@ export function AICoachMessage() {
         <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
       </div>
       <div>
-        <h4 className="font-bold text-indigo-950 dark:text-zinc-100">Bom dia!</h4>
+        <h4 className="font-bold text-indigo-950 dark:text-zinc-100">Insights do Jarvis</h4>
         <p className="text-indigo-900/80 dark:text-zinc-300 text-sm mt-1 leading-relaxed">
-          Você está a apenas <strong className="text-indigo-600 dark:text-indigo-400 font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(faltam)}/mês</strong> em comissão para alcançar a patente <strong className={`font-bold uppercase ${PATENTES_CONFIG[proximaPatente].cor.replace('bg-', 'text-')}`}>{proximaPatente}</strong>.
+          Você está a apenas <strong className="text-indigo-600 dark:text-indigo-400 font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(faltam)}</strong> em vendas para alcançar o patamar <strong className={`font-bold uppercase ${corTextColor}`}>{proximaPatente === 'STONE' ? 'STONE (PEDRA)' : proximaPatente === 'GOLD' ? 'GOLD (OURO)' : proximaPatente}</strong>.
           <br/>
-          Existem propostas abertas que podem cobrir essa diferença. Recomendo entrar em contato com esses clientes hoje.
+          Foque em alavancar o RPC e a venda de Seguro para garantir também as premiações adicionais neste mês.
         </p>
       </div>
     </div>

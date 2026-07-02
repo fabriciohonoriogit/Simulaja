@@ -37,23 +37,32 @@ export function calcularComissaoRecorrenteLead(lead: any): number {
 }
 
 /**
- * Retorna a patente com base no valor da comissão mensal
+/**
+ * Retorna a patente com base no valor da venda mensal
+ */
+export function obterPatentePorVenda(vendaMensal: number): Patente {
+  if (vendaMensal < PATENTES_CONFIG['GOLD'].min) return 'STONE';
+  if (vendaMensal < PATENTES_CONFIG['CROMO'].min) return 'GOLD';
+  if (vendaMensal < PATENTES_CONFIG['TITÂNIO'].min) return 'CROMO';
+  if (vendaMensal < PATENTES_CONFIG['PLATINA'].min) return 'TITÂNIO';
+  if (vendaMensal < PATENTES_CONFIG['DIAMANTE'].min) return 'PLATINA';
+  return 'DIAMANTE';
+}
+
+/**
+ * Mantém compatibilidade com funções antigas baseadas em comissão
  */
 export function obterPatentePorComissao(comissaoMensal: number): Patente {
-  if (comissaoMensal < PATENTES_CONFIG['JÚNIOR'].min) return 'BABY';
-  if (comissaoMensal < PATENTES_CONFIG['PRO'].min) return 'JÚNIOR';
-  if (comissaoMensal < PATENTES_CONFIG['ESPECIALISTA'].min) return 'PRO';
-  if (comissaoMensal < PATENTES_CONFIG['ELITE'].min) return 'ESPECIALISTA';
-  if (comissaoMensal < PATENTES_CONFIG['LENDA'].min) return 'ELITE';
-  return 'LENDA';
+  // Conversão aproximada para manter retrocompatibilidade
+  return obterPatentePorVenda(comissaoMensal * 250);
 }
 
 /**
  * Retorna o progresso (0 a 100) para a próxima patente
  */
-export function calcularProgressoProximaPatente(comissaoMensal: number, patenteAtual: Patente): number {
+export function calcularProgressoProximaPatente(vendaMensal: number, patenteAtual: Patente): number {
   const config = PATENTES_CONFIG[patenteAtual];
-  if (!config.next) return 100; // LENDA (Max level)
+  if (!config.next) return 100; // DIAMANTE (Max level)
 
   const min = config.min;
   const max = config.max;
@@ -61,7 +70,7 @@ export function calcularProgressoProximaPatente(comissaoMensal: number, patenteA
   // Tratamento para evitar divisão por zero se algo estiver errado
   if (max === min) return 100;
 
-  let progressoBase = comissaoMensal - min;
+  let progressoBase = vendaMensal - min;
   if (progressoBase < 0) progressoBase = 0;
   
   const intervalo = (max + 1) - min;
