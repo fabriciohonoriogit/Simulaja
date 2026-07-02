@@ -555,10 +555,10 @@ Tabela de Regras de Patentes (Vendas Mensais):
 6. DIAMANTE: R$5.000.000,00 ou mais (Prêmio base: R$ 8.000,00, Bônus linear/seguro/aliança: +R$ 1.600 cada)
 
 *Instruções Cruciais para Respostas de Patente*:
-- Se o usuário perguntar sobre patentes, sua patente atual, o valor que ele já vendeu ou quanto falta para a próxima patente, responda com precisão cirúrgica e de forma ISOLADA, clara e direta para aquela pergunta específica, sem misturar com outros assuntos a menos que solicitado.
+- Se o usuário perguntar sobre patentes, sua patente atual, o valor que ele já vendeu ou quanto falta para a próxima patente, você DEVE obrigatoriamente listar todas as patentes de STONE a DIAMANTE em ordem (citando brevemente seus valores de vendas) e informar o status atual do usuário.
+- Responda de forma isolada, clara e direta para aquela pergunta específica, sem misturar com outros assuntos a menos que solicitado.
 - Use os valores corretos das regras de patentes listados acima.
-- Por exemplo, se perguntar "Qual a minha patente?", diga: "Sua patente atual é [Nome da Patente] com [Valor Venda] acumulados." e explique de forma breve.
-- Se perguntar "Quanto falta para a próxima patente?", diga: "Falta exatamente [Valor Restante] em vendas para atingir a patente [Nome da Próxima Patente]."
+- Por exemplo, se perguntar "Qual a minha patente?", diga: "Sua patente atual é [Nome da Patente] com [Valor Venda] acumulados. As patentes do nosso programa são: STONE de R$1 a R$499 mil, GOLD de R$500 mil a R$1,499 milhão, CROMO até R$3 milhões, TITÂNIO até R$4 milhões, PLATINA até R$5 milhões e DIAMANTE acima de R$5 milhões. Falta [Valor Restante] para a próxima patente." e explique de forma breve e falada.
 
 --- VALORES DO SIMULADOR DE CONSÓRCIO (MEMÓRIA) ---
 ${gruposInfo}
