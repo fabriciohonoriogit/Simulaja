@@ -453,7 +453,6 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
                 Olá! Analisei seus resultados de vendas e KPIs do mês atual. Você acumula <strong className="text-white font-bold">{fmt(producaoMes)}</strong> em vendas realizadas, o que o qualifica para a patente <strong className="text-indigo-400 uppercase font-black">{patenteExibicao}</strong>.
               </p>
               <p>
-              <p>
                 {(patenteEfetiva === 'STONE' || patenteEfetiva === 'GOLD') ? (
                   <span>
                     🚨 <strong className="text-white">Atenção à ativação da patente:</strong> Seu volume de vendas de {fmt(producaoMes)} está na categoria {patenteEfetiva === 'STONE' ? 'STONE (PEDRA)' : 'GOLD (OURO)'} (abaixo do limite de Cromo de 1.5M) ou seus KPIs (RPC/EP/NPS) estão abaixo dos limites. Melhore seus KPIs e atinja 1,5M em vendas para destravar a patente Cromo e seu prêmio base de R$ 1.200.
