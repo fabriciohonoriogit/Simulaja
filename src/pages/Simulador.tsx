@@ -17,7 +17,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 
-import { GRUPOS, CATEGORIAS, GrupoItem } from "@/constants/simulador";
+import { GRUPOS, CATEGORIAS, GrupoItem, GRUPO_CARACTERISTICAS } from "@/constants/simulador";
 import { createLead } from "@/services/leadService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 
@@ -441,12 +441,64 @@ export default function Simulador() {
             </div>
           )}
 
-          <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4 flex flex-col items-center justify-center mb-6">
+          <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4 flex flex-col items-center justify-center mb-4">
             <p className="text-[9px] font-bold text-green-600 uppercase tracking-widest mb-1">
               {effectiveMode === "linear" ? "Parcela Linear" : "Parcela Reduzida (50%)"}
             </p>
             <p className="text-2xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
           </div>
+
+          {/* Características do Grupo */}
+          {(() => {
+            const c = GRUPO_CARACTERISTICAS[isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo];
+            if (!c) return null;
+            const contemResolucao285 = c.caracteristicas.includes("RESOLUÇAO 285") || c.caracteristicas.includes("RESOLUÇÃO 285");
+            return (
+              <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50 text-left space-y-3 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-300" />
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                    <span>⚙️</span> Características do Grupo {c.grupo}
+                  </span>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-100">
+                    Reajuste: {c.reajuste}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">1ª Assembleia</p>
+                    <p className="font-semibold text-foreground">{c.primeiraAssembleia}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Próxima Assembleia</p>
+                    <p className="font-semibold text-foreground">{c.proximaAssembleia}</p>
+                  </div>
+                </div>
+
+                <div className="text-xs space-y-2 pt-1 border-t border-slate-200/60">
+                  <div>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Ordem de Contemplação</p>
+                    <p className="text-foreground leading-relaxed italic">{c.ordemContemplacao}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Regras de Lance & Diluição</p>
+                    <p className="text-foreground leading-relaxed">{c.opcaoDiluir}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Regra de Reajuste Anual</p>
+                    <p className="text-foreground leading-relaxed">{c.regraReajuste}</p>
+                  </div>
+                </div>
+
+                {contemResolucao285 && (
+                  <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-amber-800 font-bold leading-relaxed">
+                    ⚠️ DEVIDO À RESOLUÇÃO 285, O GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA.
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="space-y-3 mb-5">
             <div className="relative">

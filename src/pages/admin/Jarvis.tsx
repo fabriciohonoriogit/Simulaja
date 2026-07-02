@@ -36,7 +36,7 @@ import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import jarvisAvatar from "@/assets/jarvis-avatar.png";
-import { ESTATISTICAS_LANCES, GRUPOS } from "@/constants/simulador";
+import { ESTATISTICAS_LANCES, GRUPOS, GRUPO_CARACTERISTICAS } from "@/constants/simulador";
 import { aiService } from "@/services/aiService";
 import { Missao, calcularMissoes } from "@/lib/missoesService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
@@ -489,7 +489,9 @@ export default function Jarvis() {
             return `Segmento ${tipo.toUpperCase()}:\n` + (lista as any[]).map(g => {
                 const valorSeguro = (g.credito * (g.seguro || 0)) / 100;
                 const r50SemSeguro = (g.r50 - valorSeguro).toFixed(2);
-                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela C/ Seguro: R$ ${g.r50}, Parcela S/ Seguro: R$ ${r50SemSeguro}, Prazo: ${g.prazo}m, Taxa Adm: ${g.tx5050 ?? g.txLinear}%, Fundo de Reserva: ${g.fr5050 ?? g.frLinear}%`;
+                const c = GRUPO_CARACTERISTICAS[g.grupo];
+                const infoCarac = c ? ` | Reajuste: ${c.reajuste} (1ª Ass: ${c.primeiraAssembleia}, Próxima Ass: ${c.proximaAssembleia}) | Ordem: ${c.ordemContemplacao} | Lance: ${c.opcaoDiluir} | Regra Reajuste: ${c.regraReajuste}` : "";
+                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela C/ Seguro: R$ ${g.r50}, Parcela S/ Seguro: R$ ${r50SemSeguro}, Prazo: ${g.prazo}m, Taxa Adm: ${g.tx5050 ?? g.txLinear}%, Fundo de Reserva: ${g.fr5050 ?? g.frLinear}%${infoCarac}`;
             }).join("\n");
         }).join("\n\n");
 

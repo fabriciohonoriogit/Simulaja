@@ -82,7 +82,7 @@ const sliderThumbStyles = `
   }
 `;
 
-import { GrupoItem, Category, GRUPOS, CATEGORIAS, ESTATISTICAS_LANCES } from "@/constants/simulador";
+import { GrupoItem, Category, GRUPOS, CATEGORIAS, ESTATISTICAS_LANCES, GRUPO_CARACTERISTICAS } from "@/constants/simulador";
 
 const MAX_CONSULTAS = 5;
 
@@ -703,6 +703,57 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     ))}
                   </div>
                 </div>
+                {/* Características do Grupo */}
+                {(() => {
+                  const c = GRUPO_CARACTERISTICAS[g.grupo];
+                  if (!c) return null;
+                  const contemResolucao285 = c.caracteristicas.includes("RESOLUÇAO 285") || c.caracteristicas.includes("RESOLUÇÃO 285");
+                  return (
+                    <div className="mt-3 p-4 rounded-xl border border-slate-200 bg-white text-left space-y-3 shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-300" />
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                          <span>⚙️</span> Características do Grupo {c.grupo}
+                        </span>
+                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                          Reajuste: {c.reajuste}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase">1ª Assembleia</p>
+                          <p className="font-semibold text-foreground">{c.primeiraAssembleia}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Próxima Assembleia</p>
+                          <p className="font-semibold text-foreground">{c.proximaAssembleia}</p>
+                        </div>
+                      </div>
+
+                      <div className="text-xs space-y-2 pt-1 border-t border-slate-50">
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Ordem de Contemplação</p>
+                          <p className="text-foreground leading-relaxed italic">{c.ordemContemplacao}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Regras de Lance & Diluição</p>
+                          <p className="text-foreground leading-relaxed">{c.opcaoDiluir}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Regra de Reajuste Anual</p>
+                          <p className="text-foreground leading-relaxed">{c.regraReajuste}</p>
+                        </div>
+                      </div>
+
+                      {contemResolucao285 && (
+                        <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-amber-800 font-bold leading-relaxed">
+                          ⚠️ DEVIDO À RESOLUÇÃO 285, O GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
@@ -912,6 +963,57 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                       </div>
                     )}
                   </div>
+
+                  {/* Características do Grupo */}
+                  {(() => {
+                    const c = GRUPO_CARACTERISTICAS[resultado.grupo];
+                    if (!c) return null;
+                    const contemResolucao285 = c.caracteristicas.includes("RESOLUÇAO 285") || c.caracteristicas.includes("RESOLUÇÃO 285");
+                    return (
+                      <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50 text-left space-y-3">
+                        <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                          <span className="text-xs font-black uppercase tracking-wider text-[#0f2044] flex items-center gap-1.5">
+                            <span>⚙️</span> Características do Grupo {c.grupo}
+                          </span>
+                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                            Reajuste: {c.reajuste}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">1ª Assembleia</p>
+                            <p className="font-semibold text-foreground">{c.primeiraAssembleia}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Próxima Assembleia</p>
+                            <p className="font-semibold text-foreground">{c.proximaAssembleia}</p>
+                          </div>
+                        </div>
+
+                        <div className="text-xs space-y-2 pt-1 border-t border-slate-100">
+                          <div>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Ordem de Contemplação</p>
+                            <p className="text-foreground leading-relaxed italic">{c.ordemContemplacao}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Regras de Lance & Diluição</p>
+                            <p className="text-foreground leading-relaxed">{c.opcaoDiluir}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Regra de Reajuste Anual</p>
+                            <p className="text-foreground leading-relaxed">{c.regraReajuste}</p>
+                          </div>
+                        </div>
+
+                        {contemResolucao285 && (
+                          <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-amber-800 font-bold leading-relaxed">
+                            ⚠️ DEVIDO À RESOLUÇÃO 285, O GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA.
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {(lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) && (
                     <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
