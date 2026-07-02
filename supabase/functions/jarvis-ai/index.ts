@@ -13,7 +13,7 @@ const tools = [
     functionDeclarations: [
       {
         name: "get_dashboard_metrics",
-        description: "Obtem as métricas agregadas do CRM (dashboard): total de leads no funil, valor em negociação e inadimplência total.",
+        description: "Obtém as métricas agregadas do CRM (dashboard): total de leads no funil, valor em negociação e inadimplência total.",
         parameters: { type: "OBJECT", properties: {} }
       },
       {
@@ -39,8 +39,73 @@ const tools = [
       },
       {
         name: "get_metas",
-        description: "Obtem as metas comerciais da equipe no ano atual.",
+        description: "Obtém as metas comerciais da equipe no ano atual.",
         parameters: { type: "OBJECT", properties: {} }
+      },
+      {
+        name: "get_comissoes",
+        description: "Obtém a lista de comissões registradas (valores, parcelas, taxa, comissão total, status) de vendas da organização.",
+        parameters: { type: "OBJECT", properties: {} }
+      },
+      {
+        name: "get_missoes",
+        description: "Obtém o histórico ou status das missões (metas concluídas ou em progresso) do consultor.",
+        parameters: { type: "OBJECT", properties: {} }
+      },
+      {
+        name: "get_historico_contatos",
+        description: "Obtém o histórico de todas as interações e contatos efetuados com os leads do CRM.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            lead_id: { type: "STRING", description: "ID do lead para filtrar o histórico. Opcional." }
+          }
+        }
+      },
+      {
+        name: "get_fechamentos_mensais",
+        description: "Obtém a lista de fechamentos mensais de vendas consolidados por organização.",
+        parameters: { type: "OBJECT", properties: {} }
+      },
+      {
+        name: "mover_lead_etapa",
+        description: "Altera a etapa/status de um lead no funil de vendas do CRM.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            lead_id: { type: "STRING", description: "ID do lead que será movido." },
+            nova_etapa: { type: "STRING", description: "A nova etapa (ex: 'proposta', 'negociacao', 'fechado', 'perdido', 'morto')." }
+          },
+          required: ["lead_id", "nova_etapa"]
+        }
+      },
+      {
+        name: "create_lead",
+        description: "Cria um novo lead no funil do CRM.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            nome: { type: "STRING", description: "Nome do lead." },
+            telefone: { type: "STRING", description: "Telefone de contato." },
+            valor_credito: { type: "NUMBER", description: "Valor estimado do crédito do consórcio." },
+            tipo_consorcio: { type: "STRING", description: "Segmento do consórcio (ex: 'imoveis', 'veiculos', 'motos', 'pesados', 'investimentos')." },
+            status: { type: "STRING", description: "Fase inicial no funil (default 'novo')." }
+          },
+          required: ["nome"]
+        }
+      },
+      {
+        name: "create_historico_contato",
+        description: "Registra uma nova interação, contato ou conversa ocorrida no histórico de um lead.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            lead_id: { type: "STRING", description: "ID do lead associado." },
+            tipo_contato: { type: "STRING", description: "Tipo de contato (ex: 'whatsapp', 'ligacao', 'reuniao', 'email')." },
+            descricao: { type: "STRING", description: "Resumo da conversa ocorrida." }
+          },
+          required: ["lead_id", "tipo_contato", "descricao"]
+        }
       },
       {
         name: "search_web",
@@ -110,6 +175,62 @@ async function executeTool(supabase: any, name: string, args: any) {
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       const { data } = await query.limit(10);
       return { results: data || [] };
+    }
+    if (name === "get_comissoes") {
+      let query = client.from('comissoes').select('*');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const { data } = await query.order('created_at', { ascending: false }).limit(20);
+      return { results: data || [] };
+    }
+    if (name === "get_missoes") {
+      let query = client.from('missoes_concluidas').select('*');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const { data } = await query.order('created_at', { ascending: false }).limit(30);
+      return { results: data || [] };
+    }
+    if (name === "get_historico_contatos") {
+      let query = client.from('historico_contatos').select('*');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      if (args.lead_id) query = query.eq('lead_id', args.lead_id);
+      const { data } = await query.order('data_contato', { ascending: false }).limit(20);
+      return { results: data || [] };
+    }
+    if (name === "get_fechamentos_mensais") {
+      let query = client.from('fechamentos_mensais').select('*');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const { data } = await query.order('created_at', { ascending: false }).limit(20);
+      return { results: data || [] };
+    }
+    if (name === "mover_lead_etapa") {
+      const { data, error } = await client.from('leads').update({
+        status: args.nova_etapa,
+        status_updated_at: new Date().toISOString()
+      }).eq('id', args.lead_id).select();
+      if (error) return { error: error.message };
+      return { success: true, results: data };
+    }
+    if (name === "create_lead") {
+      const { data, error } = await client.from('leads').insert({
+        nome: args.nome,
+        telefone: args.telefone || null,
+        valor_credito: args.valor_credito || null,
+        tipo_consorcio: args.tipo_consorcio || null,
+        status: args.status || 'novo',
+        organizacao_id: orgId
+      }).select();
+      if (error) return { error: error.message };
+      return { success: true, results: data };
+    }
+    if (name === "create_historico_contato") {
+      const { data, error } = await client.from('historico_contatos').insert({
+        lead_id: args.lead_id,
+        tipo_contato: args.tipo_contato,
+        descricao: args.descricao,
+        data_contato: new Date().toISOString(),
+        organizacao_id: orgId
+      }).select();
+      if (error) return { error: error.message };
+      return { success: true, results: data };
     }
     if (name === "search_web") {
       const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "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";

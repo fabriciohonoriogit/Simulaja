@@ -41,6 +41,8 @@ import { aiService } from "@/services/aiService";
 import { Missao, calcularMissoes } from "@/lib/missoesService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 import { bcbService, BcbData } from "@/services/bcbService";
+import { useGamificationStore } from "@/stores/gamificationStore";
+import { PATENTES_CONFIG } from "@/types/gamification";
 
 interface Message {
     id: string;
@@ -104,6 +106,7 @@ interface JarvisAnalysis {
 }
 
 export default function Jarvis() {
+    const { patenteAtual } = useGamificationStore();
     const { toast } = useToast();
     const { profile } = useProfile();
     const [question, setQuestion] = useState("");
@@ -505,6 +508,14 @@ export default function Jarvis() {
             }
         } catch (e) { }
 
+        const configPatente = PATENTES_CONFIG[patenteAtual];
+        const proximaPatenteText = configPatente.next 
+            ? `${configPatente.next === 'STONE' ? 'STONE (PEDRA)' : configPatente.next === 'GOLD' ? 'GOLD (OURO)' : configPatente.next}`
+            : 'Nenhuma (Patente Máxima Alcançada)';
+        const valorFaltanteNext = configPatente.next 
+            ? PATENTES_CONFIG[configPatente.next].min - realizadoMes
+            : 0;
+
         // Novo Contexto Reduzido: O Jarvis agora usa Tools (Function Calling)
         // para buscar dados profundos, então mandamos apenas um resumo rápido.
         const contextBuilder = `
@@ -523,6 +534,26 @@ INCC: ${economiaDados?.incc?.valor ? parseFloat(economiaDados.incc.valor).toFixe
 - Pipeline Total em Negociação: ${formatCurrency(pipelineValue)} (${emNegociacao.length} leads)
 - Novos leads hoje: ${novosHoje}
 - Total Devendo (Inadimplência): ${formatCurrency(dividaTotal)}
+
+--- PATENTES E GAMIFICAÇÃO ---
+Patente Atual do Usuário: ${patenteAtual === 'STONE' ? 'STONE (PEDRA)' : patenteAtual === 'GOLD' ? 'GOLD (OURO)' : patenteAtual}
+Vendas Realizadas no Mês (Volume Acumulado): ${formatCurrency(realizadoMes)}
+Próxima Patente a Atingir: ${proximaPatenteText}
+Valor de vendas necessário para a próxima patente: ${configPatente.next ? formatCurrency(valorFaltanteNext) : 'Meta máxima de patentes atingida!'}
+
+Tabela de Regras de Patentes (Vendas Mensais):
+1. STONE (PEDRA): R$1,00 a R$499.999,99 (Prêmio base: R$ 0, Bônus adicionais: R$ 0)
+2. GOLD (OURO): R$500.000,00 a R$1.499.999,99 (Prêmio base: R$ 0, Bônus adicionais: R$ 0)
+3. CROMO: R$1.500.000,00 a R$2.999.999,99 (Prêmio base: R$ 1.200,00, Bônus linear/seguro/aliança: +R$ 800 cada)
+4. TITÂNIO: R$3.000.000,00 a R$3.999.999,99 (Prêmio base: R$ 3.000,00, Bônus linear/seguro/aliança: +R$ 1.200 cada)
+5. PLATINA: R$4.000.000,00 a R$4.999.999,99 (Prêmio base: R$ 5.000,00, Bônus linear/seguro/aliança: +R$ 1.400 cada)
+6. DIAMANTE: R$5.000.000,00 ou mais (Prêmio base: R$ 8.000,00, Bônus linear/seguro/aliança: +R$ 1.600 cada)
+
+*Instruções Cruciais para Respostas de Patente*:
+- Se o usuário perguntar sobre patentes, sua patente atual, o valor que ele já vendeu ou quanto falta para a próxima patente, responda com precisão cirúrgica e de forma ISOLADA, clara e direta para aquela pergunta específica, sem misturar com outros assuntos a menos que solicitado.
+- Use os valores corretos das regras de patentes listados acima.
+- Por exemplo, se perguntar "Qual a minha patente?", diga: "Sua patente atual é [Nome da Patente] com [Valor Venda] acumulados." e explique de forma breve.
+- Se perguntar "Quanto falta para a próxima patente?", diga: "Falta exatamente [Valor Restante] em vendas para atingir a patente [Nome da Próxima Patente]."
 
 --- VALORES DO SIMULADOR DE CONSÓRCIO (MEMÓRIA) ---
 ${gruposInfo}
