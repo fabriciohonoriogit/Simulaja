@@ -516,12 +516,33 @@ export default function Jarvis() {
             ? PATENTES_CONFIG[configPatente.next].min - realizadoMes
             : 0;
 
+        const segmentNames: Record<string, string> = {
+            imoveis: 'Imóveis',
+            veiculos: 'Veículos',
+            motos: 'Motos',
+            pesados: 'Pesados/Agrícolas',
+            investimentos: 'Investimentos'
+        };
+
+        const segmentSummaries = segmentMetas.map(s => {
+            const nome = segmentNames[s.segmento] || s.segmento;
+            const progresso = s.meta_vendas > 0 ? (s.valor_total / s.meta_vendas) * 100 : 0;
+            return `- ${nome}: Realizado ${formatCurrency(s.valor_total)} de uma Meta de ${formatCurrency(s.meta_vendas)} (${progresso.toFixed(1)}% batido) | Leads no segmento: ${s.total_leads} | Vendas no mês: ${s.total_vendas}`;
+        }).join("\n");
+
         // Novo Contexto Reduzido: O Jarvis agora usa Tools (Function Calling)
         // para buscar dados profundos, então mandamos apenas um resumo rápido.
         const contextBuilder = `
 --- RESUMO RÁPIDO DA TELA ATUAL ---
 DATA DE HOJE: ${new Date().toLocaleDateString('pt-BR')} (Faltam ${Math.max(0, diasNoMes - diaHoje)} dias para o fim do mês)
 CLIMA ATUAL (LOCAL): ${climaInfo}
+
+--- METAS E REALIZADO POR SEGMENTO (MÊS CORRENTE) ---
+${segmentSummaries || 'Nenhum dado por segmento carregado ainda.'}
+
+*Instruções Cruciais para Respostas de Metas e Dashboard*:
+- Se o usuário perguntar sobre as metas de segmentos específicos (ex: "Como está a meta de imóveis?", "Quanto vendemos de carros?"), responda de forma direta e ISOLADA, reportando exatamente os valores realizados, a meta estipulada e a porcentagem de atingimento descritas na seção "METAS E REALIZADO POR SEGMENTO (MÊS CORRENTE)".
+
 
 --- INDICADORES ECONÔMICOS (BCB) ---
 Selic: ${economiaDados?.selic?.valor ? parseFloat(economiaDados.selic.valor).toFixed(2) + '% a.a.' : 'Não disponível'}
