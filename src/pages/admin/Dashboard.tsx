@@ -370,14 +370,7 @@ export default function Dashboard() {
             percentRetencao={percentRetencao} 
             percentContemplados={percentContemplados} 
           />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="lg:col-span-1">
-              <BossOfTheWeek />
-            </div>
-            <div className="lg:col-span-1">
-              <HallOfFame ranking={ranking} profileId={profile?.id} />
-            </div>
-          </div>
+          <HallOfFame ranking={ranking} profileId={profile?.id} />
         </div>
 
         {/* MÉTRICAS CLÁSSICAS */}
@@ -603,7 +596,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 shadow-sm border-border">
+        <Card className="lg:col-span-3 shadow-sm border-border">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base sm:text-sm flex items-center gap-2">
@@ -633,45 +626,8 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-border bg-gradient-to-br from-emerald-500/5 to-transparent">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                <Target className="h-5 w-5 text-emerald-600" /> Meta x Realizado
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col justify-center h-[220px] sm:h-[300px] space-y-6">
-            <div className="text-center">
-                <p className="text-xs text-muted-foreground uppercase font-bold mb-1">Status do Mês</p>
-                <p className="text-3xl font-black text-emerald-600">{progressoMes.toFixed(2).replace('.', ',')}%</p>
-            </div>
-            
-            <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold uppercase">
-                    <span>Realizado</span>
-                    <span>Meta</span>
-                </div>
-                <div className="w-full bg-emerald-100 rounded-full h-4 overflow-hidden border border-emerald-200">
-                    <div 
-                        className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]" 
-                        style={{ width: `${Math.min(100, progressoMes)}%` }} 
-                    />
-                </div>
-                <div className="flex justify-between text-[11px] font-medium text-muted-foreground">
-                    <span>{formatLeadValue(realizadoMes)}</span>
-                    <span>{formatLeadValue(metaMensal)}</span>
-                </div>
-            </div>
-
-            <div className={`p-3 rounded-lg border text-center ${progressoMes >= 100 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
-                <p className="text-xs font-bold uppercase">
-                    {progressoMes >= 100 ? 'Meta Batida!' : `Ainda faltam ${formatLeadValue(Math.max(0, metaMensal - realizadoMes))}`}
-                </p>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Alertas / Próximas Ações */}
-        <Card className="shadow-sm border-border">
+        <Card className="shadow-sm border-border lg:col-span-3">
           <CardHeader className="pb-2">
             <CardTitle className="text-base sm:text-lg flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" /> Atenção Necessária
@@ -854,37 +810,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Top Leads por Valor */}
-        <Card className="shadow-sm border-border lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" /> Maiores Valores para Negociar
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-border">
-              {leads
-                .filter(l => l.status !== "fechado" && l.status !== "morto" && l.status !== "perdido" && l.status !== "inadimplente")
-                .sort((a, b) => Number(b.valor_credito || 0) - Number(a.valor_credito || 0))
-                .slice(0, 7)
-                .map((l, i) => (
-                  <div key={l.id} className="flex items-center justify-between p-3 hover:bg-accent/5 transition-colors">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-lg font-black text-muted-foreground/40 w-6 text-center">{i + 1}</span>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{l.nome}</p>
-                        <p className="text-[10px] text-muted-foreground capitalize">{l.status?.replace("_", " ") ?? "novo"}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm font-bold text-primary shrink-0">{formatLeadValue(Number(l.valor_credito))}</p>
-                  </div>
-                ))}
-              {leads.filter(l => l.status !== "fechado" && l.status !== "morto" && l.status !== "perdido" && l.status !== "inadimplente").length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-6">Nenhum lead em negociação.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+
 
         {/* Relatório Diário JARVIS */}
         <JarvisReport 
