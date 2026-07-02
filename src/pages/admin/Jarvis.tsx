@@ -115,8 +115,6 @@ export default function Jarvis() {
     const [analysis, setAnalysis] = useState<JarvisAnalysis | null>(null);
     const [leads, setLeads] = useState<Lead[]>([]);
     const [inadimplentes, setInadimplentes] = useState<Inadimplente[]>([]);
-    const [cotasContempladas, setCotasContempladas] = useState<any[]>([]);
-    const [historicoContatos, setHistoricoContatos] = useState<any[]>([]);
     const [segmentMetas, setSegmentMetas] = useState<MetricaSegmento[]>([]);
     const [metaAnual, setMetaAnual] = useState(0);
     const [missoes, setMissoes] = useState<Missao[]>([]);
@@ -309,14 +307,13 @@ export default function Jarvis() {
     ];
 
     useEffect(() => {
+        if (!profile?.organizacao_id) return;
         const fetchData = async () => {
             try {
-                const [leadsRes, metaRes, inadRes, cotasRes, histRes] = await Promise.all([
-                    supabase.from("leads").select("*"),
-                    supabase.from("meta").select("*").eq("ano", new Date().getFullYear()).maybeSingle(),
-                    (supabase as any).from("inadimplentes").select("*"),
-                    (supabase as any).from("cotas_contempladas").select("*"),
-                    supabase.from("historico_contatos").select("*").order("data_contato", { ascending: false })
+                const [leadsRes, metaRes, inadRes] = await Promise.all([
+                    supabase.from("leads").select("*").eq("organizacao_id", profile.organizacao_id),
+                    supabase.from("meta").select("*").eq("ano", new Date().getFullYear()).eq("organizacao_id", profile.organizacao_id).maybeSingle(),
+                    (supabase as any).from("inadimplentes").select("*").eq("organizacao_id", profile.organizacao_id)
                 ]);
 
                 let allLeads: Lead[] = [];
@@ -324,29 +321,16 @@ export default function Jarvis() {
                     allLeads = leadsRes.data as Lead[];
                     setLeads(allLeads);
                     
-                    if (profile?.id && profile?.organizacao_id) {
-                        try {
-                            const res = await calcularMissoes(profile.id, profile.organizacao_id, profile.tipo_acesso as any);
-                            setMissoes(res.missoes);
-                        } catch(e) {
-                            console.error("Erro ao carregar missões no Jarvis:", e);
-                        }
+                    try {
+                        const res = await calcularMissoes(profile.id, profile.organizacao_id, profile.tipo_acesso as any);
+                        setMissoes(res.missoes);
+                    } catch(e) {
+                        console.error("Erro ao carregar missões no Jarvis:", e);
                     }
-
-                    // Saudação silenciosa no chat (opcional), removido o áudio automático
-                    // O texto inicial já fica no array `messages` no estado inicial do componente.
                 }
 
                 if (inadRes.data) {
                     setInadimplentes(inadRes.data as Inadimplente[]);
-                }
-                
-                if (cotasRes.data) {
-                    setCotasContempladas(cotasRes.data);
-                }
-
-                if (histRes.data) {
-                    setHistoricoContatos(histRes.data);
                 }
 
                 if (metaRes.data) {
@@ -406,7 +390,7 @@ export default function Jarvis() {
         };
 
         fetchData();
-    }, []);
+    }, [profile?.organizacao_id]);
 
     const handleAnalyze = async (query: string = question) => {
         if (!query.trim()) return;
@@ -670,9 +654,16 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
         setIsScanning(true);
         toast({ title: "Jarvis em Ação", description: "Escaneando histórico de leads para re-qualificação..." });
 
+        const firstLeadsIds = leads.slice(0, 15).map(l => l.id);
+        const { data: histsData } = await supabase
+            .from("historico_contatos")
+            .select("*")
+            .in("lead_id", firstLeadsIds)
+            .order("data_contato", { ascending: false });
+
         const context = leads.slice(0, 15).map(l => {
-            const hists = historicoContatos.filter(h => h.lead_id === l.id).slice(0, 3);
-            return `Lead: ${l.id}, Nome: ${l.dados_cadastro?.nome || "Sem Nome"}, Status: ${l.status}, Interações: ${hists.map(h => h.observacao).join(" | ")}`;
+            const hists = (histsData || []).filter(h => h.lead_id === l.id).slice(0, 3);
+            return `Lead: ${l.id}, Nome: ${l.dados_cadastro?.nome || "Sem Nome"}, Status: ${l.status}, Interações: ${hists.map(h => h.observacao || h.descricao || "").join(" | ")}`;
         }).join("\n");
 
         const { analysis: results, error } = await aiService.qualifyLeads(context);
