@@ -81,7 +81,7 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
 
   // Obter limites da patente efetiva (ou da patenteAtual caso queira usar a configurada na store)
   const patenteExibicao = (patenteEfetiva !== 'STONE' && patenteEfetiva !== 'GOLD') ? patenteEfetiva : patenteAtual;
-  const config = PATENTES_CONFIG[patenteExibicao];
+  const config = PATENTES_CONFIG[patenteExibicao] || PATENTES_CONFIG['STONE'];
 
   // Calcular prêmios
   const premioBase = config.premioBase;

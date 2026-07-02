@@ -61,7 +61,7 @@ export function obterPatentePorComissao(comissaoMensal: number): Patente {
  * Retorna o progresso (0 a 100) para a próxima patente
  */
 export function calcularProgressoProximaPatente(vendaMensal: number, patenteAtual: Patente): number {
-  const config = PATENTES_CONFIG[patenteAtual];
+  const config = PATENTES_CONFIG[patenteAtual] || PATENTES_CONFIG['STONE'];
   if (!config.next) return 100; // DIAMANTE (Max level)
 
   const min = config.min;

@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 
 export function AICoachMessage() {
   const { patenteAtual, producaoMes } = useGamificationStore();
-  const config = PATENTES_CONFIG[patenteAtual];
+  const config = PATENTES_CONFIG[patenteAtual] || PATENTES_CONFIG['STONE'];
   const proximaPatente = config.next;
   
   if (!proximaPatente) {
@@ -23,8 +23,9 @@ export function AICoachMessage() {
     );
   }
 
-  const faltam = PATENTES_CONFIG[proximaPatente].min - producaoMes;
-  const corTextColor = PATENTES_CONFIG[proximaPatente].cor.split(' ')[0].replace('bg-', 'text-').replace('from-', 'text-');
+  const configProxima = PATENTES_CONFIG[proximaPatente] || PATENTES_CONFIG['GOLD'];
+  const faltam = configProxima.min - producaoMes;
+  const corTextColor = configProxima.cor ? configProxima.cor.split(' ')[0].replace('bg-', 'text-').replace('from-', 'text-') : 'text-slate-500';
   
   return (
     <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 rounded-xl p-4 flex gap-4 items-start shadow-sm">

@@ -16,11 +16,11 @@ const PATENTE_EMOJIS: Record<string, string> = {
 
 export function DashboardHero() {
   const { patenteAtual, comissaoMensalAtual, producaoMes } = useGamificationStore();
-  const config = PATENTES_CONFIG[patenteAtual];
+  const config = PATENTES_CONFIG[patenteAtual] || PATENTES_CONFIG['STONE'];
   const proximaPatente = config.next;
   const progresso = calcularProgressoProximaPatente(producaoMes, patenteAtual);
   
-  const faltam = config.next ? PATENTES_CONFIG[config.next].min - producaoMes : 0;
+  const faltam = config.next && PATENTES_CONFIG[config.next] ? PATENTES_CONFIG[config.next].min - producaoMes : 0;
 
   return (
     <Card className="relative overflow-hidden border border-border bg-card text-card-foreground shadow-sm">

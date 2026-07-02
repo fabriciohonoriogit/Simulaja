@@ -110,6 +110,33 @@ export const useGamificationStore = create<GamificationStore>()(
     }),
     {
       name: 'contemplar-gamification-storage',
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (persistedState) {
+          if (persistedState.patenteAtual === 'INICIANTE' || !persistedState.patenteAtual) {
+            persistedState.patenteAtual = 'STONE';
+          }
+          if (persistedState.previousPatente === 'INICIANTE') {
+            persistedState.previousPatente = null;
+          }
+        }
+        return persistedState;
+      }
     }
   )
 );
+
+// Auto-correction timeout to clean legacy local storage states on load
+setTimeout(() => {
+  try {
+    const state = useGamificationStore.getState();
+    if (state.patenteAtual === 'INICIANTE' || state.patenteAtual as any === 'INICIANTE') {
+      useGamificationStore.setState({ patenteAtual: 'STONE' });
+    }
+    if (state.previousPatente === 'INICIANTE') {
+      useGamificationStore.setState({ previousPatente: null });
+    }
+  } catch (e) {
+    console.error("Migration error:", e);
+  }
+}, 50);

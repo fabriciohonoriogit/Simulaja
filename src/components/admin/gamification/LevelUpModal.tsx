@@ -43,7 +43,7 @@ export function LevelUpModal() {
     }
   }, [showLevelUpModal]);
 
-  const config = PATENTES_CONFIG[patenteAtual];
+  const config = PATENTES_CONFIG[patenteAtual] || PATENTES_CONFIG['STONE'];
 
   return (
     <AnimatePresence>
