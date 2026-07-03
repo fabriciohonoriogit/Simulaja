@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { WhatsAppIcon } from "@/components/SocialIcons";
@@ -136,12 +136,24 @@ export default function Simulador() {
   const resultRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef<HTMLDivElement>(null);
 
-  const lista = GRUPOS[categoria] || GRUPOS["imovel"];
+  const lista = useMemo(() => {
+    const rawLista = (GRUPOS[categoria] || GRUPOS["imovel"]).filter(g => !g.isPlanoGold);
+    if (paymentMode === 'reduzido') {
+      const seen = new Set<number>();
+      return rawLista.filter(g => {
+        if (seen.has(g.credito)) return false;
+        seen.add(g.credito);
+        return true;
+      });
+    }
+    return rawLista;
+  }, [categoria, paymentMode]);
+
   const g = lista[idx] || lista[0];
 
   useEffect(() => {
     setIdx(Math.min(4, lista.length - 1));
-  }, [categoria, lista]);
+  }, [categoria, lista.length]);
 
   // effectiveMode: respeita a escolha do usuário, força "linear" apenas quando o grupo não tem plano reduzido
   const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;

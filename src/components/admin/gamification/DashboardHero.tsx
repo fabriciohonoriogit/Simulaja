@@ -33,7 +33,7 @@ export function DashboardHero() {
           {/* Patente Atual */}
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              Patente Atual
+              Ranking Elite Atual
             </span>
             <div className="flex items-center gap-2">
               <span className={`px-3 py-1.5 rounded-md text-sm font-black uppercase tracking-wider ${config.cor} flex items-center gap-2 shadow-sm`}>

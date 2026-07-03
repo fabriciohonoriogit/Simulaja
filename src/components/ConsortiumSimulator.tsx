@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/hooks/use-toast";
 import { gerarPDF } from "@/lib/pdfGenerator";
@@ -188,8 +188,30 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     });
   }, []);
 
-  const rawLista = dynamicGrupos[categoria] || [];
-  const lista = filterPlanoGold && categoria === 'imovel' ? rawLista.filter(g => g.isPlanoGold) : rawLista;
+  const rawLista = useMemo(() => {
+    const list = dynamicGrupos[categoria] || [];
+    if (!isInternal) {
+      return list.filter(g => !g.isPlanoGold);
+    }
+    return list;
+  }, [dynamicGrupos, categoria, isInternal]);
+
+  const lista = useMemo(() => {
+    let filtered = filterPlanoGold && categoria === 'imovel'
+      ? rawLista.filter(g => g.isPlanoGold)
+      : rawLista.filter(g => !g.isPlanoGold);
+
+    if (paymentMode === 'reduzido' && !filterPlanoGold) {
+      const seen = new Set<number>();
+      filtered = filtered.filter(g => {
+        if (seen.has(g.credito)) return false;
+        seen.add(g.credito);
+        return true;
+      });
+    }
+    return filtered;
+  }, [rawLista, filterPlanoGold, categoria, paymentMode]);
+
   const safeIdx = Math.min(idx, lista.length > 0 ? lista.length - 1 : 0);
   const _g = lista[safeIdx] || { grupo: "—", credito: 0, r50: 0, prazo: 0 };
 
@@ -632,7 +654,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     >
                       Linear
                     </button>
-                    {categoria === 'imovel' && (
+                    {categoria === 'imovel' && isInternal && (
                       <button 
                         onClick={() => {
                           setFilterPlanoGold(true);
