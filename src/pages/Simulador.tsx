@@ -132,18 +132,16 @@ export default function Simulador() {
   const [isSaving, setIsSaving] = useState(false);
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
   const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
-  const [filterPlanoGold, setFilterPlanoGold] = useState(false);
 
   const resultRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef<HTMLDivElement>(null);
 
-  const rawLista = GRUPOS[categoria] || GRUPOS["imovel"];
-  const lista = filterPlanoGold && categoria === 'imovel' ? rawLista.filter(g => g.isPlanoGold) : rawLista;
-  const g = lista[Math.min(idx, lista.length - 1)] || lista[0];
+  const lista = GRUPOS[categoria] || GRUPOS["imovel"];
+  const g = lista[idx] || lista[0];
 
   useEffect(() => {
-    setIdx(filterPlanoGold ? 0 : Math.min(4, lista.length - 1));
-  }, [categoria, lista, filterPlanoGold]);
+    setIdx(Math.min(4, lista.length - 1));
+  }, [categoria, lista]);
 
   // effectiveMode: respeita a escolha do usuário, força "linear" apenas quando o grupo não tem plano reduzido
   const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
@@ -416,10 +414,7 @@ export default function Simulador() {
             {CATEGORIAS.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => {
-                setCategoria(cat.id);
-                setFilterPlanoGold(false);
-              }}
+                onClick={() => setCategoria(cat.id)}
               className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${categoria === cat.id ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-[#0f2044] hover:text-[#0f2044]'}`}
             >
               {cat.label}
@@ -431,34 +426,17 @@ export default function Simulador() {
             <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                 <button 
-                  onClick={() => {
-                    setFilterPlanoGold(false);
-                    setPaymentMode('reduzido');
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${!filterPlanoGold && effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  onClick={() => setPaymentMode('reduzido')}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   Reduzido (50%)
                 </button>
                 <button 
-                  onClick={() => {
-                    setFilterPlanoGold(false);
-                    setPaymentMode('linear');
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${!filterPlanoGold && effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  onClick={() => setPaymentMode('linear')}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   Linear
                 </button>
-                {categoria === 'imovel' && (
-                  <button 
-                    onClick={() => {
-                      setFilterPlanoGold(true);
-                      setPaymentMode('reduzido');
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${filterPlanoGold ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-500 hover:bg-amber-50'}`}
-                  >
-                    ✨ Plano Gold
-                  </button>
-                )}
               </div>
             </div>
           )}
