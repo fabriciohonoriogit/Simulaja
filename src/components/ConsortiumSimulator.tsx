@@ -130,6 +130,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const [bloqueado, setBloqueado] = useState(false);
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
   const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
+  const [filterPlanoGold, setFilterPlanoGold] = useState(false);
   
   const [lanceDinheiroPct, setLanceDinheiroPct] = useState(0);
   const [lanceEmbutidoPct, setLanceEmbutidoPct] = useState(25);
@@ -187,15 +188,16 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     });
   }, []);
 
-  const lista = dynamicGrupos[categoria] || [];
+  const rawLista = dynamicGrupos[categoria] || [];
+  const lista = filterPlanoGold && categoria === 'imovel' ? rawLista.filter(g => g.isPlanoGold) : rawLista;
   const safeIdx = Math.min(idx, lista.length > 0 ? lista.length - 1 : 0);
   const _g = lista[safeIdx] || { grupo: "—", credito: 0, r50: 0, prazo: 0 };
 
   useEffect(() => {
     if (lista.length > 0) {
-      setIdx(Math.min(4, lista.length - 1));
+      setIdx(filterPlanoGold ? 0 : Math.min(4, lista.length - 1));
     }
-  }, [categoria, lista.length]);
+  }, [categoria, lista.length, filterPlanoGold]);
 
   const hasBothPlans = _g.r100 !== undefined && _g.r50 !== _g.r100;
   const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";
@@ -613,17 +615,34 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                 <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                     <button 
-                      onClick={() => setPaymentMode('reduzido')}
-                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      onClick={() => {
+                        setFilterPlanoGold(false);
+                        setPaymentMode('reduzido');
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${!filterPlanoGold && effectiveMode === 'reduzido' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                       Reduzido (50%)
                     </button>
                     <button 
-                      onClick={() => setPaymentMode('linear')}
-                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      onClick={() => {
+                        setFilterPlanoGold(false);
+                        setPaymentMode('linear');
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${!filterPlanoGold && effectiveMode === 'linear' ? 'bg-[#0f2044] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                       Linear
                     </button>
+                    {categoria === 'imovel' && (
+                      <button 
+                        onClick={() => {
+                          setFilterPlanoGold(true);
+                          setPaymentMode('reduzido');
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${filterPlanoGold ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-500 hover:bg-amber-50'}`}
+                      >
+                        ✨ Plano Gold
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -633,7 +652,10 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               {dynamicCategorias.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setCategoria(cat.id)}
+                  onClick={() => {
+                    setCategoria(cat.id);
+                    setFilterPlanoGold(false);
+                  }}
                   className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${categoria === cat.id
                     ? 'bg-[#0f2044] text-white border-[#0f2044]' 
                     : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-[#0f2044] hover:text-[#0f2044]'
