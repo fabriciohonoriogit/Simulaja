@@ -14,6 +14,7 @@ export type GrupoItem = {
   fr?: number; 
   seguro?: number; 
   isPromo?: boolean; 
+  isPlanoGold?: boolean;
 };
 
 export type GrupoCaracteristicas = {
@@ -657,6 +658,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6039", credito: 450000, prazo: 226, r50: 1548.72, r100: 2504.47, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
     { grupo: "6035", credito: 450000, prazo: 225, r50: 1641.60, r100: 2557.31, txLinear: 20, frLinear: 1, tx5050: 24, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6042", credito: 500000, prazo: 239, r50: 1637.46, r100: 2638.94, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
+    { grupo: "6042", credito: 500000, prazo: 239, r50: 1770.52, r100: 3381.04, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.032, isPromo: true, isPlanoGold: true },
     { grupo: "6039", credito: 500000, prazo: 226, r50: 1720.80, r100: 2782.74, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
     { grupo: "6035", credito: 500000, prazo: 225, r50: 1824.00, r100: 2841.46, txLinear: 20, frLinear: 1, tx5050: 24, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6042", credito: 550000, prazo: 239, r50: 1801.21, r100: 2902.83, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
@@ -670,6 +672,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6035", credito: 650000, prazo: 225, r50: 2371.20, r100: 3693.89, txLinear: 20, frLinear: 1, tx5050: 24, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6042", credito: 700000, prazo: 239, r50: 2292.44, r100: 3694.52, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
     { grupo: "6039", credito: 700000, prazo: 226, r50: 2409.12, r100: 3895.84, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
+    { grupo: "6039", credito: 700000, prazo: 226, r50: 2641.49, r100: 5056.88, txLinear: 27, frLinear: 1, tx5050: 27, fr5050: 1, seguro: 0.0323, isPromo: true, isPlanoGold: true },
     { grupo: "6042", credito: 1000000, prazo: 239, r50: 3274.92, r100: 5277.88, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
     { grupo: "6042", credito: 1500000, prazo: 239, r50: 4912.38, r100: 7916.82, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
     { grupo: "6042", credito: 2000000, prazo: 239, r50: 6549.84, r100: 10555.76, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
