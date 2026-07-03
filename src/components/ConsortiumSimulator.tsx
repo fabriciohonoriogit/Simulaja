@@ -419,7 +419,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     else if (categoria === "eletro") emojiBem = "💻";
 
     const isIm = categoria === 'imovel';
-    const tipoParcelaStr = g.isPlanoGold ? (isLinear ? 'Golden Linear' : 'PLANO GOLD') : (isLinear ? 'Linear' : 'Reduzida 50%');
+    const tipoParcelaStr = g.isPlanoGold ? (isLinear ? '👑 Golden Linear' : '👑 PLANO GOLD') : (isLinear ? 'Linear' : 'Reduzida 50%');
     const prazo = isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
     const grupo = isSelectedLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
     const consultor = profile?.nome || searchParams.get("nome") || 'Fabricio Honório';
@@ -433,7 +433,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       `${emojiBem} Bem: ${segmentLabel} | Grupo ${grupo}`,
       `💰 Carta de Crédito: ${fmt(g.credito)}`,
       `⏱️ Prazo: ${prazo} meses`,
-      `📉 Tipo de Parcela: ${tipoParcelaStr}`,
+      `👑 Tipo de Parcela: ${tipoParcelaStr}`,
       ``,
       `🚀 LANCE`,
       `─────────────────────────`,
@@ -443,11 +443,11 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       ``,
       `📊 VALOR PARCELA`,
       `─────────────────────────`,
-      `💵 Valor da Parcela Atual: ${fmt(g.r50)}`,
+      `💵 Valor da Parcela Atual: ${fmt(selectedInstallment)}`,
       `💰 Crédito Disponível: ${fmt(creditoDisponivel)}`,
       `📉 Saldo Devedor: ${fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}`,
       `⏱️ Prazo Restante: ${prazoRestante} meses`,
-      `📉 Parcela Pós-Contemplação: ${fmt(parcelaPos > 0 ? parcelaPos : g.r50)}`,
+      `📉 Parcela Pós-Contemplação: ${fmt(parcelaPos > 0 ? parcelaPos : selectedInstallment)}`,
       ``,
       `─────────────────────────`,
       `👨‍💼 Simulação realizada por ${consultor}`

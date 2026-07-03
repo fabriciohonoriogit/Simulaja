@@ -295,7 +295,7 @@ export default function Simulador() {
     else if (categoria === "eletro") emojiBem = "💻";
 
     const isLinear = effectiveMode === 'linear';
-    const tipoParcelaStr = isLinear ? 'Linear' : 'Reduzida 50%';
+    const tipoParcelaStr = g.isPlanoGold ? (isLinear ? '👑 Golden Linear' : '👑 PLANO GOLD') : (isLinear ? 'Linear' : 'Reduzida 50%');
     const prazo = isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
     const grupo = isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
     const consultor = refNome || 'O Especialista Consórcio';
@@ -326,7 +326,7 @@ export default function Simulador() {
       `${emojiBem} Bem: ${segmentLabel} | Grupo ${grupo}`,
       `💰 Carta de Crédito: ${fmt(g.credito)}`,
       `⏱️ Prazo: ${prazo} meses`,
-      `📉 Tipo de Parcela: ${tipoParcelaStr}`,
+      `👑 Tipo de Parcela: ${tipoParcelaStr}`,
       ``,
       `🚀 LANCE`,
       `─────────────────────────`,
