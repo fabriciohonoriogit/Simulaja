@@ -395,7 +395,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       fundoReserva: fr,
       seguro: seguro,
       prazo: isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo,
-      tipoParcela: g.isPlanoGold ? (isSelectedLinear ? 'Golden Linear' : 'PLANO GOLD') : (isSelectedLinear ? 'Linear' : 'Reduzida 50%'),
+      tipoParcela: g.tipoVenda ? g.tipoVenda : (g.isPlanoGold ? (isSelectedLinear ? 'Golden Linear' : 'PLANO GOLD') : (isSelectedLinear ? 'Linear' : 'Reduzida 50%')),
       parcelasContemplar: parcelasContemplar,
       lanceDinheiroPct: lanceDinheiroPct,
       lanceEmbutidoPct: lanceEmbutidoPct,
@@ -421,7 +421,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     else if (categoria === "eletro") emojiBem = "💻";
 
     const isIm = categoria === 'imovel';
-    const tipoParcelaStr = g.isPlanoGold ? (isLinear ? '👑 Golden Linear' : '👑 PLANO GOLD') : (isLinear ? 'Linear' : 'Reduzida 50%');
+    const tipoParcelaStr = g.tipoVenda ? (isLinear ? g.tipoVenda : `👑 ${g.tipoVenda}`) : (g.isPlanoGold ? (isLinear ? '👑 Golden Linear' : '👑 PLANO GOLD') : (isLinear ? 'Linear' : 'Reduzida 50%'));
     const prazo = isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
     const grupo = isSelectedLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
     const consultor = profile?.nome || searchParams.get("nome") || 'Fabricio Honório';
@@ -704,7 +704,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                 <div className="rounded-[12px] p-4 text-center mb-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1.5px solid #86efac" }}>
                   <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: "linear-gradient(90deg,#16a34a,#4ade80)" }} />
                   <p className="text-[0.6rem] font-bold uppercase tracking-wider mb-0.5" style={{ color: "#15803d" }}>
-                    {g.isPlanoGold ? (isLinear ? "Plano Golden Linear" : "PLANO GOLD") : (isLinear ? "Parcela Linear" : "Parcela reduzida 50%")} <span style={{ color: "#4ade80", fontWeight: 400 }}>· {g.isPlanoGold ? "golden" : (isLinear ? "integral" : "até a contemplação")}</span>
+                    {g.isPlanoGold ? (isLinear ? "Plano Golden Linear" : (g.tipoVenda ?? "PLANO GOLD")) : (isLinear ? "Parcela Linear" : "Parcela reduzida 50%")} <span style={{ color: "#4ade80", fontWeight: 400 }}>· {g.isPlanoGold ? "golden" : (isLinear ? "integral" : "até a contemplação")}</span>
                   </p>
                   <p className="text-3xl sm:text-3xl font-medium" style={{ fontFamily: "monospace", color: "#16a34a" }}>
                     {fmtFull(selectedInstallment)}
@@ -714,7 +714,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                       { label: "Crédito", value: fmt(g.credito) },
                       { label: "Prazo", value: `${isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo} meses` },
                       { label: "Grupo", value: isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo },
-                      { label: "Plano", value: g.isPlanoGold ? (isLinear ? "Golden Linear" : "PLANO GOLD") : (isLinear ? "Linear" : "50/50") },
+                      { label: "Plano", value: g.tipoVenda ? g.tipoVenda : (g.isPlanoGold ? (isLinear ? "Golden Linear" : "PLANO GOLD") : (isLinear ? "Linear" : "50/50")) },
                       ...(isInternal && tx !== undefined ? [{ label: "Tx Adm", value: `${tx}%` }] : []),
                       ...(isInternal && fr !== undefined ? [{ label: "F. Reserva", value: `${fr}%` }] : [])
                     ].map((m) => (
