@@ -53,10 +53,7 @@
             caches.keys().then(function(keys) {
               keys.forEach(function(k) { caches.delete(k); });
             });
-          }
-          setTimeout(function() {
-            window.location.reload(true);
-          }, 500);
+          // Caches limpos com sucesso
         }
       })();
     </script>

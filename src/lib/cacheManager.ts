@@ -30,8 +30,7 @@ export async function checkAndClearCache(): Promise<void> {
       console.log(`[CacheManager] ${registrations.length} SW(s) desregistrados.`);
     }
 
-    // 3. Salva a nova versão e recarrega forçado
+    // 3. Salva a nova versão
     localStorage.setItem(VERSION_KEY, BUILD_VERSION);
-    window.location.reload();
   }
 }

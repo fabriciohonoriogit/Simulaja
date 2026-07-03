@@ -83,7 +83,7 @@ export default function AdminLayout() {
     const [open, setOpen] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
     const [org, setOrg] = useState<OrganizationRow | null>(null);
-    const { hasJarvis } = useSubscription();
+    const { hasJarvis, isExpired } = useSubscription();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
         const saved = localStorage.getItem("admin_sidebar_collapsed");
         return saved === "true";
@@ -122,10 +122,10 @@ export default function AdminLayout() {
     };
 
     useEffect(() => {
-        if (org && !(org as any).onboarding_completed && location.pathname !== "/admin/onboarding") {
+        if (!isExpired && org && !(org as any).onboarding_completed && location.pathname !== "/admin/onboarding") {
             navigate("/admin/onboarding", { replace: true });
         }
-    }, [org, location.pathname, navigate]);
+    }, [org, location.pathname, navigate, isExpired]);
 
     useEffect(() => {
         localStorage.setItem("admin_sidebar_collapsed", String(sidebarCollapsed));
