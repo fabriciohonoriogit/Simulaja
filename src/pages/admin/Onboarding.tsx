@@ -45,17 +45,80 @@ export default function Onboarding() {
     if (!profile?.organizacao_id) return;
     setSaving(true);
     try {
-      // Atualiza Organizacao
-      const { error: orgError } = await (supabase.from("organizacoes") as any).update({
-        nome: orgName,
-        onboarding_completed: true
-      }).eq("id", profile.organizacao_id);
+      let targetOrgId = profile.organizacao_id;
 
-      if (orgError) throw orgError;
+      // Se o usuário estiver na organização padrão, significa que o trigger antigo do banco de dados o associou a ela.
+      // Nesse caso, criamos uma nova organização dedicada para ele não misturar dados com o tenant padrão.
+      if (profile.organizacao_id === "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4") {
+        const { data: newOrg, error: newOrgError } = await supabase
+          .from("organizacoes")
+          .insert({
+            nome: orgName,
+            onboarding_completed: true,
+            plano: "pro",
+            subscription_status: "trialing",
+            trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            owner_id: profile.id
+          })
+          .select("id")
+          .single();
+
+        if (newOrgError) throw newOrgError;
+        targetOrgId = newOrg.id;
+
+        // Atualiza o perfil para apontar para a nova organização e ser admin
+        const { error: profileError } = await supabase
+          .from("perfis")
+          .update({
+            organizacao_id: targetOrgId,
+            tipo_acesso: "admin"
+          })
+          .eq("id", profile.id);
+
+        if (profileError) throw profileError;
+
+        try {
+          await supabase.from("user_roles").insert({
+            user_id: profile.id,
+            role: "admin"
+          });
+        } catch (e) {
+          console.error("Erro ao inserir role de admin:", e);
+        }
+      } else {
+        // Se já estiver em outra organização própria, garante que ele seja promovido a admin se for vendedor
+        if (profile.tipo_acesso !== "admin") {
+          const { error: profileError } = await supabase
+            .from("perfis")
+            .update({
+              tipo_acesso: "admin"
+            })
+            .eq("id", profile.id);
+
+          if (profileError) throw profileError;
+
+          try {
+            await supabase.from("user_roles").insert({
+              user_id: profile.id,
+              role: "admin"
+            });
+          } catch (e) {
+            console.error("Erro ao inserir role de admin:", e);
+          }
+        }
+
+        // Atualiza Organizacao
+        const { error: orgError } = await (supabase.from("organizacoes") as any).update({
+          nome: orgName,
+          onboarding_completed: true
+        }).eq("id", targetOrgId);
+
+        if (orgError) throw orgError;
+      }
 
       // Opcional: cria a meta
       const { error: metaError } = await supabase.from("meta").insert({
-        organizacao_id: profile.organizacao_id,
+        organizacao_id: targetOrgId,
         meta_anual: parseInt(metaAnual.replace(/\D/g, "")),
         ano: new Date().getFullYear()
       });
