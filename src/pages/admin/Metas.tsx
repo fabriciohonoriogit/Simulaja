@@ -130,7 +130,7 @@ const SEGMENT_CONFIG: Record<string, { icon: LucideIcon, color: string, textColo
 
 export default function Metas() {
     const { toast } = useToast();
-    const { profile, isManager } = useProfile();
+    const { profile, loading: profileLoading, isManager } = useProfile();
     const supabaseAny: any = supabase;
     const [leads, setLeads] = useState<Lead[]>([]);
     const [carteira, setCarteira] = useState<CarteiraItem[]>([]);
@@ -313,9 +313,13 @@ export default function Metas() {
 
     // 1. Initial Load
     useEffect(() => { 
-        if (!profile?.organizacao_id) return;
+        if (profileLoading) return;
+        if (!profile?.organizacao_id) {
+            setLoading(false);
+            return;
+        }
         fetchData(); 
-    }, [profile?.organizacao_id, fetchData]);
+    }, [profile?.organizacao_id, profileLoading, fetchData]);
 
     // 2. Separate Realtime Subscription (Only depends on orgId)
     useEffect(() => {
@@ -537,7 +541,7 @@ export default function Metas() {
     }).length;
 
 
-    if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
+    if (profileLoading || loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
     return (
         <div className="flex-1 flex flex-col min-h-0 relative group/main-scroll overflow-hidden">

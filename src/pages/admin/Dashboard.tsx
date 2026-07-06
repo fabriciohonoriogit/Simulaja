@@ -67,7 +67,7 @@ const openWhatsApp = (lead: Lead, consultorName?: string) => {
 };
 
 export default function Dashboard() {
-  const { profile } = useProfile();
+  const { profile, loading: profileLoading } = useProfile();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [perfis, setPerfis] = useState<any[]>([]);
   const [carteira, setCarteira] = useState<CarteiraItem[]>([]);
@@ -98,7 +98,11 @@ export default function Dashboard() {
   const loteriaFederal = localStorage.getItem("especialista_loteria_federal") || "";
 
   useEffect(() => {
-    if (!profile?.organizacao_id) return;
+    if (profileLoading) return;
+    if (!profile?.organizacao_id) {
+      setLoading(false);
+      return;
+    }
 
     const fetchData = async () => {
       try {
@@ -170,7 +174,7 @@ export default function Dashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile?.organizacao_id]);
+  }, [profile?.organizacao_id, profileLoading]);
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
@@ -334,7 +338,7 @@ export default function Dashboard() {
     .slice(0, 3);
 
 
-  if (loading) {
+  if (profileLoading || loading) {
     return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   }
 

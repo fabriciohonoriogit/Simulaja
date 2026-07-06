@@ -115,6 +115,26 @@ export default function AdminLayout() {
                         .single();
                     setOrg(orgData);
                 }
+            } else {
+                // Auto-recuperação: cria o perfil do usuário caso não exista
+                const defaultOrgId = "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4";
+                const nome = user.user_metadata?.nome_completo || user.email || "Usuário";
+                
+                const { data: newProfile, error: insertError } = await supabase.from("perfis").insert({
+                    id: user.id,
+                    nome_completo: nome,
+                    organizacao_id: defaultOrgId,
+                    tipo_acesso: "admin"
+                }).select("*").single();
+
+                if (!insertError && newProfile) {
+                    setProfile(newProfile as Profile);
+                    const { data: orgData } = await supabase.from("organizacoes")
+                        .select("*")
+                        .eq("id", defaultOrgId)
+                        .single();
+                    setOrg(orgData);
+                }
             }
         } catch (e) {
             console.error("Layout fetch error:", e);
