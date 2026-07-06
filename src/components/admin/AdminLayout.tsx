@@ -116,24 +116,32 @@ export default function AdminLayout() {
                     setOrg(orgData);
                 }
             } else {
-                // Auto-recuperação: cria o perfil do usuário caso não exista
-                const defaultOrgId = "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4";
-                const nome = user.user_metadata?.nome_completo || user.email || "Usuário";
-                
-                const { data: newProfile, error: insertError } = await supabase.from("perfis").insert({
-                    id: user.id,
-                    nome_completo: nome,
-                    organizacao_id: defaultOrgId,
-                    tipo_acesso: "admin"
-                }).select("*").single();
+                // Auto-recuperação: cria o perfil do usuário e uma nova organização caso não exista
+                try {
+                    const nome = user.user_metadata?.nome_completo || user.email || "Usuário";
+                    const orgName = `${nome} - CRM`;
+                    const orgSlug = `org-${Math.random().toString(36).substring(2, 10)}`;
 
-                if (!insertError && newProfile) {
-                    setProfile(newProfile as Profile);
-                    const { data: orgData } = await supabase.from("organizacoes")
-                        .select("*")
-                        .eq("id", defaultOrgId)
-                        .single();
-                    setOrg(orgData);
+                    const { data: newOrg, error: orgError } = await supabase.from("organizacoes").insert({
+                        nome: orgName,
+                        slug: orgSlug
+                    }).select().single();
+
+                    if (orgError) throw orgError;
+
+                    const { data: newProfile, error: insertError } = await supabase.from("perfis").insert({
+                        id: user.id,
+                        nome_completo: nome,
+                        organizacao_id: newOrg.id,
+                        tipo_acesso: "admin"
+                    }).select("*").single();
+
+                    if (!insertError && newProfile) {
+                        setProfile(newProfile as Profile);
+                        setOrg(newOrg);
+                    }
+                } catch (err) {
+                    console.error("Erro na auto-recuperação de layout:", err);
                 }
             }
         } catch (e) {
