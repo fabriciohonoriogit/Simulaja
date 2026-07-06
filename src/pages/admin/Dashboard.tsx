@@ -100,56 +100,41 @@ export default function Dashboard() {
   useEffect(() => {
     if (!profile?.organizacao_id) return;
 
-    const fetchData = () => {
-      (supabase as any)
-        .from("leads")
-        .select("*")
-        .eq("organizacao_id", profile.organizacao_id)
-        .order("created_at", { ascending: false })
-        .then(({ data }: any) => {
-          const sorted = ((data as any[]) ?? []).sort(
-            (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-          );
-          if (prevCountRef.current > 0 && sorted.length > prevCountRef.current) {
-            setNewLeadFlash(true);
-            setTimeout(() => setNewLeadFlash(false), 4000);
-          }
-          prevCountRef.current = sorted.length;
-          setLeads(sorted);
-        });
+    const fetchData = async () => {
+      try {
+        const [leadsRes, carteiraRes, perfisRes, inadimplentesRes, comissoesRes] = await Promise.all([
+          supabase.from("leads").select("*").eq("organizacao_id", profile.organizacao_id).order("created_at", { ascending: false }),
+          supabase.from("carteira").select("id, nome, grupo, cota, valor_credito, celular, administradora, tipo_consorcio, cota_contemplada, data_contemplacao, status").eq("organizacao_id", profile.organizacao_id),
+          supabase.from("perfis").select("*").eq("organizacao_id", profile.organizacao_id),
+          supabase.from("inadimplentes").select("*").eq("organizacao_id", profile.organizacao_id),
+          supabase.from("comissoes").select("comissao_total, status, valor_estorno").eq("organizacao_id", profile.organizacao_id)
+        ]);
 
-      (supabase as any)
-        .from("carteira")
-        .select("id, nome, grupo, cota, valor_credito, celular, administradora, tipo_consorcio, cota_contemplada, data_contemplacao, status")
-        .eq("organizacao_id", profile.organizacao_id)
-        .then(({ data }: any) => {
-          setCarteira((data as any[]) || []);
-          setLoading(false);
-        });
+        if (leadsRes.error) console.error("Error fetching leads:", leadsRes.error);
+        if (carteiraRes.error) console.error("Error fetching carteira:", carteiraRes.error);
+        if (perfisRes.error) console.error("Error fetching perfis:", perfisRes.error);
+        if (inadimplentesRes.error) console.error("Error fetching inadimplentes:", inadimplentesRes.error);
+        if (comissoesRes.error) console.error("Error fetching comissoes:", comissoesRes.error);
 
-      (supabase as any)
-        .from("perfis")
-        .select("*")
-        .eq("organizacao_id", profile.organizacao_id)
-        .then(({ data }: any) => {
-          setPerfis((data as any[]) || []);
-        });
+        const sorted = ((leadsRes.data as any[]) ?? []).sort(
+          (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+        );
+        if (prevCountRef.current > 0 && sorted.length > prevCountRef.current) {
+          setNewLeadFlash(true);
+          setTimeout(() => setNewLeadFlash(false), 4000);
+        }
+        prevCountRef.current = sorted.length;
 
-      (supabase as any)
-        .from("inadimplentes")
-        .select("*")
-        .eq("organizacao_id", profile.organizacao_id)
-        .then(({ data }: any) => {
-          setInadimplentes((data as any[]) || []);
-        });
-
-      (supabase as any)
-        .from("comissoes")
-        .select("comissao_total, status, valor_estorno")
-        .eq("organizacao_id", profile.organizacao_id)
-        .then(({ data }: any) => {
-          setComissoes((data as any[]) || []);
-        });
+        setLeads(sorted);
+        setCarteira((carteiraRes.data as any[]) || []);
+        setPerfis((perfisRes.data as any[]) || []);
+        setInadimplentes((inadimplentesRes.data as any[]) || []);
+        setComissoes((comissoesRes.data as any[]) || []);
+      } catch (err) {
+        console.error("Erro ao buscar dados do dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData();

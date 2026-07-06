@@ -199,7 +199,6 @@ export default function Metas() {
                     .select("*")
                     .eq("vendedor_id", targetId)
                     .eq("ano", currentYear)
-                    .eq("organizacao_id", profile.organizacao_id)
                     .maybeSingle();
                 metaData = mvData;
             } else {
@@ -352,8 +351,7 @@ export default function Metas() {
                 const { error } = await supabaseAny.from("metas_vendedor").upsert({ 
                     vendedor_id: targetId, 
                     ano: currentYear, 
-                    meta_anual: novoValor,
-                    organizacao_id: profile?.organizacao_id
+                    meta_anual: novoValor
                 }, { onConflict: "vendedor_id,ano" });
                 
                 if (error) throw error;
