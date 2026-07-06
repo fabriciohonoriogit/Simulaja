@@ -43,14 +43,17 @@ async function callAI(prompt: string, maxTokens = 800, history?: Array<{role: st
 
 export const aiService = {
   async generateSalesScript(lead: LeadContext) {
-    const prompt = `Você é o Jarvis, um consultor de elite em consórcios.
-O lead ${lead.nome} de ${lead.cidade} acabou de fazer uma simulação de ${lead.tipo_consorcio} no valor de R$ ${lead.valor_credito.toLocaleString("pt-BR")}.
-Crie uma primeira mensagem de WhatsApp curta, persuasiva e humana.
-Não use emojis em excesso. Chame-o pelo nome.
-Foque em como essa carta de crédito pode transformar o patrimônio dele ou gerar rentabilidade.
-Responda apenas com o texto da mensagem.`;
+    const prompt = `Você é o Jarvis, consultor comercial parceiro em consórcios do Simulaja.
+O lead ${lead.nome} de ${lead.cidade} acabou de simular um consórcio de ${lead.tipo_consorcio} no valor de R$ ${lead.valor_credito.toLocaleString("pt-BR")}.
+
+Crie uma primeira abordagem de WhatsApp de acordo com o método SRV (Sonho, Realidade e Velocidade) e seguindo estas diretrizes:
+1. Tom de voz: Assuma o papel de consultor comercial. O tom deve ser direto, consultivo, muito amigável e sem parecer automático.
+2. Formato: Crie uma mensagem curta (máximo de 3 parágrafos curtos) abordando-o pelo nome. Não use emojis em excesso.
+3. Fluxo SRV: Faça referência ao Sonho dele (${lead.tipo_consorcio}) e ao valor simulado (R$ ${lead.valor_credito.toLocaleString("pt-BR")}).
+4. Foco na Velocidade: Instigue a curiosidade sobre a contemplação rápida. Termine com uma pergunta simples sobre a Velocidade (se ele tem planos de dar um lance para acelerar ou se vai contar com lance fixo/sorteio) para gerar resposta.
+5. Responda apenas com o texto da mensagem a ser enviada.`;
     const { text, error } = await callAI(prompt, 500);
-    return { script: text || "Olá, bom dia! Gostaria de falar sobre o seu consórcio.", error };
+    return { script: text || `Olá, ${lead.nome}! Vi que simulou um consórcio de ${lead.tipo_consorcio}. Como pensa em acelerar a conquista (lance ou sorteio)?`, error };
   },
 
   async askJarvis(context: string, question: string, history?: Array<{role: string, text: string}>, imageBase64?: string) {
