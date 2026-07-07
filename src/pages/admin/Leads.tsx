@@ -145,6 +145,7 @@ export default function Leads() {
           ...(formData.dados_cadastro || {}),
           is_retroativo: formData.is_retroativo || false
         },
+        origem: formData.origem || null,
       };
       
       updatePayload.nome = formatToUpper(updatePayload.nome);
@@ -538,7 +539,7 @@ export default function Leads() {
                         <div key={f.label} className="flex justify-between items-center py-1 border-b border-slate-50 last:border-0">
                           <span className="text-[10px] font-bold text-slate-400 uppercase">{f.label}</span>
                           <span className="text-xs font-black text-slate-900">
-                            {f.keys.map(k => viewingFichaLead.dados_cadastro?.[k]).find(v => !!v) || "—"}
+                            {f.keys.map(k => viewingFichaLead.dados_cadastro?.[k]).find(v => !!v) || (f.label === "Como Conheceu" ? viewingFichaLead.origem : null) || "—"}
                           </span>
                         </div>
                       ))}
@@ -672,6 +673,7 @@ export default function Leads() {
               status_updated_at: editingLead.status_updated_at || "",
               is_retroativo: editingLead.dados_cadastro?.is_retroativo || false,
               dados_cadastro: editingLead.dados_cadastro || null,
+              origem: editingLead.origem || "",
             } : {
               nome: "", email: "", celular: "", cidade: "",
               tipo_consorcio: "imovel", valor_credito: "", prazo_meses: "",
@@ -679,6 +681,7 @@ export default function Leads() {
               administradora: "none", grupo: "", cota: "",
               status_updated_at: "",
               is_retroativo: false,
+              origem: "",
             }}
             onSubmit={handleSaveLead}
             onCancel={() => setIsDialogOpen(false)}

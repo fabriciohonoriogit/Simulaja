@@ -98,6 +98,7 @@ export function FunilModals({ state }: { state: any }) {
                 is_retroativo: editingLead.dados_cadastro?.is_retroativo || false,
                 comissao_regra: editingLead.dados_cadastro?.comissao_regra || "DEMAIS",
                 comissao_tipo: editingLead.dados_cadastro?.comissao_tipo || "REDUZIDA",
+                origem: editingLead.origem || "",
               }}
               onSubmit={handleSaveLead}
               onCancel={() => setEditingLead(null)}
@@ -327,12 +328,12 @@ export function FunilModals({ state }: { state: any }) {
                         { label: "Naturalidade", keys: ["naturalidade", "NATURALIDADE", "ufNaturalidade", "CIDADE_NATAL"] },
                         { label: "Profissão", keys: ["profissao", "PROFISSAO", "CARGO", "cargo"] },
                         { label: "Renda Mensal", keys: ["renda", "RENDA", "RENDA_MENSAL", "renda_mensal"] },
-                        { label: "Como Conheceu", keys: ["comunicacao", "COMO_CONHECEU", "ORIGEM", "como_conheceu"] },
+                        { label: "Como Conheceu", keys: ["comunicacao", "COMO_CONHECEU", "ORIGEM", "como_conheceu", "origem"] },
                       ].map((f) => (
                         <div key={f.label} className="flex justify-between items-center py-1 border-b border-slate-50 last:border-0">
                           <span className="text-[10px] font-bold text-slate-400 uppercase">{f.label}</span>
                           <span className="text-xs font-black text-slate-900">
-                            {f.keys.map(k => (viewingFichaLead.dados_cadastro as any)[k]).find(v => !!v) || "—"}
+                            {f.keys.map(k => (viewingFichaLead.dados_cadastro as any)?.[k]).find(v => !!v) || (f.label === "Como Conheceu" ? viewingFichaLead.origem : null) || "—"}
                           </span>
                         </div>
                       ))}

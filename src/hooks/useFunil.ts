@@ -826,6 +826,7 @@ export function useFunil() {
             grupo: formData.grupo,
             cota: formData.cota,
             dados_cadastro: dados_cadastro,
+            origem: formData.origem || null,
           })
           .eq("id", editingLead.id);
 

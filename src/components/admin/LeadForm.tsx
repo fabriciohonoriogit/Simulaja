@@ -43,6 +43,15 @@ export const SCORE_OPTIONS = [
   { value: "baixo", label: "🧊 Baixo" },
 ];
 
+export const ORIGEM_OPTIONS = [
+  { value: "facebook", label: "Facebook" },
+  { value: "instagram", label: "Instagram" },
+  { value: "tik tok", label: "Tik Tok" },
+  { value: "loja", label: "Loja" },
+  { value: "indicação", label: "Indicação" },
+  { value: "outros", label: "Outros" },
+];
+
 const ADMINISTRADORAS = ["MAGALU", "ADEMICON", "SERVOPA"];
 
 const STATUS_FECHADOS = ["venda_fechada", "fechado"];
@@ -70,6 +79,7 @@ export interface LeadFormData {
   dados_cadastro?: any;
   comissao_regra?: string;
   comissao_tipo?: string;
+  origem?: string;
 }
 
 interface LeadFormProps {
@@ -216,6 +226,18 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
               <Label htmlFor="prazo_meses" className="font-bold">Prazo (meses)</Label>
               <Input id="prazo_meses" type="number" value={form.prazo_meses} onChange={handleChange} placeholder="Ex: 120" className="rounded-xl h-11" />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="origem" className="font-bold">Origem do Lead</Label>
+            <Select value={form.origem || ""} onValueChange={(val) => handleSelectChange("origem", val)}>
+              <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Selecione a origem" /></SelectTrigger>
+              <SelectContent>
+                {ORIGEM_OPTIONS.map(o => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

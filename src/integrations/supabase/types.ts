@@ -720,6 +720,7 @@ export type Database = {
           status: string | null
           status_updated_at: string | null
           tipo_consorcio: string | null
+          origem: string | null
           ultimo_contato: string | null
           updated_at: string | null
           valor_credito: number | null
@@ -751,6 +752,7 @@ export type Database = {
           status?: string | null
           status_updated_at?: string | null
           tipo_consorcio?: string | null
+          origem?: string | null
           ultimo_contato?: string | null
           updated_at?: string | null
           valor_credito?: number | null
@@ -782,6 +784,7 @@ export type Database = {
           status?: string | null
           status_updated_at?: string | null
           tipo_consorcio?: string | null
+          origem?: string | null
           ultimo_contato?: string | null
           updated_at?: string | null
           valor_credito?: number | null
