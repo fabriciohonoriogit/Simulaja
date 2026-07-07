@@ -656,7 +656,6 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6030", credito: 240000, prazo: 195, r50: 972.95, r100: 1562.38, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6027", credito: 250000, prazo: 189, r50: 973.59, r100: 1618.64, txLinear: 15, frLinear: 1, tx5050: 17, fr5050: 1, seguro: 0.0297, isPromo: true },
     { grupo: "6027", credito: 280000, prazo: 190, r50: 1131.69, r100: 1791.32, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "6025", credito: 300000, prazo: 193, r50: 1145.81, r100: 1971.88, txLinear: 20, frLinear: 1, tx5050: 17, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6030", credito: 300000, prazo: 195, r50: 1216.19, r100: 1952.98, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0305, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6030", credito: 320000, prazo: 195, r50: 1297.27, r100: 2083.17, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6035", credito: 340000, prazo: 225, r50: 1240.32, r100: 1932.19, txLinear: 20, frLinear: 1, tx5050: 24, fr5050: 1, seguro: 0.0305, isPromo: true },
