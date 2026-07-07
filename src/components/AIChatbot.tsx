@@ -52,17 +52,16 @@ const AIChatbot = () => {
     setIsOpen(true);
     if (messages.length === 0) {
       setTimeout(() => {
-        addBotMessage("Olá! Tudo bem? 👋\nEu sou o Jarvis, assistente virtual do especialista Fabrício Honório.");
+        addBotMessage("Olá! Tudo bem? 👋\nEu sou o Jarvis, assistente virtual da equipe de especialistas.");
         setTimeout(() => {
-          setStep("welcome");
+          setStep("realidade");
           addBotMessage(
-            "Para te ajudar de forma estratégica a planejar sua conquista, vamos traçar seu perfil usando o método **SRV (Sonho, Realidade e Velocidade)**.\n\nVamos começar pelo seu **Sonho**: Qual objetivo você quer conquistar?",
+            "Para te ajudar de forma estratégica vamos traçar seu planejamento.\n\nAgora vamos entender, qual faixa de parcela mensal cabe de forma confortável no seu orçamento hoje?",
             [
-              { label: "🚗 Carro", value: "Carro" },
-              { label: "🏍️ Moto", value: "Moto" },
-              { label: "🏡 Casa / Imóvel", value: "Casa / Imóvel" },
-              { label: "📈 Investimento", value: "Investimento" },
-              { label: "✍️ Outro objetivo", value: "Outro" },
+              { label: "💵 Até R$ 500", value: "Até R$ 500" },
+              { label: "💵 R$ 500 a R$ 1.000", value: "R$ 500 a R$ 1.000" },
+              { label: "💵 R$ 1.000 a R$ 2.000", value: "R$ 1.000 a R$ 2.000" },
+              { label: "💵 Acima de R$ 2.000", value: "Acima de R$ 2.000" },
             ]
           );
         }, 1000);
@@ -74,36 +73,12 @@ const AIChatbot = () => {
     addUserMessage(label);
 
     switch (step) {
-      case "welcome":
-        if (value === "Outro") {
-          setStep("sonho_custom");
-          setShowInput(true);
-          setTimeout(() => {
-            addBotMessage("Legal! Me conta em poucas palavras: qual é o bem ou objetivo que você quer conquistar?");
-          }, 800);
-        } else {
-          setLeadData((prev) => ({ ...prev, sonho: value }));
-          setTimeout(() => {
-            setStep("realidade");
-            addBotMessage(
-              "Excelente escolha! Um planejamento bem feito faz toda a diferença.\n\nAgora vamos entender a **Realidade** (sua capacidade de pagamento):\nQual faixa de parcela mensal cabe de forma confortável no seu orçamento hoje?",
-              [
-                { label: "💵 Até R$ 500", value: "Até R$ 500" },
-                { label: "💵 R$ 500 a R$ 1.000", value: "R$ 500 a R$ 1.000" },
-                { label: "💵 R$ 1.000 a R$ 2.000", value: "R$ 1.000 a R$ 2.000" },
-                { label: "💵 Acima de R$ 2.000", value: "Acima de R$ 2.000" },
-              ]
-            );
-          }, 800);
-        }
-        break;
-
       case "realidade":
         setLeadData((prev) => ({ ...prev, realidade: value }));
         setTimeout(() => {
           setStep("velocidade");
           addBotMessage(
-            "Perfeito, planejamento financeiro é a base de tudo.\n\nPara fechar, vamos falar da **Velocidade**:\nComo você pretende acelerar a contemplação da sua carta de crédito?",
+            "Vamos pensar já na sua contemplação como você pretende acelerar essa etapa?",
             [
               { label: "🚀 Ofertar um Lance", value: "Ofertar um Lance" },
               { label: "🎯 Usar Lance Fixo", value: "Usar Lance Fixo" },
@@ -134,18 +109,17 @@ const AIChatbot = () => {
             setStep("insight");
             setLeadData((prev) => {
               addBotMessage(
-                `Maravilhoso! Com base nas suas respostas, montamos seu perfil de compra inteligente (Método SRV):\n\n` +
-                `🎯 **SONHO:** ${prev.sonho}\n` +
+                `Maravilhoso! Com base nas suas respostas, montamos seu perfil de planejamento inteligente:\n\n` +
                 `💰 **REALIDADE:** Parcela ${prev.realidade}\n` +
                 `⚡ **VELOCIDADE:** ${finalVelocidade}\n\n` +
-                `Já consegui traçar uma estratégia excelente para o seu perfil e encontrar os melhores grupos de consórcio.`
+                `Já consegui traçar uma estratégia excelente para o seu perfil e encontrar os melhores grupos de consórcios.`
               );
               setTimeout(() => {
                 setStep("whatsapp");
                 addBotMessage(
-                  "Agora, vou te conectar diretamente com o Fabrício no WhatsApp para ele te passar a simulação exata baseada nessas opções de lance e parcelas. Podemos prosseguir?",
+                  "Agora, vou te conectar diretamente com um especialista no WhatsApp para te passar a simulação exata baseada nessas opções. Podemos prosseguir?",
                   [
-                    { label: "✅ Sim, falar com o Fabrício", value: "Sim" },
+                    { label: "✅ Sim, falar com especialista", value: "Sim" },
                     { label: "⏳ Ver depois", value: "Depois" },
                   ]
                 );
@@ -163,18 +137,17 @@ const AIChatbot = () => {
           setStep("insight");
           setLeadData((prev) => {
             addBotMessage(
-              `Maravilhoso! Com base nas suas respostas, montamos seu perfil de compra inteligente (Método SRV):\n\n` +
-              `🎯 **SONHO:** ${prev.sonho}\n` +
+              `Maravilhoso! Com base nas suas respostas, montamos seu perfil de planejamento inteligente:\n\n` +
               `💰 **REALIDADE:** Parcela ${prev.realidade}\n` +
               `⚡ **VELOCIDADE:** ${finalVel}\n\n` +
-              `Já consegui traçar uma estratégia excelente para o seu perfil e encontrar os melhores grupos de consórcio.`
+              `Já consegui traçar uma estratégia excelente para o seu perfil e encontrar os melhores grupos de consórcios.`
             );
             setTimeout(() => {
               setStep("whatsapp");
               addBotMessage(
-                "Agora, vou te conectar diretamente com o Fabrício no WhatsApp para ele te passar a simulação exata baseada nessas opções de lance e parcelas. Podemos prosseguir?",
+                "Agora, vou te conectar diretamente com um especialista no WhatsApp para te passar a simulação exata baseada nessas opções. Podemos prosseguir?",
                 [
-                  { label: "✅ Sim, falar com o Fabrício", value: "Sim" },
+                  { label: "✅ Sim, falar com especialista", value: "Sim" },
                   { label: "⏳ Ver depois", value: "Depois" },
                 ]
               );
@@ -196,33 +169,12 @@ const AIChatbot = () => {
   };
 
   const handleSendValue = () => {
-    if (!inputValue.trim()) return;
-    const value = inputValue.trim();
-    addUserMessage(value);
-    setInputValue("");
-    setShowInput(false);
-
-    if (step === "sonho_custom") {
-      setLeadData((prev) => ({ ...prev, sonho: value }));
-      setTimeout(() => {
-        setStep("realidade");
-        addBotMessage(
-          "Excelente! Um planejamento bem feito faz toda a diferença.\n\nAgora vamos entender a **Realidade** (sua capacidade de pagamento):\nQual faixa de parcela mensal cabe de forma confortável no seu orçamento hoje?",
-          [
-            { label: "💵 Até R$ 500", value: "Até R$ 500" },
-            { label: "💵 R$ 500 a R$ 1.000", value: "R$ 500 a R$ 1.000" },
-            { label: "💵 R$ 1.000 a R$ 2.000", value: "R$ 1.000 a R$ 2.000" },
-            { label: "💵 Acima de R$ 2.000", value: "Acima de R$ 2.000" },
-          ]
-        );
-      }, 800);
-    }
+    // Esse formulário customizado de sonho não é mais alcançado no novo fluxo direto
   };
 
   const handleWhatsApp = () => {
     const msg = encodeURIComponent(
-      `Olá Fabrício! Completei a consultoria inteligente com o Jarvis no site e gostaria de uma simulação personalizada pelo método SRV:\n\n` +
-      `🎯 *SONHO:* ${leadData.sonho}\n` +
+      `Olá! Completei o planejamento inteligente com o Jarvis no site e gostaria de uma simulação personalizada:\n\n` +
       `💰 *REALIDADE:* Parcela de ${leadData.realidade}\n` +
       `⚡ *VELOCIDADE:* ${leadData.velocidade}\n\n` +
       `Pode me ajudar a encontrar os melhores grupos de consórcio?`
