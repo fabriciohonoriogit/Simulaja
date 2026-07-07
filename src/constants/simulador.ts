@@ -111,6 +111,16 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
     opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
     regraReajuste: "Reajuste todo o mês de Outubro pelo INCC a partir de Outubro 2025."
   },
+  "6030": {
+    grupo: "6030",
+    reajuste: "INCC",
+    primeiraAssembleia: "25/07/2026",
+    proximaAssembleia: "25/07/2026",
+    caracteristicas: "Imóvel linear e 50/50. Crédito - 240.000,00 a 320.000,00. Cotas vagas: 265. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO.",
+    ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia).",
+    opcaoDiluir: "Opção de diluir o lance total.",
+    regraReajuste: "Reajuste pelo INCC."
+  },
   "5297": {
     grupo: "5297",
     reajuste: "IPCA",
@@ -647,6 +657,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6027", credito: 250000, prazo: 189, r50: 973.59, r100: 1618.64, txLinear: 15, frLinear: 1, tx5050: 17, fr5050: 1, seguro: 0.0297, isPromo: true },
     { grupo: "6027", credito: 280000, prazo: 190, r50: 1131.69, r100: 1791.32, txLinear: 15, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6025", credito: 300000, prazo: 193, r50: 1145.81, r100: 1971.88, txLinear: 20, frLinear: 1, tx5050: 17, fr5050: 1, seguro: 0.0305, isPromo: true },
+    { grupo: "6030", credito: 300000, prazo: 195, r50: 1216.19, r100: 1952.98, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0305, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6030", credito: 320000, prazo: 195, r50: 1297.27, r100: 2083.17, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6035", credito: 340000, prazo: 225, r50: 1240.32, r100: 1932.19, txLinear: 20, frLinear: 1, tx5050: 24, fr5050: 1, seguro: 0.0305, isPromo: true },
     { grupo: "6042", credito: 350000, prazo: 239, r50: 1146.22, r100: 1847.26, txLinear: 18, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.03, isPromo: true },
