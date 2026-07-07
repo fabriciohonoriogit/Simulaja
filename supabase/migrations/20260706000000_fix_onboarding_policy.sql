@@ -12,5 +12,7 @@ CREATE POLICY "organizacoes_update_admin" ON public.organizacoes
       )
       OR owner_id = auth.uid()
       OR onboarding_completed = false
-    )
+  )
+  WITH CHECK (
+    id = public.get_my_org_id()
   );
