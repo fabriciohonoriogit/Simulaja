@@ -420,7 +420,8 @@ export default function Comissoes() {
     doc.setFont("helvetica", "normal");
     doc.text(reportTitle, 15, 28);
     doc.setFont("helvetica", "bold");
-    doc.text("REFERENCIA MAIO/2026", 15, 34);
+    const refMonthYear = format(new Date(), "MM/yyyy");
+    doc.text(`REFERENCIA ${refMonthYear}`, 15, 34);
     doc.text(`Emissão: ${dateStr}`, 155, 28);
 
     let y = 55;
@@ -429,8 +430,11 @@ export default function Comissoes() {
       ? comissoes.filter(c => selectedIds.includes(c.id)) 
       : filtered;
 
+    const pdfTotalEstornos = listToPrint.reduce((acc, c) => acc + calcEstornoCorreto(c), 0);
     const pdfTotalComissoes = listToPrint.reduce((acc, c) => acc + Number(c.comissao_total || 0), 0);
-    const pdfTotalReceberMes = listToPrint.filter(c => c.status !== 'estornado').reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)), 0);
+    const pdfTotalReceberMes = listToPrint
+      .filter(c => c.status !== 'estornado')
+      .reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao || 1)), 0) - pdfTotalEstornos;
 
     // Summary Cards in PDF
     doc.setFillColor(248, 250, 252); // slate-50
@@ -488,8 +492,14 @@ export default function Comissoes() {
       doc.text(formatCurrency(c.valor_venda).replace("R$", "").trim(), 105, y);
       doc.text(formatCurrency(c.comissao_total).replace("R$", "").trim(), 130, y);
       
-      const valorParcela = formatCurrency(c.comissao_total / c.parcelas_comissao);
-      doc.text(`${c.parcela_atual || 1}/${c.parcelas_comissao} (${valorParcela})`, 155, y);
+      let valorParcelaText = "";
+      if (c.status === "estornado") {
+        valorParcelaText = `Estorno (-${formatCurrency(calcEstornoCorreto(c)).replace("R$", "").trim()})`;
+      } else {
+        const valorParcela = formatCurrency(c.comissao_total / c.parcelas_comissao).replace("R$", "").trim();
+        valorParcelaText = `${c.parcela_atual || 1}/${c.parcelas_comissao} (${valorParcela})`;
+      }
+      doc.text(valorParcelaText, 155, y);
       
       const statusText = c.status === "estornado" ? "ESTORNADO" : "ATIVO";
       if (statusText === "ESTORNADO") doc.setTextColor(225, 29, 72);
@@ -499,7 +509,7 @@ export default function Comissoes() {
       y += 7;
     });
 
-    const totalReceberReport = listToPrint.filter(c => c.status !== 'estornado').reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)), 0);
+    const totalReceberReport = pdfTotalReceberMes;
     y += 15;
     if (y > 260) { doc.addPage(); y = 30; }
 
@@ -877,7 +887,10 @@ export default function Comissoes() {
             <tbody className="divide-y divide-slate-100">
               {Object.entries(groupedComissoes).map(([admin, items]) => {
                 const subtotalTotal = items.reduce((acc, c) => acc + Number(c.comissao_total), 0);
-                const subtotalMes = items.filter(c => !idsPagosNesteMes.includes(c.id) && c.status !== 'estornado').reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao)), 0);
+                const subtotalEstornos = items.reduce((acc, c) => acc + calcEstornoCorreto(c), 0);
+                const subtotalMes = items
+                  .filter(c => !idsPagosNesteMes.includes(c.id) && c.status !== 'estornado')
+                  .reduce((acc, c) => acc + (Number(c.comissao_total) / Number(c.parcelas_comissao || 1)), 0) - subtotalEstornos;
                 
                 return (
                   <React.Fragment key={admin}>
