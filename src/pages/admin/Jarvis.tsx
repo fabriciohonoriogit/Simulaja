@@ -479,7 +479,9 @@ export default function Jarvis() {
                 const c = GRUPO_CARACTERISTICAS[g.grupo];
                 const infoCarac = c ? ` | Reajuste: ${c.reajuste} (1ª Ass: ${c.primeiraAssembleia}, Próxima Ass: ${c.proximaAssembleia}) | Ordem: ${c.ordemContemplacao} | Lance: ${c.opcaoDiluir} | Regra Reajuste: ${c.regraReajuste}` : "";
                 const estats = obterEstatisticasGrupo(g.grupo);
-                const infoEstats = ` | Histórico Contemplação: Mínimo ${estats.lanceMenor}%, Máximo ${estats.lanceMaior}%, Média ${estats.lanceMedia}% (Baseado em ${estats.qtdLances} lances)`;
+                const infoEstats = estats 
+                    ? ` | Histórico Contemplação: Mínimo ${estats.lanceMenor}%, Máximo ${estats.lanceMaior}%, Média ${estats.lanceMedia}% (Baseado em ${estats.qtdLances} lances)`
+                    : ` | Histórico Contemplação: Não cadastrado no sistema (sem dados)`;
                 return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela C/ Seguro: R$ ${g.r50}, Parcela S/ Seguro: R$ ${r50SemSeguro}, Prazo: ${g.prazo}m, Taxa Adm: ${g.tx5050 ?? g.txLinear}%, Fundo de Reserva: ${g.fr5050 ?? g.frLinear}%${infoCarac}${infoEstats}`;
             }).join("\n");
         }).join("\n\n");

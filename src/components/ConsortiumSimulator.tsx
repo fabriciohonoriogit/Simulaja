@@ -866,56 +866,64 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
                     {/* Estatísticas de Contemplação e Probabilidade */}
                     <div className="mt-3 pt-3 border-t border-[#d8e0ee]/60 space-y-2">
-                      <div className="flex justify-between items-center text-[10px] text-muted-foreground font-semibold">
-                        <span>Mínimo: <span className="text-[#122040] font-bold">{estats.lanceMenor.toFixed(1)}%</span></span>
-                        <span>Média: <span className="text-[#122040] font-bold">{estats.lanceMedia.toFixed(1)}%</span></span>
-                        <span>Máximo: <span className="text-[#122040] font-bold">{estats.lanceMaior.toFixed(1)}%</span></span>
-                      </div>
-
-                      {lanceTotalPct > 0 && (() => {
-                        let probLabel = "Baixa";
-                        let probColor = "text-red-600 bg-red-50 border-red-200";
-                        let progressColor = "bg-red-500";
-                        let percentOfMax = Math.min(100, (lanceTotalPct / estats.lanceMaior) * 100);
-
-                        if (lanceTotalPct >= estats.lanceMaior) {
-                          probLabel = "Muito Alta";
-                          probColor = "text-green-700 bg-green-50 border-green-200";
-                          progressColor = "bg-green-600";
-                        } else if (lanceTotalPct >= estats.lanceMedia) {
-                          probLabel = "Alta";
-                          probColor = "text-emerald-600 bg-emerald-50 border-emerald-200";
-                          progressColor = "bg-emerald-500";
-                        } else if (lanceTotalPct >= estats.lanceMenor) {
-                          probLabel = "Média";
-                          probColor = "text-amber-600 bg-amber-50 border-amber-200";
-                          progressColor = "bg-amber-500";
-                        }
-
-                        return (
-                          <div className={`p-2.5 rounded-lg border text-xs font-medium space-y-1.5 ${probColor}`}>
-                            <div className="flex justify-between items-center">
-                              <span className="flex items-center gap-1">
-                                {probLabel === "Muito Alta" || probLabel === "Alta" ? "🎯" : probLabel === "Média" ? "⚡" : "⚠️"} 
-                                Probabilidade: <strong>{probLabel}</strong>
-                              </span>
-                              <span className="font-bold">{lanceTotalPct.toFixed(1)}%</span>
-                            </div>
-                            
-                            {/* Mini barra de progresso visual */}
-                            <div className="w-full bg-slate-200/60 rounded-full h-1.5 overflow-hidden">
-                              <div className={`h-full rounded-full transition-all duration-300 ${progressColor}`} style={{ width: `${percentOfMax}%` }} />
-                            </div>
-                            
-                            <p className="text-[10px] opacity-90 leading-tight">
-                              {lanceTotalPct >= estats.lanceMenor 
-                                ? `O lance ofertado (${lanceTotalPct.toFixed(1)}%) supera o lance mínimo histórico de ${estats.lanceMenor.toFixed(1)}% deste grupo.`
-                                : `O lance ofertado (${lanceTotalPct.toFixed(1)}%) está abaixo do mínimo histórico de ${estats.lanceMenor.toFixed(1)}% necessário para contemplação.`
-                              }
-                            </p>
+                      {estats ? (
+                        <>
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-semibold">
+                            <span>Mínimo: <span className="text-[#122040] font-bold">{estats.lanceMenor.toFixed(1)}%</span></span>
+                            <span>Média: <span className="text-[#122040] font-bold">{estats.lanceMedia.toFixed(1)}%</span></span>
+                            <span>Máximo: <span className="text-[#122040] font-bold">{estats.lanceMaior.toFixed(1)}%</span></span>
                           </div>
-                        );
-                      })()}
+
+                          {lanceTotalPct > 0 && (() => {
+                            let probLabel = "Baixa";
+                            let probColor = "text-red-600 bg-red-50 border-red-200";
+                            let progressColor = "bg-red-500";
+                            let percentOfMax = Math.min(100, (lanceTotalPct / estats.lanceMaior) * 100);
+
+                            if (lanceTotalPct >= estats.lanceMaior) {
+                              probLabel = "Muito Alta";
+                              probColor = "text-green-700 bg-green-50 border-green-200";
+                              progressColor = "bg-green-600";
+                            } else if (lanceTotalPct >= estats.lanceMedia) {
+                              probLabel = "Alta";
+                              probColor = "text-emerald-600 bg-emerald-50 border-emerald-200";
+                              progressColor = "bg-emerald-500";
+                            } else if (lanceTotalPct >= estats.lanceMenor) {
+                              probLabel = "Média";
+                              probColor = "text-amber-600 bg-amber-50 border-amber-200";
+                              progressColor = "bg-amber-500";
+                            }
+
+                            return (
+                              <div className={`p-2.5 rounded-lg border text-xs font-medium space-y-1.5 ${probColor}`}>
+                                <div className="flex justify-between items-center">
+                                  <span className="flex items-center gap-1">
+                                    {probLabel === "Muito Alta" || probLabel === "Alta" ? "🎯" : probLabel === "Média" ? "⚡" : "⚠️"} 
+                                    Probabilidade: <strong>{probLabel}</strong>
+                                  </span>
+                                  <span className="font-bold">{lanceTotalPct.toFixed(1)}%</span>
+                                </div>
+                                
+                                {/* Mini barra de progresso visual */}
+                                <div className="w-full bg-slate-200/60 rounded-full h-1.5 overflow-hidden">
+                                  <div className={`h-full rounded-full transition-all duration-300 ${progressColor}`} style={{ width: `${percentOfMax}%` }} />
+                                </div>
+                                
+                                <p className="text-[10px] opacity-90 leading-tight">
+                                  {lanceTotalPct >= estats.lanceMenor 
+                                    ? `O lance ofertado (${lanceTotalPct.toFixed(1)}%) supera o lance mínimo histórico de ${estats.lanceMenor.toFixed(1)}% deste grupo.`
+                                    : `O lance ofertado (${lanceTotalPct.toFixed(1)}%) está abaixo do mínimo histórico de ${estats.lanceMenor.toFixed(1)}% necessário para contemplação.`
+                                  }
+                                </p>
+                              </div>
+                            );
+                          })()}
+                        </>
+                      ) : (
+                        <div className="text-[10px] text-muted-foreground bg-slate-50 p-2 rounded border border-[#d8e0ee]/50 text-center italic">
+                          ℹ️ Sem dados de contemplação cadastrados no sistema para o Grupo {g.grupo}.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
