@@ -114,7 +114,7 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
   "6030": {
     grupo: "6030",
     reajuste: "INCC",
-    primeiraAssembleia: "25/07/2026",
+    primeiraAssembleia: "22/12/2021",
     proximaAssembleia: "25/07/2026",
     caracteristicas: "Imóvel linear e 50/50. Crédito - 240.000,00 a 320.000,00. Cotas vagas: 265. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO.",
     ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia).",
@@ -762,6 +762,7 @@ export const CATEGORIAS: Category[] = [
 export const ESTATISTICAS_LANCES: Record<string, { lanceMaior: number, lanceMenor: number, lanceMedia: number, qtdLances: number }> = {
   "5292": { lanceMaior: 85.00, lanceMenor: 64.00, lanceMedia: 71.31, qtdLances: 17 },
   "6043": { lanceMaior: 52.27, lanceMenor: 52.27, lanceMedia: 52.27, qtdLances: 1 },
+  "6030": { lanceMaior: 100.00, lanceMenor: 75.00, lanceMedia: 87.50, qtdLances: 2 },
 };
 
 export function obterEstatisticasGrupo(grupo: string): { lanceMaior: number, lanceMenor: number, lanceMedia: number, qtdLances: number } {
