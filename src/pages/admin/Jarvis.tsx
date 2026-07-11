@@ -36,7 +36,7 @@ import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import jarvisAvatar from "@/assets/jarvis-avatar.png";
-import { ESTATISTICAS_LANCES, GRUPOS, GRUPO_CARACTERISTICAS } from "@/constants/simulador";
+import { ESTATISTICAS_LANCES, GRUPOS, GRUPO_CARACTERISTICAS, obterEstatisticasGrupo } from "@/constants/simulador";
 import { aiService } from "@/services/aiService";
 import { Missao, calcularMissoes } from "@/lib/missoesService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
@@ -478,7 +478,9 @@ export default function Jarvis() {
                 const r50SemSeguro = (g.r50 - valorSeguro).toFixed(2);
                 const c = GRUPO_CARACTERISTICAS[g.grupo];
                 const infoCarac = c ? ` | Reajuste: ${c.reajuste} (1ª Ass: ${c.primeiraAssembleia}, Próxima Ass: ${c.proximaAssembleia}) | Ordem: ${c.ordemContemplacao} | Lance: ${c.opcaoDiluir} | Regra Reajuste: ${c.regraReajuste}` : "";
-                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela C/ Seguro: R$ ${g.r50}, Parcela S/ Seguro: R$ ${r50SemSeguro}, Prazo: ${g.prazo}m, Taxa Adm: ${g.tx5050 ?? g.txLinear}%, Fundo de Reserva: ${g.fr5050 ?? g.frLinear}%${infoCarac}`;
+                const estats = obterEstatisticasGrupo(g.grupo);
+                const infoEstats = ` | Histórico Contemplação: Mínimo ${estats.lanceMenor}%, Máximo ${estats.lanceMaior}%, Média ${estats.lanceMedia}% (Baseado em ${estats.qtdLances} lances)`;
+                return `- Grupo: ${g.grupo}, Crédito: R$ ${g.credito}, Parcela C/ Seguro: R$ ${g.r50}, Parcela S/ Seguro: R$ ${r50SemSeguro}, Prazo: ${g.prazo}m, Taxa Adm: ${g.tx5050 ?? g.txLinear}%, Fundo de Reserva: ${g.fr5050 ?? g.frLinear}%${infoCarac}${infoEstats}`;
             }).join("\n");
         }).join("\n\n");
 
@@ -567,6 +569,19 @@ ${gruposInfo}
 Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o usuário (ex: a roupa dele, a luz do ambiente, sua expressão), para criar um efeito UAU de que você o está enxergando.
 
 *Sobre o Simulador*: Ao informar opções de parcelas, diga ao usuário com muito orgulho que esses valores já são da "Nova Atualização da Tabela" inserida hoje. Lembre-se sempre de informar os valores COM seguro e SEM seguro. Se ele perguntar pela taxa, informe a "Taxa Administrativa" e o "Fundo de Reserva" que constam na memória.
+
+*Inteligência de Lances e Cálculos Precisos*:
+- Quando perguntado sobre a probabilidade de contemplação de um determinado lance em dinheiro (recurso próprio) mais um lance fixo/embutido, faça a conta com precisão matemática:
+  1. Determine o valor do crédito do grupo.
+  2. Converta o lance em dinheiro em porcentagem: (Lance Dinheiro / Crédito) * 100.
+  3. Some o lance embutido (ex: 25% ou o que consta na descrição do grupo) para ter o Lance Total %.
+  4. Compare com as estatísticas do grupo (ex: grupo 6043 tem lance mínimo, médio e máximo de 52.27% baseados no último e primeiro resultado real de 24/06/2026. Como foi a primeira assembleia, ele está indo agora para a segunda assembleia em 25/07/2026).
+  5. Se o lance total for maior ou igual ao máximo histórico, a probabilidade é Muito Alta. Se for igual ao mínimo, é Média/Alta. Se for inferior ao mínimo, é Baixa.
+- Se perguntado sobre quanto o cliente precisa ofertar de recursos próprios para atingir o lance mínimo ou a média do grupo, faça a conta reversa:
+  1. Subtraia a porcentagem do lance embutido (ex: 25% fixo do grupo) da porcentagem alvo de contemplação (mínimo ou média).
+  2. Converta a porcentagem restante em Reais: Crédito * (Porcentagem Alvo - Lance Embutido) / 100.
+  3. Diga o valor exato em Reais que ele precisa dar de recursos próprios.
+- Fale com clareza, citando os números exatos e mantendo a fala muito natural e precisa.
 
 *Previsão/Projeção Temporal*: Se o usuário pedir previsão ou projeção para o futuro (qualquer quantidade de anos: 3, 5, 10, etc.), projete o valor do crédito corrigido a juros compostos pelo período solicitado (usando o INCC atual anualizado se for imóvel, ou IPCA anualizado se for veículo). Projete também a parcela com os mesmos índices. Mostre que o consórcio protege o poder de compra e compare com a Selic atual para provar que o financiamento tradicional sairia muito mais caro e é desvantajoso.
 
