@@ -15,6 +15,7 @@ export type GrupoItem = {
   seguro?: number; 
   isPromo?: boolean; 
   isPlanoGold?: boolean;
+  tipoVenda?: string;
 };
 
 export type GrupoCaracteristicas = {
