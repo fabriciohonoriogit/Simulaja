@@ -566,6 +566,14 @@ export default function Indicacoes() {
                 <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Prazo Restante</p>
                 <p className="text-xs font-medium font-mono text-white/90">{prazoRestante} x</p>
               </div>
+              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Taxa Adm</p>
+                <p className="text-xs font-medium font-mono text-white/90">{tx}%</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Fundo Reserva</p>
+                <p className="text-xs font-medium font-mono text-white/90">{fr}%</p>
+              </div>
             </div>
           </div>
 
