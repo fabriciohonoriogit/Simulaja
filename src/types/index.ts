@@ -2,7 +2,9 @@ import { Database } from '@/integrations/supabase/types';
 
 export type LeadRow = Database['public']['Tables']['leads']['Row'];
 export type ProfileRow = Database['public']['Tables']['perfis']['Row'];
-export type OrganizationRow = Database['public']['Tables']['organizacoes']['Row'];
+export type OrganizationRow = Database['public']['Tables']['organizacoes']['Row'] & {
+  evolution_instance_name?: string | null;
+};
 export type ComissaoRow = Database['public']['Tables']['comissoes']['Row'];
 export type HistoricoContatoRow = Database['public']['Tables']['historico_contatos']['Row'];
 export type CarteiraRow = Database['public']['Tables']['carteira']['Row'];

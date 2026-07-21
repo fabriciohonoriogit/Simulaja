@@ -50,10 +50,12 @@ export default function Onboarding() {
       // Se o usuário estiver na organização padrão, significa que o trigger antigo do banco de dados o associou a ela.
       // Nesse caso, criamos uma nova organização dedicada para ele não misturar dados com o tenant padrão.
       if (profile.organizacao_id === "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4") {
+        const slug = orgName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").substring(0, 50) || "org";
         const { data: newOrg, error: newOrgError } = await supabase
           .from("organizacoes")
           .insert({
             nome: orgName,
+            slug,
             onboarding_completed: true,
             plano: "pro",
             subscription_status: "trialing",

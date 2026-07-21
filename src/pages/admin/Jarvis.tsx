@@ -680,7 +680,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
 
         const context = leads.slice(0, 15).map(l => {
             const hists = (histsData || []).filter(h => h.lead_id === l.id).slice(0, 3);
-            return `Lead: ${l.id}, Nome: ${l.dados_cadastro?.nome || "Sem Nome"}, Status: ${l.status}, Interações: ${hists.map(h => h.observacao || h.descricao || "").join(" | ")}`;
+            return `Lead: ${l.id}, Nome: ${l.dados_cadastro?.nome || "Sem Nome"}, Status: ${l.status}, Interações: ${hists.map(h => h.observacao || h.resultado || "").join(" | ")}`;
         }).join("\n");
 
         const { analysis: results, error } = await aiService.qualifyLeads(context);

@@ -671,7 +671,7 @@ export function useFunil() {
 
     const comissao_total = (valorCredito * taxa_comissao) / 100;
 
-    const { error: rpcError } = await supabase.rpc('fechar_venda', {
+    const { error: rpcError } = await (supabase.rpc as any)('fechar_venda', {
       p_lead_id: celebrationLead.id,
       p_valor_credito: valorCredito,
       p_grupo: grupo,

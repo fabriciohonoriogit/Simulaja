@@ -130,10 +130,11 @@ export const useGamificationStore = create<GamificationStore>()(
 setTimeout(() => {
   try {
     const state = useGamificationStore.getState();
-    if (state.patenteAtual === 'INICIANTE' || state.patenteAtual as any === 'INICIANTE') {
+    const legacyValue = 'INICIANTE' as any;
+    if (state.patenteAtual === legacyValue) {
       useGamificationStore.setState({ patenteAtual: 'STONE' });
     }
-    if (state.previousPatente === 'INICIANTE') {
+    if (state.previousPatente === legacyValue) {
       useGamificationStore.setState({ previousPatente: null });
     }
   } catch (e) {
