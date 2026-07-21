@@ -17,7 +17,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 
-import { GRUPOS, CATEGORIAS, GrupoItem, GRUPO_CARACTERISTICAS } from "@/constants/simulador";
+import { GRUPOS, CATEGORIAS, GrupoItem, GRUPO_CARACTERISTICAS, MEDIA_LANCES_GRUPOS } from "@/constants/simulador";
 import { createLead } from "@/services/leadService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 
@@ -477,7 +477,7 @@ export default function Simulador() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                   <div>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">1ª Assembleia</p>
                     <p className="font-semibold text-foreground">{c.primeiraAssembleia}</p>
@@ -486,6 +486,12 @@ export default function Simulador() {
                     <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Próxima Assembleia</p>
                     <p className="font-semibold text-foreground">{c.proximaAssembleia}</p>
                   </div>
+                  {MEDIA_LANCES_GRUPOS[c.grupo] !== undefined && (
+                    <div className="col-span-2 sm:col-span-1">
+                      <p className="text-[9px] font-bold text-green-600 uppercase font-sans">Média Lance Contemplado</p>
+                      <p className="font-bold text-green-800 font-mono">{MEDIA_LANCES_GRUPOS[c.grupo].toFixed(2)}%</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="text-xs space-y-2 pt-1 border-t border-slate-200/60">

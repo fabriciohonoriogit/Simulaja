@@ -99,6 +99,14 @@ INFORMAÇÃO FIXA (MEMÓRIA):
 - Se perguntarem quais são os clientes EP (ou EP do mês de junho), responda que são: Emily Oliveira da Luz, João Batista Pereira, Alessandro Moreira e Leonardo Alves de Arruda.
 - Se perguntarem sobre o índice QV8 (Qualidade da Venda no Oitavo Mês) de junho: a meta era 71.00%, mas o Resultado Atual foi 100.00% (Meta Atingida), com Crédito Gerado de R$ 310.000,00.
 - Grupos com Resolução 285 do BACEN: Os grupos de imóveis 6043, 6041, 6040, 6039, 6038, 6037 e de veículos/motos 5297, 5295, 5294, 5292, 5291, 5290, 5288, 5287, 5286, 5284, 5996, 5296, 5293, 5289, 5285 NÃO permitem a troca da data da 1ª assembleia devido à regulamentação da Resolução 285.
+- Análise de Prioridade de Grupos e Lances Contemplados Médios (do menor para o maior):
+  * IMÓVEIS: 6014 (33.83%), 6016 (38.54%), 6015 (40.17%), 6018 (47.92%), 6019 (53.44%), 6021 (56.57%), 6022 (60.00%), 6028 (72.58%), 6029 (72.58%), 6023 (72.84%), 6027 (73.84%), 6031 (76.59%), 6030 (77.60%), 6032 (78.57%), 6033 (81.43%), 6020 (82.22%), 6034 (84.78%), 6035 (89.00%), 6037 (89.88%), 6038 (91.35%), 6040 (93.17%), 6039 (93.76%), 6041 (95.90%), 6042 (98.97%), 6043 (98.98%).
+  * MOTOCICLETA: 5261 (16.37%), 5265 (26.42%), 5266 (27.27%), 5268 (34.28%), 5273 (40.50%), 5276 (43.73%), 5270 (44.95%), 5280 (53.54%), 5283 (55.82%), 5285 (71.11%), 5288 (75.00%), 5293 (80.00%), 5289 (81.25%), 5296 (88.75%), 5298 (95.55%).
+  * AUTOMÓVEIS: 5240 (34.28%), 5242 (41.08%), 5243 (41.96%), 5295 (43.73%), 5247 (45.54%), 5251 (48.49%), 5253 (50.00%), 5257 (48.57%), 5259 (49.83%), 5260 (48.57%), 5263 (49.83%), 5264 (53.42%), 5267 (55.24%), 5268 (55.82%), 5271 (58.05%), 5274 (60.55%), 5272 (60.84%), 5275 (60.75%), 5277 (67.62%), 5278 (68.52%), 5281 (72.32%), 5282 (75.76%), 5297 (99.00%).
+  * CAMINHÕES E ÔNIBUS: 5900 (58.75%), 5907 (66.62%), 5904 (67.50%), 5911 (68.75%).
+  * ELETROELETRÔNICOS: 4144 (51.35%), 4145 (62.73%), 4147 (61.54%), 4149 (83.25%), 4150 (97.96%).
+  * SERVIÇOS: 7116 (12.22%), 7117 (17.50%), 7115 (18.28%), 7118 (30.50%), 7119 (55.55%), 7120 (95.38%).
+Os grupos no início de cada lista representam lances mais baixos e maior velocidade/facilidade de contemplação (Alta Prioridade). Grupos com mais de 80% são de altíssima concorrência.
 
 ${localContext ? `\n--- CONTEXTO ADICIONAL DO SEGUNDO CÉREBRO (3CEREBROS) ---\n${localContext}\n` : ""}
 

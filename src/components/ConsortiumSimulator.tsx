@@ -82,7 +82,7 @@ const sliderThumbStyles = `
   }
 `;
 
-import { GrupoItem, Category, GRUPOS, CATEGORIAS, ESTATISTICAS_LANCES, GRUPO_CARACTERISTICAS, obterEstatisticasGrupo } from "@/constants/simulador";
+import { GrupoItem, Category, GRUPOS, CATEGORIAS, ESTATISTICAS_LANCES, GRUPO_CARACTERISTICAS, obterEstatisticasGrupo, MEDIA_LANCES_GRUPOS } from "@/constants/simulador";
 
 const MAX_CONSULTAS = 5;
 
@@ -765,7 +765,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                         <div>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase">1ª Assembleia</p>
                           <p className="font-semibold text-foreground">{c.primeiraAssembleia}</p>
@@ -774,6 +774,12 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                           <p className="text-[9px] font-bold text-muted-foreground uppercase">Próxima Assembleia</p>
                           <p className="font-semibold text-foreground">{c.proximaAssembleia}</p>
                         </div>
+                        {MEDIA_LANCES_GRUPOS[c.grupo] !== undefined && (
+                          <div className="col-span-2 sm:col-span-1">
+                            <p className="text-[9px] font-bold text-green-600 uppercase">Média Lance Contemplado</p>
+                            <p className="font-bold text-green-800 font-mono">{MEDIA_LANCES_GRUPOS[c.grupo].toFixed(2)}%</p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="text-xs space-y-2 pt-1 border-t border-slate-50">
