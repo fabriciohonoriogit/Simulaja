@@ -713,6 +713,7 @@ export type Database = {
           lead_temperatura: string | null
           nome: string
           organizacao_id: string | null
+          origem: string | null
           prazo_meses: number | null
           propensity_reason: string | null
           propensity_score: number | null
@@ -720,7 +721,6 @@ export type Database = {
           status: string | null
           status_updated_at: string | null
           tipo_consorcio: string | null
-          origem: string | null
           ultimo_contato: string | null
           updated_at: string | null
           valor_credito: number | null
@@ -745,6 +745,7 @@ export type Database = {
           lead_temperatura?: string | null
           nome: string
           organizacao_id?: string | null
+          origem?: string | null
           prazo_meses?: number | null
           propensity_reason?: string | null
           propensity_score?: number | null
@@ -752,7 +753,6 @@ export type Database = {
           status?: string | null
           status_updated_at?: string | null
           tipo_consorcio?: string | null
-          origem?: string | null
           ultimo_contato?: string | null
           updated_at?: string | null
           valor_credito?: number | null
@@ -777,6 +777,7 @@ export type Database = {
           lead_temperatura?: string | null
           nome?: string
           organizacao_id?: string | null
+          origem?: string | null
           prazo_meses?: number | null
           propensity_reason?: string | null
           propensity_score?: number | null
@@ -784,7 +785,6 @@ export type Database = {
           status?: string | null
           status_updated_at?: string | null
           tipo_consorcio?: string | null
-          origem?: string | null
           ultimo_contato?: string | null
           updated_at?: string | null
           valor_credito?: number | null
@@ -1065,6 +1065,7 @@ export type Database = {
           max_leads: number | null
           max_usuarios: number | null
           nome: string
+          onboarding_completed: boolean | null
           owner_id: string | null
           plano: string | null
           slug: string
@@ -1078,6 +1079,7 @@ export type Database = {
           max_leads?: number | null
           max_usuarios?: number | null
           nome: string
+          onboarding_completed?: boolean | null
           owner_id?: string | null
           plano?: string | null
           slug: string
@@ -1091,6 +1093,7 @@ export type Database = {
           max_leads?: number | null
           max_usuarios?: number | null
           nome?: string
+          onboarding_completed?: boolean | null
           owner_id?: string | null
           plano?: string | null
           slug?: string
@@ -1253,6 +1256,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      registration_errors: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          error_message: string | null
+          id: number
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          error_message?: string | null
+          id?: number
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          error_message?: string | null
+          id?: number
+        }
+        Relationships: []
       }
       simulador_config: {
         Row: {
