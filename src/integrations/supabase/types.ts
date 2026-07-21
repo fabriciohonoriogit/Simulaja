@@ -1061,6 +1061,7 @@ export type Database = {
       organizacoes: {
         Row: {
           created_at: string | null
+          evolution_instance_name: string | null
           id: string
           max_leads: number | null
           max_usuarios: number | null
@@ -1075,6 +1076,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          evolution_instance_name?: string | null
           id?: string
           max_leads?: number | null
           max_usuarios?: number | null
@@ -1089,6 +1091,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          evolution_instance_name?: string | null
           id?: string
           max_leads?: number | null
           max_usuarios?: number | null
