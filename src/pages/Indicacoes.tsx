@@ -483,6 +483,21 @@ export default function Indicacoes() {
               {isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}
             </p>
             <p className="text-2xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
+            
+            <div className="w-full grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-green-200 text-center">
+              <div>
+                <p className="text-[8px] font-bold text-green-600 uppercase">Prazo</p>
+                <p className="text-xs font-bold text-green-800">{g.prazo} meses</p>
+              </div>
+              <div>
+                <p className="text-[8px] font-bold text-green-600 uppercase">Taxa Adm</p>
+                <p className="text-xs font-bold text-green-800">{tx}%</p>
+              </div>
+              <div>
+                <p className="text-[8px] font-bold text-green-600 uppercase">F. Reserva</p>
+                <p className="text-xs font-bold text-green-800">{fr}%</p>
+              </div>
+            </div>
           </div>
 
           {/* Lance Box */}
