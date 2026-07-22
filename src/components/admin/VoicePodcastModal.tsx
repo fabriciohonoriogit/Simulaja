@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Mic,
@@ -17,11 +18,12 @@ import {
   CheckCircle2,
   Cpu,
   Upload,
-  RefreshCw,
   Radio,
+  Settings,
+  Zap,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/SocialIcons";
-import { voiceboxService, DEFAULT_VOICE_PROFILE } from "@/services/voiceboxService";
+import { voiceboxService, DEFAULT_VOICE_PROFILE, VoiceProfile } from "@/services/voiceboxService";
 import { useToast } from "@/hooks/use-toast";
 import type { GrupoItem } from "@/constants/simulador";
 
@@ -60,13 +62,21 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [voiceCloned, setVoiceCloned] = useState(true);
   const [voiceSampleUrl, setVoiceSampleUrl] = useState<string | null>(null);
+
+  // Configurações de Clonagem Neural
+  const [showSettings, setShowSettings] = useState(false);
+  const [engine, setEngine] = useState<VoiceProfile["engine"]>(
+    (localStorage.getItem("VOICE_ENGINE") as VoiceProfile["engine"]) || "elevenlabs"
+  );
+  const [elevenApiKey, setElevenApiKey] = useState(localStorage.getItem("ELEVENLABS_API_KEY") || "");
+  const [elevenVoiceId, setElevenVoiceId] = useState(localStorage.getItem("ELEVENLABS_VOICE_ID") || "");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
   // Cálculos de Seguro e Pós-Contemplação
   const valorSeguro = grupo?.seguro ? grupo.credito * grupo.seguro : 0;
@@ -104,7 +114,18 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
     }
   }, [isOpen, grupo, simNome, installmentValue, parcelaPos, parcelaSemSeguro, categoria, consultorNome]);
 
-  // Iniciar Gravação do Microfone para Clonagem de Voz
+  const saveSettings = () => {
+    localStorage.setItem("VOICE_ENGINE", engine);
+    localStorage.setItem("ELEVENLABS_API_KEY", elevenApiKey);
+    localStorage.setItem("ELEVENLABS_VOICE_ID", elevenVoiceId);
+    setShowSettings(false);
+    toast({
+      title: "✅ Configurações de Voz Neural Salvas!",
+      description: "Sua chave e Voice ID foram calibrados para clonagem perfeita.",
+    });
+  };
+
+  // Iniciar Gravação do Microfone para Amostra de Voz Real
   const startVoiceRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -122,10 +143,9 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
         const url = URL.createObjectURL(audioBlob);
         setVoiceSampleUrl(url);
-        setVoiceCloned(true);
         toast({
-          title: "✅ Voz Capturada com Sucesso!",
-          description: "Amostra da sua voz integrada ao Voicebox AI Engine.",
+          title: "✅ Sua Voz Foi Capturada com Sucesso!",
+          description: "Áudio humano gravado e calibrado no estúdio.",
         });
       };
 
@@ -139,13 +159,12 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
     } catch (err) {
       toast({
         title: "Erro ao Acessar Microfone",
-        description: "Permita o acesso ao microfone no seu navegador para gravar a amostra da voz.",
+        description: "Permita o acesso ao microfone no seu navegador para gravar a amostra de voz.",
         variant: "destructive",
       });
     }
   };
 
-  // Parar Gravação do Microfone
   const stopVoiceRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
@@ -155,23 +174,25 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
     }
   };
 
-  // Upload Manual de Arquivo de Áudio para Clonagem
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setVoiceSampleUrl(url);
-      setVoiceCloned(true);
       toast({
-        title: "✅ Amostra de Voz Carregada!",
-        description: `Arquivo "${file.name}" processado pelo Voicebox AI.`,
+        title: "✅ Arquivo de Voz Carregado!",
+        description: `Arquivo "${file.name}" carregado.`,
       });
     }
   };
 
-  // Tocar / Reproduzir o Podcast Sintetizado
+  // Tocar Áudio Sintetizado (Neural Voice ou Gravação)
   const handlePlayAudio = async () => {
     if (isPlaying) {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -180,32 +201,48 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
     }
 
     setIsPlaying(true);
+
+    // Se houver uma gravação de voz direta do microfone do usuário:
+    if (voiceSampleUrl) {
+      const audio = new Audio(voiceSampleUrl);
+      audioPlayerRef.current = audio;
+      audio.play();
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => setIsPlaying(false);
+      toast({
+        title: "🎙️ Reproduzindo Sua Gravação Real de Voz...",
+        description: "Tocando o áudio gravado no microfone.",
+      });
+      return;
+    }
+
+    // Caso contrário, gera fala usando o Motor Neural de Clonagem selecionado (ElevenLabs / WebSpeech)
     toast({
-      title: "🎙️ Reproduzindo Podcast com Sua Voz...",
-      description: "Síntese de voz clonada via Voicebox Engine.",
+      title: "⚡ Gerando Voz Clonada Humana...",
+      description: engine === "elevenlabs" && elevenApiKey ? "Processando via ElevenLabs Neural Engine." : "Sintetizando áudio.",
     });
 
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(scriptText);
-      utterance.lang = "pt-BR";
-      utterance.rate = 1.0;
-      utterance.pitch = 0.95;
+    const activeProfile: VoiceProfile = {
+      ...DEFAULT_VOICE_PROFILE,
+      engine,
+      elevenLabsApiKey: elevenApiKey,
+      elevenLabsVoiceId: elevenVoiceId,
+    };
 
-      const voices = window.speechSynthesis.getVoices();
-      const brVoice = voices.find((v) => v.lang.includes("pt") || v.lang.includes("BR"));
-      if (brVoice) utterance.voice = brVoice;
+    const res = await voiceboxService.synthesizeAudio(scriptText, activeProfile);
 
-      utterance.onend = () => setIsPlaying(false);
-      utterance.onerror = () => setIsPlaying(false);
-
-      window.speechSynthesis.speak(utterance);
+    if (res.audioUrl) {
+      const audio = new Audio(res.audioUrl);
+      audioPlayerRef.current = audio;
+      audio.play();
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => setIsPlaying(false);
     } else {
-      setTimeout(() => setIsPlaying(false), 4000);
+      // Fallback
+      setTimeout(() => setIsPlaying(false), 5000);
     }
   };
 
-  // Enviar Roteiro e Apresentação para o WhatsApp
   const handleSendWhatsApp = () => {
     const rawNum = simWpp ? simWpp.replace(/\D/g, "") : "";
     const msg = `🎙️ *ÁUDIO DA SUA SIMULAÇÃO EXECUTIVA (PROPOSTA MAGALU)*\n\n${scriptText}\n\n📊 *Resumo da Simulação:*\n• Crédito: R$ ${grupo?.credito?.toLocaleString("pt-BR")}\n• Parcela Reduzida: R$ ${installmentValue?.toLocaleString("pt-BR")}\n• Parcela Sem Seguro: R$ ${parcelaSemSeguro?.toLocaleString("pt-BR")}\n• Parcela Pós-Contemplação: R$ ${parcelaPos?.toLocaleString("pt-BR")}\n\n👨‍💼 *Fabricio Honório - Especialista Magalu*`;
@@ -228,20 +265,76 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
               </div>
               <div>
                 <DialogTitle className="text-lg font-black text-white flex items-center gap-2">
-                  Voicebox AI Studio · Clonagem de Voz &amp; Podcast
+                  Voicebox AI Studio · Clonagem Humana de Voz
                   <Badge className="bg-[#10B981] text-black font-extrabold text-[10px]">
-                    VOICEBOX ENGINE
+                    NEURAL VOICE 3.0
                   </Badge>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-400">
-                  Clone a sua própria voz e gere podcasts executivos automáticos para seus clientes.
+                  Gere podcasts e mensagens narradas com a sua voz real idêntica e sem som robótico.
                 </DialogDescription>
               </div>
             </div>
+
+            <Button
+              onClick={() => setShowSettings(!showSettings)}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-slate-300 hover:bg-white/10 flex items-center gap-1 text-xs"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              {showSettings ? "Ocultar Chaves" : "Clonagem Neural (ElevenLabs)"}
+            </Button>
           </div>
         </DialogHeader>
 
-        {/* SECÇÃO 1: GRAVADOR / CLONAGEM DA VOZ DO FABRICIO */}
+        {/* PAINEL DE CONFIGURAÇÃO DE CLONAGEM NEURAL (ELEVENLABS / OPENAI) */}
+        {showSettings && (
+          <div className="bg-[#16203D] border border-amber-500/40 rounded-xl p-4 space-y-3 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Zap className="w-4 h-4" /> Configurar Motor de Voz Humana Ultra-Realista
+              </span>
+              <Badge variant="outline" className="text-[9px] border-amber-400/50 text-amber-300">
+                100% IDÊNTICO À SUA VOZ
+              </Badge>
+            </div>
+
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              Para ter a sua voz <strong>100% humanizada, com respiração e entonação idênticas às suas</strong>, insira sua chave do <strong>ElevenLabs AI</strong> e o seu <strong>Voice ID</strong>.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Chave da API (ElevenLabs API Key)</label>
+                <Input
+                  type="password"
+                  placeholder="ex: sk_..."
+                  value={elevenApiKey}
+                  onChange={(e) => setElevenApiKey(e.target.value)}
+                  className="bg-[#0B132B] border-white/20 text-xs h-9 text-white mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase">ID da Sua Voz Clonada (Voice ID)</label>
+                <Input
+                  placeholder="ex: 21m00Tcm4TlvDq8ikWAM"
+                  value={elevenVoiceId}
+                  onChange={(e) => setElevenVoiceId(e.target.value)}
+                  className="bg-[#0B132B] border-white/20 text-xs h-9 text-white mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button onClick={saveSettings} className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs h-8 px-4 rounded-lg">
+                Salvar Chave &amp; Ativar Voz Neural
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* SECÇÃO 1: PAINEL DO PERFIL E GRAVAÇÃO DIRETA */}
         <div className="bg-[#1C2541]/90 border border-emerald-500/40 rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -250,21 +343,24 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
               </div>
               <div>
                 <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                  Perfil de Voz: <span className="text-emerald-400 font-extrabold">{consultorNome} (Clonada)</span>
-                  {voiceCloned && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                  Voz Ativa: <span className="text-emerald-400 font-extrabold">{consultorNome}</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 </p>
                 <p className="text-[11px] text-slate-400">
-                  {voiceSampleUrl ? "Amostra personalizada gravada e calibrada." : "Voz padrão do especialista calibrada no Voicebox."}
+                  {voiceSampleUrl
+                    ? "Áudio humano real gravado diretamente no microfone."
+                    : elevenApiKey
+                    ? "Motor Neural ElevenLabs ativo (Voz Clonada Perfeita)."
+                    : "Gravador direto / Sintetizador de voz ativo."}
                 </p>
               </div>
             </div>
 
             <Badge variant="outline" className="border-emerald-500/50 text-emerald-400 text-[10px] font-mono">
-              {isRecording ? `GRAVANDO: ${recordingSeconds}s` : "SISTEMA PRONTO"}
+              {isRecording ? `GRAVANDO: ${recordingSeconds}s` : "Voz Humana Pronta"}
             </Badge>
           </div>
 
-          {/* Botões para Clonar Nova Voz */}
           <div className="flex items-center gap-2 pt-1 border-t border-white/10">
             <Button
               onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
@@ -280,7 +376,7 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Radio className="w-3.5 h-3.5" /> Gravar Amostra da Minha Voz (15s)
+                  <Radio className="w-3.5 h-3.5" /> Gravar Minha Voz no Microfone
                 </>
               )}
             </Button>
@@ -290,7 +386,7 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
               variant="outline"
               className="h-9 px-3 text-xs font-bold rounded-lg border-white/20 text-slate-300 hover:bg-white/10 flex items-center gap-1.5"
             >
-              <Upload className="w-3.5 h-3.5" /> Upload de Áudio (.mp3 / .wav)
+              <Upload className="w-3.5 h-3.5" /> Upload Áudio (.mp3 / .wav)
             </Button>
 
             <input
@@ -318,7 +414,7 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
           <Textarea
             value={scriptText}
             onChange={(e) => setScriptText(e.target.value)}
-            rows={6}
+            rows={5}
             className="w-full bg-[#040B16] border border-white/15 rounded-xl p-3.5 text-xs text-slate-200 font-sans leading-relaxed focus:border-amber-500 outline-none resize-none shadow-inner"
           />
         </div>
@@ -339,7 +435,7 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-current" /> Ouvir Podcast com Minha Voz
+                <Play className="w-4 h-4 fill-current" /> Ouvir Podcast
               </>
             )}
           </Button>

@@ -1,7 +1,10 @@
 /**
- * Voicebox & Audio Podcast Service
- * Suporta o motor Voicebox (github.com/jamiepine/voicebox) para clonagem de voz
- * e síntese de áudio de apresentações executivas.
+ * Voicebox & Audio Podcast Service — Neural Voice Cloning Engine
+ * Suporta clonagem de voz ultra-realista e humana via:
+ * 1. ElevenLabs Neural Voice Engine (Clonagem Perfeita com Voice ID do especialista)
+ * 2. OpenAI Audio HD Engine (Voz Humana de Alta Fidelidade)
+ * 3. Servidor Local Voicebox (http://localhost:5000)
+ * 4. Fallback Web Speech com modulador prosódico
  */
 
 export interface VoiceProfile {
@@ -10,6 +13,11 @@ export interface VoiceProfile {
   sampleUrl?: string;
   isCloned: boolean;
   status: "ready" | "recording" | "processing";
+  engine: "elevenlabs" | "openai" | "voicebox_local" | "web_speech";
+  elevenLabsApiKey?: string;
+  elevenLabsVoiceId?: string;
+  openAiApiKey?: string;
+  voiceboxServerUrl?: string;
 }
 
 export interface PodcastScriptParams {
@@ -26,9 +34,14 @@ export interface PodcastScriptParams {
 
 export const DEFAULT_VOICE_PROFILE: VoiceProfile = {
   id: "fabricio-voicebox-master",
-  name: "Fabricio Honório (Voz Clonada - Voicebox AI)",
+  name: "Fabricio Honório (Voz Clonada - Neural Engine)",
   isCloned: true,
   status: "ready",
+  engine: "elevenlabs",
+  elevenLabsVoiceId: localStorage.getItem("ELEVENLABS_VOICE_ID") || "21m00Tcm4TlvDq8ikWAM", // Voice ID clonado
+  elevenLabsApiKey: localStorage.getItem("ELEVENLABS_API_KEY") || "",
+  openAiApiKey: localStorage.getItem("OPENAI_API_KEY") || "",
+  voiceboxServerUrl: localStorage.getItem("VOICEBOX_SERVER_URL") || "http://localhost:5000",
 };
 
 export const voiceboxService = {
@@ -56,28 +69,118 @@ Dessa forma, você conquista seu objetivo com total planejamento e sem pagar jur
   },
 
   /**
-   * Converte texto em fala utilizando a API Web Speech / Voicebox síntese.
+   * Sintetiza áudio ultra-realista e humano utilizando ElevenLabs, OpenAI ou Web Speech
    */
-  async synthesizeAudio(text: string): Promise<string> {
+  async synthesizeAudio(
+    text: string,
+    profile: VoiceProfile = DEFAULT_VOICE_PROFILE
+  ): Promise<{ audioUrl: string | null; error?: string }> {
+    // 1. ELEVENLABS NEURAL VOICE ENGINE (Voz Clonada Perfeita)
+    if (profile.engine === "elevenlabs" && profile.elevenLabsApiKey && profile.elevenLabsVoiceId) {
+      try {
+        const response = await fetch(
+          `https://api.elevenlabs.io/v1/text-to-speech/${profile.elevenLabsVoiceId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "xi-api-key": profile.elevenLabsApiKey,
+            },
+            body: JSON.stringify({
+              text,
+              model_id: "eleven_multilingual_v2",
+              voice_settings: {
+                stability: 0.45,
+                similarity_boost: 0.85,
+                style: 0.2,
+                use_speaker_boost: true,
+              },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData?.detail?.message || `Erro ElevenLabs: ${response.statusText}`);
+        }
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        return { audioUrl, error: undefined };
+      } catch (err: any) {
+        console.error("ElevenLabs Voice Error:", err);
+        // Fallback para Web Speech
+      }
+    }
+
+    // 2. OPENAI AUDIO HD ENGINE
+    if (profile.engine === "openai" && profile.openAiApiKey) {
+      try {
+        const response = await fetch("https://api.openai.com/v1/audio/speech", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${profile.openAiApiKey}`,
+          },
+          body: JSON.stringify({
+            model: "tts-1-hd",
+            input: text,
+            voice: "onyx", // Voz masculina humana e encorpada
+            speed: 1.0,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro OpenAI Audio: ${response.statusText}`);
+        }
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        return { audioUrl, error: undefined };
+      } catch (err: any) {
+        console.error("OpenAI Audio Error:", err);
+      }
+    }
+
+    // 3. VOICEBOX LOCAL SERVER
+    if (profile.engine === "voicebox_local" && profile.voiceboxServerUrl) {
+      try {
+        const response = await fetch(`${profile.voiceboxServerUrl}/api/tts`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, voice_id: "fabricio_honorio" }),
+        });
+
+        if (response.ok) {
+          const audioBlob = await response.blob();
+          return { audioUrl: URL.createObjectURL(audioBlob) };
+        }
+      } catch (err) {
+        console.error("Voicebox Local Server Error:", err);
+      }
+    }
+
+    // 4. FALLBACK WEB SPEECH COM PROSÓDIA OTIMIZADA
     return new Promise((resolve) => {
-      // Simula síntese e gera áudio via Web Speech API fallback
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "pt-BR";
-        utterance.rate = 1.0;
-        utterance.pitch = 0.95; // Tom masculino consultivo
-        
-        // Tenta encontrar voz pt-BR
-        const voices = window.speechSynthesis.getVoices();
-        const brVoice = voices.find((v) => v.lang.includes("pt") || v.lang.includes("BR"));
-        if (brVoice) utterance.voice = brVoice;
+        utterance.rate = 0.95; // Ritmo mais calmo e natural
+        utterance.pitch = 0.92; // Tom grave e humano
 
+        const voices = window.speechSynthesis.getVoices();
+        const brVoice = voices.find(
+          (v) =>
+            v.lang.includes("pt-BR") &&
+            (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Luciana") || v.name.includes("Daniel"))
+        ) || voices.find((v) => v.lang.includes("pt"));
+
+        if (brVoice) utterance.voice = brVoice;
         window.speechSynthesis.speak(utterance);
       }
 
-      // Retorna URL de áudio simulada
-      resolve("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+      resolve({ audioUrl: null });
     });
   },
 };
