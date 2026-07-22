@@ -52,7 +52,7 @@ Vale lembrar que o valor da sua parcela após a contemplação dependerá da mod
 - Se você for contemplado via sorteio, a sua parcela pós-contemplação fica em aproximadamente ${posFmt}.
 - Se a contemplação for realizada via lance fixo ou lance embutido, o valor abatido reduz ainda mais o seu saldo devedor e ajusta a parcela de acordo com a sua estratégia.
 
-Dessa forma, você conquista seu objetivo com total planejamento e sem pagar juros bancários. Estou à disposição para tirar qualquer dúvida e garantir a sua cota! Um abraço!`;
+Dessa forma, você conquista seu objetivo com total planejamento e sem pagar juros. Estou à disposição para tirar qualquer dúvida e garantir a sua contemplação! Um abraço!`;
   },
 
   /**
