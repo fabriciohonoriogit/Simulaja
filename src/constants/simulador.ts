@@ -667,9 +667,9 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6042", credito: 600000, prazo: 239, r50: 1912.25, r100: 3167.38, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 650000, prazo: 239, r50: 2071.59, r100: 3431.32, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true },
     { grupo: "6042", credito: 700000, prazo: 239, r50: 2230.94, r100: 3695.27, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true },
-    { grupo: "6042", credito: 1000000, prazo: 239, r50: 3187.10, r100: 5278.96, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true },
-    { grupo: "6042", credito: 1500000, prazo: 239, r50: 4780.65, r100: 7918.44, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true },
-    { grupo: "6042", credito: 2000000, prazo: 239, r50: 6374.20, r100: 10557.92, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true },
+    { grupo: "6042", credito: 1000000, prazo: 239, r50: 3187.10, r100: 5278.96, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true, tipoVenda: "2 COTAS DE 500 MIL" },
+    { grupo: "6042", credito: 1500000, prazo: 239, r50: 4780.65, r100: 7918.44, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true, tipoVenda: "3 COTAS DE 500 MIL" },
+    { grupo: "6042", credito: 2000000, prazo: 239, r50: 6374.20, r100: 10557.92, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.03, isPromo: true, tipoVenda: "4 COTAS DE 500 MIL" },
   ],
   veiculo: [
     { grupo: "5296", credito: 15000, prazo: 100, r50: 195.30, r100: 195.30, txLinear: 25, frLinear: 2, seguro: 0.032, isPromo: true },

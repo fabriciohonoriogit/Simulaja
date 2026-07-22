@@ -27,7 +27,7 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
       bgImage = '/segment-imovel.webp';
       headlineVerb = 'INVESTIR';
       headlineComplement = 'NOS SEUS SONHOS';
-      modalidadeStr = 'AQUISIÇÃO / REFORMA';
+      modalidadeStr = grupo.tipoVenda || 'AQUISIÇÃO / REFORMA';
       categoryTags = 'IMÓVEIS  •  CONSTRUÇÃO  •  REFORMA  •  INVESTIMENTO';
     } else if (categoria === 'veiculo') {
       bgImage = subCategoria === 'moto' ? '/segment-moto.webp' : (subCategoria === 'jet ski' || subCategoria === 'náutico') ? '/segment-nautico.webp' : '/segment-veiculo.webp';
