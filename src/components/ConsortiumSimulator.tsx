@@ -1322,6 +1322,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             consultorNome={profile?.nome || searchParams.get("nome") || 'Fabricio Honório'}
             lanceDinheiroPct={lanceDinheiroPct}
             lanceEmbutidoPct={lanceEmbutidoPct}
+            parcelasContemplar={parcelasContemplar}
             incluirSeguro={incluirSeguro}
           />
         </div>
