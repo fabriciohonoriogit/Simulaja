@@ -29,19 +29,30 @@ export const useAuth = (): UseAuthReturn => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async (userId: string) => {
+    const fetchProfile = async (userId: string, userEmail?: string) => {
       try {
         const { data: profileData } = await supabase
           .from("perfis")
           .select("id, nome_completo, tipo_acesso, organizacao_id, avatar_url")
           .eq("id", userId)
-          .single();
-        setProfile(profileData as Profile | null);
-        setRole(profileData?.tipo_acesso ?? null);
+          .maybeSingle();
+
+        if (profileData) {
+          setProfile(profileData as Profile);
+          setRole(profileData.tipo_acesso ?? "vendedor");
+        } else {
+          const fallback: Profile = {
+            id: userId,
+            nome_completo: userEmail?.split("@")[0] || "Usuário",
+            tipo_acesso: "vendedor",
+            organizacao_id: null,
+          };
+          setProfile(fallback);
+          setRole("vendedor");
+        }
       } catch (e) {
         console.error("Erro ao buscar perfil:", e);
-        setProfile(null);
-        setRole(null);
+        setRole("vendedor");
       }
     };
 
@@ -50,7 +61,7 @@ export const useAuth = (): UseAuthReturn => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchProfile(session.user.id);
+          fetchProfile(session.user.id, session.user.email);
         } else {
           setProfile(null);
           setRole(null);
@@ -63,7 +74,7 @@ export const useAuth = (): UseAuthReturn => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id).finally(() => setLoading(false));
+        fetchProfile(session.user.id, session.user.email).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }

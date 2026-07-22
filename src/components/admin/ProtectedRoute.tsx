@@ -16,11 +16,5 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     return <Navigate to="/admin/login" replace />;
   }
 
-  // Qualquer perfil autenticado (admin, manager, vendedor) acessa o CRM.
-  // O RLS já restringe o que cada um vê no banco.
-  if (!role) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
   return <>{children}</>;
 }

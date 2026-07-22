@@ -57,7 +57,7 @@ export default function Login() {
     const { error } = await signIn(email, password);
     setLoading(false);
     if (error) {
-      setError("E-mail ou senha inválidos.");
+      setError(error.message || "E-mail ou senha inválidos.");
     } else {
       navigate("/admin");
     }
