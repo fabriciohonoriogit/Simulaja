@@ -79,18 +79,125 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
     let bgHeaderImage = "/segment-agro.webp";
     let segmentoLabel = "MULTISEGMENTO, AGRO & FROTAS";
 
+    // Cards do Segmento para a Seção 2 (Padrão: Imóvel)
+    let segmentCards = [
+      {
+        title: "Casas Residenciais",
+        icon: "🏡",
+        image: "/segment-imovel.webp",
+        desc: "Aquisição ou construção da casa dos seus sonhos em bairro nobre ou condomínio fechado sem juros bancários.",
+      },
+      {
+        title: "Apartamentos & Studios",
+        icon: "🏙️",
+        image: "/segment-apartamento.png",
+        desc: "Apartamentos na planta, prontos para morar ou unidades para locação com alta rentabilidade patrimonial.",
+      },
+      {
+        title: "Terrenos & Lotes",
+        icon: "🏞️",
+        image: "/segment-terreno.png",
+        desc: "Compra de terrenos e lotes em áreas de alta valorização para construção futura ou reserva de valor.",
+      },
+      {
+        title: "Alavancagem Imobiliária",
+        icon: "🏢",
+        image: "/segment-investimento.webp",
+        desc: "Aquisição estratégica de galpões, prédios comerciais e imóveis de renda preservando a liquidez de caixa.",
+      },
+    ];
+
     if (categoria === "imovel") {
       bgHeaderImage = "/segment-imovel.webp";
       segmentoLabel = "ESTRUTURAÇÃO IMOBILIÁRIA & PATRIMONIAL";
+      // Já configurado como padrão acima
     } else if (categoria === "veiculo") {
       bgHeaderImage = "/segment-veiculo.webp";
-      segmentoLabel = "VEÍCULOS, ELÉTRICOS & HÍBRIDOS";
+      segmentoLabel = "VEÍCULOS, MOTOS & NÁUTICO";
+      segmentCards = [
+        {
+          title: "Carros, SUVs & Híbridos",
+          icon: "🚗",
+          image: "/segment-veiculo.webp",
+          desc: "Aquisição de automóveis 0km ou seminovos, carros de luxo, elétricos e híbridos com parcelas previsíveis.",
+        },
+        {
+          title: "Motos & Scooters",
+          icon: "🏍️",
+          image: "/segment-moto.webp",
+          desc: "Conquiste sua moto urbana, scooter ou modelos de alta cilindrada para lazer e mobilidade com economia total.",
+        },
+        {
+          title: "Jet Ski & Linha Náutica",
+          icon: "🛥️",
+          image: "/segment-jetski.webp",
+          desc: "Adquira seu Jet Ski, lancha ou equipamentos náuticos de lazer sem incidir juros abusivos de financiamento.",
+        },
+        {
+          title: "Renovação de Frotas",
+          icon: "🏎️",
+          image: "/segment-investimento.webp",
+          desc: "Amplie e renove frotas corporativas de automóveis executivos e utilitários mantendo a liquidez de caixa.",
+        },
+      ];
+    } else if (categoria === "servicos" || categoria === "eletro") {
+      bgHeaderImage = "/segment-investimento.webp";
+      segmentoLabel = "ELETRO, SERVIÇOS & SAÚDE ESTRATÉGICA";
+      segmentCards = [
+        {
+          title: "Eletrodomésticos & Ponta",
+          icon: "🧺",
+          image: "/segment-eletrodomesticos.png",
+          desc: "Equipe sua casa ou empresa com eletrodomésticos modernos, TVs, geladeiras side-by-side e tecnologia.",
+        },
+        {
+          title: "Moto Elétrica & Mobilidade",
+          icon: "⚡",
+          image: "/segment-moto-eletrica.png",
+          desc: "Adquira motos elétricas e soluções de mobilidade urbana sustentável economizando com combustível.",
+        },
+        {
+          title: "Cirurgias Plásticas & Estética",
+          icon: "✨",
+          image: "/segment-cirurgia-plastica.png",
+          desc: "Realize procedimentos estéticos, cirurgias plásticas e tratamentos de saúde com parcelas leves e planejadas.",
+        },
+        {
+          title: "Serviços & Investimento",
+          icon: "🎯",
+          image: "/segment-investimento.webp",
+          desc: "Financie festas de casamento, formaturas, viagens internacionais, estudos e grandes projetos corporativos.",
+        },
+      ];
     } else if (categoria === "pesados") {
       bgHeaderImage = "/segment-agro.webp";
       segmentoLabel = "PESADOS, MÁQUINAS AGRÍCOLAS & CAMINHÕES";
-    } else if (categoria === "servicos") {
-      bgHeaderImage = "/segment-investimento.webp";
-      segmentoLabel = "SERVIÇOS & INVESTIMENTO ESTRATÉGICO";
+      segmentCards = [
+        {
+          title: "Caminhões Extrapesados",
+          icon: "🚛",
+          image: "/segment-veiculo.webp",
+          desc: "Aquisição e ampliação de caminhões extrapesados, cavalos mecânicos e frotas comerciais de carga.",
+        },
+        {
+          title: "Máquinas Agrícolas & Tratores",
+          icon: "🚜",
+          image: "/segment-agro.webp",
+          desc: "Tratores, colheitadeiras e pulverizadores de alta tecnologia para aumentar a produtividade no campo.",
+        },
+        {
+          title: "Carretas & Implementos",
+          icon: "🌾",
+          image: "/segment-agro.webp",
+          desc: "Equipe sua produção agrícola e operações logísticas com carretas graneleiras, baús e reboques.",
+        },
+        {
+          title: "Alavancagem Agro & Frotas",
+          icon: "📈",
+          image: "/segment-investimento.webp",
+          desc: "Expansão patrimonial do agronegócio preservando o capital de giro para insumos durante a safra.",
+        },
+      ];
     }
 
     return (
@@ -316,61 +423,23 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
             </h2>
 
             <div className="grid grid-cols-2 gap-6">
-              {/* Segment 1: Veículos, Elétricos & Híbridos */}
-              <div className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]">
-                <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
-                  <img src="/segment-veiculo.webp" alt="Veículos, Elétricos & Híbridos" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              {segmentCards.map((card, idx) => (
+                <div
+                  key={idx}
+                  className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]"
+                >
+                  <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
+                    <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  </div>
+                  <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                    <span>{card.icon}</span> {card.title}
+                  </h3>
+                  <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
+                    {card.desc}
+                  </p>
                 </div>
-                <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
-                  <span>⚡</span> Veículos, Elétricos &amp; Híbridos
-                </h3>
-                <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
-                  Aquisição de carros 100% elétricos, híbridos plug-in, utilitários e renovação de frotas executivas com previsibilidade de custos.
-                </p>
-              </div>
-
-              {/* Segment 2: Caminhões & Pesados */}
-              <div className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]">
-                <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
-                  <img src="/segment-agro.webp" alt="Caminhões & Pesados" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                </div>
-                <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
-                  <span>🚛</span> Caminhões Extrapesados &amp; Frotas
-                </h3>
-                <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
-                  Aquisição e ampliação de caminhões pesados, cavalos mecânicos, carretas e frotas comerciais sem incidir juros bancários.
-                </p>
-              </div>
-
-              {/* Segment 3: Máquinas Agrícolas */}
-              <div className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]">
-                <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
-                  <img src="/segment-agro.webp" alt="Máquinas Agrícolas" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                </div>
-                <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
-                  <span>🚜</span> Máquinas Agrícolas &amp; Agrobusiness
-                </h3>
-                <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
-                  Tratores, colheitadeiras, pulverizadores e implementos do campo para alavancar a produção mantendo a saúde do caixa.
-                </p>
-              </div>
-
-              {/* Segment 4: Imóveis & Galpões */}
-              <div className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]">
-                <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
-                  <img src="/segment-imovel.webp" alt="Imóveis & Galpões" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                </div>
-                <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
-                  <span>🏢</span> Imóveis, Galpões &amp; Patrimônio
-                </h3>
-                <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
-                  Compra de imóveis residenciais, comerciais, galpões, terrenos ou reformas estratégicas com máxima previsibilidade.
-                </p>
-              </div>
+              ))}
             </div>
           </div>
 
