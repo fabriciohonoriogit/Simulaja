@@ -298,82 +298,78 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
               </div>
 
               <div className="mt-3 pt-2 border-t border-white/10 flex justify-between items-center text-[11px]">
-                <span className="text-slate-300 font-medium">Economia Total Acumulada no Plano:</span>
-                <span className="text-[13px] font-black text-[#10B981]">{fmtFull(economiaSeguroTotal)}</span>
+                <span className="text-slate-300 font-medium">Economia Total Acumulada Sem Seguro:</span>
+                {economiaSeguroTotal > 0 ? (
+                  <span className="text-[13px] font-black text-[#10B981]">{fmtFull(economiaSeguroTotal)}</span>
+                ) : (
+                  <span className="text-[12px] font-black text-[#10B981]">Bonificação Máxima Aplicada</span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* DIVERSOS SEGMENTOS: CARROS HÍBRIDOS, ELÉTRICOS, CAMINHÕES, AGRO & IMÓVEIS */}
+          {/* DIVERSOS SEGMENTOS EM LARANJADO, CENTRALIZADO E COM SOMBREAMENTO 3D */}
           <div className="mb-8">
-            <h2 className="text-[13px] font-black tracking-[0.2em] uppercase text-[#E0A96D] mb-3.5 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#E0A96D]" />
+            <h2 className="text-[14px] font-black tracking-[0.2em] uppercase text-[#FF7A00] mb-4 flex items-center justify-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#FF7A00] shadow-[0_0_10px_#FF7A00]" />
               2. POSSIBILIDADES ESTRATÉGICAS DE USO DO CRÉDITO
             </h2>
 
-            <div className="grid grid-cols-2 gap-5">
-              {/* Segment 1 */}
-              <div className="bg-[#1C2541]/80 border border-white/15 rounded-[18px] p-5 flex gap-4 relative overflow-hidden shadow-lg">
-                <div className="w-[100px] h-[100px] rounded-xl overflow-hidden shrink-0 relative border border-white/20">
-                  <img src="/segment-veiculo.webp" alt="Elétricos e Híbridos" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-cyan-900/30" />
+            <div className="grid grid-cols-2 gap-6">
+              {/* Segment 1: Veículos, Elétricos & Híbridos */}
+              <div className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]">
+                <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
+                  <img src="/segment-veiculo.webp" alt="Veículos, Elétricos & Híbridos" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
-                <div className="flex flex-col justify-center">
-                  <h3 className="text-[14.5px] font-extrabold text-white mb-1 flex items-center gap-1.5">
-                    <span>⚡</span> Veículos Elétricos, Híbridos &amp; Automóveis
-                  </h3>
-                  <p className="text-[11.5px] font-normal text-slate-300 leading-relaxed">
-                    Aquisição de carros 100% elétricos, híbridos plug-in, utilitários e renovação de frotas com previsibilidade de custos.
-                  </p>
-                </div>
+                <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                  <span>⚡</span> Veículos, Elétricos &amp; Híbridos
+                </h3>
+                <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
+                  Aquisição de carros 100% elétricos, híbridos plug-in, utilitários e renovação de frotas executivas com previsibilidade de custos.
+                </p>
               </div>
 
-              {/* Segment 2 */}
-              <div className="bg-[#1C2541]/80 border border-white/15 rounded-[18px] p-5 flex gap-4 relative overflow-hidden shadow-lg">
-                <div className="w-[100px] h-[100px] rounded-xl overflow-hidden shrink-0 relative border border-white/20">
-                  <img src="/segment-agro.webp" alt="Caminhões e Pesados" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-blue-900/30" />
+              {/* Segment 2: Caminhões & Pesados */}
+              <div className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]">
+                <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
+                  <img src="/segment-agro.webp" alt="Caminhões & Pesados" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
-                <div className="flex flex-col justify-center">
-                  <h3 className="text-[14.5px] font-extrabold text-white mb-1 flex items-center gap-1.5">
-                    <span>🚛</span> Caminhões Extrapesados &amp; Frotas Logísticas
-                  </h3>
-                  <p className="text-[11.5px] font-normal text-slate-300 leading-relaxed">
-                    Aquisição e ampliação de caminhões pesados, cavalos mecânicos, carretas e frotas comerciais com parcelas reduzidas.
-                  </p>
-                </div>
+                <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                  <span>🚛</span> Caminhões Extrapesados &amp; Frotas
+                </h3>
+                <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
+                  Aquisição e ampliação de caminhões pesados, cavalos mecânicos, carretas e frotas comerciais sem incidir juros bancários.
+                </p>
               </div>
 
-              {/* Segment 3 */}
-              <div className="bg-[#1C2541]/80 border border-white/15 rounded-[18px] p-5 flex gap-4 relative overflow-hidden shadow-lg">
-                <div className="w-[100px] h-[100px] rounded-xl overflow-hidden shrink-0 relative border border-white/20">
+              {/* Segment 3: Máquinas Agrícolas */}
+              <div className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]">
+                <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
                   <img src="/segment-agro.webp" alt="Máquinas Agrícolas" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-emerald-900/30" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
-                <div className="flex flex-col justify-center">
-                  <h3 className="text-[14.5px] font-extrabold text-white mb-1 flex items-center gap-1.5">
-                    <span>🚜</span> Máquinas Agrícolas &amp; Agrobusiness
-                  </h3>
-                  <p className="text-[11.5px] font-normal text-slate-300 leading-relaxed">
-                    Tratores, colheitadeiras, pulverizadores e implementos do campo para aumentar a produção sem afetar o fluxo de caixa.
-                  </p>
-                </div>
+                <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                  <span>🚜</span> Máquinas Agrícolas &amp; Agrobusiness
+                </h3>
+                <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
+                  Tratores, colheitadeiras, pulverizadores e implementos do campo para alavancar a produção mantendo a saúde do caixa.
+                </p>
               </div>
 
-              {/* Segment 4 */}
-              <div className="bg-[#1C2541]/80 border border-white/15 rounded-[18px] p-5 flex gap-4 relative overflow-hidden shadow-lg">
-                <div className="w-[100px] h-[100px] rounded-xl overflow-hidden shrink-0 relative border border-white/20">
-                  <img src="/segment-imovel.webp" alt="Imóveis & Alavancagem" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-amber-900/30" />
+              {/* Segment 4: Imóveis & Galpões */}
+              <div className="bg-gradient-to-b from-[#1C2541] via-[#16203D] to-[#0B132B] border-2 border-[#FF7A00]/50 rounded-[24px] p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-[0_12px_32px_-6px_rgba(255,122,0,0.35)]">
+                <div className="w-[110px] h-[110px] rounded-2xl overflow-hidden mb-3.5 relative border-2 border-[#FF7A00]/60 shadow-lg">
+                  <img src="/segment-imovel.webp" alt="Imóveis & Galpões" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
-                <div className="flex flex-col justify-center">
-                  <h3 className="text-[14.5px] font-extrabold text-white mb-1 flex items-center gap-1.5">
-                    <span>🏢</span> Imóveis, Galpões &amp; Estruturação Patrimonial
-                  </h3>
-                  <p className="text-[11.5px] font-normal text-slate-300 leading-relaxed">
-                    Compra de imóveis residenciais, comerciais, galpões, terrenos ou reformas expressivas com máxima alavancagem.
-                  </p>
-                </div>
+                <h3 className="text-[15.5px] font-black text-[#FF7A00] mb-1.5 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                  <span>🏢</span> Imóveis, Galpões &amp; Patrimônio
+                </h3>
+                <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed text-center">
+                  Compra de imóveis residenciais, comerciais, galpões, terrenos ou reformas estratégicas com máxima previsibilidade.
+                </p>
               </div>
             </div>
           </div>
