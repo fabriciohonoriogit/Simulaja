@@ -1492,17 +1492,30 @@ export type Database = {
         Returns: Json
       }
       get_my_org_id: { Args: never; Returns: string }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      update_member_role: {
-        Args: { new_role: string; target_user_id: string }
-        Returns: undefined
-      }
+      has_role:
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+      update_member_role:
+        | {
+            Args: { new_role: string; target_user_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: { new_role: string; target_user_id: string }
+            Returns: undefined
+          }
     }
     Enums: {
       app_role: "admin" | "vendedor"
