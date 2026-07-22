@@ -566,43 +566,42 @@ export default function Indicacoes() {
             </div>
           </div>
 
-          <div className="rounded-[12px] p-4 mb-4 relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0c1a30 0%, #122040 100%)", border: "1px solid rgba(26,64,128,0.4)", boxShadow: "0 6px 30px rgba(6,15,30,0.2)" }}>
-            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, #1a4080, #e8aa20, #f5c842, #e8aa20, #1a4080)" }} />
-            <p className="text-[0.6rem] font-bold tracking-[0.15em] uppercase text-white/90 mb-3 flex items-center gap-1.5">
+          <div className="rounded-2xl p-5 mb-5 relative overflow-hidden shadow-xl border border-white/20" style={{ background: "linear-gradient(160deg, #0c1a30 0%, #122040 100%)", boxShadow: "0 10px 30px rgba(6,15,30,0.3)" }}>
+            <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: "linear-gradient(90deg, #1a4080, #e8aa20, #f5c842, #e8aa20, #1a4080)" }} />
+            <p className="text-[0.65rem] font-black tracking-[0.15em] uppercase text-white/90 mb-3 flex items-center gap-1.5">
               <span className="text-sm opacity-90">✅</span> Resultados da Simulação
             </p>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/5 border border-white/10 rounded-md p-2.5 text-center transition-all hover:bg-white/10" style={{ background: "rgba(200,144,10,0.12)", borderColor: "rgba(200,144,10,0.3)" }}>
-                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Parcela Pós-Contemplação</p>
-                <p className="text-base sm:text-lg font-bold font-mono text-[#f5c842]">{fmt(parcelaPos > 0 ? parcelaPos : g.r50)}</p>
+              <div className="bg-white/10 backdrop-blur-md border border-amber-500/30 rounded-xl p-3 text-center transition-all hover:bg-white/15" style={{ background: "rgba(200,144,10,0.15)" }}>
+                <p className="text-[0.55rem] font-extrabold tracking-wider uppercase text-amber-200 mb-0.5">Parcela Pós-Contemplação</p>
+                <p className="text-base sm:text-xl font-black font-mono text-[#f5c842] drop-shadow-sm">{fmt(parcelaPos > 0 ? parcelaPos : g.r50)}</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
-                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Crédito Disponível</p>
-                <p className="text-xs font-medium font-mono text-white/90">{fmt(creditoDisponivel)}</p>
+              <div className="bg-white/5 backdrop-blur-md border border-white/15 rounded-xl p-3 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.55rem] font-bold tracking-wider uppercase text-slate-300 mb-0.5">Crédito Disponível</p>
+                <p className="text-xs font-bold font-mono text-white">{fmt(creditoDisponivel)}</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
-                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Saldo Devedor</p>
-                <p className="text-xs font-medium font-mono text-white/90">{fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}</p>
+              <div className="bg-white/5 backdrop-blur-md border border-white/15 rounded-xl p-3 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.55rem] font-bold tracking-wider uppercase text-slate-300 mb-0.5">Saldo Devedor</p>
+                <p className="text-xs font-bold font-mono text-white">{fmt(saldoDevedorPosLance > 0 ? saldoDevedorPosLance : saldoDevedorBruto)}</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
-                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Prazo Restante</p>
-                <p className="text-xs font-medium font-mono text-white/90">{prazoRestante} x</p>
+              <div className="bg-white/5 backdrop-blur-md border border-white/15 rounded-xl p-3 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.55rem] font-bold tracking-wider uppercase text-slate-300 mb-0.5">Prazo Restante</p>
+                <p className="text-xs font-bold font-mono text-white">{prazoRestante} x</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
-                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Taxa Adm</p>
-                <p className="text-xs font-medium font-mono text-white/90">{tx}%</p>
+              <div className="bg-white/5 backdrop-blur-md border border-white/15 rounded-xl p-3 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.55rem] font-bold tracking-wider uppercase text-slate-300 mb-0.5">Taxa Adm</p>
+                <p className="text-xs font-bold font-mono text-white">{tx}%</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-md p-2 text-center transition-all hover:bg-white/10">
-                <p className="text-[0.5rem] font-bold tracking-wider uppercase text-white/60 mb-0.5">Fundo Reserva</p>
-                <p className="text-xs font-medium font-mono text-white/90">{fr}%</p>
+              <div className="bg-white/5 backdrop-blur-md border border-white/15 rounded-xl p-3 text-center transition-all hover:bg-white/10">
+                <p className="text-[0.55rem] font-bold tracking-wider uppercase text-slate-300 mb-0.5">Fundo Reserva</p>
+                <p className="text-xs font-bold font-mono text-white">{fr}%</p>
               </div>
             </div>
           </div>
 
-
           <div className="space-y-3 mb-5">
-            <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">📋 Dados do Cliente</p>
+            <p className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-2">📋 Dados do Cliente Indicado</p>
             <div className="relative">
               <Input 
                 placeholder="Nome do cliente *" 
@@ -623,19 +622,19 @@ export default function Indicacoes() {
             </div>
           </div>
 
-          <Button onClick={simular} disabled={bloqueado} className="w-full h-12 rounded-xl font-bold text-[15px] bg-[#f47920] hover:bg-[#e06a1b] text-white shadow-lg transition-all disabled:opacity-50">
-            Simule Já <ChevronRight className="ml-2 w-4 h-4" />
+          <Button onClick={simular} disabled={bloqueado} className="w-full h-12 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-[#FF6B00] to-[#E65100] hover:from-[#FF7A00] hover:to-[#FF6B00] text-white shadow-xl transition-all hover:-translate-y-0.5 disabled:opacity-50">
+            Simular para Cliente Indicação <ChevronRight className="ml-2 w-4 h-4" />
           </Button>
 
           {resultado && (
-            <div ref={resultRef} className="mt-6 p-5 border border-slate-200 rounded-xl animate-in fade-in slide-in-from-bottom-4 bg-slate-50">
-              <h3 className="font-bold text-slate-800 mb-4 text-center text-sm">Resultado Gerado</h3>
+            <div ref={resultRef} className="mt-6 p-5 border border-emerald-200 rounded-2xl animate-in fade-in slide-in-from-bottom-4 bg-emerald-50/70 shadow-lg">
+              <h3 className="font-black text-emerald-900 mb-4 text-center text-xs uppercase tracking-wider">Simulação da Indicação Gerada!</h3>
               <div className="grid grid-cols-2 gap-3">
-                <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-10 text-[11px] bg-white">
-                  <FileText className="mr-2 w-3.5 h-3.5" /> Baixar PDF
+                <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-11 text-[11px] bg-white rounded-xl shadow-sm hover:bg-slate-50">
+                  <FileText className="mr-2 w-4 h-4 text-slate-500" /> Baixar PDF
                 </Button>
-                <Button onClick={handleShareWhatsApp} className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold h-10 text-[11px] shadow-sm">
-                  <Share2 className="mr-2 w-3.5 h-3.5" /> Enviar
+                <Button onClick={handleShareWhatsApp} className="bg-gradient-to-r from-[#25D366] to-[#1ebd59] hover:from-[#1ebd59] hover:to-[#17a84e] text-white font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5">
+                  <Share2 className="mr-2 w-4 h-4" /> Enviar WhatsApp
                 </Button>
               </div>
             </div>

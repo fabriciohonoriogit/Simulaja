@@ -450,11 +450,15 @@ export default function Simulador() {
             </div>
           )}
 
-          <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4 flex flex-col items-center justify-center mb-4">
-            <p className="text-[9px] font-bold text-green-600 uppercase tracking-widest mb-1">
+          {/* Card da Parcela Reduzida */}
+          <div className="rounded-2xl p-5 text-center mb-5 relative overflow-hidden shadow-lg border-2 border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50/60 to-emerald-100/50">
+            <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600" />
+            <p className="text-[0.65rem] font-black uppercase tracking-widest mb-1 text-emerald-800">
               {g.isPlanoGold ? (effectiveMode === "linear" ? "Plano Golden Linear" : "PLANO GOLD") : (effectiveMode === "linear" ? "Parcela Linear" : "Parcela Reduzida (50%)")}
             </p>
-            <p className="text-2xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
+            <p className="text-3xl sm:text-4xl font-black text-emerald-700 font-mono drop-shadow-sm">
+              {fmt(selectedInstallment)}
+            </p>
           </div>
 
           {/* Características do Grupo */}
@@ -463,13 +467,13 @@ export default function Simulador() {
             if (!c) return null;
             const contemResolucao285 = c.caracteristicas.includes("RESOLUÇAO 285") || c.caracteristicas.includes("RESOLUÇÃO 285");
             return (
-              <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50 text-left space-y-3 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-300" />
-                <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+              <div className="mb-6 p-5 rounded-2xl border border-slate-200/80 bg-white text-left space-y-3 shadow-md relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-600 via-amber-500 to-emerald-500" />
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
                     <span>⚙️</span> Características do Grupo {c.grupo}
                   </span>
-                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-100">
+                  <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                     Reajuste: {c.reajuste}
                   </span>
                 </div>
@@ -477,37 +481,37 @@ export default function Simulador() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                   <div>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">1ª Assembleia</p>
-                    <p className="font-semibold text-foreground">{c.primeiraAssembleia}</p>
+                    <p className="font-semibold text-slate-800">{c.primeiraAssembleia}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Próxima Assembleia</p>
-                    <p className="font-semibold text-foreground">{c.proximaAssembleia}</p>
+                    <p className="font-semibold text-slate-800">{c.proximaAssembleia}</p>
                   </div>
                   {MEDIA_LANCES_GRUPOS[c.grupo] !== undefined && (
                     <div className="col-span-2 sm:col-span-1">
-                      <p className="text-[9px] font-bold text-green-600 uppercase font-sans">Média Lance Contemplado</p>
-                      <p className="font-bold text-green-800 font-mono">{MEDIA_LANCES_GRUPOS[c.grupo].toFixed(2)}%</p>
+                      <p className="text-[9px] font-bold text-emerald-600 uppercase font-sans">Média Lance Contemplado</p>
+                      <p className="font-bold text-emerald-700 font-mono">{MEDIA_LANCES_GRUPOS[c.grupo].toFixed(2)}%</p>
                     </div>
                   )}
                 </div>
 
-                <div className="text-xs space-y-2 pt-1 border-t border-slate-200/60">
+                <div className="text-xs space-y-2 pt-2 border-t border-slate-100">
                   <div>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Ordem de Contemplação</p>
-                    <p className="text-foreground leading-relaxed italic">{c.ordemContemplacao}</p>
+                    <p className="text-slate-700 leading-relaxed italic">{c.ordemContemplacao}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Regras de Lance & Diluição</p>
-                    <p className="text-foreground leading-relaxed">{c.opcaoDiluir}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Regras de Lance &amp; Diluição</p>
+                    <p className="text-slate-700 leading-relaxed">{c.opcaoDiluir}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Regra de Reajuste Anual</p>
-                    <p className="text-foreground leading-relaxed">{c.regraReajuste}</p>
+                    <p className="text-slate-700 leading-relaxed">{c.regraReajuste}</p>
                   </div>
                 </div>
 
                 {contemResolucao285 && (
-                  <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-amber-800 font-bold leading-relaxed">
+                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[10px] text-amber-900 font-bold leading-relaxed">
                     ⚠️ DEVIDO À RESOLUÇÃO 285, O GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA.
                   </div>
                 )}
@@ -541,19 +545,19 @@ export default function Simulador() {
             </div>
           </div>
 
-          <Button onClick={confirmar} className="w-full h-12 rounded-xl font-bold text-[15px] bg-[#051125] hover:bg-[#0a1e3f] text-white shadow-lg transition-all">
+          <Button onClick={confirmar} className="w-full h-12 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-[#1E293B] hover:to-[#334155] text-white shadow-xl transition-all hover:-translate-y-0.5">
             Simular Agora <ChevronRight className="ml-2 w-4 h-4" />
           </Button>
 
           {resultado && (
-            <div className="mt-6 p-5 border border-slate-200 rounded-xl animate-in fade-in slide-in-from-bottom-4 bg-slate-50">
-              <h3 className="font-bold text-slate-800 mb-4 text-center text-sm">Resultado Gerado</h3>
+            <div className="mt-6 p-5 border border-emerald-200 rounded-2xl animate-in fade-in slide-in-from-bottom-4 bg-emerald-50/60 shadow-lg">
+              <h3 className="font-extrabold text-emerald-900 mb-4 text-center text-xs uppercase tracking-wider">Simulação Gerada com Sucesso!</h3>
               <div className="grid grid-cols-2 gap-3">
-                <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-10 text-[11px] bg-white">
-                  <FileText className="mr-2 w-3.5 h-3.5" /> Baixar PDF
+                <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-11 text-[11px] bg-white rounded-xl shadow-sm hover:bg-slate-50">
+                  <FileText className="mr-2 w-4 h-4 text-slate-500" /> Baixar PDF
                 </Button>
-                <Button onClick={handleShareWhatsApp} className="bg-[#25D366] hover:bg-[#1fb355] text-white font-bold h-10 text-[11px] shadow-sm">
-                  <Share2 className="mr-2 w-3.5 h-3.5" /> Enviar
+                <Button onClick={handleShareWhatsApp} className="bg-gradient-to-r from-[#25D366] to-[#1ebd59] hover:from-[#1ebd59] hover:to-[#17a84e] text-white font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5">
+                  <Share2 className="mr-2 w-4 h-4" /> Enviar WhatsApp
                 </Button>
               </div>
             </div>
