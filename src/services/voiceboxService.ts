@@ -39,21 +39,20 @@ export const voiceboxService = {
     const nome = params.clienteNome?.trim() || "Cliente";
     const credFmt = params.credito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     const parcFmt = params.parcelaInicial.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    const semSeguroFmt = params.parcelaSemSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     const posFmt = params.parcelaPos.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     const consultor = params.consultorNome || "Fabricio Honório";
 
     return `Olá, ${nome}! Aqui é o ${consultor}, Gestor de Negócios e Especialista em Consórcios do Consórcio Magalu.
 
-Preparei um estudo estratégico exclusivo para o seu plano no Grupo ${params.grupo}.
+Preparei um estudo estratégico exclusivo para a sua aquisição no Grupo ${params.grupo}.
 
-Conseguimos estruturar um crédito integral de ${credFmt} com uma parcela reduzida de apenas ${parcFmt} até a contemplação.
+Estruturamos a simulação com um crédito de ${credFmt} e uma parcela inicial reduzida de apenas ${parcFmt} até a contemplação.
 
-E temos uma excelente notícia: optando pela contratação com bonificação sem seguro, a sua parcela cai para apenas ${semSeguroFmt}!
+Vale lembrar que o valor da sua parcela após a contemplação dependerá da modalidade de contemplação:
+- Se você for contemplado via sorteio, a sua parcela pós-contemplação fica em aproximadamente ${posFmt}.
+- Se a contemplação for realizada via lance fixo ou lance embutido, o valor abatido reduz ainda mais o seu saldo devedor e ajusta a parcela de acordo com a sua estratégia.
 
-Além disso, após a contemplação por sorteio ou lance, a sua parcela ajustada fica em aproximadamente ${posFmt}, permitindo alavancar seu patrimônio, veículos ou máquinas agrícolas com total previsibilidade e sem pagar juros bancários.
-
-Estou à disposição para tirarmos qualquer dúvida e garantirmos a sua cota. Um forte abraço!`;
+Dessa forma, você conquista seu objetivo com total planejamento e sem pagar juros bancários. Estou à disposição para tirar qualquer dúvida e garantir a sua cota! Um abraço!`;
   },
 
   /**
