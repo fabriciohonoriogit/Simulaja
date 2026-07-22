@@ -30,6 +30,8 @@ import { useSimuladorStore } from "@/stores/simuladorStore";
 import { ResultadosSimulacao } from "./ResultadosSimulacao";
 import { SimulacaoData } from "@/schemas/simulacao";
 import { BannerGenerator } from "@/components/BannerGenerator";
+import { NotebookLMPresentation } from "@/components/NotebookLMPresentation";
+import { generateNotebookLMPdfFromRef } from "@/utils/generateNotebookLMPdf";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 
 const sliderThumbStyles = `
@@ -335,26 +337,21 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     });
   };
 
-  const handleGerarApresentacaoLM = () => {
-    const res = resultado || (isInternal ? g : null);
-    if (!res) return;
+  const notebookRef = useRef<HTMLDivElement>(null);
 
-    generateNotebookLMPdf({
-      grupo: res,
-      categoria,
-      paymentMode: effectiveMode,
-      installmentValue: selectedInstallment,
-      simNome,
-      simWpp,
-      consultorNome: profile?.nome || searchParams.get("nome") || 'Fabricio Honório',
-      lanceDinheiroPct,
-      lanceEmbutidoPct,
-      incluirSeguro,
+  const handleGerarApresentacaoLM = async () => {
+    if (!notebookRef.current) return;
+
+    toast({
+      title: "Gerando Apresentação...",
+      description: "Processando os slides executivos no estilo Notebook LM...",
     });
+
+    await generateNotebookLMPdfFromRef(notebookRef.current, simNome);
 
     toast({
       title: "Apresentação Notebook LM Gerada!",
-      description: "Estudo estratégico executivo baixado com sucesso em PDF.",
+      description: "Estudo estratégico executivo em PDF baixado com sucesso.",
     });
   };
 
@@ -1313,6 +1310,19 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             categoria={categoria}
             paymentMode={effectiveMode}
             installmentValue={selectedInstallment}
+          />
+          <NotebookLMPresentation
+            ref={notebookRef}
+            grupo={resultado || g}
+            categoria={categoria}
+            paymentMode={effectiveMode}
+            installmentValue={selectedInstallment}
+            simNome={simNome}
+            simWpp={simWpp}
+            consultorNome={profile?.nome || searchParams.get("nome") || 'Fabricio Honório'}
+            lanceDinheiroPct={lanceDinheiroPct}
+            lanceEmbutidoPct={lanceEmbutidoPct}
+            incluirSeguro={incluirSeguro}
           />
         </div>
       )}
