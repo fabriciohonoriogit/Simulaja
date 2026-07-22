@@ -508,9 +508,9 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       await new Promise(res => setTimeout(res, 300));
       
       const canvas = await html2canvas(bannerElement, { 
-        scale: 1, 
+        scale: 2, 
         useCORS: true, 
-        logging: true,
+        logging: false,
         backgroundColor: null
       });
       

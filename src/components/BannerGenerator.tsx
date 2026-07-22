@@ -9,186 +9,195 @@ interface BannerGeneratorProps {
   installmentValue: number;
 }
 
-const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const fmt = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
   ({ grupo, categoria, subCategoria, paymentMode, installmentValue }, ref) => {
-    // Determine background and title based on category and subCategory
+    if (!grupo) return null;
+
+    // Background Image Selection based on category
     let bgImage = '/segment-imovel.webp';
-    let title = 'CONSÓRCIO IMÓVEL';
-    
+    let headlineVerb = 'INVESTIR';
+    let headlineComplement = 'NOS SEUS SONHOS';
+    let modalidadeStr = 'CONSTRUÇÃO / REFORMA';
+    let categoryTags = 'IMÓVEIS  •  CONSTRUÇÃO  •  REFORMA  •  INVESTIMENTO';
+
     if (categoria === 'imovel') {
-      bgImage = '/segment-imovel.webp'; // Casa
-      title = 'CONSÓRCIO IMÓVEL';
+      bgImage = '/segment-imovel.webp';
+      headlineVerb = 'INVESTIR';
+      headlineComplement = 'NOS SEUS SONHOS';
+      modalidadeStr = 'AQUISIÇÃO / REFORMA';
+      categoryTags = 'IMÓVEIS  •  CONSTRUÇÃO  •  REFORMA  •  INVESTIMENTO';
     } else if (categoria === 'veiculo') {
-      const veiculoOptions = [
-        { bg: '/segment-veiculo.webp', title: 'CONSÓRCIO DE VEÍCULOS' },
-        { bg: '/segment-moto.webp', title: 'CONSÓRCIO DE MOTOS' },
-        { bg: '/segment-nautico.webp', title: 'CONSÓRCIO NÁUTICO' }
-      ];
-      let selectedOption = veiculoOptions[0];
-      
-      if (subCategoria === 'moto') selectedOption = veiculoOptions[1];
-      else if (subCategoria === 'jet ski' || subCategoria === 'náutico') selectedOption = veiculoOptions[2];
-      else if (!subCategoria) {
-        // Randomly pick one to provide variety
-        selectedOption = veiculoOptions[Math.floor(Math.random() * veiculoOptions.length)];
-      }
-
-      bgImage = selectedOption.bg;
-      title = selectedOption.title;
-      
+      bgImage = subCategoria === 'moto' ? '/segment-moto.webp' : (subCategoria === 'jet ski' || subCategoria === 'náutico') ? '/segment-nautico.webp' : '/segment-veiculo.webp';
+      headlineVerb = 'CONQUISTAR';
+      headlineComplement = 'SEU NOVO VEÍCULO';
+      modalidadeStr = subCategoria === 'moto' ? 'MOTOCICLETAS' : 'AUTOMÓVEIS / LEVES';
+      categoryTags = 'CARROS  •  MOTOS  •  UTILITÁRIOS  •  LIBERDADE';
     } else if (categoria === 'pesados') {
-      const pesadosOptions = [
-        { bg: '/segment-agro.webp', title: 'CONSÓRCIO DE PESADOS' },
-        { bg: '/segment-veiculo.webp', title: 'CONSÓRCIO DE VANS' },
-        { bg: '/segment-agro.webp', title: 'CONSÓRCIO AGRÍCOLA' }
-      ];
-      let selectedOption = pesadosOptions[0];
-
-      if (subCategoria === 'caminhão') selectedOption = pesadosOptions[0];
-      else if (subCategoria === 'vans') selectedOption = pesadosOptions[1];
-      else if (subCategoria === 'tratores') selectedOption = pesadosOptions[2];
-      else if (!subCategoria) {
-        selectedOption = pesadosOptions[Math.floor(Math.random() * pesadosOptions.length)];
-      }
-
-      bgImage = selectedOption.bg;
-      title = selectedOption.title;
+      bgImage = '/segment-agro.webp';
+      headlineVerb = 'ACELERAR';
+      headlineComplement = 'SEUS NEGÓCIOS';
+      modalidadeStr = 'CAMINHÕES / MÁQUINAS';
+      categoryTags = 'CAMINHÕES  •  TRATORES  •  MÁQUINAS  •  AGRO';
     } else if (categoria === 'servicos') {
       bgImage = '/segment-investimento.webp';
-      title = 'CONSÓRCIO DE SERVIÇOS';
+      headlineVerb = 'PLANEJAR';
+      headlineComplement = 'SEU FUTURO';
+      modalidadeStr = 'SERVIÇOS / VIAGENS';
+      categoryTags = 'VIAGENS  •  ESTUDOS  •  FESTAS  •  REFORMAS';
     }
 
-    // Determine values to show
-    if (!grupo) return null;
-    const taxaValue = grupo.txLinear || grupo.tx5050 || 18;
+    const isLinear = paymentMode === 'linear';
+    const parcelaLabel = isLinear ? 'Parcela linear' : 'Parcelas a partir de';
+    const subNotaText = isLinear 
+      ? 'Plano promocional com parcela fixa linear*' 
+      : 'Parcela reduzida até contemplação*';
+
+    // Estimativa de economia para destacar na tarja laranja
+    const economiaEstimada = Math.round(grupo.credito * 0.05);
 
     return (
       <div
         id="banner-generator-container"
         ref={ref}
-        className="fixed top-0 left-[-9999px] w-[1080px] h-[1920px] bg-cover bg-center flex flex-col overflow-hidden"
+        className="fixed top-0 left-[-9999px] w-[1080px] h-[1920px] bg-cover bg-center flex flex-col justify-between overflow-hidden font-sans text-white select-none"
         style={{
           backgroundImage: `url(${bgImage})`,
           opacity: 1,
           pointerEvents: 'none',
           zIndex: -9999,
-          transform: 'scale(1)'
+          transform: 'scale(1)',
         }}
       >
-        {/* Soft light overlay on the left to make text pop, and a bottom gradient for the footer */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/40 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#003876]/90 via-transparent to-transparent pointer-events-none" />
+        {/* Layer 1: Dark gradients top and bottom to contrast header text and background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/90 pointer-events-none" />
 
-        {/* Content Container */}
-        <div className="relative z-10 w-full h-full p-[80px]">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-[10px]">
-            <div className="flex flex-col mt-[40px]">
-              <span className="text-[45px] font-medium text-[#1e3a8a] tracking-widest uppercase">CONSÓRCIO</span>
-              <span className="text-[130px] font-black leading-none text-[#1e40af] uppercase">
-                {title.replace('CONSÓRCIO ', '')}
-              </span>
-            </div>
-            {/* Logo */}
-            <div className="flex flex-col items-end mt-[20px]">
-              <img src="/logo-consorcio-magalu.png" alt="Consórcio Magalu" className="h-[80px] object-contain" />
-            </div>
-          </div>
-
-          {/* Credit Value */}
-          <div className="flex items-end mb-[50px] drop-shadow-2xl">
-            <span className="text-[180px] font-black leading-none text-[#2563eb]" style={{ WebkitTextStroke: '2px white' }}>
-              {Math.floor(grupo.credito / 1000)}
+        {/* TOP HEADER SECTION */}
+        <div className="relative z-10 pt-[70px] px-[80px] flex flex-col items-center text-center">
+          {/* Brand Header */}
+          <div className="flex flex-col items-center mb-[30px]">
+            <span className="text-[24px] font-bold tracking-[0.35em] text-white/90 uppercase">
+              CONSÓRCIO
             </span>
-            <span className="text-[80px] font-black text-[#1e40af] mb-[25px] ml-[20px] drop-shadow-md">
-              MIL
+            <span className="text-[62px] font-black tracking-tight leading-none text-white font-sans">
+              Magalu
             </span>
           </div>
 
-          {/* Glassmorphism Panels */}
-          <div className="flex flex-col gap-[30px] w-[580px]">
-            {/* Main Installment Panel */}
-            <div className="backdrop-blur-xl bg-white/60 border border-white/80 rounded-[40px] p-[45px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col items-start relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-transparent"></div>
-              <div className="relative z-10 w-full">
-                <span className="text-[32px] font-black uppercase tracking-wider mb-[10px] text-gray-800">
-                  {paymentMode === 'linear' ? 'PARCELA LINEAR' : 'PARCELA A PARTIR'}
-                </span>
-                <div className="flex items-start">
-                  <span className="text-[50px] font-black mt-[15px] mr-[15px] text-[#1e40af]">R$</span>
-                  <span className="text-[140px] font-black text-[#1e40af] leading-none tracking-tighter drop-shadow-sm">
-                    {installmentValue?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {/* Headline */}
+          <h1 className="text-[44px] font-extrabold tracking-wider uppercase leading-tight text-white drop-shadow-md">
+            TODO DIA É DIA DE<br />
+            <span className="text-[#FF5500] font-black">{headlineVerb}</span>{' '}
+            <span>{headlineComplement}</span>
+          </h1>
+        </div>
+
+        {/* MIDDLE SECTION: MAIN FLOATING DARK GLASS CARD */}
+        <div className="relative z-10 px-[80px] my-auto flex justify-center">
+          <div className="w-full max-w-[940px] bg-[#101216]/85 backdrop-blur-xl border border-white/20 rounded-[40px] p-[55px] px-[65px] shadow-[0_30px_90px_rgba(0,0,0,0.8)] flex flex-col items-center text-center relative overflow-hidden">
+            {/* Subtle Top Glow line on the card */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF5500]/60 to-transparent" />
+
+            {/* CRÉDITO SECTION */}
+            <span className="text-[26px] font-bold tracking-[0.3em] text-white/80 uppercase mb-[6px]">
+              CRÉDITO
+            </span>
+            <div className="text-[92px] font-black leading-none tracking-tight text-[#FF5500] drop-shadow-[0_4px_20px_rgba(255,85,0,0.3)] mb-[24px]">
+              {fmt(grupo.credito)}
+            </div>
+
+            {/* THIN SEPARATOR LINE */}
+            <div className="w-full h-[1px] bg-white/15 mb-[24px]" />
+
+            {/* PARCELA SECTION */}
+            <span className="text-[30px] font-semibold text-white/90 mb-[8px]">
+              {parcelaLabel}
+            </span>
+            <div className="text-[126px] font-black leading-none tracking-tighter text-white drop-shadow-lg mb-[32px]">
+              {fmt(installmentValue)}
+            </div>
+
+            {/* TWO COLUMN FEATURE BAR (Bounded by 2 horizontal lines) */}
+            <div className="w-full border-y border-white/15 py-[24px] my-[6px] flex items-center justify-around">
+              {/* Column 1: Prazo */}
+              <div className="flex items-center gap-[18px]">
+                <div className="w-[58px] h-[58px] rounded-xl border-2 border-[#FF5500] flex items-center justify-center text-[#FF5500]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-[32px] h-[32px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[18px] font-bold tracking-wider text-white/70 uppercase">
+                    PRAZO DE ATÉ
+                  </span>
+                  <span className="text-[28px] font-black text-white leading-tight">
+                    {grupo.prazo} MESES
+                  </span>
+                </div>
+              </div>
+
+              {/* Middle Separator */}
+              <div className="w-[1px] h-[55px] bg-white/20" />
+
+              {/* Column 2: Modalidade */}
+              <div className="flex items-center gap-[18px]">
+                <div className="w-[58px] h-[58px] rounded-xl border-2 border-[#FF5500] flex items-center justify-center text-[#FF5500]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-[32px] h-[32px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[18px] font-bold tracking-wider text-white/70 uppercase">
+                    MODALIDADE
+                  </span>
+                  <span className="text-[26px] font-black text-white leading-tight">
+                    {modalidadeStr}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Minor Info Panels - Unified in one card */}
-            <div className="backdrop-blur-xl bg-white/50 border border-white/70 rounded-[40px] p-[45px] flex flex-col gap-[35px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/70 to-transparent"></div>
-              <div className="relative z-10 flex flex-col gap-[35px] w-full">
-                
-                <div className="flex items-center gap-[30px]">
-                  <div className="w-[85px] h-[85px] rounded-full bg-white flex items-center justify-center text-[#1e40af] font-black text-[45px] shadow-md border border-gray-100">
-                    %
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[28px] font-bold text-gray-800 leading-tight">A MENOR</span>
-                    <span className="text-[28px] font-bold text-[#1e40af] leading-tight">TAXA DO MERCADO</span>
-                  </div>
-                </div>
+            {/* SUB NOTE */}
+            <p className="text-[23px] font-medium text-white/90 mt-[26px] mb-[24px]">
+              {subNotaText}
+            </p>
 
-                <div className="w-full h-[2px] bg-white/80" />
-
-                <div className="flex items-center gap-[30px]">
-                  <div className="w-[85px] h-[85px] rounded-full bg-white flex items-center justify-center text-[#1e40af] font-black text-[40px] shadow-md border border-gray-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[28px] font-bold text-gray-800 leading-tight">TAXA DE APENAS</span>
-                    <span className="text-[60px] font-black text-[#1e40af] leading-none">{taxaValue}%</span>
-                  </div>
-                </div>
-
-                <div className="w-full h-[2px] bg-white/80" />
-
-                <div className="flex items-center gap-[30px]">
-                  <div className="w-[85px] h-[85px] rounded-full bg-white flex items-center justify-center text-[#1e40af] font-black text-[40px] shadow-md border border-gray-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[65px] font-black text-[#1e40af] leading-none">{grupo.prazo}</span>
-                    <span className="text-[28px] font-bold text-gray-800 uppercase tracking-widest leading-tight">MESES</span>
-                  </div>
-                </div>
-
-              </div>
+            {/* ORANGE PILL BADGE */}
+            <div className="w-full bg-[#FF5500] rounded-full py-[18px] px-[20px] flex items-center justify-center text-center shadow-[0_10px_30px_rgba(255,85,0,0.4)]">
+              <span className="text-[21px] font-black uppercase tracking-wide text-white">
+                SEM ENTRADA &nbsp;•&nbsp; SEM JUROS &nbsp;•&nbsp; ECONOMIA DE ATÉ R$ {economiaEstimada.toLocaleString('pt-BR')}
+              </span>
             </div>
           </div>
+        </div>
 
-          {/* Bottom Call to Action and URL */}
-          <div className="absolute bottom-[230px] right-[80px]">
-            <div className="bg-gradient-to-br from-[#003876] to-[#00183b] border border-[#3b82f6]/40 rounded-full w-[420px] h-[420px] flex flex-col items-center justify-center text-center p-[45px] shadow-[0_20px_60px_rgba(0,20,50,0.6)] relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-400/20 via-transparent to-transparent"></div>
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="w-[65px] h-[65px] rounded-full border-[3px] border-white/90 flex items-center justify-center text-white text-[35px] font-bold mb-[25px] shadow-sm">
-                  ✓
-                </div>
-                <span className="text-[38px] font-medium text-white mb-[8px] leading-tight">Conquiste o</span>
-                <span className="text-[48px] font-serif italic text-[#93c5fd] mb-[8px] leading-tight">seu imóvel</span>
-                <span className="text-[32px] font-light text-white leading-tight">com planejamento<br/>e tranquilidade.</span>
-              </div>
-            </div>
+        {/* FOOTER SECTION */}
+        <div className="relative z-10 pb-[65px] px-[80px] flex flex-col items-center text-center gap-[18px]">
+          {/* Category Bullet Tags */}
+          <div className="text-[21px] font-extrabold tracking-[0.2em] text-white/95 uppercase drop-shadow">
+            {categoryTags}
           </div>
 
-          {/* Footer Bar */}
-          <div className="absolute bottom-[70px] left-[80px] right-[80px] backdrop-blur-xl bg-gradient-to-r from-transparent via-[#003876]/80 to-transparent border border-white/20 rounded-full py-[25px] flex items-center justify-center gap-[20px] text-white shadow-xl">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-            <span className="text-[32px] font-medium tracking-wider">www.oespecialistaconsorcio.com.br</span>
+          {/* Magalu Brand Footer Logo */}
+          <div className="flex items-center gap-[10px]">
+            <span className="text-[20px] font-bold tracking-[0.25em] text-white/80 uppercase">
+              CONSÓRCIO
+            </span>
+            <span className="text-[34px] font-black tracking-tight leading-none text-white">
+              Magalu
+            </span>
           </div>
 
+          {/* Website URL */}
+          <div className="text-[24px] font-semibold text-white/80 tracking-wider font-mono">
+            www.oespecialistaconsorcio.com.br
+          </div>
         </div>
       </div>
     );
