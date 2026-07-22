@@ -1200,7 +1200,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     Para condições especiais e lances personalizados <strong className="text-secondary">fale com o especialista ✉️</strong>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 border-t border-border mt-4">
+                  <div className={`grid gap-2 pt-4 border-t border-border mt-4 ${isInternal ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
                     <button
                       onClick={handleEnviarWpp}
                       className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-lg transition-all"
@@ -1226,19 +1226,21 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                       </svg>
                       <span>Imagem</span>
                     </button>
-                    <button
-                      onClick={handleGerarApresentacaoLM}
-                      className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0d1b2a] via-[#1b263b] to-[#0f172a] hover:from-[#1b263b] hover:to-[#1e293b] text-white shadow-lg border border-amber-500/40 transition-all group"
-                      title="Gerar Estudo Estratégico em PDF no estilo Notebook LM"
-                    >
-                      <svg className="w-4 h-4 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                        <path d="M12 6h4" />
-                        <path d="M12 10h4" />
-                      </svg>
-                      <span className="whitespace-nowrap">Apresentação LM</span>
-                    </button>
+                    {isInternal && (
+                      <button
+                        onClick={handleGerarApresentacaoLM}
+                        className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0d1b2a] via-[#1b263b] to-[#0f172a] hover:from-[#1b263b] hover:to-[#1e293b] text-white shadow-lg border border-amber-500/40 transition-all group"
+                        title="Gerar Estudo Estratégico em PDF no estilo Notebook LM"
+                      >
+                        <svg className="w-4 h-4 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                          <path d="M12 6h4" />
+                          <path d="M12 10h4" />
+                        </svg>
+                        <span className="whitespace-nowrap">Apresentação LM</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
