@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, role } = useAuth();
 
   if (loading) {
     return (
@@ -13,6 +13,12 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }
 
   if (!user) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // Qualquer perfil autenticado (admin, manager, vendedor) acessa o CRM.
+  // O RLS já restringe o que cada um vê no banco.
+  if (!role) {
     return <Navigate to="/admin/login" replace />;
   }
 
