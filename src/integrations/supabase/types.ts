@@ -1491,6 +1491,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_convite_by_token: { Args: { p_token: string }; Returns: Json }
       get_my_org_id: { Args: never; Returns: string }
       has_role:
         | {

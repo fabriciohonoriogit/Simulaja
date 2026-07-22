@@ -33,24 +33,26 @@ export default function Register() {
 
   const checkInvitation = async () => {
     setChecking(true);
-    const { data, error } = await (supabase.from("convites") as any)
-      .select("*, organizacoes(nome)")
-      .eq("token", invitationToken)
-      .eq("status", "pendente")
-      .maybeSingle();
+    const { data, error } = await supabase.rpc("get_convite_by_token", {
+      p_token: invitationToken,
+    });
 
     if (error || !data) {
       setInviteError("Este link de convite expirou ou é inválido.");
       setChecking(false);
       return;
     }
-    if (new Date(data.expires_at) < new Date()) {
+    const convite = typeof data === "string" ? JSON.parse(data) : data;
+    if (new Date(convite.expires_at) < new Date()) {
       setInviteError("Este convite expirou. Solicite um novo.");
       setChecking(false);
       return;
     }
-    setInvitationData(data);
-    setEmail(data.email || "");
+    setInvitationData({
+      ...convite,
+      organizacoes: { nome: convite.organizacao_nome },
+    });
+    setEmail(convite.email || "");
     setChecking(false);
   };
 
