@@ -31,8 +31,10 @@ import { ResultadosSimulacao } from "./ResultadosSimulacao";
 import { SimulacaoData } from "@/schemas/simulacao";
 import { BannerGenerator } from "@/components/BannerGenerator";
 import { NotebookLMPresentation } from "@/components/NotebookLMPresentation";
+import { VoicePodcastModal } from "@/components/admin/VoicePodcastModal";
 import { generateNotebookLMPdfFromRef } from "@/utils/generateNotebookLMPdf";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
+import { Mic } from "lucide-react";
 
 const sliderThumbStyles = `
   input[type=range].custom-slider {
@@ -338,6 +340,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   };
 
   const notebookRef = useRef<HTMLDivElement>(null);
+  const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
 
   const handleGerarApresentacaoLM = async () => {
     if (!notebookRef.current) return;
@@ -979,7 +982,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   </div>
                 </div>
 
-                <div className={`grid grid-cols-1 ${isInternal ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-2 justify-center mb-6`}>
+                <div className={`grid grid-cols-1 ${isInternal ? 'sm:grid-cols-5' : 'sm:grid-cols-3'} gap-2 justify-center mb-6`}>
                   <button onClick={handleExportPDF} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-3 rounded-[10px] text-[0.65rem] font-bold uppercase tracking-wider text-white transition-all hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, #122040 0%, #060f1e 100%)", boxShadow: "0 4px 20px rgba(6,15,30,0.3)" }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     PDF Proposta
@@ -997,15 +1000,21 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     WhatsApp
                   </button>
                   {isInternal && (
-                    <button onClick={handleGerarApresentacaoLM} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-3 rounded-[10px] text-[0.65rem] font-bold uppercase tracking-wider text-white transition-all hover:-translate-y-0.5 border border-amber-500/40 group" style={{ background: "linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%)", boxShadow: "0 4px 20px rgba(13,27,42,0.4)" }} title="Gerar Estudo Estratégico em PDF no estilo Notebook LM">
-                      <svg className="w-3.5 h-3.5 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                        <path d="M12 6h4" />
-                        <path d="M12 10h4" />
-                      </svg>
-                      Apresentação LM
-                    </button>
+                    <>
+                      <button onClick={handleGerarApresentacaoLM} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-3 rounded-[10px] text-[0.65rem] font-bold uppercase tracking-wider text-white transition-all hover:-translate-y-0.5 border border-amber-500/40 group" style={{ background: "linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%)", boxShadow: "0 4px 20px rgba(13,27,42,0.4)" }} title="Gerar Estudo Estratégico em PDF no estilo Notebook LM">
+                        <svg className="w-3.5 h-3.5 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                          <path d="M12 6h4" />
+                          <path d="M12 10h4" />
+                        </svg>
+                        Apresentação LM
+                      </button>
+                      <button onClick={() => setIsPodcastModalOpen(true)} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-3 rounded-[10px] text-[0.65rem] font-bold uppercase tracking-wider text-white transition-all hover:-translate-y-0.5 border border-emerald-500/40 group" style={{ background: "linear-gradient(135deg, #064e3b 0%, #022c22 100%)", boxShadow: "0 4px 20px rgba(6,78,59,0.4)" }} title="Gerar Podcast Executivo com Voz Clonada Voicebox">
+                        <Mic className="w-3.5 h-3.5 shrink-0 text-emerald-400 group-hover:scale-110 transition-transform" />
+                        Podcast IA
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -1326,6 +1335,23 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             incluirSeguro={incluirSeguro}
           />
         </div>
+      )}
+
+      {isInternal && (
+        <VoicePodcastModal
+          isOpen={isPodcastModalOpen}
+          onClose={() => setIsPodcastModalOpen(false)}
+          grupo={resultado || g}
+          categoria={categoria}
+          paymentMode={effectiveMode}
+          installmentValue={selectedInstallment}
+          simNome={simNome}
+          simWpp={simWpp}
+          consultorNome={profile?.nome || searchParams.get("nome") || 'Fabricio Honório'}
+          lanceDinheiroPct={lanceDinheiroPct}
+          lanceEmbutidoPct={lanceEmbutidoPct}
+          parcelasContemplar={parcelasContemplar}
+        />
       )}
     </div>
   );
