@@ -76,14 +76,13 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
 
         {/* TOP HEADER SECTION */}
         <div className="relative z-10 pt-[70px] px-[80px] flex flex-col items-center text-center">
-          {/* Brand Header */}
-          <div className="flex flex-col items-center mb-[30px]">
-            <span className="text-[24px] font-bold tracking-[0.35em] text-white/90 uppercase">
-              CONSÓRCIO
-            </span>
-            <span className="text-[62px] font-black tracking-tight leading-none text-white font-sans">
-              Magalu
-            </span>
+          {/* Official Brand Header Logo */}
+          <div className="flex flex-col items-center mb-[25px]">
+            <img 
+              src="/logo-consorcio-magalu.svg" 
+              alt="Consórcio Magalu" 
+              className="h-[125px] w-auto object-contain drop-shadow-lg"
+            />
           </div>
 
           {/* Headline */}
@@ -185,13 +184,12 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
           </div>
 
           {/* Magalu Brand Footer Logo */}
-          <div className="flex items-center gap-[10px]">
-            <span className="text-[20px] font-bold tracking-[0.25em] text-white/80 uppercase">
-              CONSÓRCIO
-            </span>
-            <span className="text-[34px] font-black tracking-tight leading-none text-white">
-              Magalu
-            </span>
+          <div className="flex items-center justify-center">
+            <img 
+              src="/logo-consorcio-magalu.svg" 
+              alt="Consórcio Magalu" 
+              className="h-[55px] w-auto object-contain drop-shadow"
+            />
           </div>
 
           {/* Website URL */}
