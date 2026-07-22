@@ -21,37 +21,40 @@ const fmtFull = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPresentationProps>(
-  ({ grupo, categoria, paymentMode, installmentValue, simNome, simWpp, consultorNome, lanceDinheiroPct = 0, lanceEmbutidoPct = 25 }, ref) => {
+  ({ grupo, categoria, paymentMode, installmentValue, simNome, simWpp, consultorNome }, ref) => {
     if (!grupo) return null;
 
-    const isImovel = categoria === "imovel";
     const isLinear = paymentMode === "linear";
     const clienteStr = simNome?.trim() ? simNome.trim() : "Cliente Especial";
     const consultorStr = consultorNome?.trim() ? consultorNome.trim() : "Fabricio Honório - Especialista Magalu";
     const dataHoje = new Date().toLocaleDateString("pt-BR");
 
+    // Cálculo exato de seguro e parcela sem seguro
+    const valorSeguro = grupo.seguro ? (grupo.credito * grupo.seguro) : 0;
+    const parcelaSemSeguro = Math.max(0, installmentValue - valorSeguro);
+
     // Background Image & Accent Colors based on category
-    let bgHeaderImage = "/segment-imovel.webp";
-    let segmentoLabel = "IMOBILIÁRIO & PATRIMONIAL";
+    let bgHeaderImage = "/segment-agro.webp";
+    let segmentoLabel = "PESADOS, AGRO & FROTAS";
 
     if (categoria === "imovel") {
       bgHeaderImage = "/segment-imovel.webp";
       segmentoLabel = "IMOBILIÁRIO & PATRIMONIAL";
     } else if (categoria === "veiculo") {
       bgHeaderImage = "/segment-veiculo.webp";
-      segmentoLabel = "VEÍCULOS & FROTAS";
+      segmentoLabel = "VEÍCULOS, ELÉTRICOS & HÍBRIDOS";
     } else if (categoria === "pesados") {
       bgHeaderImage = "/segment-agro.webp";
-      segmentoLabel = "AGRO & MÁQUINAS PESADAS";
+      segmentoLabel = "PESADOS, MÁQUINAS AGRÍCOLAS & CAMINHÕES";
     } else if (categoria === "servicos") {
       bgHeaderImage = "/segment-investimento.webp";
-      segmentoLabel = "SERVIÇOS & INVESTIMENTO";
+      segmentoLabel = "SERVIÇOS & INVESTIMENTO ESTRATÉGICO";
     }
 
-    const taxaAdmTotal = (grupo.txLinear ?? grupo.tx5050 ?? 18);
+    const taxaAdmTotal = (grupo.txLinear ?? grupo.tx5050 ?? 15);
     const fundoReservaTotal = (grupo.frLinear ?? grupo.fr5050 ?? 1);
     const custoTotalConsorcio = grupo.credito * (1 + (taxaAdmTotal + fundoReservaTotal) / 100);
-    const custoTotalFinanciamento = grupo.credito * 2.15;
+    const custoTotalFinanciamento = grupo.credito * 2.10;
     const economiaEstimada = Math.max(0, custoTotalFinanciamento - custoTotalConsorcio);
 
     return (
@@ -78,7 +81,7 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
                   NOTEBOOK LM EXECUTIVE
                 </span>
                 <span className="text-[16px] font-bold text-white tracking-wide">
-                  ESTUDO ESTRATÉGICO PATRIMONIAL
+                  ESTUDO ESTRATÉGICO PATRIMONIAL &amp; FROTAS
                 </span>
               </div>
             </div>
@@ -87,7 +90,7 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
               <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-full px-4 py-1.5 text-[13px] font-bold text-white mb-1">
                 Apresentação para: <span className="text-[#E0A96D]">{clienteStr}</span>
               </div>
-              <span className="text-[11px] font-medium text-slate-400">Data: {dataHoje} · Grupo {grupo.grupo || "6042"}</span>
+              <span className="text-[11px] font-medium text-slate-400">Data: {dataHoje} · Grupo {grupo.grupo || "5996"}</span>
             </div>
           </div>
 
@@ -99,15 +102,15 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0B132B] via-[#0B132B]/85 to-transparent" />
 
-            <div className="relative z-10 max-w-[720px]">
+            <div className="relative z-10 max-w-[750px]">
               <span className="inline-block bg-[#FF5500] text-white text-[11px] font-black uppercase tracking-[0.2em] px-3.5 py-1 rounded-full mb-3">
                 {segmentoLabel}
               </span>
-              <h1 className="text-[36px] font-black uppercase tracking-tight leading-tight text-white mb-3">
-                PLANEJAMENTO FINANCEIRO INTELIGENTE &amp; ALAVANCAGEM
+              <h1 className="text-[34px] font-black uppercase tracking-tight leading-tight text-white mb-3">
+                PLANEJAMENTO ESTRATÉGICO MULTISEGMENTO &amp; FROTAS
               </h1>
-              <p className="text-[15px] font-medium text-slate-200 leading-relaxed">
-                Estudo de viabilidade técnica e financeira para aquisição e expansão de bens patrimoniais sem incidência de juros compostos remuneratórios.
+              <p className="text-[14.5px] font-medium text-slate-200 leading-relaxed">
+                Estudo executivo de viabilidade para aquisição de Caminhões, Máquinas Agrícolas, Veículos Híbridos/Elétricos, Imóveis e Alavancagem com custo financeiro otimizado.
               </p>
             </div>
           </div>
@@ -116,7 +119,7 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
           <div className="mb-10">
             <h2 className="text-[14px] font-black tracking-[0.2em] uppercase text-[#E0A96D] mb-4 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#E0A96D]" />
-              1. RESUMO EXECUTIVO DA PROPOSTA
+              1. RESUMO EXECUTIVO DA PROPOSTA DE CRÉDITO
             </h2>
 
             <div className="grid grid-cols-4 gap-5">
@@ -131,20 +134,23 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
               </div>
 
               {/* Card 2 */}
-              <div className="bg-[#1C2541]/90 backdrop-blur-md border border-[#10B981]/40 rounded-[20px] p-6 text-center shadow-lg relative overflow-hidden">
+              <div className="bg-[#1C2541]/90 backdrop-blur-md border border-[#10B981]/40 rounded-[20px] p-5 text-center shadow-lg relative overflow-hidden flex flex-col justify-between">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-[#10B981]" />
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
                   {isLinear ? "PARCELA LINEAR" : "PARCELA REDUZIDA 50%"}
                 </span>
-                <span className="text-[28px] font-black text-[#10B981] leading-none block">
+                <span className="text-[26px] font-black text-[#10B981] leading-none block mb-1">
                   {fmtFull(installmentValue)}
                 </span>
+                <div className="bg-[#10B981]/15 border border-[#10B981]/30 rounded-lg py-1 px-2 text-[11px] font-bold text-[#10B981]">
+                  Sem seguro: <span className="text-white font-extrabold">{fmtFull(parcelaSemSeguro)}</span>
+                </div>
               </div>
 
               {/* Card 3 */}
               <div className="bg-[#1C2541]/90 backdrop-blur-md border border-white/15 rounded-[20px] p-6 text-center shadow-lg">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">
-                  PRAZO DO GRUPO
+                  PRAZO DO PLANO
                 </span>
                 <span className="text-[28px] font-black text-white leading-none block">
                   {grupo.prazo} meses
@@ -164,74 +170,74 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
             </div>
           </div>
 
-          {/* STRATEGIC USE CASES: 4 CARDS WITH IMAGES & ICONS */}
+          {/* ALL SEGMENTS STRATEGIC USE CASES (4 FULL CARDS) */}
           <div className="mb-10">
             <h2 className="text-[14px] font-black tracking-[0.2em] uppercase text-[#E0A96D] mb-4 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#E0A96D]" />
-              {isImovel ? "2. POSSIBILIDADES ESTRATÉGICAS DE USO DO CRÉDITO IMOBILIÁRIO" : "2. POSSIBILIDADES DE USO & APLICAÇÕES ESTRATÉGICAS"}
+              2. APLICAÇÃO ESTRATÉGICA NOS DIVERSOS SEGMENTOS
             </h2>
 
             <div className="grid grid-cols-2 gap-6">
-              {/* Pillar 1 */}
+              {/* Segment 1: Caminhões & Pesados */}
               <div className="bg-[#1C2541]/80 border border-white/15 rounded-[20px] p-6 flex gap-5 relative overflow-hidden shadow-xl">
                 <div className="w-[110px] h-[110px] rounded-xl overflow-hidden shrink-0 relative border border-white/20">
-                  <img src="/segment-imovel.webp" alt="Aquisição" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-blue-900/30" />
+                  <img src="/segment-agro.webp" alt="Caminhões" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-blue-900/40" />
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h3 className="text-[16px] font-extrabold text-white mb-1.5 flex items-center gap-2">
-                    <span>🔑</span> Aquisição Imobiliária Inteligente
+                  <h3 className="text-[15.5px] font-extrabold text-white mb-1.5 flex items-center gap-2">
+                    <span>🚛</span> Caminhões Extrapesados &amp; Frotas
                   </h3>
-                  <p className="text-[12.5px] font-normal text-slate-300 leading-relaxed">
-                    Utilização do crédito de <strong>{fmt(grupo.credito)}</strong> para aquisição de imóveis residenciais, comerciais, terrenos ou galpões sem pagar juros bancários.
+                  <p className="text-[12px] font-normal text-slate-300 leading-relaxed">
+                    Aquisição e renovação de frotas de caminhões, cavalos mecânicos, carretas e utilitários pesados de transporte com parcelas pré-fixadas e sem juros bancários.
                   </p>
                 </div>
               </div>
 
-              {/* Pillar 2 */}
+              {/* Segment 2: Máquinas Agrícolas */}
               <div className="bg-[#1C2541]/80 border border-white/15 rounded-[20px] p-6 flex gap-5 relative overflow-hidden shadow-xl">
                 <div className="w-[110px] h-[110px] rounded-xl overflow-hidden shrink-0 relative border border-white/20">
-                  <img src="/segment-investimento.webp" alt="Construção" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-amber-900/30" />
+                  <img src="/segment-agro.webp" alt="Máquinas Agrícolas" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-emerald-900/40" />
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h3 className="text-[16px] font-extrabold text-white mb-1.5 flex items-center gap-2">
-                    <span>🛠️</span> Construção &amp; Reforma de Alto Padrão
+                  <h3 className="text-[15.5px] font-extrabold text-white mb-1.5 flex items-center gap-2">
+                    <span>🚜</span> Máquinas Agrícolas &amp; Agrobusiness
                   </h3>
-                  <p className="text-[12.5px] font-normal text-slate-300 leading-relaxed">
-                    Recursos para construir em terreno próprio ou executar reformas expressivas, valorizando o imóvel existente sem comprometer a liquidez do seu caixa.
+                  <p className="text-[12px] font-normal text-slate-300 leading-relaxed">
+                    Recursos para tratores, colheitadeiras, pulverizadores e implementos agrícolas modernos, impulsionando a produtividade do campo sem comprometer o fluxo de caixa.
                   </p>
                 </div>
               </div>
 
-              {/* Pillar 3 */}
+              {/* Segment 3: Veículos Elétricos & Híbridos */}
               <div className="bg-[#1C2541]/80 border border-white/15 rounded-[20px] p-6 flex gap-5 relative overflow-hidden shadow-xl">
                 <div className="w-[110px] h-[110px] rounded-xl overflow-hidden shrink-0 relative border border-white/20">
-                  <img src="/segment-investimento.webp" alt="Alavancagem" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-emerald-900/30" />
+                  <img src="/segment-veiculo.webp" alt="Elétricos e Híbridos" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-cyan-900/40" />
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h3 className="text-[16px] font-extrabold text-white mb-1.5 flex items-center gap-2">
-                    <span>📈</span> Alavancagem Patrimonial &amp; Renda de Aluguel
+                  <h3 className="text-[15.5px] font-extrabold text-white mb-1.5 flex items-center gap-2">
+                    <span>⚡</span> Veículos Elétricos, Híbridos &amp; Automóveis
                   </h3>
-                  <p className="text-[12.5px] font-normal text-slate-300 leading-relaxed">
-                    Estratégia de investimento: adquira imóveis para locação onde a própria renda do aluguel quita as parcelas mensais, gerando patrimônio recorrente.
+                  <p className="text-[12px] font-normal text-slate-300 leading-relaxed">
+                    Tecnologia e sustentabilidade: compra de automóveis 100% elétricos, híbridos plug-in e veículos leves com custo de aquisição significativamente menor.
                   </p>
                 </div>
               </div>
 
-              {/* Pillar 4 */}
+              {/* Segment 4: Imóveis & Alavancagem */}
               <div className="bg-[#1C2541]/80 border border-white/15 rounded-[20px] p-6 flex gap-5 relative overflow-hidden shadow-xl">
                 <div className="w-[110px] h-[110px] rounded-xl overflow-hidden shrink-0 relative border border-white/20">
-                  <img src="/segment-imovel.webp" alt="Quitação" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-slate-900/40" />
+                  <img src="/segment-imovel.webp" alt="Imóveis & Alavancagem" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-amber-900/40" />
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h3 className="text-[16px] font-extrabold text-white mb-1.5 flex items-center gap-2">
-                    <span>🏛️</span> Quitação / Troca de Financiamento Bancário
+                  <h3 className="text-[15.5px] font-extrabold text-white mb-1.5 flex items-center gap-2">
+                    <span>🏢</span> Imóveis, Galpões &amp; Alavancagem
                   </h3>
-                  <p className="text-[12.5px] font-normal text-slate-300 leading-relaxed">
-                    Utilização da carta contemplada para quitar financiamentos bancários com taxas de juros elevadas (SAC/PRICE), reduzindo o custo financeiro total.
+                  <p className="text-[12px] font-normal text-slate-300 leading-relaxed">
+                    Estruturação patrimonial: aquisição de galpões comerciais, terrenos, imóveis residenciais ou industriais, além de quitação de financiamentos de juros altos.
                   </p>
                 </div>
               </div>
@@ -245,7 +251,7 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
                 ESTUDO COMPARATIVO DE ECONOMIA REAL
               </span>
               <span className="text-[22px] font-extrabold text-white">
-                Economia estimada de <span className="text-[#10B981] font-black">{fmtFull(economiaEstimada)}</span> em comparação ao financiamento tradicional.
+                Economia estimada de <span className="text-[#10B981] font-black">{fmtFull(economiaEstimada)}</span> em relação ao financiamento tradicional.
               </span>
               <span className="text-[12px] font-normal text-slate-300 mt-1">
                 Custo total do consórcio: <strong>{fmtFull(custoTotalConsorcio)}</strong> versus <strong>{fmtFull(custoTotalFinanciamento)}</strong> no financiamento bancário.
@@ -266,7 +272,7 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
                 {consultorStr}
               </span>
               <span className="text-[12px] font-medium text-[#E0A96D]">
-                Consórcio Magalu · Especialista em Estratégias Patrimoniais
+                Consórcio Magalu · Especialista em Estratégias Patrimoniais &amp; Frotas
               </span>
             </div>
 
