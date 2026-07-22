@@ -125,12 +125,20 @@ export default function Indicacoes() {
   const [parcelasContemplar, setParcelasContemplar] = useState(1);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const lista = GRUPOS[categoria] || GRUPOS["imovel"];
+  const lista = useMemo(() => {
+    const rawLista = (GRUPOS[categoria] || GRUPOS["imovel"]).filter(g => !g.isPlanoGold);
+    const seen = new Set<number>();
+    return rawLista.filter(g => {
+      if (seen.has(g.credito)) return false;
+      seen.add(g.credito);
+      return true;
+    });
+  }, [categoria]);
   const _g = lista[idx] || lista[0];
 
   useEffect(() => {
     setIdx(Math.min(4, lista.length - 1));
-  }, [categoria, lista]);
+  }, [categoria, lista.length]);
 
   const hasBothPlans = _g.r100 !== undefined && _g.r50 !== _g.r100;
   const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";

@@ -201,16 +201,14 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       ? rawLista.filter(g => g.isPlanoGold)
       : rawLista.filter(g => !g.isPlanoGold);
 
-    if (paymentMode === 'reduzido' && !filterPlanoGold) {
-      const seen = new Set<number>();
-      filtered = filtered.filter(g => {
-        if (seen.has(g.credito)) return false;
-        seen.add(g.credito);
-        return true;
-      });
-    }
+    const seen = new Set<number>();
+    filtered = filtered.filter(g => {
+      if (seen.has(g.credito)) return false;
+      seen.add(g.credito);
+      return true;
+    });
     return filtered;
-  }, [rawLista, filterPlanoGold, categoria, paymentMode]);
+  }, [rawLista, filterPlanoGold, categoria]);
 
   const safeIdx = Math.min(idx, lista.length > 0 ? lista.length - 1 : 0);
   const _g = lista[safeIdx] || { grupo: "—", credito: 0, r50: 0, prazo: 0 };

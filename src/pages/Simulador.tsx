@@ -138,16 +138,13 @@ export default function Simulador() {
 
   const lista = useMemo(() => {
     const rawLista = (GRUPOS[categoria] || GRUPOS["imovel"]).filter(g => !g.isPlanoGold);
-    if (paymentMode === 'reduzido') {
-      const seen = new Set<number>();
-      return rawLista.filter(g => {
-        if (seen.has(g.credito)) return false;
-        seen.add(g.credito);
-        return true;
-      });
-    }
-    return rawLista;
-  }, [categoria, paymentMode]);
+    const seen = new Set<number>();
+    return rawLista.filter(g => {
+      if (seen.has(g.credito)) return false;
+      seen.add(g.credito);
+      return true;
+    });
+  }, [categoria]);
 
   const g = lista[idx] || lista[0];
 
