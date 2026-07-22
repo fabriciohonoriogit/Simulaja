@@ -23,6 +23,7 @@ import { WhatsAppIcon } from './SocialIcons';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
+import { generateNotebookLMPdf } from "@/utils/generateNotebookLMPdf";
 import { useProfile } from "@/hooks/useProfile";
 import { useSimulador } from "@/hooks/useSimulador";
 import { useSimuladorStore } from "@/stores/simuladorStore";
@@ -331,6 +332,29 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     toast({
         title: "PDF Gerado!",
         description: "A proposta foi baixada com sucesso.",
+    });
+  };
+
+  const handleGerarApresentacaoLM = () => {
+    const res = resultado || (isInternal ? g : null);
+    if (!res) return;
+
+    generateNotebookLMPdf({
+      grupo: res,
+      categoria,
+      paymentMode: effectiveMode,
+      installmentValue: selectedInstallment,
+      simNome,
+      simWpp,
+      consultorNome: profile?.nome || searchParams.get("nome") || 'Fabricio Honório',
+      lanceDinheiroPct,
+      lanceEmbutidoPct,
+      incluirSeguro,
+    });
+
+    toast({
+      title: "Apresentação Notebook LM Gerada!",
+      description: "Estudo estratégico executivo baixado com sucesso em PDF.",
     });
   };
 
@@ -1176,31 +1200,44 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     Para condições especiais e lances personalizados <strong className="text-secondary">fale com o especialista ✉️</strong>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 border-t border-border mt-4">
                     <button
                       onClick={handleEnviarWpp}
-                      className="flex-1 py-3.5 rounded-[10px] text-sm font-extrabold flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-lg transition-all"
+                      className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-lg transition-all"
                     >
-                      <WhatsAppIcon className="w-5 h-5 shrink-0" />
+                      <WhatsAppIcon className="w-4 h-4 shrink-0" />
                       <span className="inline-block">Enviar</span>
                     </button>
                     <button
                       onClick={handleExportPDF}
-                      className="flex-1 py-3.5 rounded-[10px] text-sm font-extrabold flex items-center justify-center gap-2.5 bg-secondary hover:bg-secondary/90 text-white shadow-lg transition-all"
+                      className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-secondary hover:bg-secondary/90 text-white shadow-lg transition-all"
                     >
-                      <FileText className="w-5 h-5 shrink-0" />
-                      <span>Baixar PDF</span>
+                      <FileText className="w-4 h-4 shrink-0" />
+                      <span>PDF Proposta</span>
                     </button>
                     <button
                       onClick={handleGerarImagem}
-                      className="flex-1 py-3.5 rounded-[10px] text-sm font-extrabold flex items-center justify-center gap-2.5 bg-[#FF7A00] hover:bg-[#FF8B1F] text-white shadow-lg transition-all"
+                      className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-[#FF7A00] hover:bg-[#FF8B1F] text-white shadow-lg transition-all"
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                       </svg>
                       <span>Imagem</span>
+                    </button>
+                    <button
+                      onClick={handleGerarApresentacaoLM}
+                      className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0d1b2a] via-[#1b263b] to-[#0f172a] hover:from-[#1b263b] hover:to-[#1e293b] text-white shadow-lg border border-amber-500/40 transition-all group"
+                      title="Gerar Estudo Estratégico em PDF no estilo Notebook LM"
+                    >
+                      <svg className="w-4 h-4 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        <path d="M12 6h4" />
+                        <path d="M12 10h4" />
+                      </svg>
+                      <span className="whitespace-nowrap">Apresentação LM</span>
                     </button>
                   </div>
                 </div>
