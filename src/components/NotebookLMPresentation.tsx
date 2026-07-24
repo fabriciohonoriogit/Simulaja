@@ -237,8 +237,8 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
         ref={ref}
         className="w-[1200px] bg-[#F8FAFC] text-slate-900 font-sans select-none"
       >
-        {/* SLIDE DE APRESENTAÇÃO EXECUTIVA (EXECUTIVE SLATE GRAY & GOLD THEME - SEM AZUL) */}
-        <div className="w-[1200px] p-[50px] pb-[100px] bg-gradient-to-b from-[#FFFFFF] via-[#F1F5F9] to-[#E2E8F0] flex flex-col gap-6 relative shadow-2xl border border-slate-300">
+        {/* SLIDE DE APRESENTAÇÃO EXECUTIVA (100% CLEAN, VIBRANTE & ALTO CONTRASTE) */}
+        <div className="w-[1200px] p-[50px] pb-[120px] bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] flex flex-col gap-6.5 relative shadow-2xl border border-slate-300">
           
           {/* TOPO: BARRA DE APRESENTAÇÃO */}
           <div className="flex items-center justify-between border-b-2 border-slate-300 pb-5">
@@ -269,26 +269,27 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
             </div>
           </div>
 
-          {/* HERO BANNER DESTAQUE DO CLIENTE */}
+          {/* HERO BANNER DESTAQUE DO CLIENTE - IMAGEM CLARA E NÍTIDA */}
           <div className="relative rounded-[24px] overflow-hidden border-2 border-slate-300 shadow-xl h-[240px] flex items-center p-8">
             <div
-              className="absolute inset-0 bg-cover bg-center scale-105"
+              className="absolute inset-0 bg-cover bg-center scale-105 brightness-110 contrast-105"
               style={{ backgroundImage: `url(${bgHeaderImage})` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/85 to-slate-900/40" />
+            {/* Overlay suave mantendo a imagem viva e o texto 100% legível */}
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/75 via-slate-900/40 to-transparent/10" />
 
             <div className="relative z-10 max-w-[800px]">
-              <span className="inline-block bg-gradient-to-r from-[#FF5500] to-[#D97706] text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-2 shadow-md">
+              <span className="inline-block bg-[#FF5500] text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-2 shadow-md">
                 {segmentoLabel}
               </span>
               
-              <div className="text-[11px] font-black tracking-[0.2em] text-[#E0A96D] uppercase mb-1">
+              <div className="text-[11px] font-black tracking-[0.2em] text-[#E0A96D] uppercase mb-1 drop-shadow-sm">
                 APRESENTAÇÃO EXECUTIVA PREPARADA ESPECIALMENTE PARA
               </div>
               <h1 className="text-[34px] font-black uppercase tracking-tight text-white leading-tight mb-2 drop-shadow-md">
                 {clienteStr}
               </h1>
-              <p className="text-[13px] font-semibold text-slate-200 leading-relaxed">
+              <p className="text-[13px] font-semibold text-slate-100 leading-relaxed drop-shadow-sm">
                 Planejamento financeiro de alta performance para aquisição de bens patrimoniais sem incidência de juros bancários remuneratórios.
               </p>
             </div>
@@ -392,7 +393,7 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
                     <span className="font-black font-mono text-slate-900 text-[12px]">{fmtFull(lEmbutidoRS)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11.5px]">
-                    <span className="text-slate-700 font-semibold">Lance do Bolso (Recursos Próprios):</span>
+                    <span className="text-slate-600 font-semibold">Lance do Bolso (Recursos Próprios):</span>
                     <span className="font-black font-mono text-slate-900 text-[12px]">{fmtFull(lDinheiroRS)}</span>
                   </div>
                   <div className="border-t border-slate-300 pt-2 flex justify-between items-center text-[13px]">
@@ -472,33 +473,33 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
             </div>
           </div>
 
-          {/* CARD DE PLANEJAMENTO ESTRATÉGICO EXECUTIVE SLATE GRAY & GOLD (SEM AZUL) */}
-          <div className="bg-gradient-to-r from-slate-900 via-[#1E293B] to-slate-900 border-2 border-[#D97706] rounded-[24px] p-6 shadow-2xl flex flex-col gap-3.5 text-white">
+          {/* CARD DE PLANEJAMENTO ESTRATÉGICO 100% BRANCO LIMPO E COM LEGENDA 100% ENQUADRADA */}
+          <div className="bg-white border-2 border-slate-300 rounded-[24px] p-6.5 shadow-xl flex flex-col gap-4 text-slate-900">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#F59E0B] drop-shadow-sm">
+              <span className="text-[12px] font-black uppercase tracking-[0.2em] text-[#FF5500]">
                 PLANEJAMENTO ESTRATÉGICO DE ALTO DESEMPENHO
               </span>
-              <div className="shrink-0 bg-gradient-to-r from-[#FF5500] to-[#D97706] text-white font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-xl shadow-md">
+              <div className="shrink-0 bg-[#FF5500] text-white font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-xl shadow-md">
                 GRUPO {grupoNum} · ALAVANCAGEM PATRIMONIAL
               </div>
             </div>
 
-            <p className="text-[20px] font-black text-white leading-snug drop-shadow-md">
+            <p className="text-[19px] font-black text-slate-900 leading-snug">
               Conquiste bens de alto valor preservando a liquidez do seu caixa e acelerando a formação de patrimônio com inteligência e previsibilidade.
             </p>
 
-            {/* REGRAS E ORDEM DE CONTEMPLAÇÃO DO GRUPO EM CAIXA BRANCA COM BORDA DOURADA */}
-            <div className="bg-white rounded-xl p-4.5 border-2 border-[#D97706] shadow-xl flex flex-col gap-1.5">
-              <span className="text-[12px] font-black text-[#D97706] uppercase tracking-wider flex items-center gap-2">
+            {/* REGRAS E ORDEM DE CONTEMPLAÇÃO DO GRUPO EM CAIXA DESTACADA COM ESPAÇAMENTO PERFEITO */}
+            <div className="bg-orange-50/70 rounded-2xl p-5 border-2 border-orange-200 shadow-sm flex flex-col gap-2">
+              <span className="text-[12px] font-black text-[#FF5500] uppercase tracking-wider flex items-center gap-2">
                 <span>🎯</span> REGRAS DE CONTEMPLAÇÃO DO GRUPO {grupoNum}:
               </span>
-              <p className="text-[13px] font-extrabold text-slate-900 leading-relaxed">
+              <p className="text-[13px] font-extrabold text-slate-900 leading-relaxed break-words">
                 "{ordemContemplacaoText}"
               </p>
             </div>
           </div>
 
-          {/* RODAPÉ EXECUTIVE SLATE GRAY & GOLD */}
+          {/* RODAPÉ EXECUTIVE BRIEFING */}
           <div className="border-t-2 border-slate-300 pt-6 pb-2 mt-2 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-[19px] font-black text-slate-900 tracking-wide">
@@ -507,7 +508,7 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
               <span className="text-[12.5px] font-black text-[#FF5500] tracking-wider uppercase">
                 GESTOR DE NEGÓCIOS - ESPECIALISTA EM CONSÓRCIOS
               </span>
-              <span className="text-[13.5px] font-black text-[#D97706]">
+              <span className="text-[13.5px] font-black text-slate-900">
                 CONSÓRCIO MAGALU
               </span>
             </div>

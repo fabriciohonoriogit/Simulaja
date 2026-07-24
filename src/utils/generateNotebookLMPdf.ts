@@ -31,8 +31,8 @@ export async function generateNotebookLMPdfFromRef(
       slideElem.getBoundingClientRect().height,
       element.scrollHeight,
       element.offsetHeight,
-      1900
-    ) + 60;
+      2000
+    ) + 120;
     const actualWidth = Math.max(
       slideElem.scrollWidth,
       element.scrollWidth,
