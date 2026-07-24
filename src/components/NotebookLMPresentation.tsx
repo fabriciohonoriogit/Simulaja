@@ -229,11 +229,11 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
       <div
         id="notebook-lm-presentation-container"
         ref={ref}
-        className="fixed top-0 left-[-9999px] w-[1200px] bg-[#0B132B] text-slate-100 font-sans select-none"
+        className="fixed top-0 left-[-9999px] w-[1200px] bg-[#0B132B] text-slate-100 font-sans select-none pb-10"
         style={{ opacity: 1, pointerEvents: "none", zIndex: -9999 }}
       >
         {/* SLIDE DE APRESENTAÇÃO EXECUTIVA */}
-        <div className="w-[1200px] min-h-[1680px] p-[48px] pb-[60px] bg-gradient-to-b from-[#0B132B] via-[#1C2541] to-[#0B132B] flex flex-col justify-between relative">
+        <div className="w-[1200px] min-h-[1880px] p-[50px] pb-[80px] bg-gradient-to-b from-[#0B132B] via-[#1C2541] to-[#0B132B] flex flex-col justify-between relative">
           
           {/* TOPO: BARRA DE APRESENTAÇÃO */}
           <div className="flex items-center justify-between border-b border-white/15 pb-5 mb-6">

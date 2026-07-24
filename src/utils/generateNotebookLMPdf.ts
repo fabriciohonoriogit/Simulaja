@@ -24,9 +24,19 @@ export async function generateNotebookLMPdfFromRef(
     // Wait briefly for DOM paint
     await new Promise((res) => setTimeout(res, 200));
 
-    // Garantir a medição exata do elemento sem cortar o conteúdo
-    const targetHeight = Math.max(element.scrollHeight, element.offsetHeight, 1600);
-    const targetWidth = Math.max(element.scrollWidth, element.offsetWidth, 1200);
+    // Medição da altura exata do elemento filho ou container com margem de segurança
+    const slideElem = (element.firstElementChild as HTMLElement) || element;
+    const targetHeight = Math.max(
+      slideElem.scrollHeight,
+      slideElem.getBoundingClientRect().height,
+      element.scrollHeight,
+      1880
+    ) + 40;
+    const targetWidth = Math.max(
+      slideElem.scrollWidth,
+      element.scrollWidth,
+      1200
+    );
 
     const canvas = await html2canvas(element, {
       scale: 2,
