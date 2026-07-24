@@ -26,13 +26,14 @@ export async function generateNotebookLMPdfFromRef(
 
     // Medição da altura exata do elemento filho ou container com margem de segurança
     const slideElem = (element.firstElementChild as HTMLElement) || element;
-    const targetHeight = Math.max(
+    const actualHeight = Math.max(
       slideElem.scrollHeight,
       slideElem.getBoundingClientRect().height,
       element.scrollHeight,
-      1880
-    ) + 40;
-    const targetWidth = Math.max(
+      element.offsetHeight,
+      1900
+    ) + 60;
+    const actualWidth = Math.max(
       slideElem.scrollWidth,
       element.scrollWidth,
       1200
@@ -43,12 +44,27 @@ export async function generateNotebookLMPdfFromRef(
       useCORS: true,
       logging: false,
       backgroundColor: "#0B132B",
-      windowWidth: targetWidth,
-      windowHeight: targetHeight,
-      width: targetWidth,
-      height: targetHeight,
+      windowWidth: actualWidth,
+      windowHeight: actualHeight,
+      width: actualWidth,
+      height: actualHeight,
       x: 0,
       y: 0,
+      onclone: (clonedDoc) => {
+        const wrapper = clonedDoc.getElementById("offscreen-presentation-wrapper");
+        if (wrapper) {
+          wrapper.style.position = "relative";
+          wrapper.style.top = "0";
+          wrapper.style.left = "0";
+        }
+        const target = clonedDoc.getElementById("notebook-lm-presentation-container");
+        if (target) {
+          target.style.position = "relative";
+          target.style.top = "0";
+          target.style.left = "0";
+          target.style.margin = "0";
+        }
+      },
     });
 
     const imgData = canvas.toDataURL("image/png");

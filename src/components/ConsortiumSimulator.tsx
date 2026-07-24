@@ -1345,7 +1345,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       
       {/* Hidden Banner Generator placed absolutely to avoid ResizeObserver loops */}
       {(resultado || isInternal) && (
-        <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
+        <div id="offscreen-presentation-wrapper" style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
           <BannerGenerator 
             ref={bannerRef}
             grupo={resultado || g}
