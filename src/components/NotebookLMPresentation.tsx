@@ -1,5 +1,5 @@
 import React, { forwardRef } from "react";
-import type { GrupoItem } from "@/constants/simulador";
+import { GRUPO_CARACTERISTICAS, type GrupoItem } from "@/constants/simulador";
 
 interface NotebookLMPresentationProps {
   grupo: GrupoItem;
@@ -74,6 +74,12 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
     );
     const prazoRestante = Math.max(1, grupo.prazo - parcelasContemplar);
     const parcelaPos = saldoDevedorPosLance / prazoRestante;
+
+    const grupoNum = grupo.grupo || "";
+    const grupoChar = GRUPO_CARACTERISTICAS[grupoNum];
+    const ordemContemplacaoText =
+      grupoChar?.ordemContemplacao ||
+      "Sorteio (Loteria Federal), Lance Livre, Lance Fixo 25% e Lance Fixo 45% conforme saldo disponível do grupo.";
 
     // Imagem do Banner do Topo
     let bgHeaderImage = "/segment-agro.webp";
@@ -467,21 +473,29 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
             </div>
           </div>
 
-          {/* BANNER PERSUASIVO DE ALAVANCAGEM E ESTRATÉGIA PATRIMONIAL */}
-          <div className="bg-gradient-to-r from-[#FF5500]/20 via-[#1C2541] to-[#E0A96D]/20 border border-[#E0A96D]/40 rounded-[22px] p-5 mb-6 flex items-center justify-between shadow-2xl">
-            <div className="flex flex-col max-w-[820px]">
-              <span className="text-[10.5px] font-black uppercase tracking-[0.2em] text-[#E0A96D] mb-1">
+          {/* BANNER PERSUASIVO DE ALAVANCAGEM E ESTRATÉGIA PATRIMONIAL COM ORDEM DE CONTEMPLAÇÃO DO GRUPO */}
+          <div className="bg-gradient-to-r from-[#FF5500]/20 via-[#1C2541] to-[#E0A96D]/20 border border-[#E0A96D]/40 rounded-[22px] p-5 shadow-2xl flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10.5px] font-black uppercase tracking-[0.2em] text-[#E0A96D]">
                 PLANEJAMENTO ESTRATÉGICO DE ALTO DESEMPENHO
               </span>
-              <span className="text-[19px] font-extrabold text-white leading-snug">
-                Conquiste bens de alto valor preservando a liquidez do seu caixa e acelerando a formação de patrimônio com inteligência e previsibilidade.
-              </span>
-              <span className="text-[11px] font-medium text-slate-300 mt-1">
-                Consórcio Magalu: A ferramenta financeira definitiva para alavancagem patrimonial sustentável e expansão de frotas.
-              </span>
+              <div className="shrink-0 bg-[#E0A96D] text-[#0B132B] font-black text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-xl shadow-lg">
+                GRUPO {grupoNum} · ALAVANCAGEM PATRIMONIAL
+              </div>
             </div>
-            <div className="shrink-0 bg-[#E0A96D] text-[#0B132B] font-black text-[12.5px] uppercase tracking-wider px-4.5 py-2.5 rounded-xl shadow-lg">
-              ALAVANCAGEM PATRIMONIAL
+
+            <p className="text-[18px] font-extrabold text-white leading-snug">
+              Conquiste bens de alto valor preservando a liquidez do seu caixa e acelerando a formação de patrimônio com inteligência e previsibilidade.
+            </p>
+
+            {/* ORDEM DE CONTEMPLAÇÃO DO GRUPO */}
+            <div className="bg-[#0B132B]/85 rounded-xl p-3.5 border border-[#E0A96D]/30 flex flex-col gap-1">
+              <span className="text-[10.5px] font-black text-[#E0A96D] uppercase tracking-wider flex items-center gap-1.5">
+                <span>🎯</span> REGRAS DE CONTEMPLAÇÃO DO GRUPO {grupoNum}:
+              </span>
+              <p className="text-[11.5px] font-medium text-slate-200 leading-relaxed italic">
+                "{ordemContemplacaoText}"
+              </p>
             </div>
           </div>
 
