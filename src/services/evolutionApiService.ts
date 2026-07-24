@@ -8,10 +8,10 @@ export interface EvolutionConfig {
 
 export const getEvolutionConfig = (): EvolutionConfig => {
   if (typeof window === "undefined") {
-    return { apiUrl: "", apiKey: "", instanceName: "simulaja" };
+    return { apiUrl: "http://localhost:8080", apiKey: "B6D711FCDE4D4FD5936544120E713976", instanceName: "simulaja" };
   }
-  const savedUrl = localStorage.getItem("evolution_api_url") || "https://api.simulaja.com.br";
-  const savedKey = localStorage.getItem("evolution_api_key") || "";
+  const savedUrl = localStorage.getItem("evolution_api_url") || "http://localhost:8080";
+  const savedKey = localStorage.getItem("evolution_api_key") || "B6D711FCDE4D4FD5936544120E713976";
   const savedInstance = localStorage.getItem("evolution_instance_name") || "simulaja";
   return { apiUrl: savedUrl, apiKey: savedKey, instanceName: savedInstance };
 };
