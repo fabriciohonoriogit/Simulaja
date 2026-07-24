@@ -9,37 +9,37 @@ import cardInvestimento from "@/assets/card-investment-chalets.webp";
 const segments = [
   {
     title: "Consórcio Imobiliário",
-    desc: "Casa própria, apartamento ou terreno com planejamento inteligente.",
+    desc: "Casas, apartamentos, terrenos, barracões e alavancagem patrimonial com imóveis sem juros bancários.",
     image: cardImovel,
   },
   {
     title: "Consórcio de Veículos",
-    desc: "SUV, sedan ou utilitário — sem juros e com poder de compra à vista.",
+    desc: "Carros 100% elétricos, híbridos, sedans e utilitários com poder de compra à vista.",
     image: cardVeiculo,
   },
   {
     title: "Consórcio de Motos",
-    desc: "A moto dos seus sonhos com parcelas que cabem no bolso.",
+    desc: "Motos urbanas, scooters e alta cilindrada com parcelas que cabem no seu bolso.",
     image: cardMoto,
   },
   {
     title: "Consórcio Náutico",
-    desc: "Jet ski, lancha ou barco — realize o sonho náutico com planejamento.",
+    desc: "Jet ski, lanchas, barcos e equipamentos náuticos com planejamento inteligente.",
     image: cardNautica,
   },
   {
-    title: "Consórcio de Frotas",
-    desc: "Caminhões, tratores e máquinas — potência para o seu negócio.",
+    title: "Consórcio de Pesados & Frotas",
+    desc: "Carros SUV, esportivos, caminhões extrapesados, carretas e frotas comerciais.",
     image: cardFrotas,
   },
   {
     title: "Consórcio Agro",
-    desc: "Tratores, máquinas e implementos para alavancar sua produção.",
+    desc: "Tratores, colheitadeiras, pulverizadores e máquinas agrícolas para a sua produção.",
     image: cardAgro,
   },
   {
     title: "Consórcio para Investimento",
-    desc: "Construa patrimônio com estratégia e sem juros bancários.",
+    desc: "Alavancagem patrimonial com barracões, galpões comerciais e imóveis de renda.",
     image: cardInvestimento,
   },
 ];

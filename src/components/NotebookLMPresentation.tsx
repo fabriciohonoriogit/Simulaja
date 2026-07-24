@@ -100,26 +100,57 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
         desc: "Compra de terrenos e lotes em áreas de alta valorização para construção futura ou reserva de valor.",
       },
       {
-        title: "Alavancagem Imobiliária",
-        icon: "🏢",
+        title: "Barracões & Alavancagem Patrimonial",
+        icon: "🏗️",
         image: "/segment-investimento.webp",
-        desc: "Aquisição estratégica de galpões, prédios comerciais e imóveis de renda preservando a liquidez de caixa.",
+        desc: "Alavancagem patrimonial com imóveis, barracões industriais, galpões comerciais e imóveis de renda.",
       },
     ];
 
     if (categoria === "imovel") {
       bgHeaderImage = "/segment-imovel.webp";
       segmentoLabel = "ESTRUTURAÇÃO IMOBILIÁRIA & PATRIMONIAL";
-      // Já configurado como padrão acima
+      segmentCards = [
+        {
+          title: "Casas Residenciais",
+          icon: "🏡",
+          image: "/segment-imovel.webp",
+          desc: "Aquisição ou construção da casa dos seus sonhos em bairro nobre ou condomínio fechado sem juros bancários.",
+        },
+        {
+          title: "Apartamentos & Studios",
+          icon: "🏙️",
+          image: "/segment-apartamento.png",
+          desc: "Apartamentos na planta, prontos para morar ou unidades para locação com alta rentabilidade patrimonial.",
+        },
+        {
+          title: "Terrenos & Lotes",
+          icon: "🏞️",
+          image: "/segment-terreno.png",
+          desc: "Compra de terrenos e lotes em áreas de alta valorização para construção futura ou reserva de valor.",
+        },
+        {
+          title: "Barracões & Alavancagem Patrimonial",
+          icon: "🏗️",
+          image: "/segment-investimento.webp",
+          desc: "Alavancagem patrimonial com imóveis, barracões industriais, galpões comerciais e imóveis de renda.",
+        },
+      ];
     } else if (categoria === "veiculo") {
       bgHeaderImage = "/segment-veiculo.webp";
       segmentoLabel = "VEÍCULOS, MOTOS & NÁUTICO";
       segmentCards = [
         {
-          title: "Carros, SUVs & Híbridos",
+          title: "Veículos Híbridos & Elétricos",
+          icon: "⚡",
+          image: "/segment-veiculo.webp",
+          desc: "Aquisição de carros 100% elétricos, híbridos plug-in e tecnologia automotiva de ponta sem juros bancários.",
+        },
+        {
+          title: "Carros & Utilitários",
           icon: "🚗",
           image: "/segment-veiculo.webp",
-          desc: "Aquisição de automóveis 0km ou seminovos, carros de luxo, elétricos e híbridos com parcelas previsíveis.",
+          desc: "Automóveis 0km ou seminovos, sedans e utilitários de passeio com parcelas previsíveis.",
         },
         {
           title: "Motos & Scooters",
@@ -128,16 +159,10 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
           desc: "Conquiste sua moto urbana, scooter ou modelos de alta cilindrada para lazer e mobilidade com economia total.",
         },
         {
-          title: "Jet Ski & Linha Náutica",
+          title: "Barcos & Jet Ski",
           icon: "🛥️",
           image: "/segment-jetski.webp",
-          desc: "Adquira seu Jet Ski, lancha ou equipamentos náuticos de lazer sem incidir juros abusivos de financiamento.",
-        },
-        {
-          title: "Renovação de Frotas",
-          icon: "🏎️",
-          image: "/segment-investimento.webp",
-          desc: "Amplie e renove frotas corporativas de automóveis executivos e utilitários mantendo a liquidez de caixa.",
+          desc: "Adquira seu Jet Ski, lanchas, barcos e equipamentos náuticos de lazer sem incidir juros abusivos de financiamento.",
         },
       ];
     } else if (categoria === "servicos" || categoria === "eletro") {
@@ -174,28 +199,28 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
       segmentoLabel = "PESADOS, MÁQUINAS AGRÍCOLAS & CAMINHÕES";
       segmentCards = [
         {
-          title: "Caminhões Extrapesados",
-          icon: "🚛",
+          title: "Carros SUV & Esportivos",
+          icon: "🚙",
           image: "/segment-veiculo.webp",
-          desc: "Aquisição e ampliação de caminhões extrapesados, cavalos mecânicos e frotas comerciais de carga.",
+          desc: "SUVs premium, utilitários esportivos e veículos de alto desempenho para uso pessoal ou executivo.",
         },
         {
-          title: "Máquinas Agrícolas & Tratores",
+          title: "Caminhões & Frotas Pesadas",
+          icon: "🚛",
+          image: "/segment-truck.webp",
+          desc: "Caminhões extrapesados, cavalos mecânicos, carretas graneleiras e frotas comerciais sem juros bancários.",
+        },
+        {
+          title: "Tratores & Máquinas Agrícolas",
           icon: "🚜",
           image: "/segment-agro.webp",
-          desc: "Tratores, colheitadeiras e pulverizadores de alta tecnologia para aumentar a produtividade no campo.",
+          desc: "Tratores, colheitadeiras, pulverizadores e implementos do campo para alavancar a produção mantendo a saúde do caixa.",
         },
         {
-          title: "Carretas & Implementos",
-          icon: "🌾",
-          image: "/segment-agro.webp",
-          desc: "Equipe sua produção agrícola e operações logísticas com carretas graneleiras, baús e reboques.",
-        },
-        {
-          title: "Alavancagem Agro & Frotas",
-          icon: "📈",
+          title: "Maquinário & Alavancagem Pesada",
+          icon: "🏗️",
           image: "/segment-investimento.webp",
-          desc: "Expansão patrimonial do agronegócio preservando o capital de giro para insumos durante a safra.",
+          desc: "Retroescavadeiras, máquinas amarela e equipamentos pesados preservando o capital de giro para operações.",
         },
       ];
     }
