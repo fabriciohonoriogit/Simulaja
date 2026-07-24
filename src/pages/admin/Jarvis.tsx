@@ -38,6 +38,7 @@ import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import jarvisAvatar from "@/assets/jarvis-avatar.png";
 import { ESTATISTICAS_LANCES, GRUPOS, GRUPO_CARACTERISTICAS, obterEstatisticasGrupo } from "@/constants/simulador";
 import { aiService } from "@/services/aiService";
+import { sendWhatsAppMessage } from "@/services/evolutionApiService";
 import { Missao, calcularMissoes } from "@/lib/missoesService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 import { bcbService, BcbData } from "@/services/bcbService";
@@ -642,6 +643,71 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                         actionMessage = `\n*(Ação Executada: Moveu ${leadAlvo.nome || "Lead"} para ${novaEtapa})*`;
                     } else {
                         actionMessage = `\n*(Falha: Lead "${command.params.nomeLead}" não encontrado)*`;
+                    }
+                } else if (command.function === "enviarMensagemWhatsApp") {
+                    const nome = command.params.nomeLead.toLowerCase();
+                    const msgTexto = command.params.mensagem;
+                    const leadAlvo = leads.find(l => 
+                        l.dados_cadastro?.nome?.toLowerCase().includes(nome) || 
+                        l.nome?.toLowerCase().includes(nome)
+                    );
+
+                    if (leadAlvo) {
+                        const phone = leadAlvo.dados_cadastro?.telefone || leadAlvo.dados_cadastro?.celular || (leadAlvo as any).telefone || (leadAlvo as any).whatsapp;
+                        if (phone) {
+                            const sendRes = await sendWhatsAppMessage({ number: phone, text: msgTexto });
+                            if (sendRes.success) {
+                                try {
+                                    await supabase.from("historico_contatos").insert({
+                                        lead_id: leadAlvo.id,
+                                        tipo_contato: "whatsapp",
+                                        observacao: `[Jarvis WhatsApp] ${msgTexto}`,
+                                        data_contato: new Date().toISOString(),
+                                        organizacao_id: profile?.organizacao_id
+                                    } as any);
+                                } catch (e) {
+                                    console.warn("Erro ao salvar histórico do WhatsApp", e);
+                                }
+                                actionMessage = `\n*(Ação Executada: WhatsApp enviado com sucesso para ${leadAlvo.nome || "Lead"} - ${phone})*`;
+                            } else {
+                                actionMessage = `\n*(Aviso: Tentativa de envio para ${leadAlvo.nome || "Lead"} falhou: ${sendRes.error})*`;
+                            }
+                        } else {
+                            actionMessage = `\n*(Falha: Telefone/WhatsApp do lead "${command.params.nomeLead}" não cadastrado)*`;
+                        }
+                    } else {
+                        actionMessage = `\n*(Falha: Lead "${command.params.nomeLead}" não encontrado)*`;
+                    }
+                } else if (command.function === "confirmarAgendamento") {
+                    const nome = command.params.nomeLead.toLowerCase();
+                    const dataHora = command.params.dataHora;
+                    const obs = command.params.observacao || "Confirmado via Jarvis WhatsApp";
+                    const leadAlvo = leads.find(l => 
+                        l.dados_cadastro?.nome?.toLowerCase().includes(nome) || 
+                        l.nome?.toLowerCase().includes(nome)
+                    );
+
+                    if (leadAlvo) {
+                        try {
+                            await supabase.from("agendamentos").insert({
+                                lead_id: leadAlvo.id,
+                                data_agendamento: new Date().toISOString(),
+                                observacao: `${obs} - Data/Hora Solicitada: ${dataHora}`,
+                                status: "confirmado",
+                                organizacao_id: profile?.organizacao_id
+                            } as any);
+                        } catch (e) {
+                            console.warn("Tabela agendamentos opcional ou offline", e);
+                        }
+
+                        const phone = leadAlvo.dados_cadastro?.telefone || leadAlvo.dados_cadastro?.celular || (leadAlvo as any).telefone || (leadAlvo as any).whatsapp;
+                        if (phone) {
+                            const confirmMsg = `Olá ${leadAlvo.nome || "Cliente"}! Seu agendamento para ${dataHora} está 100% confirmado. Qualquer dúvida, estou à disposição!`;
+                            await sendWhatsAppMessage({ number: phone, text: confirmMsg });
+                        }
+                        actionMessage = `\n*(Ação Executada: Agendamento de ${leadAlvo.nome || "Lead"} registrado/confirmado para ${dataHora})*`;
+                    } else {
+                        actionMessage = `\n*(Falha: Lead "${command.params.nomeLead}" não encontrado para agendamento)*`;
                     }
                 }
             } catch (e) {

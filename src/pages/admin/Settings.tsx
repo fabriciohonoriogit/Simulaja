@@ -12,6 +12,7 @@ import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Up
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createWhatsAppInstance } from "@/services/evolutionOnboardingService";
+import { getEvolutionConfig, saveEvolutionConfig, checkEvolutionStatus } from "@/services/evolutionApiService";
 
 const ROLES = [
   { value: "admin", label: "Administrador" },
@@ -37,6 +38,36 @@ export default function Settings() {
   const [org, setOrg] = useState<OrganizationRow | null>(null);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [creatingInstance, setCreatingInstance] = useState(false);
+  const [evolutionUrl, setEvolutionUrl] = useState("");
+  const [evolutionKey, setEvolutionKey] = useState("");
+  const [evolutionInstance, setEvolutionInstance] = useState("");
+  const [evolutionStatus, setEvolutionStatus] = useState<string>("UNKNOWN");
+  const [testingStatus, setTestingStatus] = useState(false);
+
+  useEffect(() => {
+    const cfg = getEvolutionConfig();
+    setEvolutionUrl(cfg.apiUrl);
+    setEvolutionKey(cfg.apiKey);
+    setEvolutionInstance(cfg.instanceName);
+  }, []);
+
+  const handleTestConnection = async () => {
+    setTestingStatus(true);
+    saveEvolutionConfig({ apiUrl: evolutionUrl, apiKey: evolutionKey, instanceName: evolutionInstance });
+    try {
+      const res = await checkEvolutionStatus();
+      setEvolutionStatus(res.state);
+      if (res.state === "open" || res.state === "CONNECTED") {
+        toast({ title: "WhatsApp Conectado!", description: "Sua instância do Evolution API está ativa e pronta." });
+      } else {
+        toast({ title: "Instância Desconectada", description: `Status: ${res.state}. Verifique o QR Code ou a URL.`, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro na conexão", description: err.message, variant: "destructive" });
+    } finally {
+      setTestingStatus(false);
+    }
+  };
 
   useEffect(() => { fetchData(); }, [profile]);
 
@@ -467,24 +498,67 @@ export default function Settings() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-sm text-slate-600">
-                      <p className="font-bold text-slate-900 mb-1">Status: {org?.evolution_instance_name ? "Conectado" : "Desconectado"}</p>
-                      <p>
-                        {org?.evolution_instance_name 
-                          ? `Instância ativa: ${org.evolution_instance_name}` 
-                          : "Provisione uma máquina de WhatsApp dedicada."}
-                      </p>
+                <CardContent className="p-6 space-y-4">
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs font-bold text-slate-700">Server URL (Evolution API)</Label>
+                      <Input
+                        placeholder="https://api.simulaja.com.br"
+                        value={evolutionUrl}
+                        onChange={(e) => setEvolutionUrl(e.target.value)}
+                        className="h-10 text-xs font-mono mt-1"
+                      />
                     </div>
-                    <Button 
-                      onClick={handleCreateWhatsApp}
-                      disabled={creatingInstance || !!org?.evolution_instance_name}
-                      className="font-bold shrink-0"
-                    >
-                      {creatingInstance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {org?.evolution_instance_name ? "Já Conectado" : "Provisionar WhatsApp"}
-                    </Button>
+                    <div>
+                      <Label className="text-xs font-bold text-slate-700">Global API Key</Label>
+                      <Input
+                        type="password"
+                        placeholder="Chave de API do servidor"
+                        value={evolutionKey}
+                        onChange={(e) => setEvolutionKey(e.target.value)}
+                        className="h-10 text-xs font-mono mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-bold text-slate-700">Nome da Instância</Label>
+                      <Input
+                        placeholder="simulaja"
+                        value={evolutionInstance}
+                        onChange={(e) => setEvolutionInstance(e.target.value)}
+                        className="h-10 text-xs font-mono mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-100">
+                    <div className="text-xs font-bold">
+                      Status:{" "}
+                      <span className={evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "text-emerald-600 font-black" : "text-amber-600 font-black"}>
+                        {evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "CONECTADO" : evolutionStatus === "UNKNOWN" ? "NÃO TESTADO" : evolutionStatus}
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleTestConnection}
+                        disabled={testingStatus}
+                        className="font-bold text-xs h-9"
+                      >
+                        {testingStatus ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
+                        Salvar &amp; Testar
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={handleCreateWhatsApp}
+                        disabled={creatingInstance}
+                        className="font-bold text-xs h-9"
+                      >
+                        {creatingInstance && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                        Provisionar
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
