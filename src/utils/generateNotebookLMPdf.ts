@@ -24,22 +24,34 @@ export async function generateNotebookLMPdfFromRef(
     // Wait briefly for DOM paint
     await new Promise((res) => setTimeout(res, 200));
 
+    // Garantir a medição exata do elemento sem cortar o conteúdo
+    const targetHeight = Math.max(element.scrollHeight, element.offsetHeight, 1600);
+    const targetWidth = Math.max(element.scrollWidth, element.offsetWidth, 1200);
+
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: "#0B132B",
+      windowWidth: targetWidth,
+      windowHeight: targetHeight,
+      width: targetWidth,
+      height: targetHeight,
+      x: 0,
+      y: 0,
     });
 
     const imgData = canvas.toDataURL("image/png");
+
+    const pdfWidth = 210; // Largura A4 em mm
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width; // Altura proporcional em mm
+
+    // Usar formato personalizado para caber 100% da altura da imagem no PDF
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: "a4",
+      format: [pdfWidth, pdfHeight],
     });
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
