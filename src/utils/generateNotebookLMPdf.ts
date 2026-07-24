@@ -43,7 +43,7 @@ export async function generateNotebookLMPdfFromRef(
       scale: 2,
       useCORS: true,
       logging: false,
-      backgroundColor: "#F8FAFC",
+      backgroundColor: "#0F172A",
       windowWidth: actualWidth,
       windowHeight: actualHeight,
       width: actualWidth,
