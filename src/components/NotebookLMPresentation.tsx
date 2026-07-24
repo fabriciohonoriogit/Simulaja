@@ -237,23 +237,23 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
         ref={ref}
         className="w-[1200px] bg-[#F8FAFC] text-slate-900 font-sans select-none"
       >
-        {/* SLIDE DE APRESENTAÇÃO EXECUTIVA (MAGALU OFFICIAL PREMIUM THEME) */}
-        <div className="w-[1200px] p-[50px] pb-[100px] bg-gradient-to-b from-[#FFFFFF] via-[#F0F6FF] to-[#E6F0FA] flex flex-col gap-6 relative shadow-2xl border border-slate-200">
+        {/* SLIDE DE APRESENTAÇÃO EXECUTIVA (EXECUTIVE SLATE GRAY & GOLD THEME - SEM AZUL) */}
+        <div className="w-[1200px] p-[50px] pb-[100px] bg-gradient-to-b from-[#FFFFFF] via-[#F1F5F9] to-[#E2E8F0] flex flex-col gap-6 relative shadow-2xl border border-slate-300">
           
           {/* TOPO: BARRA DE APRESENTAÇÃO */}
-          <div className="flex items-center justify-between border-b-2 border-[#0086FF]/30 pb-5">
+          <div className="flex items-center justify-between border-b-2 border-slate-300 pb-5">
             <div className="flex items-center gap-6">
               <img
                 src="/logo-consorcio-magalu.svg"
                 alt="Consórcio Magalu"
                 className="h-[54px] w-auto object-contain"
               />
-              <div className="h-8 w-[2px] bg-[#0086FF]/30" />
+              <div className="h-8 w-[2px] bg-slate-300" />
               <div className="flex flex-col">
-                <span className="text-[12px] font-black tracking-[0.25em] text-[#0086FF] uppercase">
+                <span className="text-[12px] font-black tracking-[0.25em] text-[#FF5500] uppercase">
                   NOTEBOOK LM EXECUTIVE BRIEFING
                 </span>
-                <span className="text-[17px] font-black text-[#0F2042] tracking-wide">
+                <span className="text-[17px] font-black text-slate-900 tracking-wide">
                   ESTUDO ESTRATÉGICO DE ALAVANCAGEM PATRIMONIAL
                 </span>
               </div>
@@ -263,22 +263,22 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
               <span className="text-[11px] font-extrabold text-slate-600 uppercase tracking-widest">
                 DATA: {dataHoje} · GRUPO {grupo.grupo || "5996"}
               </span>
-              <span className="text-[11px] font-black text-[#0086FF] bg-[#0086FF]/10 border border-[#0086FF]/30 px-3.5 py-1 rounded-full mt-1 uppercase tracking-wider shadow-sm">
+              <span className="text-[11px] font-black text-[#FF5500] bg-orange-50 border border-orange-200 px-3.5 py-1 rounded-full mt-1 uppercase tracking-wider shadow-sm">
                 STATUS: {grupo.tipoVenda || "DISPONÍVEL"}
               </span>
             </div>
           </div>
 
           {/* HERO BANNER DESTAQUE DO CLIENTE */}
-          <div className="relative rounded-[24px] overflow-hidden border-2 border-[#0086FF]/30 shadow-xl h-[240px] flex items-center p-8">
+          <div className="relative rounded-[24px] overflow-hidden border-2 border-slate-300 shadow-xl h-[240px] flex items-center p-8">
             <div
               className="absolute inset-0 bg-cover bg-center scale-105"
               style={{ backgroundImage: `url(${bgHeaderImage})` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0F2042]/95 via-[#0086FF]/85 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/85 to-slate-900/40" />
 
             <div className="relative z-10 max-w-[800px]">
-              <span className="inline-block bg-[#FF5500] text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-2 shadow-md">
+              <span className="inline-block bg-gradient-to-r from-[#FF5500] to-[#D97706] text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-2 shadow-md">
                 {segmentoLabel}
               </span>
               
@@ -288,7 +288,7 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
               <h1 className="text-[34px] font-black uppercase tracking-tight text-white leading-tight mb-2 drop-shadow-md">
                 {clienteStr}
               </h1>
-              <p className="text-[13px] font-semibold text-blue-50 leading-relaxed">
+              <p className="text-[13px] font-semibold text-slate-200 leading-relaxed">
                 Planejamento financeiro de alta performance para aquisição de bens patrimoniais sem incidência de juros bancários remuneratórios.
               </p>
             </div>
@@ -296,18 +296,18 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
 
           {/* RESULTADOS DA SIMULAÇÃO: 6 KPI CARDS */}
           <div>
-            <h2 className="text-[14px] font-black tracking-[0.2em] uppercase text-[#0F2042] mb-3.5 flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#0086FF]" />
+            <h2 className="text-[14px] font-black tracking-[0.2em] uppercase text-slate-900 mb-3.5 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#FF5500]" />
               1. RESULTADOS COMPLETO DA SIMULAÇÃO
             </h2>
 
             <div className="grid grid-cols-3 gap-4 mb-4">
               {/* Card 1: Crédito */}
-              <div className="bg-white border-2 border-[#0086FF]/40 rounded-[20px] p-4.5 text-center shadow-md shadow-blue-500/5">
-                <span className="text-[11px] font-black uppercase tracking-wider text-[#0F2042] block mb-1">
+              <div className="bg-white border-2 border-slate-300 rounded-[20px] p-4.5 text-center shadow-md">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 block mb-1">
                   CRÉDITO CONTRATADO
                 </span>
-                <span className="text-[27px] font-black text-[#0086FF] leading-none block">
+                <span className="text-[27px] font-black text-slate-900 leading-none block">
                   {fmtFull(grupo.credito)}
                 </span>
               </div>
@@ -343,31 +343,31 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
 
             <div className="grid grid-cols-3 gap-4">
               {/* Card 4: Prazo Total */}
-              <div className="bg-white border-2 border-slate-200 rounded-[20px] p-3.5 text-center shadow-sm">
-                <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-500 block mb-1">
+              <div className="bg-white border-2 border-slate-300 rounded-[20px] p-3.5 text-center shadow-sm">
+                <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-600 block mb-1">
                   PRAZO DO PLANO
                 </span>
-                <span className="text-[22px] font-black text-[#0F2042] leading-none block">
+                <span className="text-[22px] font-black text-slate-900 leading-none block">
                   {grupo.prazo} meses
                 </span>
               </div>
 
               {/* Card 5: Crédito Disponível Líquido */}
-              <div className="bg-white border-2 border-slate-200 rounded-[20px] p-3.5 text-center shadow-sm">
-                <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-500 block mb-1">
+              <div className="bg-white border-2 border-slate-300 rounded-[20px] p-3.5 text-center shadow-sm">
+                <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-600 block mb-1">
                   CRÉDITO DISPONÍVEL LÍQUIDO
                 </span>
-                <span className="text-[22px] font-black text-[#0F2042] leading-none block">
+                <span className="text-[22px] font-black text-slate-900 leading-none block">
                   {fmtFull(creditoDisponivel)}
                 </span>
               </div>
 
               {/* Card 6: Taxa Adm & Fundo Reserva */}
-              <div className="bg-white border-2 border-slate-200 rounded-[20px] p-3.5 text-center shadow-sm">
-                <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-500 block mb-1">
+              <div className="bg-white border-2 border-slate-300 rounded-[20px] p-3.5 text-center shadow-sm">
+                <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-600 block mb-1">
                   TAXA ADM &amp; F. RESERVA
                 </span>
-                <span className="text-[22px] font-black text-[#0F2042] leading-none block">
+                <span className="text-[22px] font-black text-slate-900 leading-none block">
                   {taxaAdmTotal}% / {fundoReservaTotal}%
                 </span>
               </div>
@@ -377,39 +377,39 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
           {/* SIMULAÇÃO DE CONTEMPLAÇÃO & BONIFICAÇÃO SEM SEGURO */}
           <div className="grid grid-cols-2 gap-5">
             {/* Bloco 1: Estrutura de Contemplação & Lances */}
-            <div className="bg-white border-2 border-[#0086FF]/30 rounded-[22px] p-5.5 shadow-md flex flex-col justify-between">
+            <div className="bg-white border-2 border-slate-300 rounded-[22px] p-5.5 shadow-md flex flex-col justify-between">
               <div>
-                <h3 className="text-[13.5px] font-black tracking-wider uppercase text-[#0F2042] mb-2 flex items-center gap-1.5">
+                <h3 className="text-[13.5px] font-black tracking-wider uppercase text-slate-900 mb-2 flex items-center gap-1.5">
                   <span>🎯</span> FORMAS DE CONTEMPLAÇÃO
                 </h3>
                 <p className="text-[12px] font-medium text-slate-700 mb-3 leading-relaxed">
                   Contemplações mensais por <strong>Sorteio (Loteria Federal)</strong> ou modalidade de <strong>Lances (Livre, Fixo 25% e Fixo 45%)</strong>.
                 </p>
 
-                <div className="bg-[#F0F6FF] rounded-xl p-4 border border-[#0086FF]/20 space-y-2">
+                <div className="bg-slate-100 rounded-xl p-4 border border-slate-300 space-y-2">
                   <div className="flex justify-between items-center text-[11.5px]">
-                    <span className="text-slate-600 font-semibold">Lance Embutido (25%):</span>
-                    <span className="font-black font-mono text-[#0F2042] text-[12px]">{fmtFull(lEmbutidoRS)}</span>
+                    <span className="text-slate-700 font-semibold">Lance Embutido (25%):</span>
+                    <span className="font-black font-mono text-slate-900 text-[12px]">{fmtFull(lEmbutidoRS)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11.5px]">
-                    <span className="text-slate-600 font-semibold">Lance do Bolso (Recursos Próprios):</span>
-                    <span className="font-black font-mono text-[#0F2042] text-[12px]">{fmtFull(lDinheiroRS)}</span>
+                    <span className="text-slate-700 font-semibold">Lance do Bolso (Recursos Próprios):</span>
+                    <span className="font-black font-mono text-slate-900 text-[12px]">{fmtFull(lDinheiroRS)}</span>
                   </div>
-                  <div className="border-t border-[#0086FF]/30 pt-2 flex justify-between items-center text-[13px]">
-                    <span className="font-black text-[#0086FF]">TOTAL DO LANCE SIMULADO:</span>
-                    <span className="font-black font-mono text-[#0086FF]">{lanceTotalPct.toFixed(1)}% ({fmtFull(lanceTotalRS)})</span>
+                  <div className="border-t border-slate-300 pt-2 flex justify-between items-center text-[13px]">
+                    <span className="font-black text-[#FF5500]">TOTAL DO LANCE SIMULADO:</span>
+                    <span className="font-black font-mono text-[#FF5500]">{lanceTotalPct.toFixed(1)}% ({fmtFull(lanceTotalRS)})</span>
                   </div>
                 </div>
               </div>
 
               <div className="mt-3 pt-2 border-t border-slate-300 flex justify-between items-center text-[11.5px]">
-                <span className="text-slate-600 font-bold">Parcela Pós-Contemplação:</span>
+                <span className="text-slate-700 font-bold">Parcela Pós-Contemplação:</span>
                 <span className="text-[15px] font-black text-emerald-600">{fmtFull(parcelaPos)}</span>
               </div>
             </div>
 
             {/* Bloco 2: Bonificação Exclusiva Sem Seguro */}
-            <div className="bg-gradient-to-br from-emerald-50 via-white to-blue-50/30 border-2 border-emerald-400 rounded-[22px] p-5.5 shadow-md flex flex-col justify-between relative overflow-hidden">
+            <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 border-2 border-emerald-400 rounded-[22px] p-5.5 shadow-md flex flex-col justify-between relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest px-4 py-1 rounded-bl-xl shadow-sm">
                 BONIFICAÇÃO EXCLUSIVA
               </div>
@@ -445,10 +445,10 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
             </div>
           </div>
 
-          {/* DIVERSOS SEGMENTOS EM AZUL ROYAL MAGALU */}
+          {/* DIVERSOS SEGMENTOS EM LARANJADO */}
           <div>
-            <h2 className="text-[15px] font-black tracking-[0.2em] uppercase text-[#0086FF] mb-4 flex items-center justify-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#0086FF]" />
+            <h2 className="text-[15px] font-black tracking-[0.2em] uppercase text-[#FF5500] mb-4 flex items-center justify-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#FF5500]" />
               2. POSSIBILIDADES ESTRATÉGICAS DE USO DO CRÉDITO
             </h2>
 
@@ -456,12 +456,12 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
               {segmentCards.map((card, idx) => (
                 <div
                   key={idx}
-                  className="bg-white border-2 border-[#0086FF] rounded-[22px] p-5 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-lg shadow-blue-500/10 hover:shadow-xl transition-all"
+                  className="bg-white border-2 border-[#FF5500] rounded-[22px] p-5 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-lg shadow-orange-500/10 hover:shadow-xl transition-all"
                 >
-                  <div className="w-[100px] h-[100px] rounded-2xl overflow-hidden mb-3 relative border-2 border-[#0086FF] shadow-md">
+                  <div className="w-[100px] h-[100px] rounded-2xl overflow-hidden mb-3 relative border-2 border-[#FF5500] shadow-md">
                     <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
                   </div>
-                  <h3 className="text-[15.5px] font-black text-[#0086FF] mb-1 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                  <h3 className="text-[15.5px] font-black text-[#FF5500] mb-1 uppercase tracking-wide flex items-center justify-center gap-1.5">
                     <span>{card.icon}</span> {card.title}
                   </h3>
                   <p className="text-[11.5px] font-bold text-slate-700 leading-relaxed text-center">
@@ -472,13 +472,13 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
             </div>
           </div>
 
-          {/* CARD DE PLANEJAMENTO ESTRATÉGICO MAGALU PREMIUM (AZUL ROYAL + COBALT + CAIXA CRISTALINA) */}
-          <div className="bg-gradient-to-r from-[#0F2042] via-[#0086FF] to-[#0F2042] border-2 border-[#0086FF] rounded-[24px] p-6 shadow-2xl flex flex-col gap-3.5 text-white">
+          {/* CARD DE PLANEJAMENTO ESTRATÉGICO EXECUTIVE SLATE GRAY & GOLD (SEM AZUL) */}
+          <div className="bg-gradient-to-r from-slate-900 via-[#1E293B] to-slate-900 border-2 border-[#D97706] rounded-[24px] p-6 shadow-2xl flex flex-col gap-3.5 text-white">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-100 drop-shadow-sm">
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#F59E0B] drop-shadow-sm">
                 PLANEJAMENTO ESTRATÉGICO DE ALTO DESEMPENHO
               </span>
-              <div className="shrink-0 bg-[#FF5500] text-white font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-xl shadow-md">
+              <div className="shrink-0 bg-gradient-to-r from-[#FF5500] to-[#D97706] text-white font-black text-[11px] uppercase tracking-wider px-4 py-1.5 rounded-xl shadow-md">
                 GRUPO {grupoNum} · ALAVANCAGEM PATRIMONIAL
               </div>
             </div>
@@ -487,36 +487,36 @@ export const NotebookLMPresentation = forwardRef<HTMLDivElement, NotebookLMPrese
               Conquiste bens de alto valor preservando a liquidez do seu caixa e acelerando a formação de patrimônio com inteligência e previsibilidade.
             </p>
 
-            {/* REGRAS E ORDEM DE CONTEMPLAÇÃO DO GRUPO EM CAIXA BRANCA CRISTALINA */}
-            <div className="bg-white rounded-xl p-4.5 border border-white shadow-xl flex flex-col gap-1.5">
-              <span className="text-[12px] font-black text-[#0086FF] uppercase tracking-wider flex items-center gap-2">
+            {/* REGRAS E ORDEM DE CONTEMPLAÇÃO DO GRUPO EM CAIXA BRANCA COM BORDA DOURADA */}
+            <div className="bg-white rounded-xl p-4.5 border-2 border-[#D97706] shadow-xl flex flex-col gap-1.5">
+              <span className="text-[12px] font-black text-[#D97706] uppercase tracking-wider flex items-center gap-2">
                 <span>🎯</span> REGRAS DE CONTEMPLAÇÃO DO GRUPO {grupoNum}:
               </span>
-              <p className="text-[13px] font-extrabold text-[#0F2042] leading-relaxed">
+              <p className="text-[13px] font-extrabold text-slate-900 leading-relaxed">
                 "{ordemContemplacaoText}"
               </p>
             </div>
           </div>
 
-          {/* RODAPÉ MAGALU OFFICIAL PREMIUM */}
-          <div className="border-t-2 border-[#0086FF]/30 pt-6 pb-2 mt-2 flex items-center justify-between">
+          {/* RODAPÉ EXECUTIVE SLATE GRAY & GOLD */}
+          <div className="border-t-2 border-slate-300 pt-6 pb-2 mt-2 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-[19px] font-black text-[#0F2042] tracking-wide">
+              <span className="text-[19px] font-black text-slate-900 tracking-wide">
                 FABRICIO HONÓRIO
               </span>
-              <span className="text-[12.5px] font-black text-[#0086FF] tracking-wider uppercase">
+              <span className="text-[12.5px] font-black text-[#FF5500] tracking-wider uppercase">
                 GESTOR DE NEGÓCIOS - ESPECIALISTA EM CONSÓRCIOS
               </span>
-              <span className="text-[13.5px] font-black text-[#FF5500]">
+              <span className="text-[13.5px] font-black text-[#D97706]">
                 CONSÓRCIO MAGALU
               </span>
             </div>
 
             <div className="flex flex-col items-end text-right">
-              <span className="text-[13.5px] font-black text-[#0F2042]">
+              <span className="text-[13.5px] font-black text-slate-900">
                 www.oespecialistaconsorcio.com.br
               </span>
-              <span className="text-[11px] font-bold text-slate-500">
+              <span className="text-[11px] font-bold text-slate-600">
                 Documento Executivo Gerado via Notebook LM Engine
               </span>
             </div>
