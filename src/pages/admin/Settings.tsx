@@ -12,7 +12,7 @@ import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Up
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createWhatsAppInstance } from "@/services/evolutionOnboardingService";
-import { getEvolutionConfig, saveEvolutionConfig, checkEvolutionStatus } from "@/services/evolutionApiService";
+import { getEvolutionConfig, saveEvolutionConfig, checkEvolutionStatus, fetchEvolutionQrCode } from "@/services/evolutionApiService";
 
 const ROLES = [
   { value: "admin", label: "Administrador" },
@@ -43,6 +43,7 @@ export default function Settings() {
   const [evolutionInstance, setEvolutionInstance] = useState("");
   const [evolutionStatus, setEvolutionStatus] = useState<string>("UNKNOWN");
   const [testingStatus, setTestingStatus] = useState(false);
+  const [qrCodeImg, setQrCodeImg] = useState<string | null>(null);
 
   useEffect(() => {
     const cfg = getEvolutionConfig();
@@ -175,20 +176,32 @@ export default function Settings() {
   };
 
   const handleCreateWhatsApp = async () => {
-    if (!profile?.organizacao_id || !org) return;
     setCreatingInstance(true);
+    saveEvolutionConfig({ apiUrl: evolutionUrl, apiKey: evolutionKey, instanceName: evolutionInstance || "simulaja" });
     try {
-      const instanceName = `simulaja_org_${profile.organizacao_id.substring(0, 8)}`;
-      const result = await createWhatsAppInstance(profile.organizacao_id, instanceName);
+      const qrRes = await fetchEvolutionQrCode(evolutionInstance || "simulaja");
+      if (qrRes.success && qrRes.qrcode) {
+        setQrCodeImg(qrRes.qrcode);
+        setEvolutionStatus("connecting");
+        toast({
+          title: "QR Code Gerado!",
+          description: "Escaneie o QR Code exibido na tela com o WhatsApp do seu celular.",
+        });
+        return;
+      }
+
+      if (profile?.organizacao_id) {
+        const instanceName = `simulaja_org_${profile.organizacao_id.substring(0, 8)}`;
+        await createWhatsAppInstance(profile.organizacao_id, instanceName);
+      }
       toast({
-        title: "WhatsApp Criado",
-        description: "A instância foi criada com sucesso! Atualize a página e escaneie o QR Code no seu Inbox.",
+        title: "Instância WhatsApp",
+        description: "Servidor local verificado. Se o QR Code não apareceu, certifique-se de rodar 'npm run evolution:start' no terminal.",
       });
-      fetchData();
     } catch (err: any) {
       toast({
-        title: "Erro ao criar WhatsApp",
-        description: err.message,
+        title: "Instância local offline",
+        description: "Ligue o servidor rodando 'npm run evolution:start' e tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -503,7 +516,7 @@ export default function Settings() {
                     <div>
                       <Label className="text-xs font-bold text-slate-700">Server URL (Evolution API)</Label>
                       <Input
-                        placeholder="https://api.simulaja.com.br"
+                        placeholder="http://localhost:8080"
                         value={evolutionUrl}
                         onChange={(e) => setEvolutionUrl(e.target.value)}
                         className="h-10 text-xs font-mono mt-1"
@@ -560,6 +573,24 @@ export default function Settings() {
                       </Button>
                     </div>
                   </div>
+
+                  {qrCodeImg && (
+                    <div className="mt-4 p-4 bg-slate-900 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-emerald-500/40 shadow-xl">
+                      <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                        Escaneie o QR Code abaixo com seu WhatsApp:
+                      </p>
+                      <div className="p-2 bg-white rounded-xl shadow-lg border border-slate-200">
+                        <img
+                          src={qrCodeImg.startsWith("data:") ? qrCodeImg : `data:image/png;base64,${qrCodeImg}`}
+                          alt="QR Code WhatsApp"
+                          className="w-48 h-48 object-contain"
+                        />
+                      </div>
+                      <p className="text-[11px] text-slate-300 font-medium">
+                        Abra o WhatsApp no celular &gt; Aparelhos Conectados &gt; Conectar um Aparelho
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

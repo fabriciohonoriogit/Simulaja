@@ -108,3 +108,41 @@ export const checkEvolutionStatus = async () => {
     return { state: "DISCONNECTED", reason: err?.message || "Servidor inalcançável" };
   }
 };
+
+export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
+  const config = getEvolutionConfig();
+  try {
+    // 1. Tenta buscar o QR Code da instância existente
+    let res = await fetch(`${config.apiUrl}/instance/connect/${instanceName}`, {
+      headers: { apikey: config.apiKey },
+    });
+    
+    // 2. Se a instância ainda não existir, cria a instância
+    if (!res.ok) {
+      const createRes = await fetch(`${config.apiUrl}/instance/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: config.apiKey },
+        body: JSON.stringify({ instanceName, qrcode: true, integration: "WHATSAPP-BAILEYS" }),
+      });
+      if (createRes.ok) {
+        const createData = await createRes.json();
+        if (createData?.qrcode?.base64) {
+          return { success: true, qrcode: createData.qrcode.base64, code: createData.qrcode.code };
+        }
+      }
+      // Tenta buscar novamente após criar
+      res = await fetch(`${config.apiUrl}/instance/connect/${instanceName}`, {
+        headers: { apikey: config.apiKey },
+      });
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      const qrcode = data?.base64 || data?.qrcode?.base64;
+      return { success: true, qrcode, code: data?.code, pairingCode: data?.pairingCode };
+    }
+    return { success: false, error: "Não foi possível obter o QR Code. Certifique-se de que a Evolution API está ativa." };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Erro de conexão ao buscar QR Code" };
+  }
+};
