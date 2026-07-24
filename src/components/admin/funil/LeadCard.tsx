@@ -416,16 +416,14 @@ export function LeadCard({
                   title="Ver Ficha Cadastral">
                   <ClipboardList className="h-4 w-4" />
                 </button>
-                <a href={`https://wa.me/55${(lead.celular || "").replace(/\D/g, "")}?text=Olá!`}
+                <button 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
-                  onClick={(e) => e.stopPropagation()}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={(e) => { e.stopPropagation(); onOpenHistorico(lead); }}
                   className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-[#25D366] transition-colors"
-                  title="WhatsApp">
+                  title="Abrir Chat WhatsApp no CRM">
                   <WhatsAppIcon className="h-4 w-4" />
-                </a>
+                </button>
                 <button 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
@@ -508,16 +506,14 @@ export function LeadCard({
               title="Ver Ficha Cadastral">
               <ClipboardList className="h-4 w-4" />
             </button>
-            <a href={`https://wa.me/55${(lead.celular || "").replace(/\D/g, "")}?text=Olá!`}
+            <button 
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              target="_blank"
-              rel="noopener noreferrer"
+              onClick={(e) => { e.stopPropagation(); onOpenHistorico(lead); }}
               className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-[#25D366] transition-colors"
-              title="WhatsApp">
+              title="Abrir Chat WhatsApp no CRM">
               <WhatsAppIcon className="h-4 w-4" />
-            </a>
+            </button>
             <button 
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}

@@ -11,6 +11,7 @@ import { format, parseISO, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Lead } from "@/types/funil";
 import { toast } from "sonner";
+import { sendWhatsAppMessage } from "@/services/evolutionApiService";
 
 interface Message {
   id: string;
@@ -86,15 +87,26 @@ export function LeadChat({ lead }: { lead: Lead }) {
     if (!newMessage.trim() || sending) return;
 
     setSending(true);
+    const messageText = newMessage.trim();
+
+    // 1. Dispara a mensagem via Evolution API para o celular do cliente
+    if (lead.celular) {
+      const res = await sendWhatsAppMessage({ number: lead.celular, text: messageText });
+      if (!res.success) {
+        console.warn("[Evolution API] Falha ao enviar via gateway:", res.error);
+      }
+    }
+
+    // 2. Registra a mensagem no banco do CRM
     const { error } = await (supabase.from("chat_messages") as any).insert({
       lead_id: lead.id,
-      content: newMessage.trim(),
+      content: messageText,
       sender: 'agent',
       organizacao_id: lead.organizacao_id
     });
 
     if (error) {
-      toast.error("Erro ao enviar mensagem");
+      toast.error("Erro ao registrar mensagem");
     } else {
       setNewMessage("");
     }

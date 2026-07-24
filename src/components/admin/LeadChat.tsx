@@ -115,15 +115,9 @@ export const LeadChat: React.FC<LeadChatProps> = ({ leadId, leadName, leadCelula
       setIsAiActive(novoStatus);
       toast({
         title: novoStatus ? "IA Ativada" : "IA Desativada",
-        description: novoStatus ? "O robô voltou a responder o cliente." : "O robô parou de responder.",
+        description: novoStatus ? "O robô voltou a responder o cliente." : "Atendimento humano ativado.",
         variant: novoStatus ? "default" : "destructive",
       });
-
-      // Se desativou, abre o whatsapp
-      if (!novoStatus && leadCelular) {
-        const cleanPhone = leadCelular.replace(/\D/g, "");
-        window.open(`https://wa.me/55${cleanPhone}`, '_blank');
-      }
 
     } catch (error) {
       console.error("Erro ao alterar IA:", error);
