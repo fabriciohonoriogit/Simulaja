@@ -28,14 +28,20 @@ export default function WhatsAppInbox() {
     if (profile?.organizacao_id) {
       fetchLeads();
       
-      // Listen for new messages to update the list
+      // Listen for new messages to update the list and show notification
       const channel = supabase
         .channel('inbox-updates')
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'chat_messages' },
-          () => {
+          (payload) => {
+            const raw = payload.new as any;
             fetchLeads(true);
+            if (raw.role === 'user') {
+              toast.info(`💬 Nova mensagem recebida no WhatsApp!`, {
+                description: raw.content?.slice(0, 60)
+              });
+            }
           }
         )
         .subscribe();
