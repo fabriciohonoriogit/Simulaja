@@ -428,16 +428,31 @@ Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao pon
         }),
       });
 
-      const data = await upstream.json();
+      let data = await upstream.json();
       
       if (!upstream.ok) {
-        console.error("Gemini API Error:", data);
-        return new Response(JSON.stringify({ text: "O Jarvis não conseguiu processar (Erro API).", error: data }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        console.warn("Gemini 2.5 Flash Lite Error, tentando fallback com Gemini 1.5 Flash...", data);
+        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        const fallbackRes = await fetch(fallbackUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents,
+            tools,
+            generationConfig: { maxOutputTokens: 1000 },
+          })
+        });
+
+        if (fallbackRes.ok) {
+          data = await fallbackRes.json();
+        } else {
+          return new Response(JSON.stringify({ text: "Tive uma oscilação momentânea na conexão com a inteligência. Pode repetir a sua pergunta, por favor?", error: data }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
       }
 
       const candidate = data?.candidates?.[0];
       if (!candidate) {
-        return new Response(JSON.stringify({ text: "Desculpe, não consegui formular uma resposta." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ text: "Tive uma oscilação momentânea na conexão. Pode me perguntar novamente?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const parts = candidate.content?.parts || [];
