@@ -213,6 +213,7 @@ export default function Jarvis() {
 
     const recognitionRef = useRef<any>(null);
     const finalTranscriptRef = useRef<string>("");
+    const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const startRecording = () => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -224,7 +225,7 @@ export default function Jarvis() {
         try {
             const rec = new SpeechRecognition();
             rec.lang = "pt-BR";
-            rec.continuous = false;
+            rec.continuous = true; // Fala contínua sem cortar o usuário no meio da frase
             rec.interimResults = true;
 
             finalTranscriptRef.current = "";
@@ -238,23 +239,48 @@ export default function Jarvis() {
                     else interim += t;
                 }
                 if (finalText) finalTranscriptRef.current += finalText;
-                setQuestion((finalTranscriptRef.current + " " + interim).trim());
+                const fullText = (finalTranscriptRef.current + " " + interim).trim();
+                setQuestion(fullText);
+
+                // Timer de pausa humana (2.2s de silêncio) para permitir que o usuário pense sem ser cortado
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                if (fullText.length > 2) {
+                    silenceTimerRef.current = setTimeout(() => {
+                        try { rec.stop(); } catch (e) {}
+                    }, 2200);
+                }
             };
 
             rec.onstart = () => {
                 setIsListening(true);
                 setOrbState("listening");
             };
-            rec.onerror = () => {
+
+            rec.onerror = (e: any) => {
+                // Se der erro de silêncio mas houver texto acumulado, encerra e envia a pergunta
+                if (e.error === 'no-speech' && finalTranscriptRef.current.trim()) {
+                    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                    setIsListening(false);
+                    const finalQ = finalTranscriptRef.current.trim();
+                    if (finalQ) {
+                        setQuestion("");
+                        handleAnalyze(finalQ);
+                    }
+                    return;
+                }
                 setIsListening(false);
                 setOrbState("idle");
             };
+
             rec.onend = () => {
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
                 if (finalQ) {
                     setQuestion("");
                     handleAnalyze(finalQ);
+                } else {
+                    setOrbState("idle");
                 }
             };
 
