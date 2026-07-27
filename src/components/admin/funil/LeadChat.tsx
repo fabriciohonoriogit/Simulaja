@@ -69,7 +69,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
     if (!error && data) {
       const formatted = (data as any[]).map((msg) => ({
         ...msg,
-        sender: msg.sender || (msg.role === 'user' || msg.role === 'client' ? 'client' : msg.role === 'ai' || msg.role === 'assistant' ? 'ai' : 'agent')
+        sender: msg.sender ? msg.sender : (msg.role === 'user' || msg.role === 'client' ? 'client' : msg.role === 'agent' ? 'agent' : 'ai')
       }));
       setMessages(formatted as Message[]);
     }
@@ -122,11 +122,13 @@ export function LeadChat({ lead }: { lead: Lead }) {
     });
 
     if (error) {
-      // Fallback para 'assistant' caso a restrição do banco só aceite ('user', 'assistant', 'system')
+      // Se o usuário está mandando manualmente como consultor humano:
+      const fallbackRole = aiEnabled ? 'assistant' : 'agent';
       const fallback = await (supabase.from("chat_messages") as any).insert({
         lead_id: lead.id,
         content: messageText,
-        role: 'assistant',
+        role: fallbackRole,
+        sender: 'agent',
       });
       error = fallback.error;
     }
@@ -137,9 +139,9 @@ export function LeadChat({ lead }: { lead: Lead }) {
     } else {
       setNewMessage("");
       if (!waStatus.success) {
-        toast.warning(`Mensagem registrada no CRM, mas não enviada ao WhatsApp do cliente: ${waStatus.error || "Instância offline"}`);
+        toast.error(`⚠️ Mensagem salva no CRM, mas FALHOU ao entregar no WhatsApp (${waStatus.error || "Servidor offline"}). Verifique se o WhatsApp está conectado nas Configurações.`, { duration: 6000 });
       } else {
-        toast.success("Mensagem enviada via WhatsApp e salva no CRM com sucesso!");
+        toast.success("🟢 Mensagem enviada ao WhatsApp e registrada no CRM!", { duration: 4000 });
       }
     }
     setSending(false);
