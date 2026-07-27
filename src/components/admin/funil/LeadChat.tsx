@@ -95,8 +95,17 @@ export function LeadChat({ lead }: { lead: Lead }) {
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
-    setSending(true);
-    const messageText = newMessage.trim();
+    // Limpa o campo de texto e adiciona a mensagem otimista na tela imediatamente
+    setNewMessage("");
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: tempId,
+      lead_id: lead.id,
+      sender: 'agent',
+      content: messageText,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
 
     // 1. Dispara a mensagem via Evolution API para o celular do cliente
     let waStatus: { success: boolean; error?: string } = { success: true };
@@ -114,30 +123,32 @@ export function LeadChat({ lead }: { lead: Lead }) {
       waStatus = { success: false, error: "Lead sem número de telefone cadastrado." };
     }
 
-    // 2. Registra a mensagem no banco do CRM
-    let { error } = await (supabase.from("chat_messages") as any).insert({
+    // 2. Registra a mensagem no banco do CRM (apenas colunas existentes no schema: lead_id, content, role)
+    let { data: insertedData, error } = await (supabase.from("chat_messages") as any).insert({
       lead_id: lead.id,
       content: messageText,
       role: 'agent',
-    });
+    }).select().single();
 
     if (error) {
-      // Se o usuário está mandando manualmente como consultor humano:
       const fallbackRole = aiEnabled ? 'assistant' : 'agent';
       const fallback = await (supabase.from("chat_messages") as any).insert({
         lead_id: lead.id,
         content: messageText,
         role: fallbackRole,
-        sender: 'agent',
-      });
+      }).select().single();
       error = fallback.error;
+      insertedData = fallback.data;
     }
 
     if (error) {
       console.error("Erro ao registrar mensagem no Supabase:", error);
       toast.error("Erro ao registrar mensagem no CRM: " + (error.message || ""));
     } else {
-      setNewMessage("");
+      if (insertedData) {
+        // Substitui a mensagem otimista pelo registro real do banco
+        setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...insertedData, sender: 'agent' } : m)));
+      }
       if (!waStatus.success) {
         toast.error(`⚠️ Mensagem salva no CRM, mas FALHOU ao entregar no WhatsApp (${waStatus.error || "Servidor offline"}). Verifique se o WhatsApp está conectado nas Configurações.`, { duration: 6000 });
       } else {
