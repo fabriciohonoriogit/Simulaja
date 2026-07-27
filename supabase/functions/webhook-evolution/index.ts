@@ -75,7 +75,7 @@ serve(async (req) => {
       const { data: leads, error: leadErr } = await supabaseAdmin
         .from("leads")
         .select("id, nome, atendimento_ia, organizacao_id")
-        .or(`celular.ilike.%${shortNumber}%,telefone.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%,telefone.ilike.%${last8Digits}%`)
+        .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%`)
         .limit(1);
 
       // Se o número NÃO pertence a nenhum lead existente no CRM, IGNORA COMPLETAMENTE (não cria lead, não salva chat)

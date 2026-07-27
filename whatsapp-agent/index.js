@@ -40,7 +40,7 @@ app.post('/webhook/evolution', async (req, res) => {
         const { data: leads } = await supabase
           .from('leads')
           .select('id, nome, atendimento_ia')
-          .or(`celular.ilike.%${shortNumber}%,telefone.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%,telefone.ilike.%${last8Digits}%`)
+          .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%`)
           .limit(1);
 
         if (!leads || leads.length === 0) {
