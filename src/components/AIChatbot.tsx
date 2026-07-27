@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import JarvisAvatar from "./JarvisAvatar";
@@ -14,6 +15,13 @@ interface Message {
 const WHATSAPP_NUMBER = "5541997925357";
 
 const AIChatbot = () => {
+  const location = useLocation();
+  const isIndicacoes = location.pathname.startsWith("/indicacoes") || location.pathname.startsWith("/parceiro");
+
+  if (isIndicacoes) {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<Step>("welcome");
   const [messages, setMessages] = useState<Message[]>([]);

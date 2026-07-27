@@ -656,13 +656,10 @@ export default function Indicacoes() {
 
       </div>
       
-      {/* Footer Powered by Jarvis */}
-      <div className="absolute bottom-4 flex items-center justify-center space-x-2 z-10 pointer-events-none">
-        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-900/40 border border-blue-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(59,130,246,0.3)]">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#4ca8e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
-        </div>
-        <p className="text-white/70 text-[12px] font-medium uppercase tracking-wider">
-          Powered by <span className="text-[#84CC16] font-bold">Jarvis AI</span>
+      {/* Footer Contemplar */}
+      <div className="absolute bottom-4 flex items-center justify-center space-x-2 z-10 pointer-events-none opacity-60">
+        <p className="text-white/70 text-[11px] font-medium uppercase tracking-wider">
+          Contemplar CRM • Área do Parceiro
         </p>
       </div>
 

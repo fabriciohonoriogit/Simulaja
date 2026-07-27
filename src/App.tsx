@@ -39,6 +39,7 @@ import { LevelUpModal } from "./components/admin/gamification/LevelUpModal";
 const AppContent = () => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
+  const isIndicacoes = location.pathname.startsWith("/indicacoes") || location.pathname.startsWith("/parceiro");
 
   return (
     <>
@@ -85,7 +86,7 @@ const AppContent = () => {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!isAdmin && <AIChatbot />}
+      {!isAdmin && !isIndicacoes && <AIChatbot />}
     </>
   );
 };
