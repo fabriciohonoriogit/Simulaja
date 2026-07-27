@@ -42,13 +42,22 @@ export function LeadChat({ lead }: { lead: Lead }) {
             ...raw,
             sender: raw.sender || (raw.role === 'user' || raw.role === 'client' ? 'client' : raw.role === 'ai' || raw.role === 'assistant' ? 'ai' : 'agent')
           };
-          setMessages((prev) => [...prev, msg]);
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
         }
       )
       .subscribe();
 
+    // Polling automático a cada 3 segundos para garantir atualização em tempo real sem F5
+    const pollInterval = setInterval(() => {
+      fetchMessages(true);
+    }, 3000);
+
     return () => {
       supabase.removeChannel(subscription);
+      clearInterval(pollInterval);
     };
   }, [lead.id]);
 
@@ -58,8 +67,8 @@ export function LeadChat({ lead }: { lead: Lead }) {
     }
   }, [messages]);
 
-  const fetchMessages = async () => {
-    setLoading(true);
+  const fetchMessages = async (silent = false) => {
+    if (!silent) setLoading(true);
     const { data, error } = await supabase
       .from("chat_messages")
       .select("*")
@@ -73,7 +82,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
       }));
       setMessages(formatted as Message[]);
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   const handleToggleAi = async (enabled: boolean) => {

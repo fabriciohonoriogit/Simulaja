@@ -35,19 +35,26 @@ export default function WhatsAppInbox() {
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'chat_messages' },
           () => {
-            fetchLeads();
+            fetchLeads(true);
           }
         )
         .subscribe();
 
+      // Polling automático a cada 4 segundos para garantir atualização da lista em tempo real
+      const pollInterval = setInterval(() => {
+        fetchLeads(true);
+      }, 4000);
+
       return () => {
         supabase.removeChannel(channel);
+        clearInterval(pollInterval);
       };
     }
   }, [profile]);
 
-  const fetchLeads = async () => {
+  const fetchLeads = async (silent = false) => {
     if (!profile?.organizacao_id) return;
+    if (!silent) setLoading(true);
 
     // First get all leads with chat history
     const { data: messages, error: msgError } = await supabase
