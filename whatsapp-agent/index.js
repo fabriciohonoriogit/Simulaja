@@ -22,6 +22,8 @@ app.post('/webhook/evolution', async (req, res) => {
       if (!msg) return;
       
       const isFromMe = !!msg.key?.fromMe;
+      if (isFromMe) return; // Ignorar totalmente mensagens sent da propria conta para evitar loop de envio
+
       const remoteJid = msg.key?.remoteJidAlt || msg.key?.participant || msg.key?.remoteJid || '';
       const pushName = msg.pushName || '';
 

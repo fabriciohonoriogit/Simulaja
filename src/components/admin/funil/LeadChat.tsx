@@ -61,31 +61,6 @@ export function LeadChat({ lead }: { lead: Lead }) {
     };
   }, [lead.id]);
 
-  // Auto-relay automático da resposta da IA para a Evolution API local
-  useEffect(() => {
-    if (messages.length === 0) return;
-    const lastMsg = messages[messages.length - 1] as any;
-    
-    // Se a mensagem for recente da IA e ainda não foi repassada para o gateway local
-    if (
-      lastMsg &&
-      (lastMsg.role === 'assistant' || lastMsg.sender === 'ai') &&
-      !lastMsg._relayed &&
-      Math.abs(Date.now() - new Date(lastMsg.created_at || 0).getTime()) < 20000
-    ) {
-      lastMsg._relayed = true;
-      const targetPhone = lead.celular || (lead as any).telefone;
-      if (targetPhone) {
-        console.log("[Auto-Relay IA] Repassando resposta da IA para o WhatsApp do cliente via Evolution API local...");
-        sendWhatsAppMessage({
-          number: targetPhone,
-          text: lastMsg.content,
-          organizacaoId: lead.organizacao_id
-        }).catch(err => console.warn("[Auto-Relay IA] Aviso:", err));
-      }
-    }
-  }, [messages, lead]);
-
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
