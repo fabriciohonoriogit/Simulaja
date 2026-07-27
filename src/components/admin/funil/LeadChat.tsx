@@ -99,15 +99,18 @@ export function LeadChat({ lead }: { lead: Lead }) {
     const messageText = newMessage.trim();
 
     // 1. Dispara a mensagem via Evolution API para o celular do cliente
+    let waStatus: { success: boolean; error?: string } = { success: true };
     if (lead.celular) {
-      const res = await sendWhatsAppMessage({ 
+      waStatus = await sendWhatsAppMessage({ 
         number: lead.celular, 
         text: messageText,
         organizacaoId: lead.organizacao_id 
       });
-      if (!res.success) {
-        console.warn("[Evolution API] Falha ao enviar via gateway:", res.error);
+      if (!waStatus.success) {
+        console.warn("[Evolution API] Falha ao enviar via gateway:", waStatus.error);
       }
+    } else {
+      waStatus = { success: false, error: "Lead sem número de celular cadastrado." };
     }
 
     // 2. Registra a mensagem no banco do CRM
@@ -129,9 +132,14 @@ export function LeadChat({ lead }: { lead: Lead }) {
 
     if (error) {
       console.error("Erro ao registrar mensagem no Supabase:", error);
-      toast.error("Erro ao registrar mensagem");
+      toast.error("Erro ao registrar mensagem no CRM: " + (error.message || ""));
     } else {
       setNewMessage("");
+      if (!waStatus.success) {
+        toast.warning(`Mensagem registrada no CRM, mas não enviada ao WhatsApp do cliente: ${waStatus.error || "Instância offline"}`);
+      } else {
+        toast.success("Mensagem enviada via WhatsApp e salva no CRM com sucesso!");
+      }
     }
     setSending(false);
   };
