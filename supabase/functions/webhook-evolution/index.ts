@@ -71,22 +71,46 @@ serve(async (req) => {
       );
 
       // 3. REGRA DE FILTRO: Buscar se o número de telefone pertence a um LEAD EXISTENTE no CRM
-      const { data: leads, error: leadErr } = await supabaseAdmin
-        .from("leads")
-        .select("id, nome, atendimento_ia, organizacao_id")
-        .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%`)
-        .limit(1);
+      const last4 = rawNumber.slice(-4);
+      const mid4 = rawNumber.length >= 8 ? rawNumber.slice(-8, -4) : "";
+      const withHyphen = mid4 ? `${mid4}-${last4}` : "";
+      const withSpace = mid4 ? `${mid4} ${last4}` : "";
 
-      // Se o número NÃO pertence a nenhum lead existente no CRM, IGNORA COMPLETAMENTE (não cria lead, não salva chat)
-      if (leadErr || !leads || leads.length === 0) {
+      let matchedLead: any = null;
+
+      const { data: leads } = await supabaseAdmin
+        .from("leads")
+        .select("id, nome, celular, atendimento_ia, organizacao_id")
+        .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%,celular.ilike.%${withHyphen}%,celular.ilike.%${withSpace}%`)
+        .limit(5);
+
+      if (leads && leads.length > 0) {
+        matchedLead = leads[0];
+      } else {
+        // Fallback: busca os leads e compara os dígitos limpos do celular em memória
+        const { data: allLeads } = await supabaseAdmin
+          .from("leads")
+          .select("id, nome, celular, atendimento_ia, organizacao_id")
+          .order("created_at", { ascending: false })
+          .limit(200);
+
+        if (allLeads) {
+          matchedLead = allLeads.find((l: any) => {
+            if (!l.celular) return false;
+            const clean = l.celular.replace(/\D/g, "");
+            return clean.endsWith(last8Digits) || (shortNumber.length >= 8 && clean.includes(shortNumber));
+          });
+        }
+      }
+
+      // Se o número NÃO pertence a nenhum lead existente no CRM, IGNORA COMPLETAMENTE
+      if (!matchedLead) {
         console.log(`[Filtro WhatsApp] Mensagem ignorada do número ${rawNumber}: não é um lead cadastrado no CRM.`);
         return new Response(JSON.stringify({ status: "ignored_not_a_crm_lead" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
         });
       }
-
-      const matchedLead = leads[0];
 
       // 4. Salvar a mensagem no histórico do chat do lead
       const { error: msgErr } = await supabaseAdmin
@@ -99,6 +123,22 @@ serve(async (req) => {
 
       if (msgErr) {
         console.error("Erro ao registrar chat_messages:", msgErr);
+      }
+
+      // 5. Se a IA estiver ATIVA no lead, disparar a resposta da IA
+      if (matchedLead.atendimento_ia !== false) {
+        console.log(`[Filtro WhatsApp] Disparando IA para o lead ${matchedLead.nome}...`);
+        try {
+          await supabaseAdmin.functions.invoke("whatsapp-agent", {
+            body: {
+              lead_id: matchedLead.id,
+              content: incomingText,
+              organizacao_id: matchedLead.organizacao_id
+            }
+          });
+        } catch (agentErr) {
+          console.error("Erro ao invocar whatsapp-agent:", agentErr);
+        }
       }
 
       return new Response(JSON.stringify({ success: true, leadId: matchedLead.id }), {
