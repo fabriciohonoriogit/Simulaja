@@ -21,7 +21,6 @@ app.post(['/webhook/evolution', '/webhook/evolution/', '/'], async (req, res) =>
     res.status(200).send('OK');
 
     const rawEvent = (event.event || event.type || event.action || '').toString().toLowerCase();
-    console.log(`[Webhook Evento] Recebido tipo de evento: "${rawEvent}"`);
     
     // PROCESSAR EXCLUSIVAMENTE 'messages.upsert' (Ignorar SEND_MESSAGE para evitar loop)
     if (!rawEvent.includes('messages.upsert') && !rawEvent.includes('messages_upsert')) {
@@ -57,7 +56,7 @@ app.post(['/webhook/evolution', '/webhook/evolution/', '/'], async (req, res) =>
 
     if (!incomingText) return;
 
-    // FILTRO DE SEGURANÇA: Verificar se o número de telefone já é um LEAD CADASTRADO no CRM
+    // FILTRO DE SEGURANÇA EXCLUSIVO POR TELEFONE: Verificar se o número de telefone é um LEAD CADASTRADO no CRM
     let matchedLead = null;
     let supabase = null;
 
@@ -74,48 +73,39 @@ app.post(['/webhook/evolution', '/webhook/evolution/', '/'], async (req, res) =>
       if (leads && leads.length > 0) {
         matchedLead = leads[0];
       } else {
-        // Fallback em memória limpando caracteres especiais
+        // Busca em memória comparando dígitos do celular
         const { data: allLeads } = await supabase
           .from('leads')
           .select('id, nome, celular, atendimento_ia, organizacao_id')
           .order('created_at', { ascending: false })
-          .limit(200);
+          .limit(500);
 
         if (allLeads) {
           matchedLead = allLeads.find((l) => {
             if (!l.celular) return false;
             const clean = l.celular.replace(/\D/g, '');
-            return clean.endsWith(last8Digits) || (shortNumber.length >= 8 && clean.includes(shortNumber));
+            return (
+              (last8Digits.length >= 8 && clean.endsWith(last8Digits)) ||
+              (shortNumber.length >= 8 && clean.includes(shortNumber))
+            );
           });
         }
       }
-
-      // Fallback por pushName
-      if (!matchedLead && pushName && pushName.trim().length > 2) {
-        const { data: nameLeads } = await supabase
-          .from('leads')
-          .select('id, nome, celular, atendimento_ia, organizacao_id')
-          .ilike('nome', `%${pushName.trim()}%`)
-          .limit(1);
-
-        if (nameLeads && nameLeads.length > 0) {
-          matchedLead = nameLeads[0];
-        }
-      }
-
-      if (!matchedLead) {
-        console.log(`[!] Contato ${pushName || rawNumber} não é um lead do CRM. Mensagem ignorada.`);
-        return;
-      }
-
-      // 1. Gravar a mensagem do cliente no CRM
-      await supabase.from('chat_messages').insert({
-        lead_id: matchedLead.id,
-        organizacao_id: matchedLead.organizacao_id,
-        content: incomingText,
-        role: 'user'
-      });
     }
+
+    // REGRA DE SEGURANÇA: Se o número NÃO pertence a NENHUM lead cadastrado no CRM, ignora COMPLETAMENTE!
+    if (!matchedLead) {
+      console.log(`[!] IGNORADO: O número ${rawNumber} não pertence a nenhum lead do CRM.`);
+      return;
+    }
+
+    // 1. Gravar a mensagem do cliente no CRM
+    await supabase.from('chat_messages').insert({
+      lead_id: matchedLead.id,
+      organizacao_id: matchedLead.organizacao_id,
+      content: incomingText,
+      role: 'user'
+    });
 
     console.log(`[+] Mensagem recebida de Lead CRM ${matchedLead?.nome || ''} (${remoteJid}): ${incomingText}`);
 

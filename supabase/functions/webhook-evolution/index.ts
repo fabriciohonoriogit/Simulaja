@@ -97,22 +97,9 @@ serve(async (req) => {
         }
       }
 
-      // Fallback por Nome (pushName) se o número vier no formato @lid puro sem telefone
-      if (!matchedLead && pushName && pushName.trim().length > 2) {
-        const { data: nameLeads } = await supabaseAdmin
-          .from("leads")
-          .select("id, nome, celular, atendimento_ia, organizacao_id")
-          .ilike("nome", `%${pushName.trim()}%`)
-          .limit(1);
-
-        if (nameLeads && nameLeads.length > 0) {
-          matchedLead = nameLeads[0];
-        }
-      }
-
       // Se o número NÃO pertence a nenhum lead existente no CRM, IGNORA COMPLETAMENTE
       if (!matchedLead) {
-        console.log(`[Filtro WhatsApp] Mensagem ignorada do contato ${pushName || rawNumber}: não é um lead cadastrado no CRM.`);
+        console.log(`[Filtro WhatsApp] Mensagem ignorada do número ${rawNumber}: não é um lead cadastrado no CRM.`);
         return new Response(JSON.stringify({ status: "ignored_not_a_crm_lead" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
