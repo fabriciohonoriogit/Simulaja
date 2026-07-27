@@ -6,8 +6,14 @@ const { sendMessage } = require('./evolution');
 const app = express();
 app.use(express.json());
 
-// Rota Webhook que a Evolution API chama
-app.post('/webhook/evolution', async (req, res) => {
+// Logger de debug para registrar todas as requisições recebidas
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] HTTP ${req.method} ${req.url} recebido!`);
+  next();
+});
+
+// Rota Webhook aceitando múltiplos alias
+app.post(['/webhook/evolution', '/webhook/evolution/', '/'], async (req, res) => {
   try {
     const event = req.body;
     
@@ -15,6 +21,7 @@ app.post('/webhook/evolution', async (req, res) => {
     res.status(200).send('OK');
 
     const rawEvent = (event.event || event.type || event.action || '').toString().toLowerCase();
+    console.log(`[Webhook Evento] Recebido tipo de evento: "${rawEvent}"`);
     
     // PROCESSAR EXCLUSIVAMENTE 'messages.upsert' (Ignorar SEND_MESSAGE para evitar loop)
     if (!rawEvent.includes('messages.upsert') && !rawEvent.includes('messages_upsert')) {
