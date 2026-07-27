@@ -100,9 +100,10 @@ export function LeadChat({ lead }: { lead: Lead }) {
 
     // 1. Dispara a mensagem via Evolution API para o celular do cliente
     let waStatus: { success: boolean; error?: string } = { success: true };
-    if (lead.celular) {
+    const targetPhone = lead.celular || (lead as any).telefone;
+    if (targetPhone) {
       waStatus = await sendWhatsAppMessage({ 
-        number: lead.celular, 
+        number: targetPhone, 
         text: messageText,
         organizacaoId: lead.organizacao_id 
       });
@@ -110,7 +111,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
         console.warn("[Evolution API] Falha ao enviar via gateway:", waStatus.error);
       }
     } else {
-      waStatus = { success: false, error: "Lead sem número de celular cadastrado." };
+      waStatus = { success: false, error: "Lead sem número de telefone cadastrado." };
     }
 
     // 2. Registra a mensagem no banco do CRM

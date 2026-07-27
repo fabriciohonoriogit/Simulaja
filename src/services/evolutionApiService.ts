@@ -53,14 +53,8 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
       },
       body: JSON.stringify({
         number: cleanNumber,
-        options: {
-          delay: 1200,
-          presence: "composing",
-          linkPreview: true,
-        },
-        textMessage: {
-          text: text,
-        },
+        text: text,
+        delay: 1200,
       }),
     });
 
