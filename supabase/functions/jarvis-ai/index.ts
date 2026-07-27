@@ -130,6 +130,54 @@ const tools = [
           },
           required: ["mensagem"]
         }
+      },
+      {
+        name: "simular_consorcio",
+        description: "Calcula e simula consórcio instantaneamente (crédito, estimativa de parcela, taxa de adm, fundo de reserva e lances ideais recomendados).",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            credito: { type: "NUMBER", description: "Valor do crédito desejado (ex: 200000)." },
+            segmento: { type: "STRING", description: "Segmento: 'imovel', 'veiculo', 'motos', 'pesados' ou 'investimentos'." },
+            prazo: { type: "NUMBER", description: "Prazo desejado em meses (opcional)." }
+          },
+          required: ["credito", "segmento"]
+        }
+      },
+      {
+        name: "get_gamificacao_ranking",
+        description: "Obtém os dados de gamificação: pontos da equipe, ranking de vendas, boss da semana, sequência de vendas (streak) e hall da fama.",
+        parameters: { type: "OBJECT", properties: {} }
+      },
+      {
+        name: "create_lembrete_notificacao",
+        description: "Cria uma notificação/lembrete no painel do CRM para o consultor sobre um compromisso, tarefa ou aviso de lead.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            titulo: { type: "STRING", description: "Título do lembrete." },
+            mensagem: { type: "STRING", description: "Detalhamento da tarefa ou lembrete." },
+            lead_id: { type: "STRING", description: "ID do lead associado (opcional)." }
+          },
+          required: ["titulo", "mensagem"]
+        }
+      },
+      {
+        name: "toggle_atendimento_ia",
+        description: "Ativa ou desativa o atendimento automático da IA Jarvis no WhatsApp de um determinado lead.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            nome: { type: "STRING", description: "Nome do lead para buscar no CRM." },
+            ativo: { type: "BOOLEAN", description: "true para ativar IA automática, false para desativar (modo atendimento humano)." }
+          },
+          required: ["nome", "ativo"]
+        }
+      },
+      {
+        name: "get_propostas_e_vendas",
+        description: "Obtém a lista de propostas geradas e cotas vendidas da organização.",
+        parameters: { type: "OBJECT", properties: {} }
       }
     ]
   }
@@ -333,6 +381,90 @@ async function executeTool(supabase: any, name: string, args: any) {
         };
       }
     }
+
+    if (name === "simular_consorcio") {
+      const credito = Number(args.credito) || 100000;
+      const seg = (args.segmento || "imovel").toLowerCase();
+      
+      let taxaAdm = 0.16;
+      let fundoReserva = 0.02;
+      let prazoPadrao = 200;
+
+      if (seg.includes("veic") || seg.includes("carro")) {
+        taxaAdm = 0.15;
+        prazoPadrao = 80;
+      } else if (seg.includes("moto")) {
+        taxaAdm = 0.18;
+        prazoPadrao = 60;
+      } else if (seg.includes("pesad")) {
+        taxaAdm = 0.14;
+        prazoPadrao = 120;
+      }
+
+      const prazoFinal = Number(args.prazo) || prazoPadrao;
+      const montanteTotal = credito * (1 + taxaAdm + fundoReserva);
+      const parcelaEstimada = montanteTotal / prazoFinal;
+
+      return {
+        credito,
+        segmento: seg,
+        prazo: prazoFinal,
+        parcelaEstimada: Math.round(parcelaEstimada * 100) / 100,
+        taxaAdministracaoPct: (taxaAdm * 100).toFixed(1) + "%",
+        fundoReservaPct: (fundoReserva * 100).toFixed(1) + "%",
+        mensagem: `Simulação concluída: Crédito de R$ ${credito.toLocaleString("pt-BR")} em ${prazoFinal}x com parcela estimada de R$ ${Math.round(parcelaEstimada).toLocaleString("pt-BR")}.`
+      };
+    }
+
+    if (name === "get_gamificacao_ranking") {
+      let query = client.from('pontos_gamificacao').select('usuario_id, pontos, nivel, streak_vendas');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const { data: pontos } = await query.order('pontos', { ascending: false }).limit(10);
+      return { ranking: pontos || [] };
+    }
+
+    if (name === "create_lembrete_notificacao") {
+      const { data, error } = await client.from('notificacoes').insert({
+        titulo: args.titulo,
+        mensagem: args.mensagem,
+        lead_id: args.lead_id || null,
+        organizacao_id: orgId,
+        lida: false,
+        created_at: new Date().toISOString()
+      }).select();
+      if (error) return { error: error.message };
+      return { success: true, message: `Lembrete "${args.titulo}" criado com sucesso no painel!` };
+    }
+
+    if (name === "toggle_atendimento_ia") {
+      let query = client.from('leads').select('id, nome, celular, atendimento_ia');
+      if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const { data: found } = await query.ilike('nome', `%${args.nome}%`).limit(1);
+
+      if (!found || found.length === 0) {
+        return { success: false, message: `Não encontrei o lead ${args.nome} para alterar a IA.` };
+      }
+
+      const lead = found[0];
+      const { error } = await client.from('leads').update({ atendimento_ia: args.ativo }).eq('id', lead.id);
+      if (error) return { error: error.message };
+
+      const statusStr = args.ativo ? "IA Ativa (Atendimento Automático)" : "Modo Humano (IA Desativada)";
+      return { success: true, message: `Atendimento do lead ${lead.nome} alterado para: ${statusStr}.` };
+    }
+
+    if (name === "get_propostas_e_vendas") {
+      let propQuery = client.from('propostas').select('*');
+      if (useAdmin) propQuery = propQuery.eq('organizacao_id', orgId);
+      const { data: propostas } = await propQuery.limit(10);
+
+      let cotasQuery = client.from('carteira').select('*');
+      if (useAdmin) cotasQuery = cotasQuery.eq('organizacao_id', orgId);
+      const { data: cotas } = await cotasQuery.limit(10);
+
+      return { propostas: propostas || [], cotasVendidas: cotas || [] };
+    }
+
     return { error: `Ferramenta ${name} não encontrada.` };
   } catch(e: any) {
     return { error: e.message };
