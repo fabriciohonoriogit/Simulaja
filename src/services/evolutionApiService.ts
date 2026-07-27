@@ -140,8 +140,18 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
 
     if (res.ok) {
       const data = await res.json();
+      const state = data?.instance?.state || data?.state;
       const qrcode = data?.base64 || data?.qrcode?.base64;
-      return { success: true, qrcode, code: data?.code, pairingCode: data?.pairingCode };
+
+      if (state === "open" || state === "CONNECTED") {
+        return { success: true, connected: true, message: "WhatsApp já está conectado e pronto!" };
+      }
+
+      if (qrcode) {
+        return { success: true, qrcode, code: data?.code, pairingCode: data?.pairingCode };
+      }
+
+      return { success: true, connected: false, message: "Aguardando geração do QR Code..." };
     }
     return { success: false, error: "Não foi possível obter o QR Code. Certifique-se de que a Evolution API está ativa." };
   } catch (err: any) {

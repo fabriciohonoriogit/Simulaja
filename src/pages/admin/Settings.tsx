@@ -180,6 +180,15 @@ export default function Settings() {
     saveEvolutionConfig({ apiUrl: evolutionUrl, apiKey: evolutionKey, instanceName: evolutionInstance || "simulaja" });
     try {
       const qrRes = await fetchEvolutionQrCode(evolutionInstance || "simulaja");
+      if (qrRes.success && qrRes.connected) {
+        setEvolutionStatus("CONNECTED");
+        toast({
+          title: "WhatsApp Conectado!",
+          description: "Sua instância do WhatsApp já está ativa e pronta para enviar mensagens.",
+        });
+        return;
+      }
+
       if (qrRes.success && qrRes.qrcode) {
         setQrCodeImg(qrRes.qrcode);
         setEvolutionStatus("connecting");
@@ -196,12 +205,12 @@ export default function Settings() {
       }
       toast({
         title: "Instância WhatsApp",
-        description: "Servidor local verificado. Se o QR Code não apareceu, certifique-se de rodar 'npm run evolution:start' no terminal.",
+        description: "Servidor verificado. Se o QR Code não apareceu, certifique-se de que a Evolution API está rodando.",
       });
     } catch (err: any) {
       toast({
-        title: "Instância local offline",
-        description: "Ligue o servidor rodando 'npm run evolution:start' e tente novamente.",
+        title: "Erro de Conexão",
+        description: err?.message || "Verifique se a Evolution API está ativa.",
         variant: "destructive",
       });
     } finally {
