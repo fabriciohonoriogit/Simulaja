@@ -26,9 +26,10 @@ export const saveEvolutionConfig = (config: Partial<EvolutionConfig>) => {
 export interface SendMessageParams {
   number: string;
   text: string;
+  organizacaoId?: string;
 }
 
-export const sendWhatsAppMessage = async ({ number, text }: SendMessageParams) => {
+export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendMessageParams) => {
   const config = getEvolutionConfig();
 
   // Limpa o número de telefone (remove caracteres não numéricos)
@@ -69,21 +70,28 @@ export const sendWhatsAppMessage = async ({ number, text }: SendMessageParams) =
     } else {
       const errText = await response.text();
       console.error("[Evolution API] Erro ao enviar mensagem:", errText);
-      return { success: false, error: errText };
+      throw new Error(errText);
     }
   } catch (error: any) {
-    console.error("[Evolution API] Exceção na chamada:", error);
+    console.error("[Evolution API] Exceção na chamada direta:", error);
     
-    // Tenta fallback via Edge Function caso cliente esteja rodando no Supabase
+    // Tenta fallback via Edge Function caso cliente esteja rodando no celular ou em ambiente remoto
     try {
       const { data, error: edgeErr } = await supabase.functions.invoke("evolution-send-message", {
-        body: { number: cleanNumber, text, instanceName: config.instanceName },
+        body: { 
+          number: cleanNumber, 
+          text, 
+          instanceName: config.instanceName,
+          organizacaoId,
+          clients: organizacaoId ? [{ id: '1', nome: 'Cliente', celular: cleanNumber }] : undefined,
+          template: text
+        },
       });
-      if (!edgeErr && data) {
+      if (!edgeErr && data && (data.success || !data.error)) {
         return { success: true, data };
       }
     } catch (e) {
-      // ignore fallback error
+      console.error("[Evolution API] Fallback Edge Function também falhou:", e);
     }
 
     return { success: false, error: error?.message || "Erro de conexão com o servidor Evolution API" };

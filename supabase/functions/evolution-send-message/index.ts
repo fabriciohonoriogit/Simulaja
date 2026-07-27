@@ -48,9 +48,16 @@ serve(async (req) => {
       }
     );
 
-    const { organizacaoId, clients, template, media }: RequestBody = await req.json();
+    const reqBody = await req.json();
+    let { organizacaoId, clients, template, media, number, text }: any = reqBody;
 
-    if (!organizacaoId || !clients || (!template && !media)) {
+    // Handle single message fallback from client frontend
+    if ((!clients || clients.length === 0) && number && text) {
+      clients = [{ id: '1', nome: 'Cliente', celular: number }];
+      template = text;
+    }
+
+    if ((!organizacaoId && (!clients || clients.length === 0)) || (!template && !media)) {
       throw new Error("Missing required fields");
     }
 

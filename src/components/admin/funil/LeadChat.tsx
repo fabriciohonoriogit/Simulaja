@@ -37,7 +37,12 @@ export function LeadChat({ lead }: { lead: Lead }) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `lead_id=eq.${lead.id}` },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const raw = payload.new as any;
+          const msg: Message = {
+            ...raw,
+            sender: raw.sender || (raw.role === 'user' || raw.role === 'client' ? 'client' : raw.role === 'ai' || raw.role === 'assistant' ? 'ai' : 'agent')
+          };
+          setMessages((prev) => [...prev, msg]);
         }
       )
       .subscribe();
@@ -62,7 +67,11 @@ export function LeadChat({ lead }: { lead: Lead }) {
       .order("created_at", { ascending: true });
 
     if (!error && data) {
-      setMessages(data as unknown as Message[]);
+      const formatted = (data as any[]).map((msg) => ({
+        ...msg,
+        sender: msg.sender || (msg.role === 'user' || msg.role === 'client' ? 'client' : msg.role === 'ai' || msg.role === 'assistant' ? 'ai' : 'agent')
+      }));
+      setMessages(formatted as Message[]);
     }
     setLoading(false);
   };
@@ -91,21 +100,35 @@ export function LeadChat({ lead }: { lead: Lead }) {
 
     // 1. Dispara a mensagem via Evolution API para o celular do cliente
     if (lead.celular) {
-      const res = await sendWhatsAppMessage({ number: lead.celular, text: messageText });
+      const res = await sendWhatsAppMessage({ 
+        number: lead.celular, 
+        text: messageText,
+        organizacaoId: lead.organizacao_id 
+      });
       if (!res.success) {
         console.warn("[Evolution API] Falha ao enviar via gateway:", res.error);
       }
     }
 
     // 2. Registra a mensagem no banco do CRM
-    const { error } = await (supabase.from("chat_messages") as any).insert({
+    let { error } = await (supabase.from("chat_messages") as any).insert({
       lead_id: lead.id,
       content: messageText,
-      sender: 'agent',
-      organizacao_id: lead.organizacao_id
+      role: 'agent',
     });
 
     if (error) {
+      // Fallback para 'assistant' caso a restrição do banco só aceite ('user', 'assistant', 'system')
+      const fallback = await (supabase.from("chat_messages") as any).insert({
+        lead_id: lead.id,
+        content: messageText,
+        role: 'assistant',
+      });
+      error = fallback.error;
+    }
+
+    if (error) {
+      console.error("Erro ao registrar mensagem no Supabase:", error);
       toast.error("Erro ao registrar mensagem");
     } else {
       setNewMessage("");
