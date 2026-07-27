@@ -26,15 +26,9 @@ serve(async (req) => {
 
       const msg = messages[0];
       
-      // 1. Ignorar mensagens enviadas por nós mesmos (fromMe)
-      if (msg.key?.fromMe) {
-        return new Response(JSON.stringify({ status: "ignored_from_me" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
-
-      const remoteJid = msg.key?.remoteJid || msg.remoteJid || "";
+      const isFromMe = !!msg.key?.fromMe;
+      const remoteJid = msg.key?.remoteJidAlt || msg.key?.participant || msg.participant || msg.key?.remoteJid || msg.remoteJid || "";
+      const pushName = msg.pushName || msg.verifiedBizName || "";
 
       // 2. Ignorar mensagens de grupos (@g.us) ou status
       if (!remoteJid || remoteJid.includes("@g.us") || remoteJid.includes("status@broadcast")) {
@@ -44,8 +38,8 @@ serve(async (req) => {
         });
       }
 
-      // Extrair o número limpo e os últimos 8 dígitos (para lidar com variação de 8 e 9 dígitos no Brasil)
-      const rawNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@c.us", "").replace(/\D/g, "");
+      // Extrair o número limpo e os últimos 8 dígitos (para lidar com variação de 8 e 9 dígitos no Brasil e @lid)
+      const rawNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@c.us", "").replace("@lid", "").replace(/\D/g, "");
       const shortNumber = rawNumber.startsWith("55") ? rawNumber.substring(2) : rawNumber;
       const last8Digits = rawNumber.length >= 8 ? rawNumber.slice(-8) : rawNumber;
 
@@ -103,9 +97,22 @@ serve(async (req) => {
         }
       }
 
+      // Fallback por Nome (pushName) se o número vier no formato @lid puro sem telefone
+      if (!matchedLead && pushName && pushName.trim().length > 2) {
+        const { data: nameLeads } = await supabaseAdmin
+          .from("leads")
+          .select("id, nome, celular, atendimento_ia, organizacao_id")
+          .ilike("nome", `%${pushName.trim()}%`)
+          .limit(1);
+
+        if (nameLeads && nameLeads.length > 0) {
+          matchedLead = nameLeads[0];
+        }
+      }
+
       // Se o número NÃO pertence a nenhum lead existente no CRM, IGNORA COMPLETAMENTE
       if (!matchedLead) {
-        console.log(`[Filtro WhatsApp] Mensagem ignorada do número ${rawNumber}: não é um lead cadastrado no CRM.`);
+        console.log(`[Filtro WhatsApp] Mensagem ignorada do contato ${pushName || rawNumber}: não é um lead cadastrado no CRM.`);
         return new Response(JSON.stringify({ status: "ignored_not_a_crm_lead" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -113,13 +120,26 @@ serve(async (req) => {
       }
 
       // 4. Salvar a mensagem no histórico do chat do lead
+      const msgRole = isFromMe ? "assistant" : "user";
       const { error: msgErr } = await supabaseAdmin
         .from("chat_messages")
         .insert({
           lead_id: matchedLead.id,
           content: incomingText,
-          role: "user",
+          role: msgRole,
         });
+
+      if (msgErr) {
+        console.error("Erro ao registrar chat_messages:", msgErr);
+      }
+
+      // Se a mensagem foi enviada por nós mesmos no celular, apenas espelha no CRM e encerra
+      if (isFromMe) {
+        return new Response(JSON.stringify({ success: true, mirrored: true, leadId: matchedLead.id }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
 
       if (msgErr) {
         console.error("Erro ao registrar chat_messages:", msgErr);
