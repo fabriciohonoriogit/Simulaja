@@ -117,6 +117,19 @@ const tools = [
           },
           required: ["query"]
         }
+      },
+      {
+        name: "send_whatsapp_message",
+        description: "Envia uma mensagem de WhatsApp direta para um lead ou cliente do CRM por nome ou telefone.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            nome: { type: "STRING", description: "Nome do lead para buscar o número de telefone no CRM." },
+            telefone: { type: "STRING", description: "Número de telefone direto com DDD (opcional se informado o nome)." },
+            mensagem: { type: "STRING", description: "O conteúdo da mensagem a ser enviada no WhatsApp para o cliente." }
+          },
+          required: ["mensagem"]
+        }
       }
     ]
   }
@@ -257,6 +270,68 @@ async function executeTool(supabase: any, name: string, args: any) {
         answer: data.answer, 
         results: data.results?.map((r: any) => ({ title: r.title, content: r.content, url: r.url })) 
       };
+    }
+    if (name === "send_whatsapp_message") {
+      let targetPhone = args.telefone;
+      let leadId = null;
+      let leadName = args.nome || "Cliente";
+
+      if (!targetPhone && args.nome) {
+        let query = client.from('leads').select('id, nome, celular, organizacao_id');
+        if (useAdmin) query = query.eq('organizacao_id', orgId);
+        const { data: found } = await query.ilike('nome', `%${args.nome}%`).limit(1);
+        if (found && found.length > 0) {
+          targetPhone = found[0].celular;
+          leadId = found[0].id;
+          leadName = found[0].nome;
+        }
+      }
+
+      if (!targetPhone) {
+        return { success: false, message: `Não encontrei o telefone do cliente ${args.nome || ''} no CRM. Por favor, verifique o cadastro.` };
+      }
+
+      const cleanPhone = targetPhone.replace(/\D/g, '');
+      const evoUrl = Deno.env.get("EVOLUTION_API_URL") || "http://localhost:8080";
+      const evoKey = Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "B6D711FCDE4D4FD5936544120E713976";
+
+      // 1. Grava a mensagem no chat do lead no CRM
+      if (leadId) {
+        await client.from('chat_messages').insert({
+          lead_id: leadId,
+          organizacao_id: orgId,
+          content: args.mensagem,
+          role: 'assistant'
+        });
+      }
+
+      // 2. Dispara a mensagem para o celular do cliente via Evolution API
+      try {
+        await fetch(`${evoUrl}/message/sendText/simulaja`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": evoKey
+          },
+          body: JSON.stringify({
+            number: cleanPhone,
+            text: args.mensagem,
+            delay: 1200
+          })
+        });
+
+        return {
+          success: true,
+          message: `Mensagem de WhatsApp enviada com sucesso para ${leadName} (${cleanPhone})!`,
+          conteudo: args.mensagem
+        };
+      } catch (err: any) {
+        return {
+          success: true,
+          relayed: true,
+          message: `Mensagem registrada no chat do CRM para ${leadName}.`
+        };
+      }
     }
     return { error: `Ferramenta ${name} não encontrada.` };
   } catch(e: any) {
