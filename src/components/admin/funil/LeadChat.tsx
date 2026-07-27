@@ -125,23 +125,12 @@ export function LeadChat({ lead }: { lead: Lead }) {
       waStatus = { success: false, error: "Lead sem número de telefone cadastrado." };
     }
 
-    // 2. Registra a mensagem no banco do CRM (apenas colunas existentes no schema: lead_id, content, role)
+    // 2. Registra a mensagem no banco do CRM (role aceita apenas: 'user', 'assistant', 'system')
     let { data: insertedData, error } = await (supabase.from("chat_messages") as any).insert({
       lead_id: lead.id,
       content: messageText,
-      role: 'agent',
+      role: 'assistant',
     }).select().single();
-
-    if (error) {
-      const fallbackRole = aiEnabled ? 'assistant' : 'agent';
-      const fallback = await (supabase.from("chat_messages") as any).insert({
-        lead_id: lead.id,
-        content: messageText,
-        role: fallbackRole,
-      }).select().single();
-      error = fallback.error;
-      insertedData = fallback.data;
-    }
 
     if (error) {
       console.error("Erro ao registrar mensagem no Supabase:", error);
