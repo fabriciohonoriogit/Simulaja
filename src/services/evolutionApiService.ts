@@ -92,6 +92,28 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
   }
 };
 
+export const ensureWebhookConfigured = async (instanceName = "simulaja") => {
+  const config = getEvolutionConfig();
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://pfedvdqpnpbrlhfbzjcj.supabase.co";
+    const webhookUrl = `${supabaseUrl}/functions/v1/webhook-evolution`;
+    await fetch(`${config.apiUrl}/webhook/set/${instanceName}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: config.apiKey },
+      body: JSON.stringify({
+        webhook: {
+          enabled: true,
+          url: webhookUrl,
+          byEvents: false,
+          events: ["MESSAGES_UPSERT", "SEND_MESSAGE"]
+        }
+      })
+    });
+  } catch (e) {
+    console.warn("[Evolution API] Falha ao configurar webhook automático:", e);
+  }
+};
+
 export const checkEvolutionStatus = async () => {
   const config = getEvolutionConfig();
   if (!config.apiUrl || !config.apiKey) return { state: "DISCONNECTED", reason: "Configurações ausentes" };
@@ -103,7 +125,11 @@ export const checkEvolutionStatus = async () => {
     });
     if (res.ok) {
       const data = await res.json();
-      return { state: data?.instance?.state || "DISCONNECTED", data };
+      const state = data?.instance?.state || "DISCONNECTED";
+      if (state === "open" || state === "CONNECTED") {
+        ensureWebhookConfigured(config.instanceName);
+      }
+      return { state, data };
     }
     return { state: "DISCONNECTED", reason: "Instância offline" };
   } catch (err: any) {
