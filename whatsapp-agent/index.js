@@ -21,14 +21,14 @@ app.post('/webhook/evolution', async (req, res) => {
       const msg = event.data?.messages?.[0] || event.messages?.[0] || event.data;
       if (!msg) return;
       
-      // Ignorar mensagens enviadas por nós mesmos (fromMe)
-      if (msg.key.fromMe) return;
+      const isFromMe = !!msg.key?.fromMe;
+      const remoteJid = msg.key?.remoteJidAlt || msg.key?.participant || msg.key?.remoteJid || '';
+      const pushName = msg.pushName || '';
 
-      const remoteJid = msg.key.remoteJid || '';
       // Ignorar mensagens de grupos ou status
-      if (remoteJid.includes('@g.us') || remoteJid.includes('status@broadcast')) return;
+      if (!remoteJid || remoteJid.includes('@g.us') || remoteJid.includes('status@broadcast')) return;
 
-      const rawNumber = remoteJid.replace('@s.whatsapp.net', '').replace(/\D/g, '');
+      const rawNumber = remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '').replace(/\D/g, '');
       const shortNumber = rawNumber.startsWith('55') ? rawNumber.substring(2) : rawNumber;
       const last8Digits = rawNumber.length >= 8 ? rawNumber.slice(-8) : rawNumber;
 
@@ -55,7 +55,7 @@ app.post('/webhook/evolution', async (req, res) => {
         
         const { data: leads } = await supabase
           .from('leads')
-          .select('id, nome, celular, atendimento_ia')
+          .select('id, nome, celular, atendimento_ia, organizacao_id')
           .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%`)
           .limit(5);
 
@@ -65,7 +65,7 @@ app.post('/webhook/evolution', async (req, res) => {
           // Fallback em memória limpando caracteres especiais
           const { data: allLeads } = await supabase
             .from('leads')
-            .select('id, nome, celular, atendimento_ia')
+            .select('id, nome, celular, atendimento_ia, organizacao_id')
             .order('created_at', { ascending: false })
             .limit(200);
 
@@ -78,17 +78,37 @@ app.post('/webhook/evolution', async (req, res) => {
           }
         }
 
+        // Fallback por pushName
+        if (!matchedLead && pushName && pushName.trim().length > 2) {
+          const { data: nameLeads } = await supabase
+            .from('leads')
+            .select('id, nome, celular, atendimento_ia, organizacao_id')
+            .ilike('nome', `%${pushName.trim()}%`)
+            .limit(1);
+
+          if (nameLeads && nameLeads.length > 0) {
+            matchedLead = nameLeads[0];
+          }
+        }
+
         if (!matchedLead) {
-          console.log(`[!] Contato ${rawNumber} não é um lead do CRM. Mensagem ignorada.`);
+          console.log(`[!] Contato ${pushName || rawNumber} não é um lead do CRM. Mensagem ignorada.`);
           return;
         }
 
-        // 1. Gravar a mensagem do cliente no CRM
+        // 1. Gravar a mensagem no CRM (role assistant se fromMe, user se mensagem do cliente)
+        const msgRole = isFromMe ? 'assistant' : 'user';
         await supabase.from('chat_messages').insert({
           lead_id: matchedLead.id,
+          organizacao_id: matchedLead.organizacao_id,
           content: incomingText,
-          role: 'user'
+          role: msgRole
         });
+      }
+
+      if (isFromMe) {
+        console.log(`[+] Mensagem enviada pelo próprio celular espelhada no CRM (${matchedLead?.nome || ''}): ${incomingText}`);
+        return;
       }
 
       console.log(`[+] Mensagem recebida de Lead CRM ${matchedLead?.nome || ''} (${remoteJid}): ${incomingText}`);
@@ -106,9 +126,10 @@ app.post('/webhook/evolution', async (req, res) => {
         console.log(`[-] Enviando resposta para ${remoteJid}...`);
 
         if (supabase && matchedLead) {
-          // 2. Gravar a resposta da IA no CRM
+          // 2. Gravar a resposta da IA no CRM com organizacao_id
           await supabase.from('chat_messages').insert({
             lead_id: matchedLead.id,
+            organizacao_id: matchedLead.organizacao_id,
             content: aiResponse,
             role: 'assistant'
           });
