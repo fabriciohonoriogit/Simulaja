@@ -27,10 +27,11 @@ Regras Cruciais de Atendimento:
 - **Objetivo Final:** Após entender o perfil SRV (Sonho, Realidade e Velocidade), agende/direcione para o Fabrício apresentar as melhores propostas de grupos ativos.`;
 
 async function generateAIResponse(userMessage, remoteJid) {
-  // Se não houver chave configurada, retorna uma mensagem simulada para testes
-  if (!openai) {
-    console.log('[!] OPENAI_API_KEY não configurada. Usando resposta mock.');
-    return "Olá! Sou o assistente do Fabrício. No momento meu cérebro de IA está desligado (falta a chave da API), mas logo estarei 100%!";
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  if (!openai && !geminiKey) {
+    console.log('[!] Nem OPENAI_API_KEY nem GEMINI_API_KEY configuradas.');
+    return "Olá! Sou o assistente do Fabrício. Em instantes o Fabrício já irá te responder!";
   }
 
   // Tenta buscar contexto dinâmico do 3cerebros
@@ -69,15 +70,35 @@ async function generateAIResponse(userMessage, remoteJid) {
       ];
     }
 
-    // Chama a API da OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // ou "gpt-3.5-turbo" / "gpt-4o"
-      messages: conversationHistory,
-      temperature: 0.7,
-      max_tokens: 250,
-    });
+    let aiMessage = "";
 
-    const aiMessage = completion.choices[0].message.content;
+    if (openai) {
+      // Chama a API da OpenAI se configurada
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: conversationHistory,
+        temperature: 0.7,
+        max_tokens: 250,
+      });
+      aiMessage = completion.choices[0].message.content;
+    } else if (geminiKey) {
+      // Chama a API da Gemini 2.5 Flash Lite
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiKey}`;
+      const contents = conversationHistory.slice(1).map(h => ({
+        role: h.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: h.content }]
+      }));
+      const res = await axios.post(geminiUrl, {
+        contents,
+        generationConfig: { maxOutputTokens: 250, temperature: 0.7 },
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
+      });
+      aiMessage = res.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    }
+
+    if (!aiMessage) {
+      return "Olá! Como posso te ajudar hoje com as opções de consórcio?";
+    }
 
     // Salva a resposta da IA no histórico
     conversationHistory.push({ role: "assistant", content: aiMessage });
@@ -95,9 +116,8 @@ async function generateAIResponse(userMessage, remoteJid) {
     }
 
     return aiMessage;
-
   } catch (error) {
-    console.error("Erro na OpenAI:", error);
+    console.error("Erro na API da IA:", error?.message || error);
     return "Desculpe, estou enfrentando uma instabilidade técnica no momento. O Fabrício já vai te atender!";
   }
 }

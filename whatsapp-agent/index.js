@@ -32,41 +32,88 @@ app.post('/webhook/evolution', async (req, res) => {
       const shortNumber = rawNumber.startsWith('55') ? rawNumber.substring(2) : rawNumber;
       const last8Digits = rawNumber.length >= 8 ? rawNumber.slice(-8) : rawNumber;
 
-      // FILTRO DE SEGURANÇA: Verificar se o número de telefone já é um LEAD CADASTRADO no CRM
-      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        const { createClient } = require('@supabase/supabase-js');
-        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-        
-        const { data: leads } = await supabase
-          .from('leads')
-          .select('id, nome, atendimento_ia')
-          .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%`)
-          .limit(1);
-
-        if (!leads || leads.length === 0) {
-          console.log(`[!] Contato ${rawNumber} não é um lead do CRM. Mensagem ignorada.`);
-          return;
-        }
-      }
-
       const messageType = Object.keys(msg.message || {})[0];
       let incomingText = '';
 
       if (messageType === 'conversation') {
         incomingText = msg.message.conversation;
       } else if (messageType === 'extendedTextMessage') {
-        incomingText = msg.message.extendedTextMessage.text;
+        incomingText = msg.message.extendedTextMessage?.text;
+      } else if (msg.message?.imageMessage?.caption) {
+        incomingText = msg.message.imageMessage.caption;
       }
 
       if (!incomingText) return;
 
-      console.log(`[+] Mensagem recebida de Lead CRM (${remoteJid}): ${incomingText}`);
+      // FILTRO DE SEGURANÇA: Verificar se o número de telefone já é um LEAD CADASTRADO no CRM
+      let matchedLead = null;
+      let supabase = null;
+
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const { createClient } = require('@supabase/supabase-js');
+        supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        
+        const { data: leads } = await supabase
+          .from('leads')
+          .select('id, nome, celular, atendimento_ia')
+          .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%`)
+          .limit(5);
+
+        if (leads && leads.length > 0) {
+          matchedLead = leads[0];
+        } else {
+          // Fallback em memória limpando caracteres especiais
+          const { data: allLeads } = await supabase
+            .from('leads')
+            .select('id, nome, celular, atendimento_ia')
+            .order('created_at', { ascending: false })
+            .limit(200);
+
+          if (allLeads) {
+            matchedLead = allLeads.find((l) => {
+              if (!l.celular) return false;
+              const clean = l.celular.replace(/\D/g, '');
+              return clean.endsWith(last8Digits) || (shortNumber.length >= 8 && clean.includes(shortNumber));
+            });
+          }
+        }
+
+        if (!matchedLead) {
+          console.log(`[!] Contato ${rawNumber} não é um lead do CRM. Mensagem ignorada.`);
+          return;
+        }
+
+        // 1. Gravar a mensagem do cliente no CRM
+        await supabase.from('chat_messages').insert({
+          lead_id: matchedLead.id,
+          content: incomingText,
+          role: 'user'
+        });
+      }
+
+      console.log(`[+] Mensagem recebida de Lead CRM ${matchedLead?.nome || ''} (${remoteJid}): ${incomingText}`);
+
+      // Se a IA estiver desativada para o lead, não responde automaticamente
+      if (matchedLead && matchedLead.atendimento_ia === false) {
+        console.log(`[!] Atendimento IA está desativado para ${matchedLead.nome}.`);
+        return;
+      }
 
       // Chamar a IA para gerar a resposta
       const aiResponse = await generateAIResponse(incomingText, remoteJid);
 
       if (aiResponse) {
         console.log(`[-] Enviando resposta para ${remoteJid}...`);
+
+        if (supabase && matchedLead) {
+          // 2. Gravar a resposta da IA no CRM
+          await supabase.from('chat_messages').insert({
+            lead_id: matchedLead.id,
+            content: aiResponse,
+            role: 'assistant'
+          });
+        }
+
         await sendMessage(remoteJid, aiResponse);
       }
     }
