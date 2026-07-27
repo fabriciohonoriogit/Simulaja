@@ -30,6 +30,7 @@ app.post('/webhook/evolution', async (req, res) => {
 
       const rawNumber = remoteJid.replace('@s.whatsapp.net', '').replace(/\D/g, '');
       const shortNumber = rawNumber.startsWith('55') ? rawNumber.substring(2) : rawNumber;
+      const last8Digits = rawNumber.length >= 8 ? rawNumber.slice(-8) : rawNumber;
 
       // FILTRO DE SEGURANÇA: Verificar se o número de telefone já é um LEAD CADASTRADO no CRM
       if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -39,7 +40,7 @@ app.post('/webhook/evolution', async (req, res) => {
         const { data: leads } = await supabase
           .from('leads')
           .select('id, nome, atendimento_ia')
-          .or(`celular.ilike.%${shortNumber}%,telefone.ilike.%${shortNumber}%`)
+          .or(`celular.ilike.%${shortNumber}%,telefone.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%,telefone.ilike.%${last8Digits}%`)
           .limit(1);
 
         if (!leads || leads.length === 0) {

@@ -44,9 +44,10 @@ serve(async (req) => {
         });
       }
 
-      // Extrair o número limpo
+      // Extrair o número limpo e os últimos 8 dígitos (para lidar com variação de 8 e 9 dígitos no Brasil)
       const rawNumber = remoteJid.replace("@s.whatsapp.net", "").replace(/\D/g, "");
       const shortNumber = rawNumber.startsWith("55") ? rawNumber.substring(2) : rawNumber;
+      const last8Digits = rawNumber.length >= 8 ? rawNumber.slice(-8) : rawNumber;
 
       // Extrair o conteúdo do texto
       const messageType = Object.keys(msg.message || {})[0];
@@ -74,7 +75,7 @@ serve(async (req) => {
       const { data: leads, error: leadErr } = await supabaseAdmin
         .from("leads")
         .select("id, nome, atendimento_ia, organizacao_id")
-        .or(`celular.ilike.%${shortNumber}%,telefone.ilike.%${shortNumber}%`)
+        .or(`celular.ilike.%${shortNumber}%,telefone.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%,telefone.ilike.%${last8Digits}%`)
         .limit(1);
 
       // Se o número NÃO pertence a nenhum lead existente no CRM, IGNORA COMPLETAMENTE (não cria lead, não salva chat)
