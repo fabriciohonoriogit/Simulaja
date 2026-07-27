@@ -125,19 +125,83 @@ serve(async (req) => {
         console.error("Erro ao registrar chat_messages:", msgErr);
       }
 
-      // 5. Se a IA estiver ATIVA no lead, disparar a resposta da IA
-      if (matchedLead.atendimento_ia !== false) {
-        console.log(`[Filtro WhatsApp] Disparando IA para o lead ${matchedLead.nome}...`);
+      // 5. Se a IA estiver ATIVA no lead, gerar resposta do Jarvis AI e enviar no WhatsApp do cliente
+      const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+      if (matchedLead.atendimento_ia !== false && geminiApiKey) {
+        console.log(`[Filtro WhatsApp] Gerando resposta do Jarvis AI para o lead ${matchedLead.nome}...`);
+        
         try {
-          await supabaseAdmin.functions.invoke("whatsapp-agent", {
-            body: {
-              lead_id: matchedLead.id,
-              content: incomingText,
-              organizacao_id: matchedLead.organizacao_id
-            }
+          // Busca histórico das últimas 10 mensagens
+          const { data: historyMsgs } = await supabaseAdmin
+            .from("chat_messages")
+            .select("role, content")
+            .eq("lead_id", matchedLead.id)
+            .order("created_at", { ascending: true })
+            .limit(10);
+
+          const contents = (historyMsgs || []).map((m: any) => ({
+            role: m.role === "assistant" || m.role === "ai" || m.role === "model" ? "model" : "user",
+            parts: [{ text: m.content || "" }]
+          }));
+
+          // Garante que a última mensagem do cliente esteja no prompt
+          if (contents.length === 0 || contents[contents.length - 1].parts[0]?.text !== incomingText) {
+            contents.push({
+              role: "user",
+              parts: [{ text: incomingText }]
+            });
+          }
+
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`;
+          const geminiRes = await fetch(geminiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents,
+              generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
+              systemInstruction: {
+                parts: [{
+                  text: `Você é o Jarvis AI, assistente comercial de consórcios da empresa Simulajá / Contemplar CRM. Responda o cliente ${matchedLead.nome} de forma educada, amigável, transparente e altamente profissional sobre consórcios imobiliários, de veículos, motos, pesados e investimentos. Responda no formato ideal para WhatsApp (mensagens diretas, máximo de 2 a 3 frases curtas).`
+                }]
+              }
+            })
           });
-        } catch (agentErr) {
-          console.error("Erro ao invocar whatsapp-agent:", agentErr);
+
+          if (geminiRes.ok) {
+            const geminiData = await geminiRes.json();
+            const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (aiText) {
+              console.log(`[Jarvis AI] Resposta gerada com sucesso: "${aiText}"`);
+              
+              // 1. Grava no banco a resposta do assistente (role 'assistant' permitido pela constraint)
+              await supabaseAdmin.from("chat_messages").insert({
+                lead_id: matchedLead.id,
+                content: aiText,
+                role: "assistant"
+              });
+
+              // 2. Envia para o WhatsApp do cliente via Evolution API
+              const evoUrl = Deno.env.get("EVOLUTION_API_URL") || "http://localhost:8080";
+              const evoKey = Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "B6D711FCDE4D4FD5936544120E713976";
+              
+              await fetch(`${evoUrl}/message/sendText/simulaja`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "apikey": evoKey
+                },
+                body: JSON.stringify({
+                  number: rawNumber,
+                  text: aiText,
+                  delay: 1200
+                })
+              }).catch(e => console.error("Erro ao enviar mensagem via Evolution API:", e));
+            }
+          } else {
+            console.error("Erro na resposta da Gemini API:", await geminiRes.text());
+          }
+        } catch (aiErr) {
+          console.error("Erro ao processar resposta automática da IA:", aiErr);
         }
       }
 
