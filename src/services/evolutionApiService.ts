@@ -45,7 +45,7 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
   try {
     // 1. Tenta enviar diretamente via API do Evolution
     const endpoint = `${config.apiUrl}/message/sendText/${config.instanceName}`;
-    const response = await fetch(endpoint, {
+    let response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -58,14 +58,43 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
       }),
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      return { success: true, data };
-    } else {
+    if (!response.ok) {
       const errText = await response.text();
-      console.error("[Evolution API] Erro ao enviar mensagem:", errText);
-      throw new Error(errText);
+      // Se a conexão estivar fechada ou offline, tenta reconectar a instância automaticamente
+      if (errText.includes("Connection Closed") || response.status === 500) {
+        console.warn("[Evolution API] Conexão fechada detectada. Tentando reconectar a instância...");
+        try {
+          await fetch(`${config.apiUrl}/instance/connect/${config.instanceName}`, {
+            headers: { apikey: config.apiKey }
+          });
+          // Aguarda 1,5s para restabelecer o socket e tenta novamente
+          await new Promise(r => setTimeout(r, 1500));
+          response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: config.apiKey,
+            },
+            body: JSON.stringify({
+              number: cleanNumber,
+              text: text,
+              delay: 1200,
+            }),
+          });
+        } catch (reconnectErr) {
+          console.error("[Evolution API] Falha na tentativa de reconexão automática:", reconnectErr);
+        }
+      }
+
+      if (!response.ok) {
+        const retryErrText = await response.text();
+        console.error("[Evolution API] Erro ao enviar mensagem:", retryErrText);
+        throw new Error(retryErrText);
+      }
     }
+
+    const data = await response.json();
+    return { success: true, data };
   } catch (error: any) {
     console.error("[Evolution API] Exceção na chamada direta:", error);
     
