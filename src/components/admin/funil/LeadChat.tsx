@@ -95,8 +95,10 @@ export function LeadChat({ lead }: { lead: Lead }) {
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
-    // Limpa o campo de texto e adiciona a mensagem otimista na tela imediatamente
+    setSending(true);
+    const messageText = newMessage.trim();
     setNewMessage("");
+
     const tempId = `temp-${Date.now()}`;
     const optimisticMsg: Message = {
       id: tempId,
