@@ -14,9 +14,9 @@ serve(async (req) => {
   try {
     const body = await req.json();
 
-    // Evolution API envia webhook no formato MESSAGES_UPSERT
-    if (body.event === "messages.upsert" || body.type === "messages.upsert") {
-      const messages = body.data?.messages || body.messages || [];
+    const rawEvent = (body.event || body.type || body.action || "").toString().toUpperCase();
+    if (rawEvent.includes("MESSAGES") || rawEvent.includes("UPSERT") || rawEvent.includes("SEND") || !body.event) {
+      const messages = body.data?.messages || body.messages || (body.data?.key ? [body.data] : (body.key ? [body] : []));
       if (messages.length === 0) {
         return new Response(JSON.stringify({ status: "no_messages" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -34,7 +34,7 @@ serve(async (req) => {
         });
       }
 
-      const remoteJid = msg.key?.remoteJid || "";
+      const remoteJid = msg.key?.remoteJid || msg.remoteJid || "";
 
       // 2. Ignorar mensagens de grupos (@g.us) ou status
       if (!remoteJid || remoteJid.includes("@g.us") || remoteJid.includes("status@broadcast")) {
@@ -45,19 +45,18 @@ serve(async (req) => {
       }
 
       // Extrair o número limpo e os últimos 8 dígitos (para lidar com variação de 8 e 9 dígitos no Brasil)
-      const rawNumber = remoteJid.replace("@s.whatsapp.net", "").replace(/\D/g, "");
+      const rawNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@c.us", "").replace(/\D/g, "");
       const shortNumber = rawNumber.startsWith("55") ? rawNumber.substring(2) : rawNumber;
       const last8Digits = rawNumber.length >= 8 ? rawNumber.slice(-8) : rawNumber;
 
       // Extrair o conteúdo do texto
-      const messageType = Object.keys(msg.message || {})[0];
-      let incomingText = "";
-
-      if (messageType === "conversation") {
-        incomingText = msg.message.conversation;
-      } else if (messageType === "extendedTextMessage") {
-        incomingText = msg.message.extendedTextMessage?.text;
-      }
+      const incomingText = 
+        msg.message?.conversation || 
+        msg.message?.extendedTextMessage?.text || 
+        msg.message?.imageMessage?.caption || 
+        msg.message?.videoMessage?.caption || 
+        msg.text || 
+        "";
 
       if (!incomingText) {
         return new Response(JSON.stringify({ status: "ignored_non_text" }), {

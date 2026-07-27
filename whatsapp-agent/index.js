@@ -16,9 +16,9 @@ app.post('/webhook/evolution', async (req, res) => {
     // Confirmação rápida para a Evolution API não dar timeout
     res.status(200).send('OK');
 
-    // Validar se é uma mensagem real recebida (não mensagem do próprio bot ou atualização de status)
-    if (event.event === 'messages.upsert') {
-      const msg = event.data?.messages?.[0];
+    const rawEvent = (event.event || event.type || event.action || '').toString().toUpperCase();
+    if (rawEvent.includes('MESSAGES') || rawEvent.includes('UPSERT') || rawEvent.includes('SEND') || !event.event) {
+      const msg = event.data?.messages?.[0] || event.messages?.[0] || event.data;
       if (!msg) return;
       
       // Ignorar mensagens enviadas por nós mesmos (fromMe)
