@@ -146,6 +146,17 @@ export default function Jarvis() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const initCamera = async (facing: "user" | "environment" = "user") => {
+        if (typeof window === "undefined" || !navigator?.mediaDevices?.getUserMedia) {
+            toast({
+                title: "Câmera Indisponível",
+                description: "O acesso à câmera requer permissão do navegador ou suporte a mídia.",
+                variant: "destructive"
+            });
+            setCameraActive(false);
+            setCameraStatus("⚠️ Câmera Indisponível");
+            return;
+        }
+
         setIsCalibrating(true);
         setCameraStatus("⚡ Conectando...");
 
@@ -168,8 +179,11 @@ export default function Jarvis() {
                     video: { facingMode: facing }
                 });
             } catch (e) {
-                // Fallback de câmera caso facingMode exija restrição não suportada no dispositivo
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                } catch (errFallback) {
+                    console.warn("Fallback de câmera falhou:", errFallback);
+                }
             }
 
             if (videoRef.current && stream) {
@@ -182,6 +196,9 @@ export default function Jarvis() {
                 setCameraActive(true);
                 setCameraFacing(facing);
                 setCameraStatus("🟢 VISÃO 360° ONLINE");
+            } else {
+                setCameraActive(false);
+                setCameraStatus("⚠️ Câmera Indisponível");
             }
         } catch (err) {
             console.warn("Erro ao calibrar câmera:", err);
@@ -954,27 +971,6 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
             }
         }
     }, [isHandsFree]);
-
-    if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
-
-    if (!hasJarvis) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-6 p-8">
-                <div className="h-24 w-24 bg-slate-100 rounded-full flex items-center justify-center">
-                    <Sparkles className="h-12 w-12 text-slate-400" />
-                </div>
-                <div className="space-y-2 max-w-md">
-                    <h2 className="text-2xl font-black text-slate-900">J.A.R.V.I.S indisponível</h2>
-                    <p className="text-slate-600">
-                        O assistente inteligente não está incluído no seu plano atual. Faça o upgrade para o <strong>Plano Pro</strong> para acessar as análises de sentimento e a IA comercial.
-                    </p>
-                </div>
-                <Button onClick={() => window.location.href = '/admin/assinatura'} className="h-12 px-8 rounded-full font-bold">
-                    Fazer Upgrade
-                </Button>
-            </div>
-        );
-    }
 
     return (
         <div className="h-[calc(100vh-6rem)] w-full relative overflow-hidden rounded-3xl bg-slate-950 flex flex-col items-center shadow-2xl border border-slate-800 animate-in fade-in zoom-in-95 duration-700">

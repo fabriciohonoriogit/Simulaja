@@ -345,7 +345,18 @@ export function JarvisOrb({ state = "idle" }: JarvisOrbProps) {
           eGeometry.getAttribute('position').needsUpdate = true;
         }
 
-        renderer.render(scene, camera);
+        const handleContextLost = (e: Event) => {
+          e.preventDefault();
+          console.warn("[JarvisOrb] Contexto WebGL perdido. Alternando para modo 2D.");
+          setHasWebGL(false);
+        };
+        renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+
+        try {
+          renderer.render(scene, camera);
+        } catch (e) {
+          console.warn("Erro de renderização WebGL:", e);
+        }
       };
 
       animate();
@@ -353,17 +364,18 @@ export function JarvisOrb({ state = "idle" }: JarvisOrbProps) {
       return () => {
         window.removeEventListener('resize', handleResize);
         if (animRef.current) cancelAnimationFrame(animRef.current);
-        // Dispose resources
-        geometry.dispose();
-        pointsMaterial.dispose();
-        linesGeometry.dispose();
-        linesMaterial.dispose();
-        eGeometry.dispose();
-        eMaterial.dispose();
-        renderer.dispose();
-        if (container.contains(renderer.domElement)) {
-          container.removeChild(renderer.domElement);
-        }
+        try {
+          geometry.dispose();
+          pointsMaterial.dispose();
+          linesGeometry.dispose();
+          linesMaterial.dispose();
+          eGeometry.dispose();
+          eMaterial.dispose();
+          renderer.dispose();
+          if (container.contains(renderer.domElement)) {
+            container.removeChild(renderer.domElement);
+          }
+        } catch (e) {}
       };
     } catch (err) {
       console.warn("WebGL initialization failed in JarvisOrb, falling back to CSS:", err);
