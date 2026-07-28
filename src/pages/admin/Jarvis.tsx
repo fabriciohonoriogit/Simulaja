@@ -510,6 +510,24 @@ export default function Jarvis() {
         fetchData();
     }, [profile?.organizacao_id]);
 
+    // Inicialização automática da escuta contínua por palavra-chave ("Jarvis") sem necessidade de apertar botão
+    useEffect(() => {
+        isHandsFreeRef.current = true;
+        setIsHandsFree(true);
+        const timer = setTimeout(() => {
+            try { startRecording(); } catch (e) {}
+        }, 800);
+
+        return () => {
+            clearTimeout(timer);
+            isHandsFreeRef.current = false;
+            setIsHandsFree(false);
+            if (recognitionRef.current) {
+                try { recognitionRef.current.stop(); } catch (e) {}
+            }
+        };
+    }, []);
+
     const handleAnalyze = async (query: string = question) => {
         if (!query.trim()) return;
         
