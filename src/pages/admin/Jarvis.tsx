@@ -972,9 +972,24 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                             </div>
                         )}
 
+                        {/* Offline / Connect Prompt Overlay */}
+                        {!cameraActive && !isCalibrating && (
+                            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-2 text-center z-10">
+                                <Camera className="h-6 w-6 text-cyan-400 mb-1 animate-pulse" />
+                                <span className="text-[10px] font-mono text-cyan-200 font-bold mb-1">CÂMERA DESATIVADA</span>
+                                <Button
+                                    size="sm"
+                                    onClick={() => initCamera(cameraFacing)}
+                                    className="h-6 text-[10px] px-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-full shadow-lg border border-cyan-300/40"
+                                >
+                                    Ativar Câmera
+                                </Button>
+                            </div>
+                        )}
+
                         {/* Calibration Spinner overlay */}
                         {isCalibrating && (
-                            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-2 text-center">
+                            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-2 text-center z-20">
                                 <Camera className="h-6 w-6 text-cyan-400 animate-spin mb-1" />
                                 <span className="text-[10px] font-mono text-cyan-300 font-bold">CALIBRANDO LENTES...</span>
                             </div>
