@@ -148,15 +148,16 @@ export default function Jarvis() {
     const initCamera = async (facing: "user" | "environment" = "user") => {
         try {
             setIsCalibrating(true);
-            setCameraStatus("⚡ Calibrando Lentes & Sensores...");
+            setCameraStatus("⚡ Conectando...");
             
             if (videoRef.current && videoRef.current.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
                 stream.getTracks().forEach(t => t.stop());
             }
 
+            // Conexão ultrarrápida sem forçar resolução alta para inicialização em 50ms
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } }
+                video: { facingMode: facing }
             });
 
             if (videoRef.current) {
@@ -164,18 +165,14 @@ export default function Jarvis() {
                 await videoRef.current.play();
                 setCameraActive(true);
                 setCameraFacing(facing);
-                
-                setTimeout(() => {
-                    setIsCalibrating(false);
-                    setCameraStatus("🟢 VISÃO 360° CALIBRADA & ONLINE");
-                    toast({ title: "Visão Jarvis Calibrada!", description: "O Jarvis agora enxerga tudo ao seu redor em tempo real." });
-                }, 1000);
+                setIsCalibrating(false);
+                setCameraStatus("🟢 VISÃO 360° ONLINE");
             }
         } catch (err) {
             console.warn("Erro ao calibrar câmera:", err);
             setCameraActive(false);
             setIsCalibrating(false);
-            setCameraStatus("⚠️ Câmera indisponível ou bloqueada");
+            setCameraStatus("⚠️ Clique para Ativar Câmera");
         }
     };
 
