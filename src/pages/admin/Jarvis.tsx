@@ -139,11 +139,22 @@ export default function Jarvis() {
     const analyzeRef = useRef<any>(null);
     const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
     const [isCalibrating, setIsCalibrating] = useState(false);
     const [cameraStatus, setCameraStatus] = useState<string>("⚠️ Clique para Ativar Câmera");
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    // Efeito para garantir vinculação contínua do vídeo ao elemento DOM
+    useEffect(() => {
+        if (cameraActive && videoRef.current && streamRef.current) {
+            if (videoRef.current.srcObject !== streamRef.current) {
+                videoRef.current.srcObject = streamRef.current;
+                videoRef.current.play().catch(e => console.warn("Autoplay note:", e));
+            }
+        }
+    }, [cameraActive, cameraFacing]);
 
     const initCamera = async (facing: "user" | "environment" = "user") => {
         if (typeof window === "undefined" || !navigator?.mediaDevices?.getUserMedia) {
@@ -162,14 +173,17 @@ export default function Jarvis() {
 
         const safetyTimer = setTimeout(() => {
             setIsCalibrating(false);
-        }, 3000);
+        }, 4000);
 
         try {
-            if (videoRef.current && videoRef.current.srcObject) {
+            if (streamRef.current) {
                 try {
-                    const stream = videoRef.current.srcObject as MediaStream;
-                    stream.getTracks().forEach(t => t.stop());
+                    streamRef.current.getTracks().forEach(t => t.stop());
                 } catch (e) {}
+                streamRef.current = null;
+            }
+
+            if (videoRef.current) {
                 videoRef.current.srcObject = null;
             }
 
@@ -186,16 +200,20 @@ export default function Jarvis() {
                 }
             }
 
-            if (videoRef.current && stream) {
-                videoRef.current.srcObject = stream;
-                try {
-                    await videoRef.current.play();
-                } catch (e) {
-                    console.warn("Autoplay note:", e);
-                }
+            if (stream) {
+                streamRef.current = stream;
                 setCameraActive(true);
                 setCameraFacing(facing);
                 setCameraStatus("🟢 VISÃO 360° ONLINE");
+
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    try {
+                        await videoRef.current.play();
+                    } catch (e) {
+                        console.warn("Autoplay note:", e);
+                    }
+                }
             } else {
                 setCameraActive(false);
                 setCameraStatus("⚠️ Câmera Indisponível");
@@ -237,11 +255,11 @@ export default function Jarvis() {
         setCameraStatus("⚠️ Clique para Ativar Câmera");
 
         return () => {
-            if (videoRef.current && videoRef.current.srcObject) {
+            if (streamRef.current) {
                 try {
-                    const stream = videoRef.current.srcObject as MediaStream;
-                    stream.getTracks().forEach(t => t.stop());
+                    streamRef.current.getTracks().forEach(t => t.stop());
                 } catch (e) {}
+                streamRef.current = null;
             }
         };
     }, []);
@@ -1003,6 +1021,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                                 <Camera className="h-6 w-6 text-cyan-400 mb-1 animate-pulse" />
                                 <span className="text-[10px] font-mono text-cyan-200 font-bold mb-1">CÂMERA DESATIVADA</span>
                                 <Button
+                                    type="button"
                                     size="sm"
                                     onClick={() => initCamera(cameraFacing)}
                                     className="h-6 text-[10px] px-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-full shadow-lg border border-cyan-300/40"
@@ -1028,6 +1047,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                         </span>
                         <div className="flex items-center gap-1">
                             <Button
+                                type="button"
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => initCamera(cameraFacing === "user" ? "environment" : "user")}
@@ -1037,6 +1057,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                                 <RefreshCw className="h-3 w-3" />
                             </Button>
                             <Button
+                                type="button"
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => initCamera(cameraFacing)}
