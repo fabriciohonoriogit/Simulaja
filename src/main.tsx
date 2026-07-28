@@ -10,13 +10,13 @@ checkAndClearCache().then(() => {
   createRoot(document.getElementById("root")!).render(<App />);
 });
 
-// Listener de atualização do SW — recarrega automaticamente ao detectar nova versão
+// Listener de atualização do SW
 registerSW({
   onNeedRefresh() {
-    window.location.reload();
+    console.log("[PWA] Nova versão registrada em segundo plano.");
   },
   onOfflineReady() {
-    console.log("PWA pronto para uso offline");
+    console.log("[PWA] Pronto para uso offline.");
   },
 });
 

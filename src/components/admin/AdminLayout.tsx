@@ -7,12 +7,11 @@ import { LayoutDashboard, Filter, Users, LogOut, Target, Briefcase, AlertTriangl
 import { Suspense } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
-import StreakBadge from "@/components/admin/StreakBadge";
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import TrialBanner from "@/components/admin/TrialBanner";
 import TrialGate from "@/components/admin/TrialGate";
 import { useSubscription } from "@/hooks/useSubscription";
+import { GlobalJarvisVoiceListener } from "@/components/admin/GlobalJarvisVoiceListener";
 
 interface MenuGroup {
     label: string;
@@ -325,6 +324,7 @@ export default function AdminLayout() {
                 </main>
             </div>
             <PwaInstallPrompt />
+            <GlobalJarvisVoiceListener />
         </div>
     );
 }

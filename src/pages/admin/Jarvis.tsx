@@ -763,14 +763,14 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
             try {
                 const command = JSON.parse(jsonMatch[1]);
                 if (command.function === "moverLeadEtapa") {
-                    const nome = command.params.nomeLead.toLowerCase();
-                    const novaEtapa = command.params.novaEtapa;
-                    const leadAlvo = leads.find(l => 
+                    const nome = (command.params?.nomeLead || "").toLowerCase();
+                    const novaEtapa = command.params?.novaEtapa;
+                    const leadAlvo = nome ? leads.find(l => 
                         l.dados_cadastro?.nome?.toLowerCase().includes(nome) || 
                         l.nome?.toLowerCase().includes(nome)
-                    );
+                    ) : undefined;
                     
-                    if (leadAlvo) {
+                    if (leadAlvo && novaEtapa) {
                         await supabase.from("leads").update({ 
                             status: novaEtapa, 
                             status_updated_at: new Date().toISOString() 
@@ -783,19 +783,19 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                         ));
                         actionMessage = `\n*(Ação Executada: Moveu ${leadAlvo.nome || "Lead"} para ${novaEtapa})*`;
                     } else {
-                        actionMessage = `\n*(Falha: Lead "${command.params.nomeLead}" não encontrado)*`;
+                        actionMessage = `\n*(Falha: Lead "${command.params?.nomeLead || ""}" não encontrado)*`;
                     }
                 } else if (command.function === "enviarMensagemWhatsApp") {
-                    const nome = command.params.nomeLead.toLowerCase();
-                    const msgTexto = command.params.mensagem;
-                    const leadAlvo = leads.find(l => 
+                    const nome = (command.params?.nomeLead || "").toLowerCase();
+                    const msgTexto = command.params?.mensagem || "";
+                    const leadAlvo = nome ? leads.find(l => 
                         l.dados_cadastro?.nome?.toLowerCase().includes(nome) || 
                         l.nome?.toLowerCase().includes(nome)
-                    );
+                    ) : undefined;
 
                     if (leadAlvo) {
                         const phone = leadAlvo.dados_cadastro?.telefone || leadAlvo.dados_cadastro?.celular || (leadAlvo as any).telefone || (leadAlvo as any).whatsapp;
-                        if (phone) {
+                        if (phone && msgTexto) {
                             const sendRes = await sendWhatsAppMessage({ number: phone, text: msgTexto });
                             if (sendRes.success) {
                                 try {
@@ -814,19 +814,19 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                                 actionMessage = `\n*(Aviso: Tentativa de envio para ${leadAlvo.nome || "Lead"} falhou: ${sendRes.error})*`;
                             }
                         } else {
-                            actionMessage = `\n*(Falha: Telefone/WhatsApp do lead "${command.params.nomeLead}" não cadastrado)*`;
+                            actionMessage = `\n*(Falha: Telefone/WhatsApp do lead "${command.params?.nomeLead || ""}" não cadastrado)*`;
                         }
                     } else {
-                        actionMessage = `\n*(Falha: Lead "${command.params.nomeLead}" não encontrado)*`;
+                        actionMessage = `\n*(Falha: Lead "${command.params?.nomeLead || ""}" não encontrado)*`;
                     }
                 } else if (command.function === "confirmarAgendamento") {
-                    const nome = command.params.nomeLead.toLowerCase();
-                    const dataHora = command.params.dataHora;
-                    const obs = command.params.observacao || "Confirmado via Jarvis WhatsApp";
-                    const leadAlvo = leads.find(l => 
+                    const nome = (command.params?.nomeLead || "").toLowerCase();
+                    const dataHora = command.params?.dataHora || "";
+                    const obs = command.params?.observacao || "Confirmado via Jarvis WhatsApp";
+                    const leadAlvo = nome ? leads.find(l => 
                         l.dados_cadastro?.nome?.toLowerCase().includes(nome) || 
                         l.nome?.toLowerCase().includes(nome)
-                    );
+                    ) : undefined;
 
                     if (leadAlvo) {
                         try {
@@ -848,7 +848,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                         }
                         actionMessage = `\n*(Ação Executada: Agendamento de ${leadAlvo.nome || "Lead"} registrado/confirmado para ${dataHora})*`;
                     } else {
-                        actionMessage = `\n*(Falha: Lead "${command.params.nomeLead}" não encontrado para agendamento)*`;
+                        actionMessage = `\n*(Falha: Lead "${command.params?.nomeLead || ""}" não encontrado para agendamento)*`;
                     }
                 }
             } catch (e) {
