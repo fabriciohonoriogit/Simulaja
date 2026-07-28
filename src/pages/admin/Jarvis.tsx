@@ -26,7 +26,9 @@ import {
     Home, 
     Car as CarIcon,
     ChevronUp,
-    ChevronDown
+    ChevronDown,
+    Camera,
+    RefreshCw
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -136,21 +138,66 @@ export default function Jarvis() {
     const handsFreeRecognitionRef = useRef<any>(null);
     const analyzeRef = useRef<any>(null);
     const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const videoRef = useRef<HTMLVideoElement>(null);
+    const [cameraActive, setCameraActive] = useState(false);
+    const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
+    const [isCalibrating, setIsCalibrating] = useState(false);
+    const [cameraStatus, setCameraStatus] = useState<string>("⚡ Calibrando Lentes...");
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    const initCamera = async (facing: "user" | "environment" = "user") => {
+        try {
+            setIsCalibrating(true);
+            setCameraStatus("⚡ Calibrando Lentes & Sensores...");
+            
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                stream.getTracks().forEach(t => t.stop());
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                await videoRef.current.play();
+                setCameraActive(true);
+                setCameraFacing(facing);
+                
+                setTimeout(() => {
+                    setIsCalibrating(false);
+                    setCameraStatus("🟢 VISÃO 360° CALIBRADA & ONLINE");
+                    toast({ title: "Visão Jarvis Calibrada!", description: "O Jarvis agora enxerga tudo ao seu redor em tempo real." });
+                }, 1000);
+            }
+        } catch (err) {
+            console.warn("Erro ao calibrar câmera:", err);
+            setCameraActive(false);
+            setIsCalibrating(false);
+            setCameraStatus("⚠️ Câmera indisponível ou bloqueada");
+        }
+    };
+
+    const captureCameraFrame = (): string | undefined => {
+        if (!videoRef.current || !cameraActive) return undefined;
+        try {
+            const canvas = canvasRef.current || document.createElement("canvas");
+            canvas.width = videoRef.current.videoWidth || 640;
+            canvas.height = videoRef.current.videoHeight || 480;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+                ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+                return dataUrl.split(",")[1];
+            }
+        } catch (e) {
+            console.error("Erro ao capturar frame:", e);
+        }
+        return undefined;
+    };
 
     useEffect(() => {
-        // Inicializa a câmera ocultamente
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.play().catch(e => console.error("Video play error", e));
-                }
-            })
-            .catch(err => {
-                console.warn("Câmera não autorizada ou não disponível:", err);
-            });
-            
+        initCamera("user");
         return () => {
             if (videoRef.current && videoRef.current.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
@@ -892,7 +939,66 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
 
     return (
         <div className="h-[calc(100vh-6rem)] w-full relative overflow-hidden rounded-3xl bg-slate-950 flex flex-col items-center shadow-2xl border border-slate-800 animate-in fade-in zoom-in-95 duration-700">
-            <video ref={videoRef} className="opacity-0 absolute pointer-events-none w-1 h-1 -z-10" playsInline muted autoPlay />
+            {/* HUD Camera Feed Container - Top Right Position */}
+            <div className="absolute top-4 right-4 z-30 flex flex-col items-end gap-2">
+                <div className="relative group bg-slate-900/80 backdrop-blur-md border border-cyan-500/40 rounded-2xl p-2 shadow-[0_0_25px_rgba(6,182,212,0.3)] transition-all duration-300 hover:border-cyan-400">
+                    <div className="w-36 h-24 sm:w-48 sm:h-32 relative overflow-hidden rounded-xl bg-black flex items-center justify-center">
+                        <video
+                            ref={videoRef}
+                            className={`w-full h-full object-cover rounded-xl transition-all ${cameraActive ? "opacity-100" : "opacity-0"}`}
+                            playsInline
+                            muted
+                            autoPlay
+                        />
+                        <canvas ref={canvasRef} className="hidden" />
+
+                        {/* Scanner Laser Animation */}
+                        {cameraActive && (
+                            <div className="absolute inset-0 pointer-events-none border border-cyan-400/30 rounded-xl overflow-hidden">
+                                <div className="w-full h-1 bg-cyan-400 shadow-[0_0_10px_#00f3ff] animate-bounce opacity-80" />
+                                <div className="absolute top-2 left-2 text-[9px] font-mono text-cyan-300 bg-black/60 px-1.5 py-0.5 rounded tracking-widest border border-cyan-500/30">
+                                    [ TARGET LOCK ]
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Calibration Spinner overlay */}
+                        {isCalibrating && (
+                            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-2 text-center">
+                                <Camera className="h-6 w-6 text-cyan-400 animate-spin mb-1" />
+                                <span className="text-[10px] font-mono text-cyan-300 font-bold">CALIBRANDO LENTES...</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* HUD Status Bar & Control Buttons */}
+                    <div className="mt-2 flex items-center justify-between gap-1 w-full px-1">
+                        <span className="text-[10px] font-mono font-bold text-cyan-300 truncate max-w-[130px] sm:max-w-[170px]">
+                            {cameraStatus}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => initCamera(cameraFacing === "user" ? "environment" : "user")}
+                                title="Virar Câmera (Frontal / Traseira)"
+                                className="h-6 w-6 text-cyan-400 hover:bg-cyan-950/60 rounded-full"
+                            >
+                                <RefreshCw className="h-3 w-3" />
+                            </Button>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => initCamera(cameraFacing)}
+                                title="Re-Calibrar Visão"
+                                className="h-6 w-6 text-cyan-400 hover:bg-cyan-950/60 rounded-full"
+                            >
+                                <Camera className="h-3 w-3" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {/* The 3D Orb Background - absolute and huge */}
             <div className="absolute inset-0 z-0 flex items-center justify-center opacity-70 pointer-events-none mix-blend-screen scale-150 sm:scale-125 md:scale-110 lg:scale-100">
                 <JarvisOrb state={orbState} />
