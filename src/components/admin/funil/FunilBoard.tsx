@@ -73,12 +73,20 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
         };
 
         const moveStage = async (leadId: string, newStatus: string) => {
+          const normStatus = (newStatus || "").toLowerCase();
           const updateData = {
-            status: newStatus,
+            status: normStatus,
             status_updated_at: new Date().toISOString()
           };
           await supabase.from("leads").update(updateData as any).eq("id", leadId);
           setLeads((prev: Lead[]) => prev.map((l) => l.id === leadId ? { ...l, ...updateData } : l));
+          
+          if (normStatus === "fechado" || normStatus === "venda_fechada") {
+            const leadAlvo = leads.find((l: Lead) => l.id === leadId);
+            if (leadAlvo && state.triggerCelebration) {
+              state.triggerCelebration({ ...leadAlvo, ...updateData });
+            }
+          }
         };
 
         const cardElement = (

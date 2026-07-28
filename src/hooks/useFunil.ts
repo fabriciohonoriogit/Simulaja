@@ -410,6 +410,27 @@ export function useFunil() {
     frame();
   }, []);
 
+  const triggerCelebration = useCallback((lead: Lead) => {
+    const finalAdmin = lead.administradora || "";
+    setCelebrationLead({ ...lead, status: "fechado" });
+    setGrupo(lead.grupo || "");
+    setCota(lead.cota || "");
+    setAdministradora(finalAdmin);
+
+    if (finalAdmin === "ADEMICON") {
+      setComissaoRegra("ADEMICON");
+      const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes(
+        (lead.tipo_consorcio || "").toLowerCase()
+      );
+      setComissaoTipo(isVeiculo ? "ADEMICON_VEICULO_REDUZIDA" : "ADEMICON_IMOVEL_REDUZIDA");
+    } else {
+      setComissaoRegra("DEMAIS");
+      setComissaoTipo("REDUZIDA");
+    }
+
+    fireConfetti();
+  }, [fireConfetti]);
+
   const handleGenerateReport = useCallback(() => {
     const doc = new jsPDF();
     const title = "Relatorio de Funil de Vendas";
@@ -532,25 +553,7 @@ export function useFunil() {
     }
 
     if (newStatus === "fechado" || newStatus === "venda_fechada") {
-      setCelebrationLead({ ...lead, status: newStatus, status_updated_at: finalStatusUpdatedAt });
-      setGrupo(lead.grupo || "");
-      setCota(lead.cota || "");
-      const finalAdmin = lead.administradora || "";
-      setAdministradora(finalAdmin);
-
-      // Pré-selecionar regra e fracionamento baseado na administradora
-      if (finalAdmin === "ADEMICON") {
-        setComissaoRegra("ADEMICON");
-        const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes(
-          (lead.tipo_consorcio || "").toLowerCase()
-        );
-        setComissaoTipo(isVeiculo ? "ADEMICON_VEICULO_REDUZIDA" : "ADEMICON_IMOVEL_REDUZIDA");
-      } else {
-        setComissaoRegra("DEMAIS");
-        setComissaoTipo("REDUZIDA");
-      }
-
-      fireConfetti();
+      triggerCelebration({ ...lead, status: newStatus, status_updated_at: finalStatusUpdatedAt });
     }
     
     const statusLabel = COLUMNS.find(c => c.id === newStatus)?.label || newStatus;
@@ -746,6 +749,7 @@ export function useFunil() {
     refetch,
     celebrationLead,
     setCelebrationLead,
+    triggerCelebration,
     grupo,
     setGrupo,
     cota,
