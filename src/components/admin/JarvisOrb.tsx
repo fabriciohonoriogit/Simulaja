@@ -143,6 +143,13 @@ export function JarvisOrb({ state = "idle" }: JarvisOrbProps) {
       container.appendChild(renderer.domElement);
       rendererRef.current = renderer;
 
+      const handleContextLost = (e: Event) => {
+        e.preventDefault();
+        console.warn("[JarvisOrb] Contexto WebGL perdido. Alternando para modo 2D.");
+        setHasWebGL(false);
+      };
+      renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+
       // Posições base das partículas em uma esfera
       const positions = new Float32Array(particleCount * 3);
       const basePositions = new Float32Array(particleCount * 3);
@@ -344,13 +351,6 @@ export function JarvisOrb({ state = "idle" }: JarvisOrbProps) {
           linesGeometry.setIndex(lineIndices);
           eGeometry.getAttribute('position').needsUpdate = true;
         }
-
-        const handleContextLost = (e: Event) => {
-          e.preventDefault();
-          console.warn("[JarvisOrb] Contexto WebGL perdido. Alternando para modo 2D.");
-          setHasWebGL(false);
-        };
-        renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
 
         try {
           renderer.render(scene, camera);
