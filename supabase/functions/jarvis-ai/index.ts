@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const DEFAULT_MODEL = "gemini-2.5-flash-lite";
+const DEFAULT_MODEL = "gemini-2.0-flash";
 
 const tools = [
   {
@@ -639,8 +639,8 @@ Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao pon
       let data = await upstream.json();
       
       if (!upstream.ok) {
-        console.warn("Gemini 2.5 Flash Lite Error, tentando fallback com Gemini 1.5 Flash...", data);
-        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        console.warn("Gemini 2.0 Flash Error, tentando fallback com Gemini 1.5 Flash...", data);
+        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         const fallbackRes = await fetch(fallbackUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
