@@ -148,7 +148,7 @@ if __name__ == '__main__':
         print("[*] Onboarding finalizado!")
     
     # Pre-popula memórias estáticas que o CRM requer (clientes EP, QV8) para manter informações antigas
-    print("[*] Injetando memórias de referência padrão (Clientes EP e QV8)...")
+    print("[*] Injetando memórias de referência padrão (Clientes EP, QV8 e Regras Consórcio Magalu)...")
     brain.remember(
         "Se perguntarem quais são os clientes EP (ou EP do mês de junho), responda que são: Emily Oliveira da Luz, João Batista Pereira, Alessandro Moreira e Leonardo Alves de Arruda.", 
         sector="conhecimento", category="reference"
@@ -156,6 +156,14 @@ if __name__ == '__main__':
     brain.remember(
         "Se perguntarem sobre o índice QV8 (Qualidade da Venda no Oitavo Mês) de junho: a meta era 71.00%, mas o Resultado Atual foi 100.00% (Meta Atingida), com Crédito Gerado de R$ 310.000,00.",
         sector="conhecimento", category="reference"
+    )
+    brain.remember(
+        "Regras do Consórcio Magalu: O cliente pode utilizar até 30% da própria carta de crédito como Lance Embutido para aumentar as chances de contemplação sem desembolsar dinheiro do bolso no ato.",
+        sector="conhecimento", category="rules"
+    )
+    brain.remember(
+        "Regras da ABAC e Banco Central: O consórcio é isento de juros, possuindo apenas taxa de administração diluída e fundo de reserva. A contemplação ocorre mensalmente por sorteio ou lance.",
+        sector="conhecimento", category="rules"
     )
 
     server = HTTPServer(('localhost', PORT), BrainHandler)
