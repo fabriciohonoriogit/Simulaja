@@ -304,14 +304,17 @@ export default function Jarvis() {
             };
 
             rec.onerror = (e: any) => {
-                // Se der erro de silêncio mas houver texto acumulado, encerra e envia a pergunta
+                // Se der erro de silêncio mas houver texto acumulado com 'jarvis', encerra e envia a pergunta
                 if (e.error === 'no-speech' && finalTranscriptRef.current.trim()) {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     setIsListening(false);
                     const finalQ = finalTranscriptRef.current.trim();
-                    if (finalQ) {
+                    if (finalQ && finalQ.toLowerCase().includes("jarvis")) {
                         setQuestion("");
                         handleAnalyze(finalQ);
+                    } else {
+                        setOrbState("idle");
+                        setQuestion("");
                     }
                     return;
                 }
@@ -323,11 +326,17 @@ export default function Jarvis() {
                 if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
-                if (finalQ) {
+                
+                // REGRA RIGOROSA: Ativação EXCLUSIVA se o áudio contiver "Jarvis" ou "Oi Jarvis"
+                if (finalQ && finalQ.toLowerCase().includes("jarvis")) {
                     setQuestion("");
                     handleAnalyze(finalQ);
                 } else {
+                    if (finalQ) {
+                        console.log("[Jarvis] Áudio ambiente ignorado (sem palavra de ativação 'Jarvis'):", finalQ);
+                    }
                     setOrbState("idle");
+                    setQuestion("");
                 }
             };
 
