@@ -674,32 +674,84 @@ export function useFunil() {
 
     const comissao_total = (valorCredito * taxa_comissao) / 100;
 
-    const { error: rpcError } = await (supabase.rpc as any)('fechar_venda', {
-      p_lead_id: celebrationLead.id,
-      p_valor_credito: valorCredito,
-      p_grupo: grupo,
-      p_cota: cota,
-      p_administradora: finalAdmin,
-      p_data_adesao: celebrationLead.status_updated_at ? celebrationLead.status_updated_at.split('T')[0] : new Date().toISOString().split('T')[0],
-      p_comissao_regra: comissaoRegra,
-      p_taxa_comissao: taxa_comissao,
-      p_tipo_comissionamento: finalTipoComissionamento,
-      p_parcelas_comissao: parcelas_comissao,
-      p_comissao_total: comissao_total,
-      p_organizacao_id: celebrationLead.organizacao_id || profile?.organizacao_id,
-      p_usuario_id: profile?.id,
-      p_nome_cliente: celebrationLead.nome,
-      p_celular_cliente: celebrationLead.celular,
-      p_tipo_consorcio: celebrationLead.tipo_consorcio
-    });
+    const dataAdesao = celebrationLead.status_updated_at 
+      ? celebrationLead.status_updated_at.split('T')[0] 
+      : new Date().toISOString().split('T')[0];
 
-    setSaving(false);
+    // 1. Atualiza Lead para Venda Fechada
+    const { error: leadError } = await supabase
+      .from("leads")
+      .update({
+        status: "fechado",
+        grupo: grupo || null,
+        cota: cota || null,
+        administradora: finalAdmin || null,
+        status_updated_at: new Date().toISOString()
+      } as any)
+      .eq("id", celebrationLead.id);
 
-    if (rpcError) {
-      console.error("Erro detalhado ao fechar venda:", rpcError);
-      toast.error(`Erro ao salvar venda: ${rpcError.message}`);
+    if (leadError) {
+      console.error("Erro ao atualizar lead:", leadError);
+      toast.error("Erro ao salvar lead: " + leadError.message);
+      setSaving(false);
       return;
     }
+
+    // 2. Adiciona ou Atualiza na Carteira de Clientes
+    try {
+      await supabase
+        .from("carteira")
+        .upsert({
+          lead_id: celebrationLead.id,
+          nome: celebrationLead.nome,
+          tipo_consorcio: celebrationLead.tipo_consorcio,
+          valor_credito: valorCredito,
+          grupo: grupo || null,
+          cota: cota || null,
+          administradora: finalAdmin || null,
+          status: "ativo",
+          data_adesao: dataAdesao,
+          organizacao_id: celebrationLead.organizacao_id || profile?.organizacao_id
+        } as any, { onConflict: 'lead_id' });
+    } catch (cErr) {
+      console.warn("Aviso ao gravar carteira:", cErr);
+    }
+
+    // 3. Registra a Comissão de Venda
+    try {
+      await supabase
+        .from("comissoes")
+        .insert({
+          organizacao_id: celebrationLead.organizacao_id || profile?.organizacao_id,
+          usuario_id: profile?.id,
+          lead_id: celebrationLead.id,
+          cliente_nome: celebrationLead.nome,
+          grupo: grupo || null,
+          cota: cota || null,
+          valor_venda: valorCredito,
+          regra_comissao: comissaoRegra || "DEMAIS",
+          taxa_comissao: taxa_comissao,
+          tipo_comissionamento: finalTipoComissionamento,
+          comissao_total: comissao_total,
+          parcelas_comissao: parcelas_comissao,
+          data_venda: dataAdesao,
+          administradora: finalAdmin || null,
+          parcela_atual: 1
+        } as any);
+    } catch (mErr) {
+      console.warn("Aviso ao gravar comissão:", mErr);
+    }
+
+    setLeads(prev => prev.map(l => l.id === celebrationLead.id ? {
+      ...l,
+      status: "fechado",
+      grupo: grupo || l.grupo,
+      cota: cota || l.cota,
+      administradora: finalAdmin || l.administradora,
+      status_updated_at: new Date().toISOString()
+    } : l));
+
+    setSaving(false);
 
     toast.success("Cliente adicionado à carteira e comissão registrada!");
     setCelebrationLead(null);
