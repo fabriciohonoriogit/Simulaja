@@ -149,24 +149,36 @@ export default function Jarvis() {
         setIsCalibrating(true);
         setCameraStatus("⚡ Conectando...");
 
-        // Timer de segurança de 3s para garantir que NUNCA fique travado em calibrando
         const safetyTimer = setTimeout(() => {
             setIsCalibrating(false);
         }, 3000);
 
         try {
             if (videoRef.current && videoRef.current.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(t => t.stop());
+                try {
+                    const stream = videoRef.current.srcObject as MediaStream;
+                    stream.getTracks().forEach(t => t.stop());
+                } catch (e) {}
+                videoRef.current.srcObject = null;
             }
 
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: facing }
-            });
+            let stream: MediaStream | null = null;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: facing }
+                });
+            } catch (e) {
+                // Fallback de câmera caso facingMode exija restrição não suportada no dispositivo
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            }
 
-            if (videoRef.current) {
+            if (videoRef.current && stream) {
                 videoRef.current.srcObject = stream;
-                videoRef.current.play().catch(e => console.warn("Autoplay note:", e));
+                try {
+                    await videoRef.current.play();
+                } catch (e) {
+                    console.warn("Autoplay note:", e);
+                }
                 setCameraActive(true);
                 setCameraFacing(facing);
                 setCameraStatus("🟢 VISÃO 360° ONLINE");
@@ -174,7 +186,7 @@ export default function Jarvis() {
         } catch (err) {
             console.warn("Erro ao calibrar câmera:", err);
             setCameraActive(false);
-            setCameraStatus("⚠️ Clique para Ativar Câmera");
+            setCameraStatus("⚠️ Câmera Indisponível");
         } finally {
             clearTimeout(safetyTimer);
             setIsCalibrating(false);
@@ -184,12 +196,15 @@ export default function Jarvis() {
     const captureCameraFrame = (): string | undefined => {
         if (!videoRef.current || !cameraActive) return undefined;
         try {
+            const w = videoRef.current.videoWidth || 640;
+            const h = videoRef.current.videoHeight || 480;
+            if (w === 0 || h === 0) return undefined;
             const canvas = canvasRef.current || document.createElement("canvas");
-            canvas.width = videoRef.current.videoWidth || 640;
-            canvas.height = videoRef.current.videoHeight || 480;
+            canvas.width = w;
+            canvas.height = h;
             const ctx = canvas.getContext("2d");
             if (ctx) {
-                ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(videoRef.current, 0, 0, w, h);
                 const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
                 return dataUrl.split(",")[1];
             }
@@ -200,38 +215,37 @@ export default function Jarvis() {
     };
 
     useEffect(() => {
-        // Câmera desativada por padrão no carregamento para evitar travamentos de navegador/dispositivo
         setIsCalibrating(false);
         setCameraActive(false);
         setCameraStatus("⚠️ Clique para Ativar Câmera");
 
         return () => {
             if (videoRef.current && videoRef.current.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(t => t.stop());
+                try {
+                    const stream = videoRef.current.srcObject as MediaStream;
+                    stream.getTracks().forEach(t => t.stop());
+                } catch (e) {}
             }
         };
     }, []);
 
-
     const speak = (text: string) => {
-        if (typeof window === "undefined") return;
+        if (typeof window === "undefined" || !window.speechSynthesis) return;
         
-        // Humanização: remover markdown (ex: *bold*, _italic_), emojis e caracteres especiais, além de adaptar espaços
         const cleanText = text
-            .replace(/\*|_|#|\[|\]/g, '') // Remove md symbols
-            .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}]/gu, '') // Remove emojis
-            .replace(/FUNIL:|LEADS:|METAS DO MÊS:|INADIMPLÊNCIA:/g, '') // Remove headers para fala mais fluida
-            .replace(/\s+/g, ' ') // Remove double spaces
+            .replace(/\*|_|#|\[|\]/g, '')
+            .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
+            .replace(/FUNIL:|LEADS:|METAS DO MÊS:|INADIMPLÊNCIA:/g, '')
+            .replace(/\s+/g, ' ')
             .trim();
 
+        if (!cleanText) return;
+
+        window.speechSynthesis.cancel();
         const msg = new SpeechSynthesisUtterance(cleanText);
         msg.lang = "pt-BR";
         
-        // Selecionar uma voz mais natural e humanizada
         const voices = window.speechSynthesis.getVoices();
-        
-        // No iOS as vozes básicas são robóticas. Vamos priorizar Premium/Enhanced ou Google/Online.
         let ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google')));
         
         if (!ptVoice) {
@@ -246,46 +260,51 @@ export default function Jarvis() {
             msg.voice = ptVoice;
         }
 
-        // Emoção e energia (Ajustado para evitar robotização no iOS)
-        msg.rate = window.navigator.userAgent.match(/iPad|iPhone|iPod/) ? 1.0 : 1.0; 
-        msg.pitch = window.navigator.userAgent.match(/iPad|iPhone|iPod/) ? 1.0 : 1.05;
+        msg.rate = 1.0; 
+        msg.pitch = 1.05;
         
         setOrbState("speaking");
         
-        msg.onend = () => {
-             setOrbState("idle");
-             // Reinicia a escuta contínua Hands-Free automaticamente após terminar de falar
-             if (isHandsFreeRef.current) {
-                 setTimeout(() => {
-                     try { startRecording(); } catch (e) {}
-                 }, 600);
-             }
-        };
-        
-        // Fallback timeout case onend fails
-        if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
-        speakingTimeoutRef.current = setTimeout(() => {
+        const finishSpeaking = () => {
+            if (speakingTimeoutRef.current) {
+                clearTimeout(speakingTimeoutRef.current);
+                speakingTimeoutRef.current = null;
+            }
             setOrbState("idle");
-            if (isHandsFreeRef.current) {
+            if (isHandsFreeRef.current && !isListeningRef.current) {
                 setTimeout(() => {
                     try { startRecording(); } catch (e) {}
                 }, 600);
             }
-        }, Math.max(3000, cleanText.length * 80));
+        };
 
-        window.speechSynthesis.speak(msg);
+        msg.onend = finishSpeaking;
+        msg.onerror = finishSpeaking;
+        
+        if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
+        speakingTimeoutRef.current = setTimeout(finishSpeaking, Math.max(3000, cleanText.length * 80));
+
+        try {
+            window.speechSynthesis.speak(msg);
+        } catch (e) {
+            console.warn("Speech synthesis failed:", e);
+            finishSpeaking();
+        }
     };
 
     const recognitionRef = useRef<any>(null);
     const finalTranscriptRef = useRef<string>("");
     const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isListeningRef = useRef<boolean>(false);
 
     const startRecording = () => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            toast({ title: "Voz indisponível", description: "Seu navegador não suporta reconhecimento de voz. Use Chrome/Safari no celular.", variant: "destructive" });
+            toast({ title: "Voz indisponível", description: "Seu navegador não suporta reconhecimento de voz. Use Chrome/Safari.", variant: "destructive" });
             return;
         }
+
+        if (isListeningRef.current) return;
 
         try {
             if (recognitionRef.current) {
@@ -313,7 +332,6 @@ export default function Jarvis() {
                 }
                 setQuestion(fullText);
 
-                // Quando a palavra 'jarvis' for falada, encerra a captação após breve pausa e dispara a resposta
                 if (fullText.toLowerCase().includes("jarvis") && fullText.length > 5) {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     silenceTimerRef.current = setTimeout(() => {
@@ -328,17 +346,20 @@ export default function Jarvis() {
             };
 
             rec.onstart = () => {
+                isListeningRef.current = true;
                 setIsListening(true);
                 setOrbState("listening");
             };
 
             rec.onerror = (e: any) => {
+                isListeningRef.current = false;
+                setIsListening(false);
+                setOrbState("idle");
+
                 if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
                     console.warn("[Jarvis Voice] Permissão de microfone não concedida.");
                     isHandsFreeRef.current = false;
                     setIsHandsFree(false);
-                    setIsListening(false);
-                    setOrbState("idle");
                     toast({
                         title: "Permissão de Microfone necessária",
                         description: "Clique no botão do microfone para conceder permissão de voz ao navegador.",
@@ -347,14 +368,13 @@ export default function Jarvis() {
                     return;
                 }
 
-                setIsListening(false);
-                setOrbState("idle");
                 if (isHandsFreeRef.current) {
                     setTimeout(() => { try { startRecording(); } catch (err) {} }, 1500);
                 }
             };
 
             rec.onend = () => {
+                isListeningRef.current = false;
                 if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
@@ -375,6 +395,7 @@ export default function Jarvis() {
             rec.start();
         } catch (e) {
             console.error("Speech recognition error:", e);
+            isListeningRef.current = false;
             setIsListening(false);
             if (isHandsFreeRef.current) {
                 setTimeout(() => { try { startRecording(); } catch (err) {} }, 2000);
