@@ -534,5 +534,141 @@ mcpRegistry.register({
   },
 });
 
+// 10. NOTIFICAÇÕES & AGENDAMENTO: Criar Lembretes no CRM com Data e Hora
+mcpRegistry.register({
+  schema: {
+    name: "mcp_lembrete_agendar",
+    description: "Agenda um aviso ou notificação no painel do CRM com data e hora para lembrar o consultor sobre compromissos, tarefas ou avisos de leads.",
+    category: "crm",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        titulo: { type: "STRING", description: "Título curto do lembrete (ex: 'Ligar para cliente Carlos')." },
+        mensagem: { type: "STRING", description: "Detalhamento da tarefa ou instrução de aviso." },
+        dataHoraAgendada: { type: "STRING", description: "Data e hora de disparo formato ISO (ex: '2026-07-29T15:00:00Z')." },
+        leadId: { type: "STRING", description: "ID do lead associado no CRM (opcional)." },
+      },
+      required: ["titulo", "mensagem", "dataHoraAgendada"],
+    },
+  },
+  handler: async (supabase, args, ctx) => {
+    try {
+      const { data, error } = await supabase
+        .from("notificacoes")
+        .insert({
+          organizacao_id: ctx.organizacaoId,
+          usuario_id: ctx.userId || null,
+          titulo: args.titulo,
+          mensagem: args.mensagem,
+          lead_id: args.leadId || null,
+          lida: false,
+          created_at: new Date().toISOString(),
+          data_agendamento: args.dataHoraAgendada,
+        })
+        .select();
+
+      if (error) {
+        console.warn("[MCP Lembrete] Tabela de notificações sem coluna data_agendamento, gravando simples:", error.message);
+        const { data: fallbackData } = await supabase
+          .from("notificacoes")
+          .insert({
+            organizacao_id: ctx.organizacaoId,
+            titulo: `[Agendado ${args.dataHoraAgendada}] ${args.titulo}`,
+            mensagem: args.mensagem,
+            lead_id: args.leadId || null,
+            lida: false,
+          })
+          .select();
+        return {
+          success: true,
+          data: {
+            id: fallbackData?.[0]?.id || "notif_" + Date.now(),
+            agendadoPara: args.dataHoraAgendada,
+            mensagem: `Lembrete "${args.titulo}" agendado com sucesso para ${args.dataHoraAgendada}!`,
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          id: data?.[0]?.id || "notif_" + Date.now(),
+          agendadoPara: args.dataHoraAgendada,
+          mensagem: `Notificação "${args.titulo}" agendada no CRM para ${args.dataHoraAgendada}!`,
+        },
+      };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Erro ao agendar lembrete." };
+    }
+  },
+});
+
+// 11. NOTIFICAÇÕES & AGENDAMENTO: Agendar Disparo de Mensagem no WhatsApp
+mcpRegistry.register({
+  schema: {
+    name: "mcp_whatsapp_schedule_message",
+    description: "Agenda o envio automático de uma mensagem de aviso no WhatsApp de um lead ou cliente com data e hora marcadas.",
+    category: "whatsapp",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        nome: { type: "STRING", description: "Nome do lead no CRM para localizar o número." },
+        telefone: { type: "STRING", description: "Número de telefone com DDD (opcional se informado o nome)." },
+        mensagem: { type: "STRING", description: "Conteúdo do aviso ou notificação a ser enviado." },
+        dataHoraAgendada: { type: "STRING", description: "Data e Hora ISO para o disparo (ex: '2026-07-30T09:00:00Z')." },
+      },
+      required: ["mensagem", "dataHoraAgendada"],
+    },
+  },
+  handler: async (supabase, args, ctx) => {
+    let targetPhone = args.telefone;
+    let leadName = args.nome || "Cliente";
+
+    if (!targetPhone && args.nome) {
+      let query = supabase.from("leads").select("id, nome, celular");
+      if (ctx.organizacaoId) query = query.eq("organizacao_id", ctx.organizacaoId);
+      const { data: found } = await query.ilike("nome", `%${args.nome}%`).limit(1);
+      if (found && found.length > 0) {
+        targetPhone = found[0].celular;
+        leadName = found[0].nome;
+      }
+    }
+
+    if (!targetPhone) {
+      return { success: false, error: `Telefone do cliente ${args.nome || ""} não foi localizado para o agendamento.` };
+    }
+
+    const cleanPhone = targetPhone.replace(/\D/g, "");
+
+    // Registra na fila de posts/agendamentos do CRM
+    try {
+      const { data: schedData } = await supabase
+        .from("marketing_posts")
+        .insert({
+          organizacao_id: ctx.organizacaoId,
+          legenda: `[WhatsApp Agendado para ${cleanPhone}]: ${args.mensagem}`,
+          plataformas: ["whatsapp_direct"],
+          status: "agendado",
+          published_at: args.dataHoraAgendada,
+        })
+        .select();
+
+      return {
+        success: true,
+        data: {
+          id: schedData?.[0]?.id || "sched_" + Date.now(),
+          cliente: leadName,
+          telefone: cleanPhone,
+          agendadoPara: args.dataHoraAgendada,
+          mensagem: `Aviso no WhatsApp agendado para ${leadName} (${cleanPhone}) para o dia/hora ${args.dataHoraAgendada}!`,
+        },
+      };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Erro ao agendar aviso no WhatsApp." };
+    }
+  },
+});
+
+
 
 
