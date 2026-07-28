@@ -1,23 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { aiService } from "@/services/aiService";
-import { Sparkles, Mic, MicOff } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export function GlobalJarvisVoiceListener() {
   const { toast } = useToast();
-  const [listening, setListening] = useState(false);
+  const location = useLocation();
   const [activeCall, setActiveCall] = useState(false);
   const recognitionRef = useRef<any>(null);
   const finalTranscriptRef = useRef<string>("");
 
+  // Desativa a escuta global se o usuário estiver diretamente na página dedicada do Jarvis
+  const isJarvisPage = location.pathname.includes("/admin/jarvis");
+
   useEffect(() => {
+    if (isJarvisPage) return; // Evita instâncias duplicadas do SpeechRecognition
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
     let isMounted = true;
 
     const startListener = () => {
-      if (!isMounted) return;
+      if (!isMounted || isJarvisPage) return;
       try {
         if (recognitionRef.current) {
           try { recognitionRef.current.stop(); } catch (e) {}
@@ -30,10 +36,6 @@ export function GlobalJarvisVoiceListener() {
 
         finalTranscriptRef.current = "";
 
-        rec.onstart = () => {
-          if (isMounted) setListening(true);
-        };
-
         rec.onresult = (event: any) => {
           let interim = "";
           let finalText = "";
@@ -45,25 +47,26 @@ export function GlobalJarvisVoiceListener() {
           if (finalText) finalTranscriptRef.current += finalText;
           const fullText = (finalTranscriptRef.current + " " + interim).trim();
 
-          // Palavra-chave de ativação sem toque
           if (fullText.toLowerCase().includes("jarvis") && fullText.length > 6) {
             setActiveCall(true);
-            rec.stop();
+            try { rec.stop(); } catch (e) {}
           }
         };
 
         rec.onerror = (e: any) => {
+          // Em erro de permissão ou aborto, não entra em loop infinito
+          if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
+            console.warn("[Global Jarvis Voice] Permissão de áudio não concedida ou bloqueada pelo navegador.");
+            return;
+          }
           if (isMounted && e.error !== 'aborted') {
-            setTimeout(startListener, 1500);
+            setTimeout(startListener, 3000);
           }
         };
 
         rec.onend = async () => {
           const finalQ = finalTranscriptRef.current.trim();
           if (finalQ && finalQ.toLowerCase().includes("jarvis")) {
-            console.log("[Global Jarvis Listener] Palavra de ativação detectada:", finalQ);
-            
-            // Atende a chamada por voz sem apertar botão
             toast({
               title: "🤖 Jarvis Atendendo Chamado...",
               description: `"${finalQ}"`,
@@ -85,9 +88,9 @@ export function GlobalJarvisVoiceListener() {
             }
           }
           
-          if (isMounted) {
+          if (isMounted && !isJarvisPage) {
             setActiveCall(false);
-            setTimeout(startListener, 800);
+            setTimeout(startListener, 2000);
           }
         };
 
@@ -106,7 +109,9 @@ export function GlobalJarvisVoiceListener() {
         try { recognitionRef.current.stop(); } catch (e) {}
       }
     };
-  }, []);
+  }, [isJarvisPage]);
+
+  if (isJarvisPage) return null;
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-slate-900/90 text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-2xl backdrop-blur-md border border-emerald-500/40 animate-pulse">

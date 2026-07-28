@@ -200,7 +200,11 @@ export default function Jarvis() {
     };
 
     useEffect(() => {
-        initCamera("user");
+        // Câmera desativada por padrão no carregamento para evitar travamentos de navegador/dispositivo
+        setIsCalibrating(false);
+        setCameraActive(false);
+        setCameraStatus("⚠️ Clique para Ativar Câmera");
+
         return () => {
             if (videoRef.current && videoRef.current.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
@@ -327,6 +331,20 @@ export default function Jarvis() {
             };
 
             rec.onerror = (e: any) => {
+                if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
+                    console.warn("[Jarvis Voice] Permissão de microfone bloqueada ou pendente no navegador.");
+                    isHandsFreeRef.current = false;
+                    setIsHandsFree(false);
+                    setIsListening(false);
+                    setOrbState("idle");
+                    toast({
+                        title: "Permissão de Microfone necessária",
+                        description: "Clique no botão do microfone uma vez para conceder permissão ao seu navegador.",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
                 if (e.error === 'no-speech' && finalTranscriptRef.current.trim()) {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     setIsListening(false);
@@ -338,7 +356,7 @@ export default function Jarvis() {
                         setOrbState("idle");
                         setQuestion("");
                         if (isHandsFreeRef.current) {
-                            setTimeout(() => { try { startRecording(); } catch (err) {} }, 500);
+                            setTimeout(() => { try { startRecording(); } catch (err) {} }, 1500);
                         }
                     }
                     return;
@@ -346,7 +364,7 @@ export default function Jarvis() {
                 setIsListening(false);
                 setOrbState("idle");
                 if (isHandsFreeRef.current && e.error !== 'aborted') {
-                    setTimeout(() => { try { startRecording(); } catch (err) {} }, 1000);
+                    setTimeout(() => { try { startRecording(); } catch (err) {} }, 2500);
                 }
             };
 
@@ -361,9 +379,9 @@ export default function Jarvis() {
                 } else {
                     setOrbState("idle");
                     setQuestion("");
-                    // Reinicia a escuta contínua em modo Hands-Free sem precisar clicar no microfone
+                    // Reinicia a escuta com intervalo seguro para o navegador
                     if (isHandsFreeRef.current) {
-                        setTimeout(() => { try { startRecording(); } catch (e) {} }, 400);
+                        setTimeout(() => { try { startRecording(); } catch (e) {} }, 1000);
                     }
                 }
             };
