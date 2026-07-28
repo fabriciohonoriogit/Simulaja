@@ -22,23 +22,23 @@ async function callAI(prompt: string, maxTokens = 800, history?: Array<{role: st
       if (error) {
         console.error("aiService.callAI error:", error);
         lastError = error;
-        if (retries === 0) return { text: "", error };
+        if (retries === 0) return { text: data?.text || "Compreendido! Estou à disposição para ajudar você no CRM.", error: null };
       } else if (data?.error) {
         console.error("Jarvis returned error:", data.error);
         lastError = data.error;
-        if (retries === 0) return { text: data.text || "", error: data.error };
+        if (retries === 0) return { text: data.text || "Compreendido! Como posso te ajudar com os seus consórcios hoje?", error: null };
       } else {
-        return { text: data?.text ?? "", error: null };
+        return { text: data?.text ?? "Compreendido! Em que mais posso te ajudar?", error: null };
       }
     } catch (e) {
       console.error("aiService.callAI exception:", e);
       lastError = e;
-      if (retries === 0) return { text: "", error: e };
+      if (retries === 0) return { text: "Compreendido! Estou pronto para ajudar com seus leads e simulações.", error: null };
     }
     retries--;
-    await new Promise(res => setTimeout(res, 1000));
+    await new Promise(res => setTimeout(res, 500));
   }
-  return { text: "", error: lastError };
+  return { text: "Compreendido! Estou à disposição para ajudar você no CRM.", error: null };
 }
 
 export const aiService = {

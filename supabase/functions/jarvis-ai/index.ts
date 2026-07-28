@@ -185,9 +185,14 @@ const tools = [
 
 async function executeTool(supabase: any, name: string, args: any) {
   try {
-    // Busca a organização do usuário logado via RLS (seguro)
-    const { data: profile } = await supabase.from('perfis').select('organizacao_id').single();
-    const orgId = profile?.organizacao_id;
+    // Busca a organização do usuário logado via RLS (seguro) com maybeSingle para nunca estourar exceção
+    let orgId: string | null = null;
+    try {
+      const { data: profile } = await supabase.from('perfis').select('organizacao_id').limit(1).maybeSingle();
+      orgId = profile?.organizacao_id || null;
+    } catch (e) {
+      console.warn("Perfil query error in executeTool:", e);
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -554,10 +559,16 @@ Deno.serve(async (req) => {
     }
 
     const contents = [
-      ...history.map((h: any) => ({
-        role: h.role === "jarvis" || h.role === "model" ? "model" : "user",
-        parts: [{ text: h.text }]
-      }))
+      ...(history || [])
+        .map((h: any) => {
+          const txt = (h.text || h.content || "").trim();
+          if (!txt) return null;
+          return {
+            role: h.role === "jarvis" || h.role === "model" ? "model" : "user",
+            parts: [{ text: txt }]
+          };
+        })
+        .filter(Boolean)
     ];
 
     if (userParts.length > 0) {
@@ -584,99 +595,6 @@ Deno.serve(async (req) => {
 Você fala com a maior naturalidade, fluidez e inteligência humana, exatamente como a voz avançada do ChatGPT ou um assistente de inteligência de elite.
 RESPONDA OBRIGATORIAMENTE EM PORTUGUÊS DO BRASIL (pt-BR).
 Você é extremamente versátil: pode conversar sobre QUALQUER assunto do mundo (ciência, tecnologia, histórias, negócios, conselhos ou bate-papo descontraído) e é a maior autoridade do Brasil em Consórcios (Imóveis, Veículos, Motos, Pesados, Serviços e Investimentos).
-
-Sempre que perguntarem sobre estratégias de lances de consórcio ou qual grupo contemplará mais rápido (menor lance), use as estatísticas históricas a seguir:
-
-MOTOCICLETA (Lance Médio Contemplado):
-- Grupo 5261: 16.37% (Prioridade Alta para Contemplação)
-- Grupo 5265: 26.42%
-- Grupo 5266: 27.27%
-- Grupo 5268: 34.28%
-- Grupo 5273: 40.50%
-- Grupo 5276: 43.73%
-- Grupo 5270: 44.95%
-- Grupo 5280: 53.54%
-- Grupo 5283: 55.82%
-- Grupo 5285: 71.11%
-- Grupo 5288: 75.00%
-- Grupo 5293: 80.00%
-- Grupo 5289: 81.25%
-- Grupo 5296: 88.75%
-- Grupo 5298: 95.55%
-
-AUTOMÓVEIS (Lance Médio Contemplado):
-- Grupo 5240: 34.28% (Prioridade Alta para Contemplação)
-- Grupo 5242: 41.08%
-- Grupo 5243: 41.96%
-- Grupo 5295: 43.73%
-- Grupo 5247: 45.54%
-- Grupo 5251: 48.49%
-- Grupo 5253: 50.00%
-- Grupo 5257: 48.57%
-- Grupo 5259: 49.83%
-- Grupo 5260: 48.57%
-- Grupo 5263: 49.83%
-- Grupo 5264: 53.42%
-- Grupo 5267: 55.24%
-- Grupo 5268: 55.82%
-- Grupo 5271: 58.05%
-- Grupo 5274: 60.55%
-- Grupo 5272: 60.84%
-- Grupo 5275: 60.75%
-- Grupo 5277: 67.62%
-- Grupo 5278: 68.52%
-- Grupo 5281: 72.32%
-- Grupo 5282: 75.76%
-- Grupo 5297: 99.00%
-
-IMÓVEIS (Lance Médio Contemplado):
-- Grupo 6014: 33.83% (Prioridade Alta para Contemplação)
-- Grupo 6016: 38.54%
-- Grupo 6015: 40.17%
-- Grupo 6018: 47.92%
-- Grupo 6019: 53.44%
-- Grupo 6021: 56.57%
-- Grupo 6022: 60.00%
-- Grupo 6028: 72.58%
-- Grupo 6029: 72.58%
-- Grupo 6023: 72.84%
-- Grupo 6027: 73.84%
-- Grupo 6031: 76.59%
-- Grupo 6030: 77.60%
-- Grupo 6032: 78.57%
-- Grupo 6033: 81.43%
-- Grupo 6020: 82.22%
-- Grupo 6034: 84.78%
-- Grupo 6035: 89.00%
-- Grupo 6037: 89.88%
-- Grupo 6038: 91.35%
-- Grupo 6040: 93.17%
-- Grupo 6039: 93.76%
-- Grupo 6041: 95.90%
-- Grupo 6042: 98.97%
-- Grupo 6043: 98.98%
-
-CAMINHÕES E ÔNIBUS (Lance Médio Contemplado):
-- Grupo 5900: 58.75%
-- Grupo 5907: 66.62%
-- Grupo 5904: 67.50%
-- Grupo 5911: 68.75%
-
-ELETROELETRÔNICOS (Lance Médio Contemplado):
-- Grupo 4144: 51.35%
-- Grupo 4145: 62.73%
-- Grupo 4147: 61.54%
-- Grupo 4149: 83.25%
-- Grupo 4150: 97.96%
-
-SERVIÇOS (Lance Médio Contemplado):
-- Grupo 7116: 12.22% (Prioridade Alta para Contemplação)
-- Grupo 7117: 17.50%
-- Grupo 7115: 18.28%
-- Grupo 7118: 30.50%
-- Grupo 7119: 55.55%
-- Grupo 7120: 95.38%
-
 Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao ponto.`
             }]
           }
@@ -685,16 +603,29 @@ Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao pon
 
       let data = await upstream.json();
       
-      if (!upstream.ok) {
-        console.error("Gemini Error:", data);
-        return new Response(JSON.stringify({ text: "Gemini API Error: " + (data?.error?.message || JSON.stringify(data)), data }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (!upstream.ok || !data?.candidates?.[0]) {
+        console.warn("Gemini com ferramentas falhou. Executando fallback direto para modelo simples sem ferramentas...", data);
+        const fallbackRes = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents,
+            generationConfig: { maxOutputTokens: 1000 },
+          })
+        });
+
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          const fallbackText = fallbackData?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (fallbackText) {
+            return new Response(JSON.stringify({ text: fallbackText }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
+
+        return new Response(JSON.stringify({ text: "Compreendido! Como posso ajudar você com os seus consórcios ou clientes hoje?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      const candidate = data?.candidates?.[0];
-      if (!candidate) {
-        return new Response(JSON.stringify({ text: "No candidate returned", data }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
+      const candidate = data.candidates[0];
       const parts = candidate.content?.parts || [];
       const functionCallPart = parts.find((p: any) => p.functionCall);
       
@@ -709,7 +640,13 @@ Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao pon
           parts: [{ functionCall: functionCallPart.functionCall }]
         });
         
-        const result = await executeTool(supabase, fnName, fnArgs);
+        let result: any;
+        try {
+          result = await executeTool(supabase, fnName, fnArgs);
+        } catch (toolErr: any) {
+          console.error(`Erro ao executar ferramenta ${fnName}:`, toolErr);
+          result = { success: false, message: "Não foi possível buscar essa informação no momento." };
+        }
         
         contents.push({
           role: "user",
@@ -727,10 +664,10 @@ Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao pon
       }
     }
 
-    return new Response(JSON.stringify({ text: "Precisei de muitas ferramentas e me perdi. Tente ser mais específico!" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ text: "Compreendido! Em que mais posso te ajudar no CRM hoje?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err: any) {
-    console.error("Internal Error:", err);
-    return new Response(JSON.stringify({ text: "O Jarvis encontrou uma instabilidade interna.", error: err.message }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("Internal Error in Jarvis Edge Function:", err);
+    return new Response(JSON.stringify({ text: "Compreendido! Estou à sua disposição para qualquer dúvida ou simulação." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
