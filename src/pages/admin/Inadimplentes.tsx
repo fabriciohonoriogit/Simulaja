@@ -314,14 +314,25 @@ export default function Inadimplentes() {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Excluir este registro?")) return;
+    const item = data.find(d => d.id === id);
+    if (!confirm(`Excluir este registro de inadimplência?`)) return;
     try {
       const { error } = await supabase
         .from("inadimplentes")
         .delete()
         .eq("id", id);
       if (error) throw error;
-      toast.success("Excluído!");
+
+      if (item?.grupo && item?.cota && profile?.organizacao_id) {
+        await supabase
+          .from("carteira")
+          .update({ status: "ativo" })
+          .eq("grupo", item.grupo)
+          .eq("cota", item.cota)
+          .eq("organizacao_id", profile.organizacao_id);
+      }
+
+      toast.success("Excluído e status na Carteira restaurado para Ativo!");
       fetchData();
     } catch (error) {
       console.error("Erro ao deletar inadimplente:", error);

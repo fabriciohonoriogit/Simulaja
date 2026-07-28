@@ -241,14 +241,37 @@ export default function Carteira() {
         }
       }
 
+      // PARTE 3: Cruzamento em tempo real com tabela de inadimplentes ativos
+      const { data: activeInadimplentes } = await supabase
+        .from("inadimplentes")
+        .select("grupo, cota")
+        .neq("status", "regularizado");
+
+      const activeInadimplenteKeys = new Set(
+        (activeInadimplentes || []).map(i => `${formatToFourDigits(i.grupo)}-${formatToFourDigits(i.cota)}`)
+      );
+
       const formattedUniqueClients = uniqueClients.map(c => {
         const leadDate = c.lead_id ? (leadDateMap.get(c.lead_id) ?? null) : null;
+        const key = `${formatToFourDigits(c.grupo)}-${formatToFourDigits(c.cota)}`;
+        const isCurrentlyInadimplente = activeInadimplenteKeys.has(key);
+        
+        let finalStatus = c.status;
+        if (isCurrentlyInadimplente) {
+          finalStatus = "inadimplente";
+        } else if (c.status === "inadimplente") {
+          // Se não consta mais na lista de inadimplentes ativos, auto-restaura o status da carteira para ativo!
+          finalStatus = "ativo";
+          supabase.from("carteira").update({ status: "ativo" }).eq("id", c.id).then();
+        }
+
         return {
           ...c,
           nome: formatToUpper(c.nome),
           grupo: formatToFourDigits(c.grupo),
           cota: formatToFourDigits(c.cota),
           administradora: formatToUpper(c.administradora),
+          status: finalStatus,
           // Prioriza SEMPRE a data do lead se disponível
           data_adesao: leadDate || c.data_adesao,
         };
