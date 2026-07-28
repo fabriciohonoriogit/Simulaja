@@ -138,6 +138,7 @@ export default function Jarvis() {
     const handsFreeRecognitionRef = useRef<any>(null);
     const analyzeRef = useRef<any>(null);
     const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
     const [isCalibrating, setIsCalibrating] = useState(false);
