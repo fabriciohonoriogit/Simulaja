@@ -263,12 +263,56 @@ async function executeTool(supabase: any, name: string, args: any) {
       return { results: data || [] };
     }
     if (name === "mover_lead_etapa") {
+      let targetLeadId = args.lead_id;
+      const leadName = args.nome_lead || args.lead_id || "";
+      
+      const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(targetLeadId);
+      
+      if (!isUuid && leadName) {
+        const searchTerms = leadName.split(/\s+/).filter((w: string) => w.length > 2);
+        const mainTerm = searchTerms[0] || leadName;
+        let query = client.from('leads').select('id, nome, cidade');
+        if (useAdmin) query = query.eq('organizacao_id', orgId);
+        const { data: found } = await query.ilike('nome', `%${mainTerm}%`).limit(10);
+        
+        if (found && found.length > 0) {
+          const bestMatch = found.find((l: any) => {
+            const fullName = ((l.nome || "") + " " + (l.cidade || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return searchTerms.every((term: string) => fullName.includes(term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+          }) || found[0];
+          targetLeadId = bestMatch.id;
+        }
+      }
+
+      const statusMap: Record<string, string> = {
+        novo: "novo_lead",
+        novo_lead: "novo_lead",
+        contato: "primeiro_contato",
+        contatado: "primeiro_contato",
+        primeiro_contato: "primeiro_contato",
+        qualificacao: "qualificacao",
+        "qualificação": "qualificacao",
+        proposta: "simulacao_enviada",
+        simulacao_enviada: "simulacao_enviada",
+        negociacao: "negociacao",
+        "negociação": "negociacao",
+        aguardando_pagamento: "aguardando_pagamento",
+        fechado: "fechado",
+        venda_fechada: "fechado",
+        perdido: "perdido",
+        morto: "morto"
+      };
+
+      const rawEtapa = (args.nova_etapa || "").toLowerCase().trim();
+      const finalEtapa = statusMap[rawEtapa] || rawEtapa || "novo_lead";
+
       const { data, error } = await client.from('leads').update({
-        status: args.nova_etapa,
+        status: finalEtapa,
         status_updated_at: new Date().toISOString()
-      }).eq('id', args.lead_id).select();
+      }).eq('id', targetLeadId).select();
+
       if (error) return { error: error.message };
-      return { success: true, results: data };
+      return { success: true, message: `Lead movido com sucesso para a etapa '${finalEtapa}'`, results: data };
     }
     if (name === "create_lead") {
       const { data, error } = await client.from('leads').insert({
