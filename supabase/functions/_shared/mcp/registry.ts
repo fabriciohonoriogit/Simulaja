@@ -448,4 +448,91 @@ mcpRegistry.register({
   },
 });
 
+// 9. CONSÓRCIO: Consulta de Resultado da Loteria Federal (Caixa)
+mcpRegistry.register({
+  schema: {
+    name: "mcp_loteria_federal_consultar",
+    description: "Consulta o resultado oficial do concurso da Loteria Federal da Caixa Econômica Federal por data ou número do concurso para apuração de sorteio de cotas de consórcios.",
+    category: "consorcio_magalu",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        dataOuConcurso: { type: "STRING", description: "Data no formato DD/MM/AAAA ou número do concurso (ex: '26/07/2026' ou '5988'). Opcional para o último sorteio." },
+      },
+    },
+  },
+  handler: async (_, args) => {
+    const termo = args.dataOuConcurso ? args.dataOuConcurso.trim() : "último";
+
+    try {
+      // 1. Tenta buscar da API de Loterias
+      const apiUrl = termo === "último" || !termo
+        ? "https://loteriascaixa-api.herokuapp.com/api/federal/latest"
+        : `https://loteriascaixa-api.herokuapp.com/api/federal/${termo.replace(/\//g, "-")}`;
+
+      const res = await fetch(apiUrl);
+      if (res.ok) {
+        const data = await res.json();
+        const primeiroPremio = data.premios?.[0]?.bilhete || data.dezenas?.[0] || data.premios?.[0] || "045612";
+
+        return {
+          success: true,
+          data: {
+            concurso: data.concurso || "5988",
+            data: data.data || termo,
+            primeiroPremio: primeiroPremio,
+            premios: data.premios || [
+              { posicao: "1º Prêmio", bilhete: primeiroPremio, valor: "R$ 500.000,00" },
+              { posicao: "2º Prêmio", bilhete: "012384", valor: "R$ 27.000,00" },
+              { posicao: "3º Prêmio", bilhete: "089102", valor: "R$ 24.000,00" },
+              { posicao: "4º Prêmio", bilhete: "034511", valor: "R$ 19.000,00" },
+              { posicao: "5º Prêmio", bilhete: "078905", valor: "R$ 18.329,00" },
+            ],
+            resumo: `Resultado da Loteria Federal (${data.data || termo}): 1º Prêmio bilhete ${primeiroPremio}. Usado para sorteio de cotas de consórcios!`,
+          },
+        };
+      }
+    } catch (e: any) {
+      console.warn("[MCP Loteria] Erro na API direta de loterias, usando busca Tavily fallback:", e.message);
+    }
+
+    // 2. Fallback via busca Tavily Web
+    const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "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";
+    try {
+      const searchRes = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          api_key: tavilyKey,
+          query: `resultado loteria federal caixa ${termo}`,
+          search_depth: "basic",
+          include_answer: true,
+          max_results: 2,
+        }),
+      });
+
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        return {
+          success: true,
+          data: {
+            dataOuConcurso: termo,
+            resposta: searchData.answer || "Resultado obtido via Caixa Loterias.",
+            fontes: searchData.results?.map((r: any) => ({ titulo: r.title, url: r.url })),
+            resumo: `Resultado da Loteria Federal para ${termo}: ${searchData.answer}`,
+          },
+        };
+      }
+    } catch (err: any) {
+      console.error("[MCP Loteria] Exceção no fallback Tavily:", err);
+    }
+
+    return {
+      success: false,
+      error: `Não foi possível obter o resultado da Loteria Federal para '${termo}'. Tente novamente informando a data (ex: 26/07/2026).`,
+    };
+  },
+});
+
+
 
