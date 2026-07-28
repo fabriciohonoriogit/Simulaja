@@ -100,6 +100,12 @@ export function GlobalJarvisVoiceListener() {
                 msg.lang = "pt-BR";
                 msg.rate = 1.05;
 
+                const voices = window.speechSynthesis.getVoices();
+                let ptVoice = voices.find(v => v.lang.toLowerCase().includes("pt-br") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Premium") || v.name.includes("Online")));
+                if (!ptVoice) ptVoice = voices.find(v => v.lang.toLowerCase().includes("pt-br") || v.lang.toLowerCase().includes("pt_br"));
+                if (!ptVoice) ptVoice = voices.find(v => v.lang.toLowerCase().startsWith("pt"));
+                if (ptVoice) msg.voice = ptVoice;
+
                 msg.onend = () => {
                   isSpeakingRef.current = false;
                   setActiveCall(false);

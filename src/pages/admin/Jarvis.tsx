@@ -281,14 +281,14 @@ export default function Jarvis() {
         msg.lang = "pt-BR";
         
         const voices = window.speechSynthesis.getVoices();
-        let ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google')));
+        let ptVoice = voices.find(v => (v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br')) && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google')));
         
         if (!ptVoice) {
-            ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Luciana') || v.name.includes('Daniel') || v.name.includes('Thiago') || v.name.includes('Felipe') || v.name.includes('Letícia')));
+            ptVoice = voices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br') || v.name.includes('Luciana') || v.name.includes('Daniel') || v.name.includes('Felipe'));
         }
         
         if (!ptVoice) {
-            ptVoice = voices.find(v => v.lang.includes('pt-BR'));
+            ptVoice = voices.find(v => v.lang.toLowerCase().startsWith('pt'));
         }
             
         if (ptVoice) {
@@ -819,12 +819,17 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
             try {
                 const command = JSON.parse(jsonMatch[1]);
                 if (command.function === "moverLeadEtapa") {
-                    const nome = (command.params?.nomeLead || "").toLowerCase();
-                    const novaEtapa = command.params?.novaEtapa;
-                    const leadAlvo = nome ? leads.find(l => 
-                        l.dados_cadastro?.nome?.toLowerCase().includes(nome) || 
-                        l.nome?.toLowerCase().includes(nome)
-                    ) : undefined;
+                    const searchStr = (command.params?.nomeLead || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const rawEtapa = command.params?.novaEtapa;
+                    const novaEtapa = normalizeStatus(rawEtapa);
+                    
+                    const searchWords = searchStr.split(/\s+/).filter(w => w.length > 2);
+                    
+                    const leadAlvo = leads.find(l => {
+                        const fullName = ((l.nome || l.dados_cadastro?.nome || "") + " " + (l.cidade || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        if (fullName.includes(searchStr) || searchStr.includes(fullName)) return true;
+                        return searchWords.length > 0 && searchWords.every(w => fullName.includes(w));
+                    });
                     
                     if (leadAlvo && novaEtapa) {
                         await supabase.from("leads").update({ 
@@ -837,9 +842,11 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                                 ? { ...l, status: novaEtapa, status_updated_at: new Date().toISOString() } 
                                 : l
                         ));
-                        actionMessage = `\n*(Ação Executada: Moveu ${leadAlvo.nome || "Lead"} para ${novaEtapa})*`;
+                        
+                        const columnLabel = COLUMNS.find(c => c.id === novaEtapa)?.label || novaEtapa;
+                        actionMessage = `\n*(Ação Executada: Moveu ${leadAlvo.nome || "Lead"} para a coluna ${columnLabel})*`;
                     } else {
-                        actionMessage = `\n*(Falha: Lead "${command.params?.nomeLead || ""}" não encontrado)*`;
+                        actionMessage = `\n*(Falha: Lead "${command.params?.nomeLead || ""}" não encontrado no CRM)*`;
                     }
                 } else if (command.function === "enviarMensagemWhatsApp") {
                     const nome = (command.params?.nomeLead || "").toLowerCase();
