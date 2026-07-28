@@ -919,6 +919,61 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
             }
             // Remove o bloco JSON para o Jarvis não ler em voz alta
             responseContent = responseContent.replace(/```json\n([\s\S]*?)\n```/, "").trim();
+        } else {
+            const lowerQuery = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const moveKeywords = ["mova", "mover", "transfira", "transferir", "passa", "passar", "coloque", "colocar", "mude", "mudar", "altere", "alterar"];
+            const isMoveIntent = moveKeywords.some(k => lowerQuery.includes(k));
+
+            if (isMoveIntent) {
+                const stageMap: Record<string, string> = {
+                    "novo": "novo_lead",
+                    "primeiro contato": "primeiro_contato",
+                    "contato": "primeiro_contato",
+                    "qualificacao": "qualificacao",
+                    "simulacao": "simulacao_enviada",
+                    "proposta": "simulacao_enviada",
+                    "negociacao": "negociacao",
+                    "aguardando": "aguardando_pagamento",
+                    "pagamento": "aguardando_pagamento",
+                    "fechado": "fechado",
+                    "venda": "fechado",
+                    "perdido": "perdido",
+                    "morto": "morto"
+                };
+
+                let targetEtapa: string | undefined = undefined;
+                for (const [kw, sId] of Object.entries(stageMap)) {
+                    if (lowerQuery.includes(kw)) {
+                        targetEtapa = sId;
+                        break;
+                    }
+                }
+
+                if (targetEtapa) {
+                    const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 2 && !moveKeywords.includes(w) && !Object.keys(stageMap).some(k => k.includes(w)));
+                    const leadAlvo = leads.find(l => {
+                        const fullName = ((l.nome || l.dados_cadastro?.nome || "") + " " + (l.cidade || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        return queryWords.length > 0 && queryWords.some(w => fullName.includes(w));
+                    });
+
+                    if (leadAlvo) {
+                        await supabase.from("leads").update({
+                            status: targetEtapa,
+                            status_updated_at: new Date().toISOString()
+                        } as any).eq("id", leadAlvo.id);
+
+                        setLeads(prev => prev.map(l =>
+                            l.id === leadAlvo.id
+                                ? { ...l, status: targetEtapa, status_updated_at: new Date().toISOString() }
+                                : l
+                        ));
+
+                        const colLabel = COLUMNS.find(c => c.id === targetEtapa)?.label || targetEtapa;
+                        actionMessage = `\n*(Ação Executada: Moveu ${leadAlvo.nome || "Lead"} para a coluna ${colLabel})*`;
+                        responseContent = `Prontinho! Movi o cliente ${leadAlvo.nome} para a coluna ${colLabel}.`;
+                    }
+                }
+            }
         }
 
         const jarvisMsg: Message = {

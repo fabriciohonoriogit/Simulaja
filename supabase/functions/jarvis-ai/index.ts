@@ -526,12 +526,13 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing API KEY" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const authHeader = req.headers.get('Authorization');
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? supabaseAnonKey;
     
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader || '' } }
+    const tokenToUse = authHeader ? authHeader : `Bearer ${supabaseServiceKey}`;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      global: { headers: { Authorization: tokenToUse } }
     });
 
     const body = await req.json().catch(() => ({}));
@@ -685,27 +686,13 @@ Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao pon
       let data = await upstream.json();
       
       if (!upstream.ok) {
-        console.warn("Gemini com ferramentas falhou. Executando fallback direto para modelo de voz e texto...", data);
-        const fallbackRes = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents,
-            generationConfig: { maxOutputTokens: 1000 },
-          })
-        });
-
-        if (fallbackRes.ok) {
-          data = await fallbackRes.json();
-        } else {
-          console.error("Fallback sem ferramentas também falhou:", await fallbackRes.text());
-        }
+        console.error("Gemini Error:", data);
+        return new Response(JSON.stringify({ text: "Gemini API Error: " + (data?.error?.message || JSON.stringify(data)), data }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const candidate = data?.candidates?.[0];
       if (!candidate) {
-        // Fallback de texto seguro para nunca deixar o usuário sem resposta
-        return new Response(JSON.stringify({ text: "Compreendido! Como posso ajudar você com esse assunto?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ text: "No candidate returned", data }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const parts = candidate.content?.parts || [];
