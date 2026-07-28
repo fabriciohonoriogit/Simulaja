@@ -250,12 +250,23 @@ export default function Jarvis() {
         
         msg.onend = () => {
              setOrbState("idle");
+             // Reinicia a escuta contínua Hands-Free automaticamente após terminar de falar
+             if (isHandsFreeRef.current) {
+                 setTimeout(() => {
+                     try { startRecording(); } catch (e) {}
+                 }, 600);
+             }
         };
         
         // Fallback timeout case onend fails
         if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
         speakingTimeoutRef.current = setTimeout(() => {
             setOrbState("idle");
+            if (isHandsFreeRef.current) {
+                setTimeout(() => {
+                    try { startRecording(); } catch (e) {}
+                }, 600);
+            }
         }, Math.max(3000, cleanText.length * 80));
 
         window.speechSynthesis.speak(msg);
@@ -273,9 +284,13 @@ export default function Jarvis() {
         }
 
         try {
+            if (recognitionRef.current) {
+                try { recognitionRef.current.stop(); } catch (e) {}
+            }
+
             const rec = new SpeechRecognition();
             rec.lang = "pt-BR";
-            rec.continuous = true; // Fala contínua sem cortar o usuário no meio da frase
+            rec.continuous = true;
             rec.interimResults = true;
 
             finalTranscriptRef.current = "";
@@ -292,9 +307,14 @@ export default function Jarvis() {
                 const fullText = (finalTranscriptRef.current + " " + interim).trim();
                 setQuestion(fullText);
 
-                // Timer de pausa humana (2.2s de silêncio) para permitir que o usuário pense sem ser cortado
-                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-                if (fullText.length > 2) {
+                // Quando a palavra 'jarvis' for falada, encerra a captação e dispara a resposta imediata
+                if (fullText.toLowerCase().includes("jarvis") && fullText.length > 8) {
+                    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                    silenceTimerRef.current = setTimeout(() => {
+                        try { rec.stop(); } catch (e) {}
+                    }, 1200);
+                } else if (fullText.length > 2) {
+                    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     silenceTimerRef.current = setTimeout(() => {
                         try { rec.stop(); } catch (e) {}
                     }, 2200);
@@ -307,7 +327,6 @@ export default function Jarvis() {
             };
 
             rec.onerror = (e: any) => {
-                // Se der erro de silêncio mas houver texto acumulado com 'jarvis', encerra e envia a pergunta
                 if (e.error === 'no-speech' && finalTranscriptRef.current.trim()) {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     setIsListening(false);
@@ -318,11 +337,17 @@ export default function Jarvis() {
                     } else {
                         setOrbState("idle");
                         setQuestion("");
+                        if (isHandsFreeRef.current) {
+                            setTimeout(() => { try { startRecording(); } catch (err) {} }, 500);
+                        }
                     }
                     return;
                 }
                 setIsListening(false);
                 setOrbState("idle");
+                if (isHandsFreeRef.current && e.error !== 'aborted') {
+                    setTimeout(() => { try { startRecording(); } catch (err) {} }, 1000);
+                }
             };
 
             rec.onend = () => {
@@ -330,16 +355,16 @@ export default function Jarvis() {
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
                 
-                // REGRA RIGOROSA: Ativação EXCLUSIVA se o áudio contiver "Jarvis" ou "Oi Jarvis"
                 if (finalQ && finalQ.toLowerCase().includes("jarvis")) {
                     setQuestion("");
                     handleAnalyze(finalQ);
                 } else {
-                    if (finalQ) {
-                        console.log("[Jarvis] Áudio ambiente ignorado (sem palavra de ativação 'Jarvis'):", finalQ);
-                    }
                     setOrbState("idle");
                     setQuestion("");
+                    // Reinicia a escuta contínua em modo Hands-Free sem precisar clicar no microfone
+                    if (isHandsFreeRef.current) {
+                        setTimeout(() => { try { startRecording(); } catch (e) {} }, 400);
+                    }
                 }
             };
 
@@ -352,6 +377,8 @@ export default function Jarvis() {
     };
 
     const stopRecording = () => {
+        isHandsFreeRef.current = false;
+        setIsHandsFree(false);
         if (recognitionRef.current) {
             try { recognitionRef.current.stop(); } catch (e) { console.error("Error stopping recognition", e); }
         }
@@ -365,8 +392,13 @@ export default function Jarvis() {
             window.speechSynthesis.resume();
         }
         
-        if (isListening) stopRecording();
-        else startRecording();
+        if (isListening || isHandsFree) {
+            stopRecording();
+        } else {
+            isHandsFreeRef.current = true;
+            setIsHandsFree(true);
+            startRecording();
+        }
     };
 
     // Motor de Simulação Portado do ConsortiumSimulator (Importado nativamente)
