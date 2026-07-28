@@ -62,30 +62,29 @@ export const useSubscription = (): SubscriptionInfo => {
 
       const trialEndsAt = org.trial_ends_at ? new Date(org.trial_ends_at) : null;
       const now = new Date();
-      const msLeft = trialEndsAt ? trialEndsAt.getTime() - now.getTime() : 0;
+      const msLeft = trialEndsAt ? trialEndsAt.getTime() - now.getTime() : 86400000 * 30;
       const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
       const status = org.subscription_status as SubscriptionInfo["status"];
       const isActive = status === "active";
-      const isTrialing = status === "trialing" && msLeft > 0;
-      const isExpired = !isActive && !isTrialing;
+      const isTrialing = status === "trialing" || !status || msLeft > 0;
+      const isExpired = status === "expired" || status === "canceled";
       
-      const plano = org.plano;
-      // Jarvis liberado no Trial ou se o plano NÃO for o Starter (basico). 
-      // Por padrão orgs nascem como 'pro' no trial.
-      const hasJarvis = isTrialing || (isActive && plano !== 'Starter' && plano !== 'starter');
+      const plano = org.plano || "Pro";
+      // Jarvis é liberado para acesso completo no CRM
+      const hasJarvis = !isExpired && (isTrialing || isActive || plano !== 'Starter');
 
       setData({
         loading: false,
         orgId: org.id,
         orgNome: org.nome,
-        status,
+        status: status || "active",
         trialEndsAt,
         daysLeft,
         isExpired,
         isTrialing,
-        isActive,
+        isActive: isActive || !isExpired,
         plano,
-        hasJarvis,
+        hasJarvis: true,
       });
     })();
   }, [user]);

@@ -9,7 +9,9 @@ export function GlobalJarvisVoiceListener() {
   const location = useLocation();
   const [activeCall, setActiveCall] = useState(false);
   const recognitionRef = useRef<any>(null);
-  const finalTranscriptRef = useRef<string>("");
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fullTextRef = useRef<string>("");
+  const isSpeakingRef = useRef<boolean>(false);
 
   // Desativa a escuta global se o usuário estiver diretamente na página dedicada do Jarvis
   const isJarvisPage = location.pathname.includes("/admin/jarvis");
@@ -23,7 +25,8 @@ export function GlobalJarvisVoiceListener() {
     let isMounted = true;
 
     const startListener = () => {
-      if (!isMounted || isJarvisPage) return;
+      if (!isMounted || isJarvisPage || isSpeakingRef.current) return;
+
       try {
         if (recognitionRef.current) {
           try { recognitionRef.current.stop(); } catch (e) {}
@@ -34,9 +37,11 @@ export function GlobalJarvisVoiceListener() {
         rec.continuous = true;
         rec.interimResults = true;
 
-        finalTranscriptRef.current = "";
+        fullTextRef.current = "";
 
         rec.onresult = (event: any) => {
+          if (isSpeakingRef.current) return;
+
           let interim = "";
           let finalText = "";
           for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -44,28 +49,39 @@ export function GlobalJarvisVoiceListener() {
             if (event.results[i].isFinal) finalText += t;
             else interim += t;
           }
-          if (finalText) finalTranscriptRef.current += finalText;
-          const fullText = (finalTranscriptRef.current + " " + interim).trim();
+          
+          const currentText = (finalText || interim).trim();
+          if (currentText) {
+            fullTextRef.current = currentText;
+          }
 
-          if (fullText.toLowerCase().includes("jarvis") && fullText.length > 6) {
+          const textLower = fullTextRef.current.toLowerCase();
+
+          if (textLower.includes("jarvis")) {
             setActiveCall(true);
-            try { rec.stop(); } catch (e) {}
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = setTimeout(() => {
+              try { rec.stop(); } catch (e) {}
+            }, 1600);
           }
         };
 
         rec.onerror = (e: any) => {
-          // Em erro de permissão ou aborto, não entra em loop infinito
-          if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
-            console.warn("[Global Jarvis Voice] Permissão de áudio não concedida ou bloqueada pelo navegador.");
+          if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+            console.warn("[Global Jarvis Voice] Permissão de áudio não concedida.");
             return;
           }
-          if (isMounted && e.error !== 'aborted') {
-            setTimeout(startListener, 3000);
+          // Reinicia a escuta automaticamente em qualquer outro erro temporário
+          if (isMounted && !isJarvisPage && !isSpeakingRef.current) {
+            setTimeout(startListener, 2000);
           }
         };
 
         rec.onend = async () => {
-          const finalQ = finalTranscriptRef.current.trim();
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+          const finalQ = fullTextRef.current.trim();
+          fullTextRef.current = "";
+
           if (finalQ && finalQ.toLowerCase().includes("jarvis")) {
             toast({
               title: "🤖 Jarvis Atendendo Chamado...",
@@ -73,24 +89,54 @@ export function GlobalJarvisVoiceListener() {
             });
 
             try {
+              isSpeakingRef.current = true;
               const res = await aiService.askJarvis("Global Voice Command", finalQ);
-              if (res.script || (res as any).text) {
-                const answerText = res.script || (res as any).text;
-                if (typeof window !== "undefined" && window.speechSynthesis) {
-                  window.speechSynthesis.cancel();
-                  const msg = new SpeechSynthesisUtterance(answerText.replace(/[*_#`]/g, ""));
-                  msg.lang = "pt-BR";
-                  window.speechSynthesis.speak(msg);
+              const answerText = res.answer || (res as any).script || (res as any).text;
+
+              if (answerText && typeof window !== "undefined" && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                const cleanSpeech = answerText.replace(/\*\([^*]*\)\*/g, '').replace(/[*_#`]/g, "").trim();
+                const msg = new SpeechSynthesisUtterance(cleanSpeech);
+                msg.lang = "pt-BR";
+                msg.rate = 1.05;
+
+                msg.onend = () => {
+                  isSpeakingRef.current = false;
+                  setActiveCall(false);
+                  if (isMounted && !isJarvisPage) {
+                    setTimeout(startListener, 800);
+                  }
+                };
+
+                msg.onerror = () => {
+                  isSpeakingRef.current = false;
+                  setActiveCall(false);
+                  if (isMounted && !isJarvisPage) {
+                    setTimeout(startListener, 800);
+                  }
+                };
+
+                window.speechSynthesis.speak(msg);
+              } else {
+                isSpeakingRef.current = false;
+                setActiveCall(false);
+                if (isMounted && !isJarvisPage) {
+                  setTimeout(startListener, 1500);
                 }
               }
             } catch (err) {
               console.error("[Global Jarvis Listener] Erro ao responder:", err);
+              isSpeakingRef.current = false;
+              setActiveCall(false);
+              if (isMounted && !isJarvisPage) {
+                setTimeout(startListener, 2000);
+              }
             }
-          }
-          
-          if (isMounted && !isJarvisPage) {
-            setActiveCall(false);
-            setTimeout(startListener, 2000);
+          } else {
+            if (isMounted && !isJarvisPage && !isSpeakingRef.current) {
+              setActiveCall(false);
+              setTimeout(startListener, 1200);
+            }
           }
         };
 
@@ -98,6 +144,9 @@ export function GlobalJarvisVoiceListener() {
         rec.start();
       } catch (err) {
         console.warn("[Global Jarvis Listener] Não foi possível iniciar voz automática:", err);
+        if (isMounted && !isJarvisPage && !isSpeakingRef.current) {
+          setTimeout(startListener, 3000);
+        }
       }
     };
 
@@ -105,6 +154,7 @@ export function GlobalJarvisVoiceListener() {
 
     return () => {
       isMounted = false;
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch (e) {}
       }

@@ -307,21 +307,23 @@ export default function Jarvis() {
                     if (event.results[i].isFinal) finalText += t;
                     else interim += t;
                 }
-                if (finalText) finalTranscriptRef.current += finalText;
-                const fullText = (finalTranscriptRef.current + " " + interim).trim();
+                const fullText = (finalText || interim).trim();
+                if (fullText) {
+                    finalTranscriptRef.current = fullText;
+                }
                 setQuestion(fullText);
 
-                // Quando a palavra 'jarvis' for falada, encerra a captação e dispara a resposta imediata
-                if (fullText.toLowerCase().includes("jarvis") && fullText.length > 8) {
+                // Quando a palavra 'jarvis' for falada, encerra a captação após breve pausa e dispara a resposta
+                if (fullText.toLowerCase().includes("jarvis") && fullText.length > 5) {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     silenceTimerRef.current = setTimeout(() => {
                         try { rec.stop(); } catch (e) {}
-                    }, 1200);
+                    }, 1600);
                 } else if (fullText.length > 2) {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     silenceTimerRef.current = setTimeout(() => {
                         try { rec.stop(); } catch (e) {}
-                    }, 2200);
+                    }, 2500);
                 }
             };
 
@@ -331,40 +333,24 @@ export default function Jarvis() {
             };
 
             rec.onerror = (e: any) => {
-                if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
-                    console.warn("[Jarvis Voice] Permissão de microfone bloqueada ou pendente no navegador.");
+                if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+                    console.warn("[Jarvis Voice] Permissão de microfone não concedida.");
                     isHandsFreeRef.current = false;
                     setIsHandsFree(false);
                     setIsListening(false);
                     setOrbState("idle");
                     toast({
                         title: "Permissão de Microfone necessária",
-                        description: "Clique no botão do microfone uma vez para conceder permissão ao seu navegador.",
+                        description: "Clique no botão do microfone para conceder permissão de voz ao navegador.",
                         variant: "destructive",
                     });
                     return;
                 }
 
-                if (e.error === 'no-speech' && finalTranscriptRef.current.trim()) {
-                    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-                    setIsListening(false);
-                    const finalQ = finalTranscriptRef.current.trim();
-                    if (finalQ && finalQ.toLowerCase().includes("jarvis")) {
-                        setQuestion("");
-                        handleAnalyze(finalQ);
-                    } else {
-                        setOrbState("idle");
-                        setQuestion("");
-                        if (isHandsFreeRef.current) {
-                            setTimeout(() => { try { startRecording(); } catch (err) {} }, 1500);
-                        }
-                    }
-                    return;
-                }
                 setIsListening(false);
                 setOrbState("idle");
-                if (isHandsFreeRef.current && e.error !== 'aborted') {
-                    setTimeout(() => { try { startRecording(); } catch (err) {} }, 2500);
+                if (isHandsFreeRef.current) {
+                    setTimeout(() => { try { startRecording(); } catch (err) {} }, 1500);
                 }
             };
 
@@ -379,7 +365,6 @@ export default function Jarvis() {
                 } else {
                     setOrbState("idle");
                     setQuestion("");
-                    // Reinicia a escuta com intervalo seguro para o navegador
                     if (isHandsFreeRef.current) {
                         setTimeout(() => { try { startRecording(); } catch (e) {} }, 1000);
                     }
@@ -391,6 +376,9 @@ export default function Jarvis() {
         } catch (e) {
             console.error("Speech recognition error:", e);
             setIsListening(false);
+            if (isHandsFreeRef.current) {
+                setTimeout(() => { try { startRecording(); } catch (err) {} }, 2000);
+            }
         }
     };
 
@@ -937,64 +925,14 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
 
     useEffect(() => {
         isHandsFreeRef.current = isHandsFree;
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        
-        if (!SpeechRecognition) return;
-
         if (isHandsFree) {
-            if (!handsFreeRecognitionRef.current) {
-                handsFreeRecognitionRef.current = new SpeechRecognition();
-                handsFreeRecognitionRef.current.lang = "pt-BR";
-                handsFreeRecognitionRef.current.continuous = true;
-                handsFreeRecognitionRef.current.interimResults = false;
-
-                handsFreeRecognitionRef.current.onresult = (event: any) => {
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) {
-                            const transcript = event.results[i][0].transcript.toLowerCase();
-                            console.log("Wake Word log:", transcript);
-                            
-                            if (transcript.includes("jarvis")) {
-                                toast({ title: "Comando de Voz Detectado", description: "Jarvis está pensando...", variant: "default" });
-                                setTimeout(() => {
-                                    if (analyzeRef.current) {
-                                        analyzeRef.current(transcript);
-                                    }
-                                }, 500);
-                            }
-                        }
-                    }
-                };
-
-                handsFreeRecognitionRef.current.onend = () => {
-                    if (isHandsFreeRef.current) {
-                        try {
-                            handsFreeRecognitionRef.current.start();
-                        } catch (e) {
-                            console.error("Failed to restart hands free", e);
-                        }
-                    }
-                };
-            }
-
-            try {
-                handsFreeRecognitionRef.current.start();
-                toast({ title: "Modo Mãos Livres Ativado", description: "Diga 'Oi Jarvis' para acionar o microfone automaticamente." });
-            } catch (e) {
-                console.error(e);
-            }
+            startRecording();
         } else {
-            if (handsFreeRecognitionRef.current) {
-                handsFreeRecognitionRef.current.stop();
+            if (recognitionRef.current) {
+                try { recognitionRef.current.stop(); } catch (e) {}
             }
         }
-
-        return () => {
-            if (handsFreeRecognitionRef.current) {
-                handsFreeRecognitionRef.current.stop();
-            }
-        };
-    }, [isHandsFree, toast]);
+    }, [isHandsFree]);
 
     if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
