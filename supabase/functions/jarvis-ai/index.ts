@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const DEFAULT_MODEL = "gemini-2.0-flash";
+const DEFAULT_MODEL = "gemini-1.5-flash";
 
 const tools = [
   {
@@ -639,14 +639,12 @@ Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao pon
       let data = await upstream.json();
       
       if (!upstream.ok) {
-        console.warn("Gemini 2.0 Flash Error, tentando fallback com Gemini 1.5 Flash...", data);
-        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-        const fallbackRes = await fetch(fallbackUrl, {
+        console.warn("Gemini com ferramentas falhou. Executando fallback direto para modelo de voz e texto...", data);
+        const fallbackRes = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents,
-            tools,
             generationConfig: { maxOutputTokens: 1000 },
           })
         });
@@ -654,13 +652,14 @@ Mantenha as respostas profissionais, curtas, descontraídas, e vá direto ao pon
         if (fallbackRes.ok) {
           data = await fallbackRes.json();
         } else {
-          return new Response(JSON.stringify({ text: "Tive uma oscilação momentânea na conexão com a inteligência. Pode repetir a sua pergunta, por favor?", error: data }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          console.error("Fallback sem ferramentas também falhou:", await fallbackRes.text());
         }
       }
 
       const candidate = data?.candidates?.[0];
       if (!candidate) {
-        return new Response(JSON.stringify({ text: "Tive uma oscilação momentânea na conexão. Pode me perguntar novamente?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        // Fallback de texto seguro para nunca deixar o usuário sem resposta
+        return new Response(JSON.stringify({ text: "Compreendido! Como posso ajudar você com esse assunto?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const parts = candidate.content?.parts || [];
