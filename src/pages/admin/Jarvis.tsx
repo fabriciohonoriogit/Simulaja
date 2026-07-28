@@ -142,37 +142,42 @@ export default function Jarvis() {
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
     const [isCalibrating, setIsCalibrating] = useState(false);
-    const [cameraStatus, setCameraStatus] = useState<string>("⚡ Calibrando Lentes...");
+    const [cameraStatus, setCameraStatus] = useState<string>("⚠️ Clique para Ativar Câmera");
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const initCamera = async (facing: "user" | "environment" = "user") => {
+        setIsCalibrating(true);
+        setCameraStatus("⚡ Conectando...");
+
+        // Timer de segurança de 3s para garantir que NUNCA fique travado em calibrando
+        const safetyTimer = setTimeout(() => {
+            setIsCalibrating(false);
+        }, 3000);
+
         try {
-            setIsCalibrating(true);
-            setCameraStatus("⚡ Conectando...");
-            
             if (videoRef.current && videoRef.current.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
                 stream.getTracks().forEach(t => t.stop());
             }
 
-            // Conexão ultrarrápida sem forçar resolução alta para inicialização em 50ms
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: facing }
             });
 
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                await videoRef.current.play();
+                videoRef.current.play().catch(e => console.warn("Autoplay note:", e));
                 setCameraActive(true);
                 setCameraFacing(facing);
-                setIsCalibrating(false);
                 setCameraStatus("🟢 VISÃO 360° ONLINE");
             }
         } catch (err) {
             console.warn("Erro ao calibrar câmera:", err);
             setCameraActive(false);
-            setIsCalibrating(false);
             setCameraStatus("⚠️ Clique para Ativar Câmera");
+        } finally {
+            clearTimeout(safetyTimer);
+            setIsCalibrating(false);
         }
     };
 
