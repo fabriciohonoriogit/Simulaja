@@ -12,6 +12,7 @@ import TrialBanner from "@/components/admin/TrialBanner";
 import TrialGate from "@/components/admin/TrialGate";
 import { useSubscription } from "@/hooks/useSubscription";
 import { GlobalJarvisVoiceListener } from "@/components/admin/GlobalJarvisVoiceListener";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface MenuGroup {
     label: string;
