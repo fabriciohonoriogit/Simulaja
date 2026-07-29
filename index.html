@@ -39,7 +39,7 @@
     <script>
       // AGGRESSIVE CACHE BUSTER FOR BRICKED PWAS
       (function() {
-        var version = 'v_2026_06_18_fix10';
+        var version = 'v_2026_07_29_fix11';
         if (localStorage.getItem('pwa_bricked_fix') !== version) {
           localStorage.setItem('pwa_bricked_fix', version);
           if ('serviceWorker' in navigator) {
@@ -53,7 +53,7 @@
             caches.keys().then(function(keys) {
               keys.forEach(function(k) { caches.delete(k); });
             });
-          // Caches limpos com sucesso
+          }
         }
       })();
     </script>
