@@ -669,6 +669,11 @@ AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emi
           body: JSON.stringify({
             contents,
             generationConfig: { maxOutputTokens: 1000 },
+            systemInstruction: {
+              parts: [{
+                text: `Você é o Jarvis, assistente de inteligência artificial e diretor comercial do Contemplar CRM. Responda em Português do Brasil com objetividade e clareza.`
+              }]
+            }
           })
         });
 
@@ -680,7 +685,8 @@ AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emi
           }
         }
 
-        return new Response(JSON.stringify({ text: "Compreendido! Como posso ajudar você com os seus consórcios ou clientes hoje?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const errMsg = data?.error?.message || "Serviço de IA temporariamente indisponível.";
+        return new Response(JSON.stringify({ text: `Ops, tive um problema ao acessar a base de dados: ${errMsg}` }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const candidate = data.candidates[0];
@@ -722,10 +728,10 @@ AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emi
       }
     }
 
-    return new Response(JSON.stringify({ text: "Compreendido! Em que mais posso te ajudar no CRM hoje?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ text: "Análise concluída. Como posso te auxiliar a bater as metas de hoje?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err: any) {
     console.error("Internal Error in Jarvis Edge Function:", err);
-    return new Response(JSON.stringify({ text: "Compreendido! Estou à sua disposição para qualquer dúvida ou simulação." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ text: `Ocorreu um erro interno no servidor do Jarvis: ${err?.message || err}` }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
