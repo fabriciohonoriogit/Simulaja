@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { aiService } from "@/services/aiService";
-import { Sparkles } from "lucide-react";
+import { Sparkles, MicOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 export function GlobalJarvisVoiceListener() {
@@ -16,8 +16,38 @@ export function GlobalJarvisVoiceListener() {
   // Desativa a escuta global se o usuário estiver diretamente na página dedicada do Jarvis
   const isJarvisPage = location.pathname.includes("/admin/jarvis");
 
+  // Detecta se o dispositivo é mobile (celular/tablet)
+  const checkIfMobile = () => {
+    if (typeof window === "undefined") return false;
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth <= 768
+    );
+  };
+
+  const [isMobile, setIsMobile] = useState<boolean>(checkIfMobile);
+  
+  // No celular: DESATIVADO por padrão para não apitar nem interromper a concentração.
+  // No desktop: mantido ativado por padrão.
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => !checkIfMobile());
+
   useEffect(() => {
-    if (isJarvisPage) return; // Evita instâncias duplicadas do SpeechRecognition
+    const handleResize = () => {
+      const mobile = checkIfMobile();
+      setIsMobile(mobile);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isJarvisPage || !isVoiceEnabled) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+        recognitionRef.current = null;
+      }
+      return; // Não ativa a escuta se desativado ou na página do Jarvis
+    }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -25,7 +55,7 @@ export function GlobalJarvisVoiceListener() {
     let isMounted = true;
 
     const startListener = () => {
-      if (!isMounted || isJarvisPage || isSpeakingRef.current) return;
+      if (!isMounted || isJarvisPage || !isVoiceEnabled || isSpeakingRef.current) return;
 
       try {
         if (recognitionRef.current) {
@@ -40,7 +70,7 @@ export function GlobalJarvisVoiceListener() {
         fullTextRef.current = "";
 
         rec.onresult = (event: any) => {
-          if (isSpeakingRef.current) return;
+          if (isSpeakingRef.current || !isVoiceEnabled) return;
 
           let interim = "";
           let finalText = "";
@@ -71,9 +101,9 @@ export function GlobalJarvisVoiceListener() {
             console.warn("[Global Jarvis Voice] Permissão de áudio não concedida.");
             return;
           }
-          // Reinicia a escuta automaticamente em qualquer outro erro temporário
-          if (isMounted && !isJarvisPage && !isSpeakingRef.current) {
-            setTimeout(startListener, 2000);
+          // Reinicia a escuta automaticamente em qualquer outro erro temporário se ainda ativado
+          if (isMounted && !isJarvisPage && isVoiceEnabled && !isSpeakingRef.current) {
+            setTimeout(startListener, 2500);
           }
         };
 
@@ -109,7 +139,7 @@ export function GlobalJarvisVoiceListener() {
                 msg.onend = () => {
                   isSpeakingRef.current = false;
                   setActiveCall(false);
-                  if (isMounted && !isJarvisPage) {
+                  if (isMounted && !isJarvisPage && isVoiceEnabled) {
                     setTimeout(startListener, 800);
                   }
                 };
@@ -117,7 +147,7 @@ export function GlobalJarvisVoiceListener() {
                 msg.onerror = () => {
                   isSpeakingRef.current = false;
                   setActiveCall(false);
-                  if (isMounted && !isJarvisPage) {
+                  if (isMounted && !isJarvisPage && isVoiceEnabled) {
                     setTimeout(startListener, 800);
                   }
                 };
@@ -126,7 +156,7 @@ export function GlobalJarvisVoiceListener() {
               } else {
                 isSpeakingRef.current = false;
                 setActiveCall(false);
-                if (isMounted && !isJarvisPage) {
+                if (isMounted && !isJarvisPage && isVoiceEnabled) {
                   setTimeout(startListener, 1500);
                 }
               }
@@ -134,12 +164,12 @@ export function GlobalJarvisVoiceListener() {
               console.error("[Global Jarvis Listener] Erro ao responder:", err);
               isSpeakingRef.current = false;
               setActiveCall(false);
-              if (isMounted && !isJarvisPage) {
+              if (isMounted && !isJarvisPage && isVoiceEnabled) {
                 setTimeout(startListener, 2000);
               }
             }
           } else {
-            if (isMounted && !isJarvisPage && !isSpeakingRef.current) {
+            if (isMounted && !isJarvisPage && isVoiceEnabled && !isSpeakingRef.current) {
               setActiveCall(false);
               setTimeout(startListener, 1200);
             }
@@ -150,7 +180,7 @@ export function GlobalJarvisVoiceListener() {
         rec.start();
       } catch (err) {
         console.warn("[Global Jarvis Listener] Não foi possível iniciar voz automática:", err);
-        if (isMounted && !isJarvisPage && !isSpeakingRef.current) {
+        if (isMounted && !isJarvisPage && isVoiceEnabled && !isSpeakingRef.current) {
           setTimeout(startListener, 3000);
         }
       }
@@ -165,14 +195,51 @@ export function GlobalJarvisVoiceListener() {
         try { recognitionRef.current.stop(); } catch (e) {}
       }
     };
-  }, [isJarvisPage]);
+  }, [isJarvisPage, isVoiceEnabled]);
+
+  const toggleVoice = () => {
+    const next = !isVoiceEnabled;
+    setIsVoiceEnabled(next);
+    toast({
+      title: next ? "🎙️ Jarvis por Voz Ativado" : "🔇 Jarvis por Voz Desativado",
+      description: next
+        ? "Microfone ativo no Jarvis. Fale 'Jarvis...' para enviar um comando."
+        : "Microfone desligado. Ative novamente quando quiser interagir por voz.",
+    });
+  };
 
   if (isJarvisPage) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-slate-900/90 text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-2xl backdrop-blur-md border border-emerald-500/40 animate-pulse">
-      <Sparkles className="h-4 w-4 text-emerald-400 animate-spin" />
-      <span>{activeCall ? "🤖 Jarvis Atendendo..." : "🟢 Jarvis Ouvindo (Diga 'Jarvis...')" }</span>
-    </div>
+    <button
+      onClick={toggleVoice}
+      type="button"
+      title={isVoiceEnabled ? "Clique para desativar a escuta de voz do Jarvis" : "Clique para ativar a escuta de voz do Jarvis"}
+      className={`fixed bottom-4 left-4 z-50 flex items-center gap-2 text-xs font-bold px-3.5 py-2 rounded-full shadow-2xl backdrop-blur-md border transition-all duration-200 cursor-pointer select-none active:scale-95 ${
+        isVoiceEnabled
+          ? "bg-slate-900/95 text-white border-emerald-500/40 animate-pulse hover:border-emerald-400"
+          : "bg-slate-900/80 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200"
+      }`}
+    >
+      {isVoiceEnabled ? (
+        activeCall ? (
+          <>
+            <Sparkles className="h-4 w-4 text-emerald-400 animate-spin" />
+            <span>🤖 Jarvis Atendendo...</span>
+          </>
+        ) : (
+          <>
+            <Sparkles className="h-4 w-4 text-emerald-400 animate-pulse" />
+            <span>🟢 Jarvis Ouvindo (Diga 'Jarvis...')</span>
+          </>
+        )
+      ) : (
+        <>
+          <MicOff className="h-4 w-4 text-slate-500" />
+          <span>{isMobile ? "🎙️ Jarvis (Toque p/ Ativar)" : "🔇 Jarvis por Voz (Desativado)"}</span>
+        </>
+      )}
+    </button>
   );
 }
+
