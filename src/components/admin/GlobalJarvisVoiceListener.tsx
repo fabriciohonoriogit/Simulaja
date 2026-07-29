@@ -112,7 +112,9 @@ export function GlobalJarvisVoiceListener() {
           const finalQ = fullTextRef.current.trim();
           fullTextRef.current = "";
 
-          if (finalQ && (/(jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça)/i.test(finalQ) || finalQ.length > 5)) {
+          const isCalled = /(jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis)/i.test(finalQ);
+
+          if (finalQ && isCalled) {
             toast({
               title: "🤖 Jarvis Atendendo Chamado...",
               description: `"${finalQ}"`,

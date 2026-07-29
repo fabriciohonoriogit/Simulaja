@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const DEFAULT_MODEL = "gemini-1.5-flash";
+const DEFAULT_MODEL = "gemini-2.0-flash";
 
 const tools = [
   {
@@ -621,7 +621,7 @@ Deno.serve(async (req) => {
       contents.push({ role: "user", parts: userParts });
     }
 
-    const CANDIDATE_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro"];
+    const CANDIDATE_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash-exp", "gemini-1.5-pro"];
 
     const systemInstructionText = `Você é o Jarvis, assistente de inteligência artificial e diretor comercial do Contemplar CRM.
 
