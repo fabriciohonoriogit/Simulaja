@@ -215,7 +215,7 @@ export function GlobalJarvisVoiceListener() {
       onClick={toggleVoice}
       type="button"
       title={isVoiceEnabled ? "Clique para desativar a escuta de voz do Jarvis" : "Clique para ativar a escuta de voz do Jarvis"}
-      className={`fixed bottom-4 left-4 z-50 flex items-center gap-2 text-xs font-bold px-3.5 py-2 rounded-full shadow-2xl backdrop-blur-md border transition-all duration-200 cursor-pointer select-none active:scale-95 ${
+      className={`fixed top-3.5 right-14 lg:top-4 lg:right-6 z-50 flex items-center gap-2 text-xs font-bold px-3.5 py-2 rounded-full shadow-2xl backdrop-blur-md border transition-all duration-200 cursor-pointer select-none active:scale-95 ${
         isVoiceEnabled
           ? "bg-slate-900/95 text-white border-emerald-500/40 animate-pulse hover:border-emerald-400"
           : "bg-slate-900/80 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200"
