@@ -225,30 +225,21 @@ export function GlobalJarvisVoiceListener() {
     <button
       onClick={toggleVoice}
       type="button"
-      title={isVoiceEnabled ? "Clique para desativar a escuta de voz do Jarvis" : "Clique para ativar a escuta de voz do Jarvis"}
-      className={`fixed top-3.5 right-14 lg:top-4 lg:right-6 z-50 flex items-center gap-2 text-xs font-bold px-3.5 py-2 rounded-full shadow-2xl backdrop-blur-md border transition-all duration-200 cursor-pointer select-none active:scale-95 ${
+      title={isVoiceEnabled ? "Jarvis Ativo (Clique para desativar)" : "Jarvis Desativado (Clique para ativar)"}
+      className={`fixed top-4 left-36 sm:top-6 sm:left-[490px] z-50 flex items-center justify-center h-8 w-8 rounded-full shadow-lg backdrop-blur-md border transition-all duration-200 cursor-pointer select-none active:scale-95 ${
         isVoiceEnabled
-          ? "bg-slate-900/95 text-white border-emerald-500/40 animate-pulse hover:border-emerald-400"
-          : "bg-slate-900/80 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200"
+          ? "bg-slate-900/90 border-emerald-500/50 text-white hover:border-emerald-400"
+          : "bg-slate-900/70 border-slate-700/60 text-slate-500 hover:bg-slate-800"
       }`}
     >
       {isVoiceEnabled ? (
         activeCall ? (
-          <>
-            <Sparkles className="h-4 w-4 text-emerald-400 animate-spin" />
-            <span>🤖 Jarvis Atendendo...</span>
-          </>
+          <Sparkles className="h-4 w-4 text-emerald-400 animate-spin" />
         ) : (
-          <>
-            <Sparkles className="h-4 w-4 text-emerald-400 animate-pulse" />
-            <span>🟢 Jarvis Ouvindo (Diga 'Jarvis...')</span>
-          </>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
         )
       ) : (
-        <>
-          <MicOff className="h-4 w-4 text-slate-500" />
-          <span>{isMobile ? "🎙️ Jarvis (Toque p/ Ativar)" : "🔇 Jarvis por Voz (Desativado)"}</span>
-        </>
+        <MicOff className="h-3.5 w-3.5 text-slate-500" />
       )}
     </button>
   );
