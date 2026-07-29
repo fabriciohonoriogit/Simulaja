@@ -14,7 +14,12 @@ const tools = [
       {
         name: "get_dashboard_metrics",
         description: "Obtém as métricas agregadas do CRM (dashboard): total de leads no funil, valor em negociação e inadimplência total.",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            filtro: { type: "STRING", description: "Filtro opcional das métricas." }
+          }
+        }
       },
       {
         name: "search_leads",
@@ -30,27 +35,52 @@ const tools = [
       {
         name: "get_carteira",
         description: "Lista clientes na carteira (ativos e inativos).",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            status: { type: "STRING", description: "Status opcional (ativo ou inativo)." }
+          }
+        }
       },
       {
         name: "get_inadimplentes",
         description: "Lista clientes inadimplentes e detalha os valores atrasados.",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            status: { type: "STRING", description: "Filtro de status opcional." }
+          }
+        }
       },
       {
         name: "get_metas",
         description: "Obtém as metas comerciais da equipe no ano atual.",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            ano: { type: "NUMBER", description: "Ano da meta (opcional)." }
+          }
+        }
       },
       {
         name: "get_comissoes",
         description: "Obtém a lista de comissões registradas (valores, parcelas, taxa, comissão total, status) de vendas da organização.",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            status: { type: "STRING", description: "Status da comissão (opcional)." }
+          }
+        }
       },
       {
         name: "get_missoes",
         description: "Obtém o histórico ou status das missões (metas concluídas ou em progresso) do consultor.",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            usuario_id: { type: "STRING", description: "ID do usuário (opcional)." }
+          }
+        }
       },
       {
         name: "get_historico_contatos",
@@ -65,7 +95,12 @@ const tools = [
       {
         name: "get_fechamentos_mensais",
         description: "Obtém a lista de fechamentos mensais de vendas consolidados por organização.",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            ano: { type: "NUMBER", description: "Ano do fechamento (opcional)." }
+          }
+        }
       },
       {
         name: "mover_lead_etapa",
@@ -147,7 +182,12 @@ const tools = [
       {
         name: "get_gamificacao_ranking",
         description: "Obtém os dados de gamificação: pontos da equipe, ranking de vendas, boss da semana, sequência de vendas (streak) e hall da fama.",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            usuario_id: { type: "STRING", description: "ID opcional do usuário." }
+          }
+        }
       },
       {
         name: "create_lembrete_notificacao",
@@ -177,7 +217,12 @@ const tools = [
       {
         name: "get_propostas_e_vendas",
         description: "Obtém a lista de propostas geradas e cotas vendidas da organização.",
-        parameters: { type: "OBJECT", properties: {} }
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            status: { type: "STRING", description: "Status opcional das propostas." }
+          }
+        }
       }
     ]
   }
