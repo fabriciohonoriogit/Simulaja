@@ -662,7 +662,7 @@ AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emi
       let data = await upstream.json();
       
       if (!upstream.ok || !data?.candidates?.[0]) {
-        console.warn("Gemini com ferramentas falhou. Executando fallback direto para modelo simples sem ferramentas...", data);
+        console.warn("Gemini com ferramentas falhou. Executando fallback direto para modelo simples...", data);
         const fallbackRes = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -685,8 +685,40 @@ AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emi
           }
         }
 
-        const errMsg = data?.error?.message || "Serviço de IA temporariamente indisponível.";
-        return new Response(JSON.stringify({ text: `Ops, tive um problema ao acessar a base de dados: ${errMsg}` }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const openaiKey = Deno.env.get("OPENAI_API_KEY");
+        if (openaiKey) {
+          try {
+            const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${openaiKey}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                  { role: "system", content: "Você é o Jarvis, diretor comercial do Contemplar CRM. Responda sempre em Português do Brasil de forma humana, clara e objetiva." },
+                  ...contents.map((c: any) => ({
+                    role: c.role === "model" ? "assistant" : "user",
+                    content: c.parts?.[0]?.text || ""
+                  }))
+                ],
+                max_tokens: 800
+              })
+            });
+            if (openaiRes.ok) {
+              const openaiData = await openaiRes.json();
+              const openAiText = openaiData?.choices?.[0]?.message?.content;
+              if (openAiText) {
+                return new Response(JSON.stringify({ text: openAiText }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+              }
+            }
+          } catch (oaiErr) {
+            console.error("Fallback OpenAI falhou:", oaiErr);
+          }
+        }
+
+        return new Response(JSON.stringify({ text: "Estou ajustando a conexão com a base de dados do CRM. Pode refazer sua pergunta em alguns instantes?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const candidate = data.candidates[0];

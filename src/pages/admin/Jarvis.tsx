@@ -270,8 +270,12 @@ export default function Jarvis() {
         const cleanText = text
             .replace(/```json[\s\S]*?```/g, '')
             .replace(/```[\s\S]*?```/g, '')
+            .replace(/\{[\s\S]*?\}/g, '')
+            .replace(/\[[\s\S]*?\]/g, '')
+            .replace(/API key not valid[\s\S]*/gi, '')
+            .replace(/INVALID_ARGUMENT[\s\S]*/gi, '')
             .replace(/\*\([^*]*\)\*/g, '')
-            .replace(/\*|_|#|\[|\]|~/g, '')
+            .replace(/[*_#`~{}]/g, '')
             .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
             .replace(/FUNIL:|LEADS:|METAS DO MÊS:|INADIMPLÊNCIA:/g, '')
             .replace(/\s+/g, ' ')
