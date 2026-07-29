@@ -283,15 +283,17 @@ export default function Jarvis() {
         const msg = new SpeechSynthesisUtterance(cleanText);
         msg.lang = "pt-BR";
         
-        const voices = window.speechSynthesis.getVoices();
-        let ptVoice = voices.find(v => (v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br')) && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google')));
+        const allVoices = window.speechSynthesis.getVoices();
+        const ptVoices = allVoices.filter(v => v.lang.toLowerCase().startsWith('pt'));
+        
+        let ptVoice = ptVoices.find(v => (v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br')) && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google')));
         
         if (!ptVoice) {
-            ptVoice = voices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br') || v.name.includes('Daniel') || v.name.includes('Felipe') || v.name.includes('Luciana'));
+            ptVoice = ptVoices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br'));
         }
         
-        if (!ptVoice) {
-            ptVoice = voices.find(v => v.lang.toLowerCase().startsWith('pt'));
+        if (!ptVoice && ptVoices.length > 0) {
+            ptVoice = ptVoices[0];
         }
             
         if (ptVoice) {
@@ -370,16 +372,11 @@ export default function Jarvis() {
                 }
                 setQuestion(fullText);
 
-                if (fullText.toLowerCase().includes("jarvis") && fullText.length > 5) {
+                if (fullText.length > 2) {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     silenceTimerRef.current = setTimeout(() => {
                         try { rec.stop(); } catch (e) {}
-                    }, 1600);
-                } else if (fullText.length > 2) {
-                    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-                    silenceTimerRef.current = setTimeout(() => {
-                        try { rec.stop(); } catch (e) {}
-                    }, 2500);
+                    }, 1800);
                 }
             };
 
@@ -417,7 +414,7 @@ export default function Jarvis() {
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
                 
-                if (finalQ && finalQ.toLowerCase().includes("jarvis")) {
+                if (finalQ && finalQ.length > 1) {
                     setQuestion("");
                     handleAnalyze(finalQ);
                 } else {

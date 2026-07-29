@@ -87,7 +87,7 @@ export function GlobalJarvisVoiceListener() {
 
           const textLower = fullTextRef.current.toLowerCase();
 
-          if (textLower.includes("jarvis")) {
+          if (/(jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis)/i.test(textLower)) {
             setActiveCall(true);
             if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
             silenceTimerRef.current = setTimeout(() => {
@@ -112,7 +112,7 @@ export function GlobalJarvisVoiceListener() {
           const finalQ = fullTextRef.current.trim();
           fullTextRef.current = "";
 
-          if (finalQ && finalQ.toLowerCase().includes("jarvis")) {
+          if (finalQ && (/(jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça)/i.test(finalQ) || finalQ.length > 5)) {
             toast({
               title: "🤖 Jarvis Atendendo Chamado...",
               description: `"${finalQ}"`,
@@ -139,10 +139,12 @@ export function GlobalJarvisVoiceListener() {
                 msg.rate = 1.02;
                 msg.pitch = 0.95;
 
-                const voices = window.speechSynthesis.getVoices();
-                let ptVoice = voices.find(v => v.lang.toLowerCase().includes("pt-br") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Premium") || v.name.includes("Online")));
-                if (!ptVoice) ptVoice = voices.find(v => v.lang.toLowerCase().includes("pt-br") || v.lang.toLowerCase().includes("pt_br") || v.name.includes("Daniel") || v.name.includes("Felipe"));
-                if (!ptVoice) ptVoice = voices.find(v => v.lang.toLowerCase().startsWith("pt"));
+                const allVoices = window.speechSynthesis.getVoices();
+                const ptVoices = allVoices.filter(v => v.lang.toLowerCase().startsWith("pt"));
+
+                let ptVoice = ptVoices.find(v => v.lang.toLowerCase().includes("pt-br") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Premium") || v.name.includes("Online")));
+                if (!ptVoice) ptVoice = ptVoices.find(v => v.lang.toLowerCase().includes("pt-br") || v.lang.toLowerCase().includes("pt_br"));
+                if (!ptVoice && ptVoices.length > 0) ptVoice = ptVoices[0];
                 if (ptVoice) msg.voice = ptVoice;
 
                 msg.onend = () => {
