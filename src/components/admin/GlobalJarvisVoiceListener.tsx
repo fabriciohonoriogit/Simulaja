@@ -120,7 +120,7 @@ export function GlobalJarvisVoiceListener() {
 
             try {
               isSpeakingRef.current = true;
-              const res = await aiService.askJarvis("Global Voice Command", finalQ);
+              const res = await aiService.askJarvis("Comando de Voz do Usuário", finalQ);
               const answerText = res.answer || (res as any).script || (res as any).text;
 
               if (answerText && typeof window !== "undefined" && window.speechSynthesis) {
