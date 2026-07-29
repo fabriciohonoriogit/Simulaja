@@ -268,7 +268,10 @@ export default function Jarvis() {
         if (typeof window === "undefined" || !window.speechSynthesis) return;
         
         const cleanText = text
-            .replace(/\*|_|#|\[|\]/g, '')
+            .replace(/```json[\s\S]*?```/g, '')
+            .replace(/```[\s\S]*?```/g, '')
+            .replace(/\*\([^*]*\)\*/g, '')
+            .replace(/\*|_|#|\[|\]|~/g, '')
             .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
             .replace(/FUNIL:|LEADS:|METAS DO MÊS:|INADIMPLÊNCIA:/g, '')
             .replace(/\s+/g, ' ')
@@ -284,7 +287,7 @@ export default function Jarvis() {
         let ptVoice = voices.find(v => (v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br')) && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google')));
         
         if (!ptVoice) {
-            ptVoice = voices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br') || v.name.includes('Luciana') || v.name.includes('Daniel') || v.name.includes('Felipe'));
+            ptVoice = voices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br') || v.name.includes('Daniel') || v.name.includes('Felipe') || v.name.includes('Luciana'));
         }
         
         if (!ptVoice) {
@@ -295,8 +298,8 @@ export default function Jarvis() {
             msg.voice = ptVoice;
         }
 
-        msg.rate = 1.0; 
-        msg.pitch = 1.05;
+        msg.rate = 1.02; 
+        msg.pitch = 0.95;
         
         setOrbState("speaking");
         

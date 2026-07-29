@@ -125,14 +125,23 @@ export function GlobalJarvisVoiceListener() {
 
               if (answerText && typeof window !== "undefined" && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
-                const cleanSpeech = answerText.replace(/\*\([^*]*\)\*/g, '').replace(/[*_#`]/g, "").trim();
+                const cleanSpeech = answerText
+                  .replace(/```json[\s\S]*?```/g, '')
+                  .replace(/```[\s\S]*?```/g, '')
+                  .replace(/\*\([^*]*\)\*/g, '')
+                  .replace(/[*_#`~]/g, '')
+                  .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+
                 const msg = new SpeechSynthesisUtterance(cleanSpeech);
                 msg.lang = "pt-BR";
-                msg.rate = 1.05;
+                msg.rate = 1.02;
+                msg.pitch = 0.95;
 
                 const voices = window.speechSynthesis.getVoices();
                 let ptVoice = voices.find(v => v.lang.toLowerCase().includes("pt-br") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Premium") || v.name.includes("Online")));
-                if (!ptVoice) ptVoice = voices.find(v => v.lang.toLowerCase().includes("pt-br") || v.lang.toLowerCase().includes("pt_br"));
+                if (!ptVoice) ptVoice = voices.find(v => v.lang.toLowerCase().includes("pt-br") || v.lang.toLowerCase().includes("pt_br") || v.name.includes("Daniel") || v.name.includes("Felipe"));
                 if (!ptVoice) ptVoice = voices.find(v => v.lang.toLowerCase().startsWith("pt"));
                 if (ptVoice) msg.voice = ptVoice;
 
