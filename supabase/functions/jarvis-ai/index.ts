@@ -621,23 +621,9 @@ Deno.serve(async (req) => {
       contents.push({ role: "user", parts: userParts });
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODEL}:generateContent?key=${apiKey}`;
+    const CANDIDATE_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro"];
 
-    let maxLoops = 4;
-    let loopCount = 0;
-    
-    while (loopCount < maxLoops) {
-      loopCount++;
-      const upstream = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents,
-          tools,
-          generationConfig: { maxOutputTokens: 1000 },
-          systemInstruction: {
-            parts: [{
-              text: `Você é o Jarvis, assistente de inteligência artificial e diretor comercial do Contemplar CRM.
+    const systemInstructionText = `Você é o Jarvis, assistente de inteligência artificial e diretor comercial do Contemplar CRM.
 
 IDENTIDADE E TOM:
 - Responda sempre em Português do Brasil, natural e fluido. Nunca inicie frases em inglês ou use expressões como "Hello", "Sure", "Here is".
@@ -653,35 +639,72 @@ ESPECIALIDADE:
 
 AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emitir boleto):
 - Se o pedido for ambíguo (ex: mais de um lead com nome parecido), confirme antes de agir.
-- Se o pedido for claro e específico, execute direto e informe o que foi feito ao final, em uma frase.`
-            }]
+- Se o pedido for claro e específico, execute direto e informe o que foi feito ao final, em uma frase.`;
+
+    let maxLoops = 4;
+    let loopCount = 0;
+    
+    while (loopCount < maxLoops) {
+      loopCount++;
+
+      let upstreamOk = false;
+      let data: any = null;
+
+      for (const modelName of CANDIDATE_MODELS) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents,
+              tools,
+              generationConfig: { maxOutputTokens: 1000 },
+              systemInstruction: {
+                parts: [{ text: systemInstructionText }]
+              }
+            }),
+          });
+          const resData = await res.json();
+          if (res.ok && resData?.candidates?.[0]) {
+            upstreamOk = true;
+            data = resData;
+            break;
+          } else {
+            console.warn(`[Jarvis API] Modelo ${modelName} retornou status ${res.status}. Tentando próximo modelo...`, resData?.error?.message);
           }
-        }),
-      });
+        } catch (mErr) {
+          console.error(`[Jarvis API] Exceção ao chamar ${modelName}:`, mErr);
+        }
+      }
 
-      let data = await upstream.json();
-      
-      if (!upstream.ok || !data?.candidates?.[0]) {
-        console.warn("Gemini com ferramentas falhou. Executando fallback direto para modelo simples...", data);
-        const fallbackRes = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents,
-            generationConfig: { maxOutputTokens: 1000 },
-            systemInstruction: {
-              parts: [{
-                text: `Você é o Jarvis, assistente de inteligência artificial e diretor comercial do Contemplar CRM. Responda em Português do Brasil com objetividade e clareza.`
-              }]
+      if (!upstreamOk || !data?.candidates?.[0]) {
+        console.warn("Todos os modelos Gemini com ferramentas falharam. Tentando fallback sem ferramentas...");
+
+        for (const modelName of CANDIDATE_MODELS) {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          try {
+            const fallbackRes = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents,
+                generationConfig: { maxOutputTokens: 1000 },
+                systemInstruction: {
+                  parts: [{ text: systemInstructionText }]
+                }
+              })
+            });
+
+            if (fallbackRes.ok) {
+              const fallbackData = await fallbackRes.json();
+              const fallbackText = fallbackData?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (fallbackText) {
+                return new Response(JSON.stringify({ text: fallbackText }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+              }
             }
-          })
-        });
-
-        if (fallbackRes.ok) {
-          const fallbackData = await fallbackRes.json();
-          const fallbackText = fallbackData?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (fallbackText) {
-            return new Response(JSON.stringify({ text: fallbackText }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          } catch (fErr) {
+            console.error(`Fallback simples para ${modelName} falhou:`, fErr);
           }
         }
 
