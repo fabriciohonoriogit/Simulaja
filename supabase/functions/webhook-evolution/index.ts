@@ -145,7 +145,6 @@ serve(async (req) => {
         .from("chat_messages")
         .insert({
           lead_id: matchedLead.id,
-          organizacao_id: matchedLead.organizacao_id,
           content: incomingText,
           role: msgRole,
         });
@@ -213,7 +212,6 @@ serve(async (req) => {
               // 1. Grava no banco a resposta do assistente (role 'assistant' permitido pela constraint)
               await supabaseAdmin.from("chat_messages").insert({
                 lead_id: matchedLead.id,
-                organizacao_id: matchedLead.organizacao_id,
                 content: aiText,
                 role: "assistant"
               });

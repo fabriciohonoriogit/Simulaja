@@ -264,7 +264,6 @@ mcpRegistry.register({
     if (leadId) {
       await supabase.from("chat_messages").insert({
         lead_id: leadId,
-        organizacao_id: ctx.organizacaoId,
         content: args.mensagem,
         role: "assistant",
       });

@@ -441,7 +441,6 @@ async function executeTool(supabase: any, name: string, args: any) {
       if (leadId) {
         await client.from('chat_messages').insert({
           lead_id: leadId,
-          organizacao_id: orgId,
           content: args.mensagem,
           role: 'assistant'
         });
