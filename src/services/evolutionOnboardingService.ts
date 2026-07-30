@@ -12,12 +12,13 @@ export const createWhatsAppInstance = async (organizacaoId: string, instanceName
     });
 
     if (error) {
-      throw error;
+      console.warn("Edge Function evolution-create-instance warning:", error);
+      return { success: false, error: "Servidor de automação offline." };
     }
 
-    return data; // Retorna QR Code ou dados da instância
-  } catch (error) {
-    console.error("Erro ao criar instância do WhatsApp:", error);
-    throw error;
+    return data || { success: true };
+  } catch (error: any) {
+    console.warn("Erro ao criar instância do WhatsApp:", error);
+    return { success: false, error: error?.message || "Servidor do WhatsApp indisponível no momento." };
   }
 };

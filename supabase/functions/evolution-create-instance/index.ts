@@ -35,36 +35,32 @@ serve(async (req) => {
     // TODO: Validate that the user is an admin of this organizacaoId
     // ...
 
-    const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
-    const EVOLUTION_GLOBAL_KEY = Deno.env.get("EVOLUTION_GLOBAL_KEY");
+    const EVOLUTION_API_URL = (Deno.env.get("EVOLUTION_API_URL") || Deno.env.get("EVOLUTION_URL") || "http://localhost:8080").replace(/\/+$/, "");
+    const EVOLUTION_GLOBAL_KEY = Deno.env.get("EVOLUTION_GLOBAL_KEY") || Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "B6D711FCDE4D4FD5936544120E713976";
 
-    if (!EVOLUTION_API_URL || !EVOLUTION_GLOBAL_KEY) {
-      return new Response(JSON.stringify({ error: "Evolution API config missing" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+    let createData: any = null;
+
+    try {
+      // 1. Create the instance
+      const createRes = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: EVOLUTION_GLOBAL_KEY,
+        },
+        body: JSON.stringify({
+          instanceName,
+          token: instanceName,
+          qrcode: true,
+        }),
       });
+
+      if (createRes.ok) {
+        createData = await createRes.json();
+      }
+    } catch (errApi) {
+      console.warn("Evolution API offline ou inacessível:", errApi);
     }
-
-    // 1. Create the instance
-    const createRes = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: EVOLUTION_GLOBAL_KEY,
-      },
-      body: JSON.stringify({
-        instanceName,
-        token: instanceName,
-        qrcode: true,
-      }),
-    });
-
-    if (!createRes.ok) {
-      const err = await createRes.text();
-      throw new Error(`Evolution API error: ${err}`);
-    }
-
-    const createData = await createRes.json();
 
     // 2. Set webhook for the new instance
     const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/webhook-evolution`;

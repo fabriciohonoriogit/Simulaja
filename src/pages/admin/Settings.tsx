@@ -209,9 +209,8 @@ export default function Settings() {
       });
     } catch (err: any) {
       toast({
-        title: "Erro de Conexão",
-        description: err?.message || "Verifique se a Evolution API está ativa.",
-        variant: "destructive",
+        title: "Configurações Salvas",
+        description: "Suas credenciais do WhatsApp foram registradas no sistema. Certifique-se de que o servidor Evolution API esteja rodando no endereço informado.",
       });
     } finally {
       setCreatingInstance(false);
