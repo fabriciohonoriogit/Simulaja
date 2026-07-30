@@ -315,11 +315,8 @@ export default function Jarvis() {
                 speakingTimeoutRef.current = null;
             }
             setOrbState("idle");
-            if (isHandsFreeRef.current && !isListeningRef.current) {
-                setTimeout(() => {
-                    try { startRecording(); } catch (e) {}
-                }, 600);
-            }
+            // Limpa qualquer transcrição residual de áudio sintetizado para evitar auto-realimentação do microfone
+            finalTranscriptRef.current = "";
         };
 
         msg.onend = finishSpeaking;
@@ -491,43 +488,59 @@ export default function Jarvis() {
     ];
 
     useEffect(() => {
-        if (!profile?.organizacao_id) return;
         const fetchData = async () => {
+            setLoading(true);
             try {
-                const [leadsRes, metaRes, inadRes] = await Promise.all([
-                    supabase.from("leads").select("*").eq("organizacao_id", profile.organizacao_id),
-                    supabase.from("meta").select("*").eq("ano", new Date().getFullYear()).eq("organizacao_id", profile.organizacao_id).maybeSingle(),
-                    (supabase as any).from("inadimplentes").select("*").eq("organizacao_id", profile.organizacao_id)
+                const orgId = profile?.organizacao_id;
+
+                const leadsQuery = orgId
+                    ? supabase.from("leads").select("*").eq("organizacao_id", orgId)
+                    : supabase.from("leads").select("*").limit(200);
+
+                const metaQuery = orgId
+                    ? supabase.from("meta").select("*").eq("ano", new Date().getFullYear()).eq("organizacao_id", orgId).maybeSingle()
+                    : supabase.from("meta").select("*").eq("ano", new Date().getFullYear()).limit(1).maybeSingle();
+
+                const inadQuery = orgId
+                    ? (supabase as any).from("inadimplentes").select("*").eq("organizacao_id", orgId)
+                    : (supabase as any).from("inadimplentes").select("*").limit(100);
+
+                const [leadsResult, metaResult, inadResult] = await Promise.allSettled([
+                    leadsQuery,
+                    metaQuery,
+                    inadQuery
                 ]);
 
                 let allLeads: Lead[] = [];
-                if (leadsRes.data) {
-                    allLeads = leadsRes.data as Lead[];
+                if (leadsResult.status === "fulfilled" && leadsResult.value?.data) {
+                    allLeads = leadsResult.value.data as Lead[];
                     setLeads(allLeads);
-                    
-                    try {
-                        const res = await calcularMissoes(profile.id, profile.organizacao_id, profile.tipo_acesso as any);
-                        setMissoes(res.missoes);
-                    } catch(e) {
-                        console.error("Erro ao carregar missões no Jarvis:", e);
+
+                    if (profile?.id) {
+                        try {
+                            const res = await calcularMissoes(profile.id, orgId || "", profile.tipo_acesso as any);
+                            setMissoes(res.missoes);
+                        } catch(e) {
+                            console.warn("Erro ao carregar missões no Jarvis:", e);
+                        }
                     }
                 }
 
-                if (inadRes.data) {
-                    setInadimplentes(inadRes.data as Inadimplente[]);
+                if (inadResult.status === "fulfilled" && inadResult.value?.data) {
+                    setInadimplentes(inadResult.value.data as Inadimplente[]);
                 }
 
-                if (metaRes.data) {
-                    setMetaAnual(metaRes.data.meta_anual || 0);
-                    
-                    // Calcular métricas por segmento baseadas no Metas.tsx
+                if (metaResult.status === "fulfilled" && metaResult.value?.data) {
+                    const metaData = metaResult.value.data;
+                    setMetaAnual(metaData.meta_anual || 0);
+
                     const currentMonthStr = new Date().toISOString().substring(0, 7);
                     const monthlyMetas: Record<string, number> = {
-                        imoveis: Number(metaRes.data.meta_imoveis || 500000),
-                        veiculos: Number(metaRes.data.meta_veiculos || 100000),
-                        motos: Number(metaRes.data.meta_motos || 100000),
-                        pesados: Number((metaRes.data as any).meta_pesados || 180000),
-                        investimentos: Number((metaRes.data as any).meta_investimentos || 120000)
+                        imoveis: Number(metaData.meta_imoveis || 500000),
+                        veiculos: Number(metaData.meta_veiculos || 100000),
+                        motos: Number(metaData.meta_motos || 100000),
+                        pesados: Number((metaData as any).meta_pesados || 180000),
+                        investimentos: Number((metaData as any).meta_investimentos || 120000)
                     };
 
                     const segConfig = [
@@ -552,7 +565,7 @@ export default function Jarvis() {
                             return dateToCheck.startsWith(currentMonthStr);
                         });
                         const valorTotal = currentMonthVendas.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
-                        
+
                         return {
                             segmento: config.id,
                             total_leads: segmentLeads.length,
@@ -564,8 +577,12 @@ export default function Jarvis() {
                     setSegmentMetas(segs);
                 }
 
-                const bcb = await bcbService.getEconomicIndicators();
-                setEconomiaDados(bcb);
+                try {
+                    const bcb = await bcbService.getEconomicIndicators();
+                    setEconomiaDados(bcb);
+                } catch (e) {
+                    console.warn("Erro indicador bcb:", e);
+                }
             } catch (err) {
                 console.error("Erro ao carregar dados para o Jarvis:", err);
             } finally {
@@ -574,7 +591,7 @@ export default function Jarvis() {
         };
 
         fetchData();
-    }, [profile?.organizacao_id]);
+    }, [profile?.organizacao_id, profile?.id]);
 
     // Garantir que a gravação/escuta por voz fique desligada por padrão ao entrar na página
     useEffect(() => {
@@ -794,7 +811,18 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
 
         const response = await aiService.askJarvis(contextBuilder, query, history, imageBase64);
         
-        let newAnalysis: JarvisAnalysis | null = null;
+        if (response.error || !response.answer) {
+            const errorMsg: Message = {
+                id: (Date.now()+1).toString(),
+                role: "jarvis",
+                content: "⚠️ Não foi possível conectar ao servidor do Jarvis no momento. Verifique sua chave de API ou conexão de rede.",
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMsg]);
+            setIsAnalyzing(false);
+            setOrbState("idle");
+            return;
+        }
         if (query.toLowerCase().includes("resumo") || query.toLowerCase().includes("funil") || query.toLowerCase().includes("tudo")) {
             newAnalysis = {
                 metaTotal: metaMensal, realizado: realizadoMes, pipeline: pipelineValue,

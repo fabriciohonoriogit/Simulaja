@@ -128,57 +128,16 @@ export function GlobalJarvisVoiceListener() {
               const res = await aiService.askJarvis("Comando de Voz do Usuário", finalQ);
               const answerText = res.answer || (res as any).script || (res as any).text;
 
-              if (answerText && typeof window !== "undefined" && window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-                const cleanSpeech = answerText
-                  .replace(/```json[\s\S]*?```/g, '')
-                  .replace(/```[\s\S]*?```/g, '')
-                  .replace(/\{[\s\S]*?\}/g, '')
-                  .replace(/\[[\s\S]*?\]/g, '')
-                  .replace(/API key not valid[\s\S]*/gi, '')
-                  .replace(/INVALID_ARGUMENT[\s\S]*/gi, '')
-                  .replace(/\*\([^*]*\)\*/g, '')
-                  .replace(/[*_#`~{}]/g, '')
-                  .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}]/gu, '')
-                  .replace(/\s+/g, ' ')
-                  .trim();
-
-                const msg = new SpeechSynthesisUtterance(cleanSpeech);
-                msg.lang = "pt-BR";
-                msg.rate = 1.02;
-                msg.pitch = 0.95;
-
-                const allVoices = window.speechSynthesis.getVoices();
-                const ptVoices = allVoices.filter(v => v.lang.toLowerCase().startsWith("pt"));
-
-                let ptVoice = ptVoices.find(v => v.lang.toLowerCase().includes("pt-br") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Premium") || v.name.includes("Online")));
-                if (!ptVoice) ptVoice = ptVoices.find(v => v.lang.toLowerCase().includes("pt-br") || v.lang.toLowerCase().includes("pt_br"));
-                if (!ptVoice && ptVoices.length > 0) ptVoice = ptVoices[0];
-                if (ptVoice) msg.voice = ptVoice;
-
-                msg.onend = () => {
-                  isSpeakingRef.current = false;
-                  setActiveCall(false);
-                  if (isMounted && !isJarvisPage && isVoiceEnabled) {
-                    setTimeout(startListener, 800);
-                  }
-                };
-
-                msg.onerror = () => {
-                  isSpeakingRef.current = false;
-                  setActiveCall(false);
-                  if (isMounted && !isJarvisPage && isVoiceEnabled) {
-                    setTimeout(startListener, 800);
-                  }
-                };
-
-                window.speechSynthesis.speak(msg);
-              } else {
-                isSpeakingRef.current = false;
-                setActiveCall(false);
-                if (isMounted && !isJarvisPage && isVoiceEnabled) {
-                  setTimeout(startListener, 1500);
-                }
+              if (answerText) {
+                toast({
+                  title: "🤖 Jarvis Respondeu",
+                  description: answerText.length > 150 ? `${answerText.slice(0, 150)}...` : answerText,
+                });
+              }
+              isSpeakingRef.current = false;
+              setActiveCall(false);
+              if (isMounted && !isJarvisPage && isVoiceEnabled) {
+                setTimeout(startListener, 2000);
               }
             } catch (err) {
               console.error("[Global Jarvis Listener] Erro ao responder:", err);

@@ -163,7 +163,7 @@ PERGUNTA: "${question}"`;
     }
 
     return {
-      answer: text || "Desculpe, ocorreu um erro de conexão. Tente novamente em instantes.",
+      answer: error ? "" : (text || "Desculpe, não foi possível obter resposta no momento."),
       error,
     };
   },
