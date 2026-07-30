@@ -820,9 +820,10 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
             };
             setMessages(prev => [...prev, errorMsg]);
             setIsAnalyzing(false);
-            setOrbState("idle");
             return;
         }
+
+        let newAnalysis: JarvisAnalysis | null = null;
         if (query.toLowerCase().includes("resumo") || query.toLowerCase().includes("funil") || query.toLowerCase().includes("tudo")) {
             newAnalysis = {
                 metaTotal: metaMensal, realizado: realizadoMes, pipeline: pipelineValue,
