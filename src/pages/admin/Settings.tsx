@@ -555,7 +555,7 @@ export default function Settings() {
                     <div className="text-xs font-bold">
                       Status:{" "}
                       <span className={evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "text-emerald-600 font-black" : "text-amber-600 font-black"}>
-                        {evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "CONECTADO" : evolutionStatus === "UNKNOWN" ? "NÃO TESTADO" : evolutionStatus}
+                        {evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "🟢 CONECTADO" : evolutionStatus === "UNKNOWN" ? "⚪ NÃO TESTADO" : `🔴 ${evolutionStatus}`}
                       </span>
                     </div>
 
@@ -577,10 +577,23 @@ export default function Settings() {
                         className="font-bold text-xs h-9"
                       >
                         {creatingInstance && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                        Provisionar
+                        Provisionar / QR Code
                       </Button>
                     </div>
                   </div>
+
+                  {evolutionStatus !== "open" && evolutionStatus !== "CONNECTED" && !qrCodeImg && (
+                    <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200/80 text-[11px] text-amber-900 space-y-1">
+                      <p className="font-bold flex items-center gap-1">
+                        💡 Instrução de Conexão:
+                      </p>
+                      <ul className="list-disc pl-4 space-y-0.5 text-[10.5px] text-amber-800">
+                        <li>Certifique-se de que o servidor Evolution API está rodando na URL configurada (ex: <code className="bg-amber-100 px-1 rounded font-mono">http://localhost:8080</code> ou sua URL de VPS).</li>
+                        <li>Clique em <strong>Provisionar / QR Code</strong> para gerar o código de conexão.</li>
+                        <li>No celular: abra o <strong>WhatsApp &gt; Aparelhos Conectados &gt; Conectar um Aparelho</strong> e escaneie a imagem.</li>
+                      </ul>
+                    </div>
+                  )}
 
                   {qrCodeImg && (
                     <div className="mt-4 p-4 bg-slate-900 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-emerald-500/40 shadow-xl">
