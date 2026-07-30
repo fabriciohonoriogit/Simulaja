@@ -102,7 +102,6 @@ app.post(['/webhook/evolution', '/webhook/evolution/', '/'], async (req, res) =>
     // 1. Gravar a mensagem do cliente no CRM
     await supabase.from('chat_messages').insert({
       lead_id: matchedLead.id,
-      organizacao_id: matchedLead.organizacao_id,
       content: incomingText,
       role: 'user'
     });
@@ -122,10 +121,9 @@ app.post(['/webhook/evolution', '/webhook/evolution/', '/'], async (req, res) =>
       console.log(`[-] Enviando resposta para ${remoteJid}...`);
 
       if (supabase && matchedLead) {
-        // 2. Gravar a resposta da IA no CRM com organizacao_id
+        // 2. Gravar a resposta da IA no CRM
         await supabase.from('chat_messages').insert({
           lead_id: matchedLead.id,
-          organizacao_id: matchedLead.organizacao_id,
           content: aiResponse,
           role: 'assistant'
         });
