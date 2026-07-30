@@ -96,28 +96,30 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
     const data = await response.json();
     return { success: true, data };
   } catch (error: any) {
-    console.error("[Evolution API] Exceção na chamada direta:", error);
-    
-    // Tenta fallback via Edge Function caso cliente esteja rodando no celular ou em ambiente remoto
+    console.warn("[Evolution API] Chamada direta falhou, acionando Edge Function de fallback:", error);
+
     try {
       const { data, error: edgeErr } = await supabase.functions.invoke("evolution-send-message", {
         body: { 
           number: cleanNumber, 
           text, 
-          instanceName: config.instanceName,
-          organizacaoId,
-          clients: organizacaoId ? [{ id: '1', nome: 'Cliente', celular: cleanNumber }] : undefined,
+          instanceName: config.instanceName || "simulaja",
+          organizacaoId: organizacaoId || "",
+          clients: [{ id: '1', nome: 'Cliente', celular: cleanNumber }],
           template: text
         },
       });
       if (!edgeErr && data && (data.success || !data.error)) {
         return { success: true, data };
       }
+      if (edgeErr || data?.error) {
+        console.error("[Evolution API] Fallback Edge Function retornou erro:", edgeErr || data?.error);
+      }
     } catch (e) {
-      console.error("[Evolution API] Fallback Edge Function também falhou:", e);
+      console.error("[Evolution API] Fallback Edge Function falhou totalmente:", e);
     }
 
-    return { success: false, error: error?.message || "Erro de conexão com o servidor Evolution API" };
+    return { success: false, error: error?.message || "Erro de conexão com a Evolution API. Verifique a instância do WhatsApp nas Configurações." };
   }
 };
 

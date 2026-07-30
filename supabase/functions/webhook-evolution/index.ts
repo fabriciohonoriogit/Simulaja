@@ -97,10 +97,43 @@ serve(async (req) => {
         }
       }
 
-      // Se o número NÃO pertence a nenhum lead existente no CRM, IGNORA COMPLETAMENTE
+      // Se o número NÃO pertence a nenhum lead existente no CRM, CRIA AUTOMATICAMENTE o lead no CRM
       if (!matchedLead) {
-        console.log(`[Filtro WhatsApp] Mensagem ignorada do número ${rawNumber}: não é um lead cadastrado no CRM.`);
-        return new Response(JSON.stringify({ status: "ignored_not_a_crm_lead" }), {
+        console.log(`[Filtro WhatsApp] Criando novo lead automaticamente no CRM para o número ${rawNumber}...`);
+        try {
+          const { data: orgs } = await supabaseAdmin.from("organizacoes").select("id").limit(1);
+          const defaultOrgId = orgs && orgs.length > 0 ? orgs[0].id : null;
+          const displayName = pushName ? `Lead ${pushName}` : `Lead WhatsApp (${rawNumber.slice(-4)})`;
+
+          const { data: newLead, error: createErr } = await supabaseAdmin
+            .from("leads")
+            .insert({
+              nome: displayName,
+              celular: rawNumber,
+              status: "novo_lead",
+              atendimento_ia: true,
+              organizacao_id: defaultOrgId,
+              dados_cadastro: {
+                nome: displayName,
+                telefone: rawNumber,
+                origem: "WhatsApp Entrante"
+              }
+            } as any)
+            .select("id, nome, celular, atendimento_ia, organizacao_id")
+            .single();
+
+          if (!createErr && newLead) {
+            matchedLead = newLead;
+          } else {
+            console.error("Erro ao auto-criar lead no webhook:", createErr);
+          }
+        } catch (autoErr) {
+          console.error("Exceção ao auto-criar lead:", autoErr);
+        }
+      }
+
+      if (!matchedLead) {
+        return new Response(JSON.stringify({ status: "ignored_failed_to_associate" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
         });

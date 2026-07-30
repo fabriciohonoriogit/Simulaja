@@ -61,18 +61,19 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
 
-    // 1. Get the organization's Evolution Instance Name
-    const { data: orgData, error: orgError } = await supabaseClient
-      .from("organizacoes")
-      .select("evolution_instance_name")
-      .eq("id", organizacaoId)
-      .single();
+    let instanceName = reqBody.instanceName || "simulaja";
 
-    if (orgError || !orgData?.evolution_instance_name) {
-      throw new Error("Organization does not have an active WhatsApp instance connected.");
+    if (organizacaoId) {
+      const { data: orgData } = await supabaseClient
+        .from("organizacoes")
+        .select("evolution_instance_name")
+        .eq("id", organizacaoId)
+        .maybeSingle();
+
+      if (orgData?.evolution_instance_name) {
+        instanceName = orgData.evolution_instance_name;
+      }
     }
-
-    const instanceName = orgData.evolution_instance_name;
 
     // We start processing asynchronously to not block the Edge Function if there are many clients.
     // However, Deno Deploy edge functions terminate shortly after the response is sent.

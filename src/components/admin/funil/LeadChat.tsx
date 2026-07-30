@@ -137,6 +137,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
     // 2. Registra a mensagem no banco do CRM (role aceita apenas: 'user', 'assistant', 'system')
     let { data: insertedData, error } = await (supabase.from("chat_messages") as any).insert({
       lead_id: lead.id,
+      organizacao_id: lead.organizacao_id,
       content: messageText,
       role: 'assistant',
     }).select().single();
