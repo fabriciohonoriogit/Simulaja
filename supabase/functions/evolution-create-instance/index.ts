@@ -39,60 +39,94 @@ serve(async (req) => {
     const EVOLUTION_GLOBAL_KEY = Deno.env.get("EVOLUTION_GLOBAL_KEY") || Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "B6D711FCDE4D4FD5936544120E713976";
 
     let createData: any = null;
+    let qrcodeBase64: string | null = null;
+    let state = "connecting";
 
     try {
-      // 1. Create the instance
-      const createRes = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
+      // 1. Tenta buscar QR Code / status da instância se já existir
+      const connRes = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+        headers: { apikey: EVOLUTION_GLOBAL_KEY }
+      });
+      if (connRes.ok) {
+        const connData = await connRes.json();
+        state = connData?.instance?.state || connData?.state || "connecting";
+        qrcodeBase64 = connData?.base64 || connData?.qrcode?.base64 || null;
+      }
+
+      // 2. Se não encontrou ou status não ok, tenta criar a instância
+      if (!connRes.ok || state === "close" || state === "closed") {
+        const createRes = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: EVOLUTION_GLOBAL_KEY,
+          },
+          body: JSON.stringify({
+            instanceName,
+            token: instanceName,
+            qrcode: true,
+          }),
+        });
+
+        if (createRes.ok) {
+          createData = await createRes.json();
+          qrcodeBase64 = createData?.qrcode?.base64 || createData?.base64 || qrcodeBase64;
+          state = createData?.instance?.state || createData?.state || state;
+        }
+      }
+    } catch (errApi) {
+      console.warn("Evolution API offline ou inacessível no servidor:", errApi);
+    }
+
+    // 3. Set webhook for the instance if possible
+    try {
+      const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/webhook-evolution`;
+      await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           apikey: EVOLUTION_GLOBAL_KEY,
         },
         body: JSON.stringify({
-          instanceName,
-          token: instanceName,
-          qrcode: true,
+          url: webhookUrl,
+          webhook_by_events: false,
+          webhook_base64: false,
+          events: ["MESSAGES_UPSERT"],
         }),
       });
-
-      if (createRes.ok) {
-        createData = await createRes.json();
-      }
-    } catch (errApi) {
-      console.warn("Evolution API offline ou inacessível:", errApi);
+    } catch (webhookErr) {
+      console.warn("Falha ao atualizar webhook:", webhookErr);
     }
 
-    // 2. Set webhook for the new instance
-    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/webhook-evolution`;
-    await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: EVOLUTION_GLOBAL_KEY,
-      },
-      body: JSON.stringify({
-        url: webhookUrl,
-        webhook_by_events: false,
-        webhook_base64: false,
-        events: ["MESSAGES_UPSERT"],
-      }),
-    });
+    // 4. Save instance credentials to the database if organizacaoId is provided
+    if (organizacaoId) {
+      try {
+        const supabaseAdmin = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+        );
 
-    // 3. Save instance credentials to the database
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+        await supabaseAdmin
+          .from("organizacoes")
+          .update({
+            evolution_instance_name: instanceName,
+            evolution_api_key: instanceName,
+          })
+          .eq("id", organizacaoId);
+      } catch (dbErr) {
+        console.warn("Falha ao salvar instancia na organizacao:", dbErr);
+      }
+    }
 
-    await supabaseAdmin
-      .from("organizacoes")
-      .update({
-        evolution_instance_name: instanceName,
-        evolution_api_key: instanceName, // we used instanceName as token
-      })
-      .eq("id", organizacaoId);
+    const isConnected = state === "open" || state === "CONNECTED";
 
-    return new Response(JSON.stringify(createData), {
+    return new Response(JSON.stringify({
+      success: true,
+      qrcode: qrcodeBase64,
+      connected: isConnected,
+      state: state,
+      instanceName: instanceName
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

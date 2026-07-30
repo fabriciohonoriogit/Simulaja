@@ -200,12 +200,21 @@ export default function Settings() {
       }
 
       if (profile?.organizacao_id) {
-        const instanceName = `simulaja_org_${profile.organizacao_id.substring(0, 8)}`;
-        await createWhatsAppInstance(profile.organizacao_id, instanceName);
+        const instanceName = evolutionInstance || `simulaja_org_${profile.organizacao_id.substring(0, 8)}`;
+        const createRes: any = await createWhatsAppInstance(profile.organizacao_id, instanceName);
+        if (createRes?.qrcode) {
+          setQrCodeImg(createRes.qrcode);
+          setEvolutionStatus("connecting");
+          toast({
+            title: "QR Code Gerado!",
+            description: "Escaneie o QR Code exibido na tela com seu celular.",
+          });
+          return;
+        }
       }
       toast({
         title: "Instância WhatsApp",
-        description: "Servidor verificado. Se o QR Code não apareceu, certifique-se de que a Evolution API está rodando.",
+        description: "Servidor verificado. Se o QR Code não apareceu, certifique-se de que a Evolution API está rodando na URL informada.",
       });
     } catch (err: any) {
       toast({

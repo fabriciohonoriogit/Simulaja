@@ -210,8 +210,26 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
 
       return { success: true, connected: false, message: "Aguardando geração do QR Code..." };
     }
-    return { success: false, error: "Não foi possível obter o QR Code. Certifique-se de que a Evolution API está ativa." };
+    return { success: false, error: "Não foi possível obter o QR Code diretamente do navegador." };
   } catch (err: any) {
-    return { success: false, error: err?.message || "Erro de conexão ao buscar QR Code" };
+    console.warn("[Evolution API] Chamada direta de QR Code falhou, tentando via Edge Function proxy...", err);
+
+    try {
+      const { data, error: edgeErr } = await supabase.functions.invoke("evolution-create-instance", {
+        body: { instanceName },
+      });
+      if (!edgeErr && data) {
+        if (data.connected) {
+          return { success: true, connected: true, message: "WhatsApp já está conectado!" };
+        }
+        if (data.qrcode) {
+          return { success: true, qrcode: data.qrcode };
+        }
+      }
+    } catch (e) {
+      console.error("Fallback de Edge Function para QR Code também falhou:", e);
+    }
+
+    return { success: false, error: err?.message || "Erro ao conectar ao servidor do WhatsApp." };
   }
 };
