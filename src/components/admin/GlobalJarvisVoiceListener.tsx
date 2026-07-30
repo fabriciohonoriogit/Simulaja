@@ -27,9 +27,8 @@ export function GlobalJarvisVoiceListener() {
 
   const [isMobile, setIsMobile] = useState<boolean>(checkIfMobile);
   
-  // No celular: DESATIVADO por padrão para não apitar nem interromper a concentração.
-  // No desktop: mantido ativado por padrão.
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => !checkIfMobile());
+  // Voz desativada por padrão em todos os dispositivos para evitar disparos automáticos e erros de microfone
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -97,13 +96,17 @@ export function GlobalJarvisVoiceListener() {
         };
 
         rec.onerror = (e: any) => {
-          if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-            console.warn("[Global Jarvis Voice] Permissão de áudio não concedida.");
+          if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
+            console.warn("[Global Jarvis Voice] Permissão de áudio não concedida ou áudio indisponível.");
+            setIsVoiceEnabled(false);
             return;
           }
-          // Reinicia a escuta automaticamente em qualquer outro erro temporário se ainda ativado
+          if (e.error === 'no-speech') {
+            return;
+          }
+          // Reinicia a escuta automaticamente apenas se ativado e montado
           if (isMounted && !isJarvisPage && isVoiceEnabled && !isSpeakingRef.current) {
-            setTimeout(startListener, 2500);
+            setTimeout(startListener, 4000);
           }
         };
 

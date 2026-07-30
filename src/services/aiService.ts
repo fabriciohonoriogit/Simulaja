@@ -59,13 +59,16 @@ Crie uma primeira abordagem de WhatsApp de acordo com o método SRV (Sonho, Real
   async askJarvis(context: string, question: string, history?: Array<{role: string, text: string}>, imageBase64?: string) {
     let localContext = "";
     try {
-      const res = await fetch(`http://localhost:8008/context?query=${encodeURIComponent(question)}&who=vendedor`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 400);
+      const res = await fetch(`http://localhost:8008/context?query=${encodeURIComponent(question)}&who=vendedor`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
         localContext = data.context || "";
       }
     } catch (e) {
-      console.warn("[3Cerebros] Servidor local não está rodando. Usando memória padrão do sistema.");
+      // Ignora silenciosamente se o servidor local do cérebro não estiver rodando
     }
 
     const prompt = `Você é J.A.R.V.I.S. (Just A Rather Very Intelligent System), assistente virtual de inteligência artificial de elite e diretor comercial do Simulaja.
@@ -145,11 +148,15 @@ PERGUNTA: "${question}"`;
     // Registra a interação no cérebro se a chamada deu certo
     if (text && !error) {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 400);
         await fetch("http://localhost:8008/observe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ who: "vendedor", user_msg: question, ai_reply: text })
+          body: JSON.stringify({ who: "vendedor", user_msg: question, ai_reply: text }),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
       } catch (e) {
         // Ignora silenciosamente se o servidor local do cérebro estiver offline
       }

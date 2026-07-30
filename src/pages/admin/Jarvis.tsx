@@ -576,16 +576,11 @@ export default function Jarvis() {
         fetchData();
     }, [profile?.organizacao_id]);
 
-    // Inicialização automática da escuta contínua por palavra-chave ("Jarvis") sem necessidade de apertar botão
+    // Garantir que a gravação/escuta por voz fique desligada por padrão ao entrar na página
     useEffect(() => {
-        isHandsFreeRef.current = true;
-        setIsHandsFree(true);
-        const timer = setTimeout(() => {
-            try { startRecording(); } catch (e) {}
-        }, 800);
-
+        isHandsFreeRef.current = false;
+        setIsHandsFree(false);
         return () => {
-            clearTimeout(timer);
             isHandsFreeRef.current = false;
             setIsHandsFree(false);
             if (recognitionRef.current) {
