@@ -1,8 +1,9 @@
 import React from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Bell, RefreshCw, ClipboardList } from "lucide-react";
+import { CalendarIcon, Bell, RefreshCw, ClipboardList, Share2, Copy } from "lucide-react";
 import { WhatsAppIcon } from "@/components/SocialIcons";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -430,9 +431,23 @@ export function FunilModals({ state }: { state: any }) {
             )}
           </div>
           
-          <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-            <Button variant="outline" onClick={() => { const l = viewingFichaLead; setViewingFichaLead(null); setEditingLead(l); }} className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest border-primary text-primary hover:bg-primary/5">Editar Ficha</Button>
-            <Button onClick={() => setViewingFichaLead(null)} className="rounded-xl px-8 font-black uppercase text-[10px] tracking-widest">Fechar Ficha</Button>
+          <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center gap-3">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                if (!viewingFichaLead) return;
+                const link = `${window.location.origin}/pre-cadastro?lead_id=${viewingFichaLead.id}`;
+                navigator.clipboard.writeText(link);
+                toast.success("Link de Pré-Cadastro Copiado! 📋", { description: "Envie ao cliente para preenchimento dos dados do contrato." });
+              }} 
+              className="rounded-xl px-4 font-black uppercase text-[10px] tracking-widest border-cyan-300 text-cyan-700 bg-cyan-50 hover:bg-cyan-100 flex items-center gap-1.5"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Copiar Link de Pré-Cadastro
+            </Button>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => { const l = viewingFichaLead; setViewingFichaLead(null); setEditingLead(l); }} className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest border-primary text-primary hover:bg-primary/5">Editar Ficha</Button>
+              <Button onClick={() => setViewingFichaLead(null)} className="rounded-xl px-8 font-black uppercase text-[10px] tracking-widest">Fechar Ficha</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

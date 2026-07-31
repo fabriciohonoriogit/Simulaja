@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTriangle, MessageCircle, Clock, CheckCircle2, BarChart3, Bell, Target, Zap, Trophy, MessageSquare, Phone, Sparkles, Pencil, Trash2, ShieldAlert, Coins, Eye, EyeOff, Calculator, Share2 } from "lucide-react";
+import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTriangle, MessageCircle, Clock, CheckCircle2, BarChart3, Bell, Target, Zap, Trophy, MessageSquare, Phone, Sparkles, Pencil, Trash2, ShieldAlert, Coins, Eye, EyeOff, Calculator, Share2, FileText } from "lucide-react";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/SocialIcons";
@@ -350,21 +350,55 @@ export default function Dashboard() {
         <div className="space-y-6 mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             {profile?.organizacao_id ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  const link = `${window.location.origin}/indicacoes?org=${profile.organizacao_id}`;
-                  navigator.clipboard.writeText(link);
-                  toast({
-                    title: "Link Copiado!",
-                    description: "O link de indicações exclusivo do seu parceiro foi copiado para a área de transferência."
-                  });
-                }}
-                className="h-10 px-4 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100/80 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
-              >
-                <Share2 className="h-4 w-4" /> Copiar Link de Indicações
-              </Button>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    const link = `${window.location.origin}/pre-cadastro?org=${profile.organizacao_id}`;
+                    navigator.clipboard.writeText(link);
+                    toast({
+                      title: "Link Copiado! 📋",
+                      description: "O Link de Pré-Cadastro para emissão de contrato foi copiado."
+                    });
+                  }}
+                  className="h-10 px-4 border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4 text-amber-600" /> Link de Pré-Cadastro (Contrato)
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    const link = `${window.location.origin}/indicacoes?org=${profile.organizacao_id}`;
+                    navigator.clipboard.writeText(link);
+                    toast({
+                      title: "Link Copiado!",
+                      description: "O link de indicações exclusivo do seu parceiro foi copiado para a área de transferência."
+                    });
+                  }}
+                  className="h-10 px-4 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100/80 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
+                >
+                  <Share2 className="h-4 w-4" /> Link de Indicações
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    const link = `${window.location.origin}/?org=${profile.organizacao_id}&srv=true`;
+                    navigator.clipboard.writeText(link);
+                    toast({
+                      title: "Link Copiado! 🚀",
+                      description: "O Link da Operação Jarvis SRV foi copiado para a área de transferência."
+                    });
+                  }}
+                  className="h-10 px-4 border-cyan-300 text-cyan-800 bg-cyan-50 hover:bg-cyan-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
+                >
+                  <Sparkles className="h-4 w-4 text-cyan-600" /> Operação Jarvis SRV
+                </Button>
+              </div>
             ) : <div />}
             <WeatherWidget />
           </div>

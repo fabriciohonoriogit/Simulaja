@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Phone, MapPin, Calendar as CalendarIcon, TrendingUp, Trash2, Bell, NotebookPen, Plus, Clock, GripVertical, ClipboardList, Pencil, Bot, ArrowRightLeft } from "lucide-react";
+import { Phone, MapPin, Calendar as CalendarIcon, TrendingUp, Trash2, Bell, NotebookPen, Plus, Clock, GripVertical, ClipboardList, Pencil, Bot, ArrowRightLeft, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { format, parseISO, differenceInDays, isValid } from "date-fns";
 import { formatLeadValue } from "@/lib/utils";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";

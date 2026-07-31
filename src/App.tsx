@@ -36,10 +36,13 @@ import { Refine } from "@refinedev/core";
 import { refineDataProvider, refineResources } from "./lib/refineConfig";
 import { LevelUpModal } from "./components/admin/gamification/LevelUpModal";
 
+import PreCadastro from "./pages/PreCadastro";
+
 const AppContent = () => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
   const isIndicacoes = location.pathname.startsWith("/indicacoes") || location.pathname.startsWith("/parceiro");
+  const isPreCadastro = location.pathname.startsWith("/pre-cadastro");
 
   return (
     <>
@@ -52,6 +55,7 @@ const AppContent = () => {
         <Route path="/simulador" element={<Simulador />} />
         <Route path="/parceiro" element={<Simulador />} />
         <Route path="/indicacoes" element={<Indicacoes />} />
+        <Route path="/pre-cadastro" element={<PreCadastro />} />
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/register" element={<Register />} />
         <Route path="/admin/reset-password" element={<ResetPassword />} />
@@ -86,7 +90,7 @@ const AppContent = () => {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!isAdmin && !isIndicacoes && <AIChatbot />}
+      {!isAdmin && !isIndicacoes && !isPreCadastro && <AIChatbot />}
     </>
   );
 };

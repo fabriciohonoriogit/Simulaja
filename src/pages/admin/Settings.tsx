@@ -718,6 +718,120 @@ export default function Settings() {
               </Card>
             )}
 
+            {/* Links de Operação CRM */}
+            <Card className="border-none shadow-lg rounded-2xl overflow-hidden bg-slate-900 text-white">
+              <CardHeader className="p-6 border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-cyan-500/20 rounded-xl">
+                    <Link2 className="h-5 w-5 text-cyan-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-bold flex items-center gap-2">
+                      Operações de Captura & Links do CRM 🚀
+                    </CardTitle>
+                    <CardDescription className="text-slate-400 text-xs">
+                      Links personalizados da sua organização para captação de leads direta no CRM.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5">
+                {/* Operação 1: Jarvis SRV */}
+                <div className="space-y-2 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                      🤖 Operação Jarvis SRV (Landing Page + IA)
+                    </span>
+                    <span className="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded font-black">
+                      AUTO OPEN IA
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Abre a landing page com a consultoria inteligente Jarvis ativada. Leads capturados são gravados como <code className="text-cyan-300">Operação Jarvis SRV</code> no seu CRM.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <Input 
+                      readOnly 
+                      value={`${window.location.origin}/?org=${profile?.organizacao_id}&srv=true`}
+                      className="font-mono text-xs bg-slate-900 border-slate-800 text-slate-200"
+                    />
+                    <Button
+                      variant="outline"
+                      className="border-cyan-500/40 bg-cyan-950/50 hover:bg-cyan-900 text-cyan-300 shrink-0"
+                      onClick={() => {
+                        const link = `${window.location.origin}/?org=${profile?.organizacao_id}&srv=true`;
+                        navigator.clipboard.writeText(link);
+                        toast({ title: "Link Copiado! 🚀", description: "Link da Operação Jarvis SRV copiado para a área de transferência." });
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Operação: Pré-Cadastro para Contrato */}
+                <div className="space-y-2 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                      📋 Formulário de Pré-Cadastro (Geração de Contrato)
+                    </span>
+                    <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-black">
+                      LEAD EXCLUSIVO
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Formulário de preenchimento de dados pessoais, endereço, renda e dados bancários do cliente para geração do contrato. Integrado diretamente com o registro do lead no CRM.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <Input 
+                      readOnly 
+                      value={`${window.location.origin}/pre-cadastro`}
+                      className="font-mono text-xs bg-slate-900 border-slate-800 text-slate-200"
+                    />
+                    <Button
+                      variant="outline"
+                      className="border-amber-500/40 bg-amber-950/50 hover:bg-amber-900 text-amber-300 shrink-0"
+                      onClick={() => {
+                        const link = `${window.location.origin}/pre-cadastro`;
+                        navigator.clipboard.writeText(link);
+                        toast({ title: "Link Copiado! 📋", description: "Link do Formulário de Pré-Cadastro copiado." });
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Operação 2: Portal de Indicações */}
+                <div className="space-y-2 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
+                  <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider block">
+                    🤝 Operação Portal de Indicações (Membros & Parceiros)
+                  </span>
+                  <p className="text-xs text-slate-400">
+                    Link do formulário de indicação premiada para parceiros e promotores registrarem novos clientes.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <Input 
+                      readOnly 
+                      value={`${window.location.origin}/indicacoes?org=${profile?.organizacao_id}`}
+                      className="font-mono text-xs bg-slate-900 border-slate-800 text-slate-200"
+                    />
+                    <Button
+                      variant="outline"
+                      className="border-emerald-500/40 bg-emerald-950/50 hover:bg-emerald-900 text-emerald-300 shrink-0"
+                      onClick={() => {
+                        const link = `${window.location.origin}/indicacoes?org=${profile?.organizacao_id}`;
+                        navigator.clipboard.writeText(link);
+                        toast({ title: "Link Copiado! 🤝", description: "Link do Portal de Indicações copiado com sucesso." });
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Webhooks de Recebimento de Leads */}
             {isAdmin && (
               <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
