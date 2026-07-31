@@ -543,6 +543,25 @@ export default function Simulador() {
                 className={`h-12 pl-10 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm ${errWpp ? "border-red-400 focus-visible:ring-red-400" : ""}`}
               />
             </div>
+
+            {/* Botão Padronizado de Pré-Cadastro (Abaixo do WhatsApp) */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const orgId = searchParams.get("org") || searchParams.get("organizacao_id");
+                let url = `/pre-cadastro`;
+                const params = new URLSearchParams();
+                if (orgId) params.append("org", orgId);
+                if (credito[0]) params.append("valor", String(credito[0]));
+                if (categoria) params.append("segmento", categoria);
+                if (params.toString()) url += `?${params.toString()}`;
+                window.open(url, "_blank");
+              }}
+              className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-wider border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 flex items-center justify-center gap-2 transition-all shadow-sm"
+            >
+              <FileText className="w-4 h-4 text-amber-600 shrink-0" /> Link de Pré-Cadastro (Contrato)
+            </Button>
           </div>
 
           <Button onClick={confirmar} className="w-full h-12 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-[#1E293B] hover:to-[#334155] text-white shadow-xl transition-all hover:-translate-y-0.5">
@@ -552,12 +571,27 @@ export default function Simulador() {
           {resultado && (
             <div className="mt-6 p-5 border border-emerald-200 rounded-2xl animate-in fade-in slide-in-from-bottom-4 bg-emerald-50/60 shadow-lg">
               <h3 className="font-extrabold text-emerald-900 mb-4 text-center text-xs uppercase tracking-wider">Simulação Gerada com Sucesso!</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-11 text-[11px] bg-white rounded-xl shadow-sm hover:bg-slate-50">
-                  <FileText className="mr-2 w-4 h-4 text-slate-500" /> Baixar PDF
+                  <FileText className="mr-1.5 w-4 h-4 text-slate-500" /> Baixar PDF
                 </Button>
                 <Button onClick={handleShareWhatsApp} className="bg-gradient-to-r from-[#25D366] to-[#1ebd59] hover:from-[#1ebd59] hover:to-[#17a84e] text-white font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5">
-                  <Share2 className="mr-2 w-4 h-4" /> Enviar WhatsApp
+                  <Share2 className="mr-1.5 w-4 h-4" /> Enviar WhatsApp
+                </Button>
+                <Button 
+                  onClick={() => {
+                    const orgId = searchParams.get("org") || searchParams.get("organizacao_id");
+                    let url = `/pre-cadastro`;
+                    const params = new URLSearchParams();
+                    if (orgId) params.append("org", orgId);
+                    if (credito[0]) params.append("valor", String(credito[0]));
+                    if (categoria) params.append("segmento", categoria);
+                    if (params.toString()) url += `?${params.toString()}`;
+                    window.open(url, "_blank");
+                  }} 
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5"
+                >
+                  <FileText className="mr-1.5 w-4 h-4" /> Ficha Pré-Cadastro
                 </Button>
               </div>
             </div>

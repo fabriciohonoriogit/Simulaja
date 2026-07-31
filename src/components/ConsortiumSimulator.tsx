@@ -1261,7 +1261,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     Para condições especiais e lances personalizados <strong className="text-secondary">fale com o especialista ✉️</strong>
                   </div>
 
-                  <div className={`grid gap-2 pt-4 border-t border-border mt-4 ${isInternal ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
+                  <div className={`grid gap-2 pt-4 border-t border-border mt-4 ${isInternal ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-4'}`}>
                     <button
                       onClick={handleEnviarWpp}
                       className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-lg transition-all"
@@ -1286,6 +1286,23 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                         <polyline points="21 15 16 10 5 21" />
                       </svg>
                       <span>Imagem</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const orgId = searchParams.get("org") || searchParams.get("organizacao_id") || profile?.organizacao_id;
+                        let url = `/pre-cadastro`;
+                        const params = new URLSearchParams();
+                        if (orgId) params.append("org", orgId);
+                        if (credito) params.append("valor", String(credito));
+                        if (categoria) params.append("segmento", categoria);
+                        if (params.toString()) url += `?${params.toString()}`;
+                        window.open(url, "_blank");
+                      }}
+                      className="py-3 px-2 rounded-[10px] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-lg transition-all"
+                      title="Abrir Ficha de Pré-Cadastro para Contrato"
+                    >
+                      <FileText className="w-4 h-4 shrink-0" />
+                      <span>Pré-Cadastro</span>
                     </button>
                     {isInternal && (
                       <button
