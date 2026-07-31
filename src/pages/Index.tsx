@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import { StickySimulatorCTA } from "@/components/StickySimulatorCTA";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Sparkles, Clock, ShieldCheck } from "lucide-react";
 import AIChatbot from "@/components/AIChatbot";
 
 const Index = () => {
