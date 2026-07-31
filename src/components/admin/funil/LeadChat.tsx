@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Send, Bot, User, MessageSquare, ChevronUp, ChevronDown } from "lucide-react";
+import { RefreshCw, Send, Bot, User, MessageSquare, ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Lead } from "@/types/funil";
 import { toast } from "sonner";
-import { sendWhatsAppMessage } from "@/services/evolutionApiService";
+import { sendWhatsAppMessage, getWhatsAppMode, getWhatsAppWebUrl, formatWhatsAppNumber } from "@/services/evolutionApiService";
 
 interface Message {
   id: string;
@@ -118,18 +118,17 @@ export function LeadChat({ lead }: { lead: Lead }) {
     };
     setMessages((prev) => [...prev, optimisticMsg]);
 
-    // 1. Dispara a mensagem via Evolution API para o celular do cliente
-    let waStatus: { success: boolean; error?: string } = { success: true };
+    // 1. Dispara a mensagem via WhatsApp (Evolution API ou WhatsApp Web)
+    let waStatus: { success?: boolean; error?: string; isWebFallback?: boolean; webUrl?: string } = { success: true };
     const targetPhone = lead.celular || (lead as any).telefone;
+    const mode = getWhatsAppMode();
+
     if (targetPhone) {
       waStatus = await sendWhatsAppMessage({ 
         number: targetPhone, 
         text: messageText,
         organizacaoId: lead.organizacao_id 
       });
-      if (!waStatus.success) {
-        console.warn("[Evolution API] Falha ao enviar via gateway:", waStatus.error);
-      }
     } else {
       waStatus = { success: false, error: "Lead sem número de telefone cadastrado." };
     }
@@ -146,11 +145,19 @@ export function LeadChat({ lead }: { lead: Lead }) {
       toast.error("Erro ao registrar mensagem no CRM: " + (error.message || ""));
     } else {
       if (insertedData) {
-        // Substitui a mensagem otimista pelo registro real do banco
         setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...insertedData, sender: 'agent' } : m)));
       }
-      if (!waStatus.success) {
-        toast.error(`⚠️ Mensagem salva no CRM, mas FALHOU ao entregar no WhatsApp (${waStatus.error || "Servidor offline"}). Verifique se o WhatsApp está conectado nas Configurações.`, { duration: 6000 });
+      
+      if (waStatus.isWebFallback) {
+        toast.success("🟢 Mensagem salva no CRM e aberta no WhatsApp Web!", { duration: 4000 });
+      } else if (!waStatus.success) {
+        toast.error(`⚠️ Mensagem salva no CRM, mas não enviada via API (${waStatus.error || "Servidor offline"}).`, {
+          duration: 6000,
+          action: targetPhone ? {
+            label: "Abrir WhatsApp Web",
+            onClick: () => window.open(getWhatsAppWebUrl(targetPhone, messageText), "_blank")
+          } : undefined
+        });
       } else {
         toast.success("🟢 Mensagem enviada ao WhatsApp e registrada no CRM!", { duration: 4000 });
       }
@@ -166,10 +173,12 @@ export function LeadChat({ lead }: { lead: Lead }) {
     );
   }
 
+  const targetPhone = lead.celular || (lead as any).telefone;
+
   return (
     <div className="flex flex-col h-[500px] bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-inner">
-      {/* Header com Toggle IA */}
-      <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
+      {/* Header com Toggle IA e Botão WhatsApp Web */}
+      <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div className={`h-2 w-2 rounded-full ${aiEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
           <span className="text-xs font-black uppercase tracking-widest text-slate-600">
@@ -177,12 +186,26 @@ export function LeadChat({ lead }: { lead: Lead }) {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <Label htmlFor="ai-toggle" className="text-[10px] font-bold uppercase text-slate-400">Automação IA</Label>
-          <Switch 
-            id="ai-toggle" 
-            checked={aiEnabled} 
-            onCheckedChange={handleToggleAi}
-          />
+          {targetPhone && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(getWhatsAppWebUrl(targetPhone), "_blank")}
+              className="h-7 text-[11px] font-bold text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100 gap-1 rounded-lg"
+            >
+              <ExternalLink className="h-3 w-3 text-emerald-600" />
+              Whats Web
+            </Button>
+          )}
+          <div className="flex items-center gap-2">
+            <Label htmlFor="ai-toggle" className="text-[10px] font-bold uppercase text-slate-400">Automação IA</Label>
+            <Switch 
+              id="ai-toggle" 
+              checked={aiEnabled} 
+              onCheckedChange={handleToggleAi}
+            />
+          </div>
         </div>
       </div>
 

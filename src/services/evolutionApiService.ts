@@ -1,10 +1,36 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type WhatsAppMode = "web" | "evolution";
+
 export interface EvolutionConfig {
   apiUrl: string;
   apiKey: string;
   instanceName: string;
 }
+
+export const getWhatsAppMode = (): WhatsAppMode => {
+  if (typeof window === "undefined") return "web";
+  return (localStorage.getItem("whatsapp_mode") as WhatsAppMode) || "web";
+};
+
+export const saveWhatsAppMode = (mode: WhatsAppMode) => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("whatsapp_mode", mode);
+};
+
+export const formatWhatsAppNumber = (number: string): string => {
+  let clean = number.replace(/\D/g, "");
+  if (!clean.startsWith("55") && clean.length >= 10 && clean.length <= 11) {
+    clean = `55${clean}`;
+  }
+  return clean;
+};
+
+export const getWhatsAppWebUrl = (number: string, text?: string): string => {
+  const clean = formatWhatsAppNumber(number);
+  const encodedText = text ? encodeURIComponent(text) : "";
+  return `https://web.whatsapp.com/send?phone=${clean}${encodedText ? `&text=${encodedText}` : ""}`;
+};
 
 export const getEvolutionConfig = (): EvolutionConfig => {
   if (typeof window === "undefined") {
@@ -30,13 +56,17 @@ export interface SendMessageParams {
 }
 
 export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendMessageParams) => {
-  const config = getEvolutionConfig();
+  const cleanNumber = formatWhatsAppNumber(number);
+  const mode = getWhatsAppMode();
+  const webUrl = getWhatsAppWebUrl(cleanNumber, text);
 
-  // Limpa o número de telefone (remove caracteres não numéricos)
-  let cleanNumber = number.replace(/\D/g, "");
-  if (!cleanNumber.startsWith("55") && cleanNumber.length >= 10 && cleanNumber.length <= 11) {
-    cleanNumber = `55${cleanNumber}`;
+  // Se o modo estiver configurado como WhatsApp Web (Direto), abre diretamente a janela
+  if (mode === "web") {
+    window.open(webUrl, "_blank");
+    return { success: true, isWebFallback: true, webUrl };
   }
+
+  const config = getEvolutionConfig();
 
   if (!config.apiUrl || !config.apiKey) {
     console.warn("[Evolution API] Configurações de API URL ou API Key ausentes.");
@@ -60,14 +90,13 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
 
     if (!response.ok) {
       const errText = await response.text();
-      // Se a conexão estivar fechada ou offline, tenta reconectar a instância automaticamente
+      // Se a conexão estiver fechada ou offline, tenta reconectar a instância automaticamente
       if (errText.includes("Connection Closed") || response.status === 500) {
         console.warn("[Evolution API] Conexão fechada detectada. Tentando reconectar a instância...");
         try {
           await fetch(`${config.apiUrl}/instance/connect/${config.instanceName}`, {
             headers: { apikey: config.apiKey }
           });
-          // Aguarda 1,5s para restabelecer o socket e tenta novamente
           await new Promise(r => setTimeout(r, 1500));
           response = await fetch(endpoint, {
             method: "POST",
@@ -112,14 +141,15 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
       if (!edgeErr && data && (data.success || !data.error)) {
         return { success: true, data };
       }
-      if (edgeErr || data?.error) {
-        console.error("[Evolution API] Fallback Edge Function retornou erro:", edgeErr || data?.error);
-      }
     } catch (e) {
       console.error("[Evolution API] Fallback Edge Function falhou totalmente:", e);
     }
 
-    return { success: false, error: error?.message || "Erro de conexão com a Evolution API. Verifique a instância do WhatsApp nas Configurações." };
+    return { 
+      success: false, 
+      error: `Servidor Evolution API indisponível em ${config.apiUrl}. Caso não possua o servidor rodando, altere para o Modo WhatsApp Web Direto.`, 
+      webUrl 
+    };
   }
 };
 
@@ -162,9 +192,9 @@ export const checkEvolutionStatus = async () => {
       }
       return { state, data };
     }
-    return { state: "DISCONNECTED", reason: "Instância offline" };
+    return { state: "DISCONNECTED", reason: `Instância offline no servidor (${config.apiUrl})` };
   } catch (err: any) {
-    return { state: "DISCONNECTED", reason: err?.message || "Servidor inalcançável" };
+    return { state: "DISCONNECTED", reason: `Servidor inalcançável em ${config.apiUrl}` };
   }
 };
 
@@ -176,7 +206,7 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
       headers: { apikey: config.apiKey },
     });
     
-    // 2. Se a instância ainda não existir, cria a instância
+    // 2. Se a instância ainda não existir, tenta criar a instância
     if (!res.ok) {
       const createRes = await fetch(`${config.apiUrl}/instance/create`, {
         method: "POST",
@@ -189,7 +219,6 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
           return { success: true, qrcode: createData.qrcode.base64, code: createData.qrcode.code };
         }
       }
-      // Tenta buscar novamente após criar
       res = await fetch(`${config.apiUrl}/instance/connect/${instanceName}`, {
         headers: { apikey: config.apiKey },
       });
@@ -210,10 +239,10 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
 
       return { success: true, connected: false, message: "Aguardando geração do QR Code..." };
     }
+
     return { 
-      success: true, 
-      qrcode: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><rect width="240" height="240" fill="%23ffffff"/><rect x="20" y="20" width="60" height="60" fill="%230f172a"/><rect x="30" y="30" width="40" height="40" fill="%23ffffff"/><rect x="40" y="40" width="20" height="20" fill="%230f172a"/><rect x="160" y="20" width="60" height="60" fill="%230f172a"/><rect x="170" y="30" width="40" height="40" fill="%23ffffff"/><rect x="180" y="40" width="20" height="20" fill="%230f172a"/><rect x="20" y="160" width="60" height="60" fill="%230f172a"/><rect x="30" y="170" width="40" height="40" fill="%23ffffff"/><rect x="40" y="180" width="20" height="20" fill="%230f172a"/><rect x="100" y="20" width="40" height="20" fill="%230f172a"/><rect x="100" y="60" width="20" height="40" fill="%230f172a"/><rect x="140" y="90" width="40" height="20" fill="%230f172a"/><rect x="90" y="120" width="60" height="20" fill="%230f172a"/><rect x="160" y="160" width="40" height="40" fill="%2325d366"/><rect x="100" y="180" width="40" height="20" fill="%230f172a"/><text x="120" y="225" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="%230f172a">${instanceName.toUpperCase()}</text></svg>`,
-      message: "QR Code de pareamento gerado."
+      success: false, 
+      error: `Não foi possível gerar QR Code. O servidor Evolution API em ${config.apiUrl} não respondeu adequadamente.` 
     };
   } catch (err: any) {
     console.warn("[Evolution API] Chamada direta de QR Code falhou, tentando via Edge Function proxy...", err);
@@ -235,9 +264,9 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
     }
 
     return { 
-      success: true, 
-      qrcode: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><rect width="240" height="240" fill="%23ffffff"/><rect x="20" y="20" width="60" height="60" fill="%230f172a"/><rect x="30" y="30" width="40" height="40" fill="%23ffffff"/><rect x="40" y="40" width="20" height="20" fill="%230f172a"/><rect x="160" y="20" width="60" height="60" fill="%230f172a"/><rect x="170" y="30" width="40" height="40" fill="%23ffffff"/><rect x="180" y="40" width="20" height="20" fill="%230f172a"/><rect x="20" y="160" width="60" height="60" fill="%230f172a"/><rect x="30" y="170" width="40" height="40" fill="%23ffffff"/><rect x="40" y="180" width="20" height="20" fill="%230f172a"/><rect x="100" y="20" width="40" height="20" fill="%230f172a"/><rect x="100" y="60" width="20" height="40" fill="%230f172a"/><rect x="140" y="90" width="40" height="20" fill="%230f172a"/><rect x="90" y="120" width="60" height="20" fill="%230f172a"/><rect x="160" y="160" width="40" height="40" fill="%2325d366"/><rect x="100" y="180" width="40" height="20" fill="%230f172a"/><text x="120" y="225" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="%230f172a">${instanceName.toUpperCase()}</text></svg>`,
-      message: "QR Code de pareamento gerado."
+      success: false, 
+      error: `Servidor Evolution API não encontrado em ${config.apiUrl}. Verifique se a aplicação/container está em execução ou altere para o Modo WhatsApp Web (Direto).` 
     };
   }
 };
+

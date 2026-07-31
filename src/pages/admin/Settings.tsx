@@ -12,7 +12,7 @@ import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Up
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createWhatsAppInstance } from "@/services/evolutionOnboardingService";
-import { getEvolutionConfig, saveEvolutionConfig, checkEvolutionStatus, fetchEvolutionQrCode } from "@/services/evolutionApiService";
+import { getEvolutionConfig, saveEvolutionConfig, checkEvolutionStatus, fetchEvolutionQrCode, getWhatsAppMode, saveWhatsAppMode, WhatsAppMode } from "@/services/evolutionApiService";
 
 const ROLES = [
   { value: "admin", label: "Administrador" },
@@ -38,6 +38,7 @@ export default function Settings() {
   const [org, setOrg] = useState<OrganizationRow | null>(null);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [creatingInstance, setCreatingInstance] = useState(false);
+  const [waMode, setWaMode] = useState<WhatsAppMode>("web");
   const [evolutionUrl, setEvolutionUrl] = useState("");
   const [evolutionKey, setEvolutionKey] = useState("");
   const [evolutionInstance, setEvolutionInstance] = useState("");
@@ -50,7 +51,24 @@ export default function Settings() {
     setEvolutionUrl(cfg.apiUrl);
     setEvolutionKey(cfg.apiKey);
     setEvolutionInstance(cfg.instanceName);
+    setWaMode(getWhatsAppMode());
   }, []);
+
+  const handleModeChange = (mode: WhatsAppMode) => {
+    setWaMode(mode);
+    saveWhatsAppMode(mode);
+    if (mode === "web") {
+      toast({
+        title: "Modo WhatsApp Web (Direto) Ativo",
+        description: "As conversas abrirão diretamente no WhatsApp Web sem necessidade de servidor.",
+      });
+    } else {
+      toast({
+        title: "Modo Evolution API Ativo",
+        description: "Configure o seu servidor Evolution API abaixo para envio automático via API.",
+      });
+    }
+  };
 
   const handleTestConnection = async () => {
     setTestingStatus(true);
@@ -177,6 +195,7 @@ export default function Settings() {
 
   const handleCreateWhatsApp = async () => {
     setCreatingInstance(true);
+    setQrCodeImg(null);
     saveEvolutionConfig({ apiUrl: evolutionUrl, apiKey: evolutionKey, instanceName: evolutionInstance || "simulaja" });
     try {
       const qrRes = await fetchEvolutionQrCode(evolutionInstance || "simulaja");
@@ -212,14 +231,19 @@ export default function Settings() {
           return;
         }
       }
+
+      setEvolutionStatus("DISCONNECTED");
       toast({
-        title: "Instância WhatsApp",
-        description: "Servidor verificado. Se o QR Code não apareceu, certifique-se de que a Evolution API está rodando na URL informada.",
+        title: "Erro na Evolution API",
+        description: qrRes.error || "Servidor offline ou inalcançável. Altere para o Modo WhatsApp Web Direto se não possuir servidor rodando.",
+        variant: "destructive",
       });
     } catch (err: any) {
+      setEvolutionStatus("DISCONNECTED");
       toast({
-        title: "Configurações Salvas",
-        description: "Suas credenciais do WhatsApp foram registradas no sistema. Certifique-se de que o servidor Evolution API esteja rodando no endereço informado.",
+        title: "Erro de Conexão",
+        description: err?.message || "Certifique-se de que a Evolution API está rodando na URL informada.",
+        variant: "destructive",
       });
     } finally {
       setCreatingInstance(false);
@@ -520,106 +544,175 @@ export default function Settings() {
             {isAdmin && (
               <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
                 <CardHeader className="bg-slate-900 text-white p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500/20 rounded-xl"><MessageSquare className="h-5 w-5 text-green-400" /></div>
-                    <div>
-                      <CardTitle className="text-base font-bold">Conexão WhatsApp</CardTitle>
-                      <CardDescription className="text-slate-400 text-xs">Evolution API</CardDescription>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-500/20 rounded-xl"><MessageSquare className="h-5 w-5 text-green-400" /></div>
+                      <div>
+                        <CardTitle className="text-base font-bold">Conexão WhatsApp</CardTitle>
+                        <CardDescription className="text-slate-400 text-xs">
+                          {waMode === "web" ? "Modo Direto (WhatsApp Web)" : "Evolution API (Automação Servidor)"}
+                        </CardDescription>
+                      </div>
                     </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${waMode === "web" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-blue-500/20 text-blue-300 border border-blue-500/40"}`}>
+                      {waMode === "web" ? "🟢 Whats Web Direto" : "⚡ Evolution API"}
+                    </span>
                   </div>
                 </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs font-bold text-slate-700">Server URL (Evolution API)</Label>
-                      <Input
-                        placeholder="http://localhost:8080"
-                        value={evolutionUrl}
-                        onChange={(e) => setEvolutionUrl(e.target.value)}
-                        className="h-10 text-xs font-mono mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-bold text-slate-700">Global API Key</Label>
-                      <Input
-                        type="password"
-                        placeholder="Chave de API do servidor"
-                        value={evolutionKey}
-                        onChange={(e) => setEvolutionKey(e.target.value)}
-                        className="h-10 text-xs font-mono mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-bold text-slate-700">Nome da Instância</Label>
-                      <Input
-                        placeholder="simulaja"
-                        value={evolutionInstance}
-                        onChange={(e) => setEvolutionInstance(e.target.value)}
-                        className="h-10 text-xs font-mono mt-1"
-                      />
+                <CardContent className="p-6 space-y-5">
+                  {/* Seleção de Modo */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-700">Selecione o Modo de Conexão WhatsApp:</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleModeChange("web")}
+                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${waMode === "web" ? "border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20" : "border-slate-200 hover:border-slate-300 bg-white"}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                            📱 WhatsApp Web (Direto)
+                          </span>
+                          {waMode === "web" && <span className="h-2 w-2 rounded-full bg-emerald-500"></span>}
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-snug">
+                          Abre as conversas direto no seu WhatsApp Web/App com mensagens pré-preenchidas. Sem erros de servidor!
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleModeChange("evolution")}
+                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${waMode === "evolution" ? "border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20" : "border-slate-200 hover:border-slate-300 bg-white"}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                            ⚡ Evolution API (Robô)
+                          </span>
+                          {waMode === "evolution" && <span className="h-2 w-2 rounded-full bg-blue-500"></span>}
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-snug">
+                          Conexão automatizada em segundo plano (requer servidor Evolution API rodando em Docker ou VPS).
+                        </p>
+                      </button>
                     </div>
                   </div>
 
-                  <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-100">
-                    <div className="text-xs font-bold">
-                      Status:{" "}
-                      <span className={evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "text-emerald-600 font-black" : "text-amber-600 font-black"}>
-                        {evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "🟢 CONECTADO" : evolutionStatus === "UNKNOWN" ? "⚪ NÃO TESTADO" : `🔴 ${evolutionStatus}`}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleTestConnection}
-                        disabled={testingStatus}
-                        className="font-bold text-xs h-9"
-                      >
-                        {testingStatus ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
-                        Salvar &amp; Testar
-                      </Button>
-                      <Button 
-                        size="sm"
-                        onClick={handleCreateWhatsApp}
-                        disabled={creatingInstance}
-                        className="font-bold text-xs h-9"
-                      >
-                        {creatingInstance && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                        Provisionar / QR Code
-                      </Button>
-                    </div>
-                  </div>
-
-                  {evolutionStatus !== "open" && evolutionStatus !== "CONNECTED" && !qrCodeImg && (
-                    <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200/80 text-[11px] text-amber-900 space-y-1">
-                      <p className="font-bold flex items-center gap-1">
-                        💡 Instrução de Conexão:
+                  {waMode === "web" ? (
+                    <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs text-emerald-950 space-y-2">
+                      <p className="font-bold flex items-center gap-1.5 text-emerald-900">
+                        🟢 Modo WhatsApp Web (Direto) Ativo
                       </p>
-                      <ul className="list-disc pl-4 space-y-0.5 text-[10.5px] text-amber-800">
-                        <li>Certifique-se de que o servidor Evolution API está rodando na URL configurada (ex: <code className="bg-amber-100 px-1 rounded font-mono">http://localhost:8080</code> ou sua URL de VPS).</li>
-                        <li>Clique em <strong>Provisionar / QR Code</strong> para gerar o código de conexão.</li>
-                        <li>No celular: abra o <strong>WhatsApp &gt; Aparelhos Conectados &gt; Conectar um Aparelho</strong> e escaneie a imagem.</li>
+                      <p className="text-[11.5px] text-emerald-800 leading-relaxed">
+                        Nenhuma configuração ou servidor externo é necessário. Ao clicar em enviar mensagens ou conversar com leads no CRM:
+                      </p>
+                      <ul className="list-disc pl-4 text-[11px] text-emerald-800 space-y-1">
+                        <li>A mensagem é registrada no histórico do CRM.</li>
+                        <li>O sistema abre diretamente o WhatsApp Web / App com o número do cliente e o texto pronto.</li>
+                        <li>Zero mensagens de erro de servidor ou QR code quebrado!</li>
                       </ul>
                     </div>
-                  )}
-
-                  {qrCodeImg && (
-                    <div className="mt-4 p-4 bg-slate-900 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-emerald-500/40 shadow-xl">
-                      <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                        Escaneie o QR Code abaixo com seu WhatsApp:
-                      </p>
-                      <div className="p-2 bg-white rounded-xl shadow-lg border border-slate-200">
-                        <img
-                          src={qrCodeImg.startsWith("data:") ? qrCodeImg : `data:image/png;base64,${qrCodeImg}`}
-                          alt="QR Code WhatsApp"
-                          className="w-48 h-48 object-contain"
-                        />
+                  ) : (
+                    <>
+                      <div className="space-y-3 pt-1 border-t border-slate-100">
+                        <div>
+                          <Label className="text-xs font-bold text-slate-700">Server URL (Evolution API)</Label>
+                          <Input
+                            placeholder="http://localhost:8080 ou https://sua-vps.com"
+                            value={evolutionUrl}
+                            onChange={(e) => setEvolutionUrl(e.target.value)}
+                            className="h-10 text-xs font-mono mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-bold text-slate-700">Global API Key</Label>
+                          <Input
+                            type="password"
+                            placeholder="Chave de API do servidor"
+                            value={evolutionKey}
+                            onChange={(e) => setEvolutionKey(e.target.value)}
+                            className="h-10 text-xs font-mono mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-bold text-slate-700">Nome da Instância</Label>
+                          <Input
+                            placeholder="simulaja"
+                            value={evolutionInstance}
+                            onChange={(e) => setEvolutionInstance(e.target.value)}
+                            className="h-10 text-xs font-mono mt-1"
+                          />
+                        </div>
                       </div>
-                      <p className="text-[11px] text-slate-300 font-medium">
-                        Abra o WhatsApp no celular &gt; Aparelhos Conectados &gt; Conectar um Aparelho
-                      </p>
-                    </div>
+
+                      <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-100">
+                        <div className="text-xs font-bold">
+                          Status:{" "}
+                          <span className={evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "text-emerald-600 font-black" : "text-amber-600 font-black"}>
+                            {evolutionStatus === "open" || evolutionStatus === "CONNECTED" ? "🟢 CONECTADO" : evolutionStatus === "UNKNOWN" ? "⚪ NÃO TESTADO" : `🔴 ${evolutionStatus}`}
+                          </span>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleTestConnection}
+                            disabled={testingStatus}
+                            className="font-bold text-xs h-9"
+                          >
+                            {testingStatus ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
+                            Salvar &amp; Testar
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={handleCreateWhatsApp}
+                            disabled={creatingInstance}
+                            className="font-bold text-xs h-9"
+                          >
+                            {creatingInstance && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                            Provisionar / QR Code
+                          </Button>
+                        </div>
+                      </div>
+
+                      {evolutionStatus !== "open" && evolutionStatus !== "CONNECTED" && !qrCodeImg && (
+                        <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200/80 text-[11px] text-amber-900 space-y-2">
+                          <p className="font-bold flex items-center gap-1">
+                            💡 Não tem um servidor Evolution API rodando?
+                          </p>
+                          <p className="text-[11px] text-amber-800">
+                            Se o servidor em <code className="bg-amber-100 px-1 rounded font-mono font-bold">{evolutionUrl || "http://localhost:8080"}</code> não estiver ativo, mude para o modo WhatsApp Web Direto.
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleModeChange("web")}
+                            className="w-full bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50 font-bold text-xs h-8"
+                          >
+                            📱 Usar WhatsApp Web (Direto)
+                          </Button>
+                        </div>
+                      )}
+
+                      {qrCodeImg && (
+                        <div className="mt-4 p-4 bg-slate-900 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-emerald-500/40 shadow-xl">
+                          <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                            Escaneie o QR Code abaixo com seu WhatsApp:
+                          </p>
+                          <div className="p-2 bg-white rounded-xl shadow-lg border border-slate-200">
+                            <img
+                              src={qrCodeImg.startsWith("data:") ? qrCodeImg : `data:image/png;base64,${qrCodeImg}`}
+                              alt="QR Code WhatsApp"
+                              className="w-48 h-48 object-contain"
+                            />
+                          </div>
+                          <p className="text-[11px] text-slate-300 font-medium">
+                            Abra o WhatsApp no celular &gt; Aparelhos Conectados &gt; Conectar um Aparelho
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
