@@ -13,47 +13,57 @@ const segments = [
     desc: "Casas, apartamentos, terrenos, barracões e alavancagem patrimonial sem juros bancários.",
     image: cardImovel,
     tag: "Imóveis",
+    categoryId: "imovel",
   },
   {
     title: "Consórcio de Veículos",
     desc: "Carros 100% elétricos, híbridos, sedans e utilitários com poder de compra à vista.",
     image: cardVeiculo,
     tag: "Veículos",
+    categoryId: "veiculo",
   },
   {
     title: "Consórcio de Motos",
     desc: "Motos urbanas, scooters e alta cilindrada com parcelas planejadas que cabem no seu bolso.",
     image: cardMoto,
     tag: "Motos",
+    categoryId: "moto",
   },
   {
     title: "Consórcio Náutico",
     desc: "Jet ski, lanchas, barcos e equipamentos náuticos com planejamento estratégico.",
     image: cardNautica,
     tag: "Náutica",
+    categoryId: "nautica",
   },
   {
     title: "Consórcio de Pesados & Frotas",
     desc: "Caminhões extrapesados, carretas, vans e frotas comerciais para expansão do seu negócio.",
     image: cardFrotas,
     tag: "Pesados",
+    categoryId: "caminhão",
   },
   {
     title: "Consórcio Agro",
     desc: "Tratores, colheitadeiras, pulverizadores e maquinários para alavancar a sua produção.",
     image: cardAgro,
     tag: "Agronegócio",
+    categoryId: "agro",
   },
   {
     title: "Consórcio para Investimento",
     desc: "Alavancagem patrimonial com galpões comerciais, barracões e renda passiva de aluguel.",
     image: cardInvestimento,
     tag: "Investimentos",
+    categoryId: "investimento",
   },
 ];
 
 const SegmentCards = () => {
-  const scrollToSimulator = () => {
+  const scrollToSimulator = (categoryId?: string) => {
+    if (categoryId) {
+      window.dispatchEvent(new CustomEvent("select-simulator-category", { detail: { categoryId } }));
+    }
     const simElement = document.getElementById("simulator");
     if (simElement) {
       simElement.scrollIntoView({ behavior: "smooth" });
@@ -115,7 +125,7 @@ const SegmentCards = () => {
 
                 <div className="pt-2">
                   <button
-                    onClick={scrollToSimulator}
+                    onClick={() => scrollToSimulator(seg.categoryId)}
                     className="w-full inline-flex items-center justify-center gap-2 bg-[#0F172A] hover:bg-[#1E293B] text-white px-5 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all group/btn"
                   >
                     <span>Simular Estratégia</span>

@@ -1,82 +1,104 @@
-import { Facebook, Instagram, Linkedin, Phone } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Phone, Sparkles } from "lucide-react";
 
 const WHATSAPP_NUMBER = "5541997925357";
 
 const Footer = () => {
   return (
-    <footer className="py-16 px-4 bg-foreground text-background">
+    <footer className="py-16 px-4 sm:px-6 bg-[#0B132B] text-slate-300 border-t border-slate-800">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          
           {/* Brand Info */}
-          <div className="space-y-4 col-span-1 lg:col-span-1">
-            <h3 className="text-2xl font-black tracking-tight text-primary">CONTEMPLAR</h3>
-            <p className="text-sm text-background/60 leading-relaxed max-w-xs">
-              Sua consultoria inteligente para conquistar imóveis, veículos e investimentos sem juros abusivos. Planejamento estratégico para o seu patrimônio.
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#B8860B] via-[#D4AF37] to-[#966F1E] flex items-center justify-center text-slate-950 font-bold">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg font-black tracking-tight text-white">FABRÍCIO HONÓRIO</h3>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
+              Consultoria estratégica especializada para você conquistar seu imóvel, veículo ou investimento sem pagar juros bancários.
             </p>
           </div>
 
-          {/* Useful Links */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold">Links Úteis</h3>
-            <ul className="space-y-3 text-sm text-background/50">
+          {/* Navigation Anchors */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">Navegação</h4>
+            <ul className="space-y-2 text-xs font-medium text-slate-400">
               <li>
-                <a href="https://www.abac.org.br/para-voce" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  ABAC — Para Você
-                </a>
+                <a href="#simulator" className="hover:text-amber-400 transition-colors">Simulador Inteligente</a>
               </li>
               <li>
-                <a href="https://www.abac.org.br/perguntas-frequentes" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  ABAC — Perguntas Frequentes
-                </a>
+                <a href="#segmentos" className="hover:text-amber-400 transition-colors">Tipos de Consórcio</a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">Política de Privacidade</a>
+                <a href="#beneficios" className="hover:text-amber-400 transition-colors">Por que Planejar?</a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">Acesso Administrativo</a>
+                <a href="#depoimentos" className="hover:text-amber-400 transition-colors">Histórias de Sucesso</a>
+              </li>
+              <li>
+                <a href="#faq" className="hover:text-amber-400 transition-colors">Perguntas Frequentes</a>
               </li>
             </ul>
           </div>
 
-          {/* Social Social */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold">Acompanhe nas Redes</h3>
-            <div className="flex gap-3">
-              <a href="https://www.facebook.com/profile.php?id=61587719436474" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-11 h-11 rounded-full bg-background/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="https://www.instagram.com/fabricioespecialistaconsorcio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-11 h-11 rounded-full bg-background/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" aria-label="LinkedIn" className="w-11 h-11 rounded-full bg-background/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300">
-                <Linkedin className="w-5 h-5" />
-              </a>
-            </div>
+          {/* Useful Links & ABAC */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">Links Úteis</h4>
+            <ul className="space-y-2 text-xs font-medium text-slate-400">
+              <li>
+                <a href="https://www.abac.org.br/para-voce" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
+                  ABAC — Guia do Consórcio
+                </a>
+              </li>
+              <li>
+                <a href="https://www.abac.org.br/perguntas-frequentes" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
+                  ABAC — Dúvidas e Regras
+                </a>
+              </li>
+              <li>
+                <a href="/login" className="hover:text-amber-400 transition-colors">Acesso Administrativo</a>
+              </li>
+            </ul>
           </div>
 
-          {/* Contact Details */}
+          {/* Contact Details & Socials */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold">Fale Agora</h3>
+            <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">Atendimento Direto</h4>
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-white/5 hover:bg-green-600/20 px-4 py-2 rounded-xl transition-all group"
+              className="inline-flex items-center gap-3 bg-slate-800/80 hover:bg-emerald-950/40 border border-slate-700/60 hover:border-emerald-500/40 p-3 rounded-2xl transition-all group w-full"
             >
-              <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center">
-                <Phone className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                <Phone className="w-4.5 h-4.5" />
               </div>
               <div>
-                <p className="text-xs text-background/40">Atendimento via WhatsApp</p>
-                <p className="text-sm font-bold text-background/80 group-hover:text-green-500">(41) 99792-5357</p>
+                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">WhatsApp Consultoria</p>
+                <p className="text-xs font-black text-white group-hover:text-emerald-400">(41) 99792-5357</p>
               </div>
             </a>
+
+            <div className="flex gap-2.5 pt-1">
+              <a href="https://www.facebook.com/profile.php?id=61587719436474" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400/50 transition-all">
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a href="https://www.instagram.com/fabricioespecialistaconsorcio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400/50 transition-all">
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a href="#" aria-label="LinkedIn" className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400/50 transition-all">
+                <Linkedin className="w-4 h-4" />
+              </a>
+            </div>
           </div>
+
         </div>
 
-        <div className="border-t border-background/10 pt-8 text-center sm:flex sm:justify-between items-center text-sm text-background/40">
+        <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} Fabrício Rodrigues Honório — Especialista em Consórcio Inteligente.</p>
-          <p className="mt-2 sm:mt-0 font-medium">Todos os direitos reservados.</p>
+          <p className="font-medium">Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
@@ -84,3 +106,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

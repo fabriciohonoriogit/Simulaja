@@ -14,7 +14,10 @@ const Hero = () => {
     { label: "Consórcio Náutico", id: "nautica" },
   ];
 
-  const scrollToSimulator = () => {
+  const scrollToSimulator = (categoryId?: string) => {
+    if (categoryId) {
+      window.dispatchEvent(new CustomEvent("select-simulator-category", { detail: { categoryId } }));
+    }
     const simElement = document.getElementById("simulator");
     if (simElement) {
       simElement.scrollIntoView({ behavior: "smooth" });
@@ -65,7 +68,7 @@ const Hero = () => {
                 key={i}
                 onMouseEnter={() => setActiveId(service.id)}
                 onMouseLeave={() => setActiveId(null)}
-                onClick={scrollToSimulator}
+                onClick={() => scrollToSimulator(service.id)}
                 className={`flex items-center gap-3 text-slate-700 hover:text-[#0F172A] cursor-pointer transition-all duration-200 p-2 rounded-xl border border-slate-100 hover:border-amber-300 hover:bg-amber-50/50 ${
                   activeId === service.id ? "bg-amber-50 border-amber-400/60 translate-x-1" : "bg-white/80"
                 }`}

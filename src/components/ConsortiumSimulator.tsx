@@ -125,6 +125,17 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const dynamicGrupos = overrideConfig?.grupos || hookGrupos;
 
   const [categoria, setCategoria] = useState("imovel");
+
+  useEffect(() => {
+    const handleCategorySelect = (e: Event) => {
+      const customEvent = e as CustomEvent<{ categoryId: string }>;
+      if (customEvent.detail?.categoryId) {
+        setCategoria(customEvent.detail.categoryId);
+      }
+    };
+    window.addEventListener("select-simulator-category", handleCategorySelect);
+    return () => window.removeEventListener("select-simulator-category", handleCategorySelect);
+  }, []);
   const [idx, setIdx] = useState(4);
   const [simNome, setSimNome] = useState("");
   const [simWpp, setSimWpp] = useState("");
