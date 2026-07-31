@@ -125,8 +125,8 @@ export default function Comissoes() {
     try {
       const { data } = await supabase
         .from("leads")
-        .select("id, nome, valor_credito, grupo, cota, status_updated_at, administradora, tipo_consorcio, status")
-        .in("status", ["fechado", "venda_fechada", "ganho", "contrato_assinado", "venda", "fechamento", "contrato", "contemplado"])
+        .select("id, nome, valor_credito, grupo, cota, status_updated_at, administradora, tipo_consorcio")
+        .in("status", ["fechado", "venda_fechada"])
         .eq("organizacao_id", profile.organizacao_id);
       setLeadsFechados(data || []);
     } catch (e) {
@@ -203,101 +203,6 @@ export default function Comissoes() {
       }
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSincronizarLeads = async () => {
-    if (!profile?.organizacao_id) return;
-    try {
-      setLoading(true);
-      const { data: leadsWon } = await supabase
-        .from("leads")
-        .select("*")
-        .in("status", ["fechado", "venda_fechada", "ganho", "contrato_assinado", "venda", "fechamento", "contrato", "contemplado"])
-        .eq("organizacao_id", profile.organizacao_id);
-
-      if (!leadsWon || leadsWon.length === 0) {
-        toast({ title: "Nenhuma venda fechada encontrada no CRM para sincronizar." });
-        setLoading(false);
-        return;
-      }
-
-      const { data: coms } = await supabase
-        .from("comissoes")
-        .select("lead_id, cliente_nome")
-        .eq("organizacao_id", profile.organizacao_id);
-
-      const existingLeadIds = new Set((coms || []).map(c => c.lead_id).filter(Boolean));
-      const existingNames = new Set((coms || []).map(c => (c.cliente_nome || "").toLowerCase().trim()));
-
-      const leadsToSync = leadsWon.filter(l => {
-        if (l.id && existingLeadIds.has(l.id)) return false;
-        if (l.nome && existingNames.has(l.nome.toLowerCase().trim())) return false;
-        return true;
-      });
-
-      if (leadsToSync.length === 0) {
-        toast({ title: "Todas as vendas fechadas do CRM já possuem comissão registrada." });
-        setLoading(false);
-        return;
-      }
-
-      const newComissoes = leadsToSync.map(lead => {
-        const valorVenda = Number(lead.valor_credito) || 0;
-        const isAdemicon = lead.administradora === "ADEMICON";
-        const taxa_comissao = isAdemicon ? 2.5 : 4;
-        const comissao_total = (valorVenda * taxa_comissao) / 100;
-        const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((lead.tipo_consorcio || "").toLowerCase());
-        
-        let tipoComiss = "REDUZIDA";
-        let parcelas = 10;
-        if (isAdemicon) {
-          tipoComiss = isVeiculo ? "ADEMICON_VEICULO_REDUZIDA" : "ADEMICON_IMOVEL_REDUZIDA";
-          parcelas = isVeiculo ? 13 : 15;
-        }
-
-        const dataVendaStr = lead.status_updated_at 
-          ? lead.status_updated_at.split("T")[0] 
-          : lead.created_at 
-          ? lead.created_at.split("T")[0] 
-          : new Date().toISOString().split("T")[0];
-
-        return {
-          organizacao_id: profile.organizacao_id,
-          usuario_id: profile.id,
-          cliente_nome: lead.nome || "Cliente CRM",
-          lead_id: lead.id,
-          grupo: lead.grupo || "",
-          cota: lead.cota || "",
-          valor_venda: valorVenda,
-          regra_comissao: isAdemicon ? "ADEMICON" : "DEMAIS",
-          taxa_comissao,
-          tipo_comissionamento: tipoComiss,
-          comissao_total,
-          parcelas_comissao: parcelas,
-          pagamentos_retroativos: 0,
-          data_venda: dataVendaStr,
-          administradora: lead.administradora || "MAGALU",
-          parcela_atual: 1,
-          status: "ativo"
-        };
-      });
-
-      const { error: insErr } = await supabase.from("comissoes").insert(newComissoes);
-      if (insErr) throw insErr;
-
-      toast({ 
-        title: "Vendas sincronizadas com sucesso!", 
-        description: `${newComissoes.length} venda(s) fechada(s) registradas no comissionamento.` 
-      });
-
-      fetchComissoes();
-      fetchLeads();
-    } catch (err: any) {
-      console.error(err);
-      toast({ title: "Erro na sincronização", description: err?.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -767,10 +672,7 @@ export default function Comissoes() {
           </h1>
           <p className="text-sm text-slate-500 font-medium">Gerencie comissões, regras fracionadas e estornos.</p>
         </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={handleSincronizarLeads} className="flex-1 sm:flex-none font-bold uppercase tracking-wider border-amber-300 bg-amber-50/80 hover:bg-amber-100 text-amber-900 shadow-sm">
-            <Coins className="h-4 w-4 mr-2 text-amber-600" /> Sincronizar Vendas
-          </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={handleGenerateReport} className="flex-1 sm:flex-none font-bold uppercase tracking-wider border-slate-200">
             <FileDown className="h-4 w-4 mr-2" /> Relatório
           </Button>
