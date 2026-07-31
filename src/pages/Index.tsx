@@ -4,7 +4,6 @@ import Hero from "@/components/Hero";
 import SegmentCards from "@/components/SegmentCards";
 import ConsortiumSimulator from "@/components/ConsortiumSimulator";
 import HowItWorks from "@/components/HowItWorks";
-import WhyPlanning from "@/components/WhyPlanning";
 import Testimonials from "@/components/Testimonials";
 import FaqAccordion from "@/components/FaqAccordion";
 import FinalCTA from "@/components/FinalCTA";
@@ -145,8 +144,7 @@ const Index = () => {
       {/* 4ª SEÇÃO - Como Funciona (4 Etapas Clean) */}
       <HowItWorks />
 
-      {/* 5ª SEÇÃO - Por que fazer um consórcio com planejamento? (Cards de Benefícios Clean) */}
-      <WhyPlanning />
+      {/* 5ª SEÇÃO - Depoimentos (Clean) */}
 
       {/* 6ª SEÇÃO - Depoimentos (Clean) */}
       <Testimonials />
