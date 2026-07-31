@@ -13,7 +13,7 @@ import { StickySimulatorCTA } from "@/components/StickySimulatorCTA";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Clock, ShieldCheck } from "lucide-react";
-import AIChatbot from "@/components/AIChatbot";
+import { BlueParticlesBackground } from "@/components/BlueParticlesBackground";
 
 const Index = () => {
   const { toast } = useToast();
@@ -97,41 +97,44 @@ const Index = () => {
       {/* 2ª SEÇÃO - Tipos de Consórcio (Clean Light) */}
       <SegmentCards />
 
-      {/* 3ª SEÇÃO - SIMULADOR (Clean Light Container) */}
+      {/* 3ª SEÇÃO - SIMULADOR (Fundo Azul Tech com Partículas e Container Estendido) */}
       <div id="simulator" className="scroll-mt-20">
-        <section className="py-24 bg-gradient-to-b from-white via-slate-50 to-white relative overflow-hidden border-t border-slate-200/60">
+        <section className="py-24 bg-[#070D19] text-white relative overflow-hidden border-t border-b border-slate-800">
           
-          <div className="container max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
+          {/* Partículas Animadas Reluzentes */}
+          <BlueParticlesBackground />
+
+          <div className="container max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             
             {/* Header Acima do Simulador */}
             <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-[#B8860B] text-xs font-bold uppercase tracking-widest">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>Simulador Inteligente</span>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#0F172A] leading-tight">
-                Descubra a melhor estratégia para o <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#966F1E]">seu objetivo</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
+                Descubra a melhor estratégia para o <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">seu objetivo</span>
               </h2>
 
-              <p className="text-slate-600 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto">
+              <p className="text-slate-300 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto">
                 Leva menos de 30 segundos para montar sua estratégia personalizada.
               </p>
 
-              <div className="pt-2 flex items-center justify-center gap-6 text-xs text-slate-500 font-bold">
+              <div className="pt-2 flex items-center justify-center gap-6 text-xs text-slate-300 font-bold">
                 <span className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-amber-600" />
+                  <Clock className="w-4 h-4 text-amber-400" />
                   Rápido & Prático
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   100% Seguro
                 </span>
               </div>
             </div>
 
-            {/* Componente do Simulador (Clean Container com retenção de captação de leads) */}
-            <div className="bg-white rounded-3xl p-4 sm:p-8 border border-slate-200/80 shadow-2xl shadow-slate-200/60">
+            {/* Componente do Simulador (Container Ampliado e Responsivo) */}
+            <div className="bg-white rounded-3xl p-4 sm:p-8 lg:p-10 border border-slate-200/80 shadow-2xl shadow-slate-950/80 relative z-10">
               <ConsortiumSimulator onSimulateSubmit={handleSimulateSubmit} />
             </div>
 
@@ -156,9 +159,6 @@ const Index = () => {
 
       {/* Footer */}
       <Footer />
-
-      {/* Assistente Virtual Jarvis (Chatbot) */}
-      <AIChatbot />
     </main>
   );
 };
