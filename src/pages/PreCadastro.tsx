@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import heroImage from "@/assets/hero-premium-desk.webp";
 import { 
   FileText, 
   User, 
@@ -18,7 +19,9 @@ import {
   ShieldCheck, 
   Sparkles,
   Loader2,
-  Lock
+  Lock,
+  ArrowRight,
+  ArrowLeft
 } from "lucide-react";
 
 export default function PreCadastro() {
@@ -236,23 +239,23 @@ export default function PreCadastro() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
-        <Card className="max-w-lg w-full bg-slate-900 border border-slate-800 text-white p-8 text-center rounded-3xl shadow-2xl space-y-6">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto animate-bounce">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full bg-white border border-slate-200 text-slate-900 p-8 text-center rounded-3xl shadow-2xl space-y-6">
+          <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-300 flex items-center justify-center mx-auto animate-bounce">
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-black tracking-tight">Pré-Cadastro Enviado! 🎉</h2>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Obrigado, <strong className="text-emerald-400">{formData.nome}</strong>. Suas informações foram registradas no sistema e enviadas para o setor de contratos.
+            <h2 className="text-2xl font-black tracking-tight text-slate-900">Pré-Cadastro Concluído! 🎉</h2>
+            <p className="text-slate-600 text-sm leading-relaxed">
+              Obrigado, <strong className="text-blue-600">{formData.nome}</strong>. Suas informações foram registradas no sistema e enviadas para o setor de contratos.
             </p>
           </div>
-          <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300 space-y-2 text-left">
-            <p className="flex items-center gap-2 text-emerald-400 font-bold uppercase tracking-wider text-[11px]">
-              <ShieldCheck className="w-4 h-4" /> Dados Criptografados & Seguros
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-2 text-left">
+            <p className="flex items-center gap-2 text-blue-700 font-bold uppercase tracking-wider text-[11px]">
+              <ShieldCheck className="w-4 h-4 text-blue-600" /> Dados Criptografados & Seguros
             </p>
-            <p className="text-slate-400">
-              Nosso consultor entrará em contato em instantes com a sua documentação pronta para assinatura digital.
+            <p className="text-slate-600">
+              Nosso consultor sênior entrará em contato em instantes com a documentação pronta para sua validação.
             </p>
           </div>
         </Card>
@@ -261,174 +264,209 @@ export default function PreCadastro() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        
-        {/* Top Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold uppercase tracking-widest">
-            <FileText className="w-4 h-4 text-cyan-400" />
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+      
+      {/* CAPA HERO DA LANDING PAGE */}
+      <div className="relative w-full min-h-[340px] sm:min-h-[420px] bg-slate-900 overflow-hidden flex items-center justify-center">
+        {/* Imagem de Fundo (Hero Cover) */}
+        <img
+          src={heroImage}
+          alt="Capa Pré-Cadastro Simulaja"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-40 mix-blend-luminosity scale-105"
+        />
+
+        {/* Dynamic Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-slate-900/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-slate-950/80" />
+
+        {/* Conteúdo da Capa */}
+        <div className="relative z-10 container max-w-4xl mx-auto px-4 text-center text-white py-12 space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-blue-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+            <FileText className="w-4 h-4 text-blue-400" />
             <span>Ficha de Pré-Cadastro • Emissão de Contrato</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Preencha seus dados para <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">gerar o contrato</span>
+
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+            Qual é o seu <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-cyan-300 to-white">próximo sonho?</span>
           </h1>
-          <p className="text-slate-400 text-sm max-w-xl mx-auto">
-            Processo 100% seguro e criptografado. Suas informações serão utilizadas exclusivamente para a confecção da sua cota de consórcio.
+
+          <p className="text-slate-200 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
+            Da casa própria ao carro novo, ajudamos você a encontrar o <strong className="text-white font-bold">consórcio ideal</strong> para conquistar seus objetivos com segurança, planejamento e consultoria especializada.
           </p>
+
+          <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-slate-300">
+            <span className="bg-slate-800/80 border border-slate-700 px-3 py-1 rounded-full flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 100% Seguro & Criptografado
+            </span>
+          </div>
         </div>
+      </div>
+
+      {/* CONTEÚDO PRINCIPAL (CLEAN LIGHT DESIGN) */}
+      <div className="container max-w-4xl mx-auto px-4 -mt-10 relative z-20 pb-16 space-y-6">
 
         {fetchingLead && (
-          <div className="flex items-center justify-center p-6 bg-slate-900 rounded-2xl border border-slate-800 text-cyan-400 gap-2 text-sm">
-            <Loader2 className="w-4 h-4 animate-spin" /> Carregando informações do cliente...
+          <div className="flex items-center justify-center p-4 bg-white rounded-2xl border border-slate-200 text-blue-600 gap-2 text-xs font-bold shadow-md">
+            <Loader2 className="w-4 h-4 animate-spin" /> Carregando dados do cliente...
           </div>
         )}
 
-        {/* Step Indicator Navigation */}
-        <div className="grid grid-cols-4 gap-2 text-center text-xs font-bold">
+        {/* NAVEGAÇÃO DE ETAPAS (Navegação em Abas Limpas e Modernas) */}
+        <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-lg grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold">
           <button
+            type="button"
             onClick={() => setCurrentStep(1)}
-            className={`p-3 rounded-2xl border transition-all ${
+            className={`py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
               currentStep === 1
-                ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-lg"
-                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                ? "bg-slate-900 text-white shadow-md"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
             }`}
           >
-            1. Pessoais 👤
+            <User className="w-4 h-4" /> 1. Pessoais
           </button>
           <button
+            type="button"
             onClick={() => setCurrentStep(2)}
-            className={`p-3 rounded-2xl border transition-all ${
+            className={`py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
               currentStep === 2
-                ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-lg"
-                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                ? "bg-slate-900 text-white shadow-md"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
             }`}
           >
-            2. Endereço 📍
+            <MapPin className="w-4 h-4" /> 2. Endereço
           </button>
           <button
+            type="button"
             onClick={() => setCurrentStep(3)}
-            className={`p-3 rounded-2xl border transition-all ${
+            className={`py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
               currentStep === 3
-                ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-lg"
-                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                ? "bg-slate-900 text-white shadow-md"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
             }`}
           >
-            3. Profissão 💼
+            <Briefcase className="w-4 h-4" /> 3. Profissão
           </button>
           <button
+            type="button"
             onClick={() => setCurrentStep(4)}
-            className={`p-3 rounded-2xl border transition-all ${
+            className={`py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
               currentStep === 4
-                ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-lg"
-                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                ? "bg-slate-900 text-white shadow-md"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
             }`}
           >
-            4. Dados & Envio 🏦
+            <Building2 className="w-4 h-4" /> 4. Envio
           </button>
         </div>
 
-        {/* Main Form Card */}
-        <Card className="bg-slate-900/90 border-slate-800 text-white rounded-3xl shadow-2xl overflow-hidden backdrop-blur-md">
-          <CardContent className="p-6 sm:p-8">
+        {/* CARD PRINCIPAL DE FORMULÁRIO (Clean White) */}
+        <Card className="bg-white border-slate-200 text-slate-900 rounded-3xl shadow-xl overflow-hidden">
+          <CardContent className="p-6 sm:p-10">
             <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* ETAPA 1: DADOS PESSOAIS */}
               {currentStep === 1 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-800 pb-3 flex items-center gap-2">
-                    <User className="w-5 h-5 text-cyan-400" />
-                    <h3 className="font-bold text-base text-white">Dados Pessoais & Documentação</h3>
+                  <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-lg text-slate-900">Dados Pessoais & Documentação</h3>
+                        <p className="text-xs text-slate-500 font-medium">Preencha as informações conforme seus documentos oficiais.</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs text-slate-300">Nome Completo *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Nome Completo *</Label>
                       <Input
                         required
                         value={formData.nome}
                         onChange={(e) => handleChange("nome", e.target.value)}
                         placeholder="Ex: João da Silva Santos"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">CPF / CNPJ *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">CPF / CNPJ *</Label>
                       <Input
                         required
                         value={formData.cpf}
                         onChange={(e) => handleChange("cpf", e.target.value)}
                         placeholder="000.000.000-00"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">RG / CNH *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">RG / CNH *</Label>
                       <Input
                         required
                         value={formData.rg}
                         onChange={(e) => handleChange("rg", e.target.value)}
                         placeholder="00.000.000-0"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Órgão Emissor / UF</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Órgão Emissor / UF</Label>
                       <Input
                         value={formData.orgaoEmissor}
                         onChange={(e) => handleChange("orgaoEmissor", e.target.value)}
                         placeholder="SSP/PR"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Data de Nascimento *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Data de Nascimento *</Label>
                       <Input
                         required
                         type="text"
                         value={formData.dataNascimento}
                         onChange={(e) => handleChange("dataNascimento", e.target.value)}
                         placeholder="DD/MM/AAAA"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Celular / WhatsApp *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Celular / WhatsApp *</Label>
                       <Input
                         required
                         value={formData.celular}
                         onChange={(e) => handleChange("celular", e.target.value)}
                         placeholder="(00) 00000-0000"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs text-slate-300">E-mail</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">E-mail</Label>
                       <Input
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleChange("email", e.target.value)}
                         placeholder="seuemail@cliente.com"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Estado Civil</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Estado Civil</Label>
                       <Select
                         value={formData.estadoCivil}
                         onValueChange={(val) => handleChange("estadoCivil", val)}
                       >
-                        <SelectTrigger className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11">
+                        <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500">
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                        <SelectContent className="bg-white border-slate-200 text-slate-900">
                           <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
                           <SelectItem value="Casado(a)">Casado(a)</SelectItem>
                           <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
@@ -439,34 +477,34 @@ export default function PreCadastro() {
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs text-slate-300">Nome da Mãe *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Nome da Mãe *</Label>
                       <Input
                         required
                         value={formData.nomeMae}
                         onChange={(e) => handleChange("nomeMae", e.target.value)}
                         placeholder="Nome completo da mãe"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Naturalidade (Cidade/UF)</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Naturalidade (Cidade/UF)</Label>
                       <Input
                         value={formData.naturalidade}
                         onChange={(e) => handleChange("naturalidade", e.target.value)}
                         placeholder="Curitiba/PR"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-4">
+                  <div className="flex justify-end pt-6">
                     <Button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 font-bold px-8 rounded-xl"
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-md flex items-center gap-2"
                     >
-                      Próximo: Endereço ➔
+                      Próximo: Endereço <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -475,105 +513,110 @@ export default function PreCadastro() {
               {/* ETAPA 2: ENDEREÇO */}
               {currentStep === 2 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-800 pb-3 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-cyan-400" />
-                    <h3 className="font-bold text-base text-white">Endereço de Residência</h3>
+                  <div className="border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900">Endereço de Residência</h3>
+                      <p className="text-xs text-slate-500 font-medium">Informe seu endereço para o envio de correspondência do contrato.</p>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">CEP * (Preenche automático)</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">CEP * (Busca Automática)</Label>
                       <Input
                         required
                         value={formData.cep}
                         onChange={(e) => handleChange("cep", e.target.value)}
                         onBlur={handleCepBlur}
                         placeholder="00000-000"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs text-slate-300">Rua / Logradouro *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Rua / Logradouro *</Label>
                       <Input
                         required
                         value={formData.logradouro}
                         onChange={(e) => handleChange("logradouro", e.target.value)}
                         placeholder="Rua, Avenida, Alameda..."
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Número *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Número *</Label>
                       <Input
                         required
                         value={formData.numero}
                         onChange={(e) => handleChange("numero", e.target.value)}
                         placeholder="123"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Complemento</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Complemento</Label>
                       <Input
                         value={formData.complemento}
                         onChange={(e) => handleChange("complemento", e.target.value)}
                         placeholder="Apto 101, Bloco B..."
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Bairro *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Bairro *</Label>
                       <Input
                         required
                         value={formData.bairro}
                         onChange={(e) => handleChange("bairro", e.target.value)}
                         placeholder="Bairro"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Cidade *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Cidade *</Label>
                       <Input
                         required
                         value={formData.cidade}
                         onChange={(e) => handleChange("cidade", e.target.value)}
                         placeholder="Cidade"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">UF *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">UF *</Label>
                       <Input
                         required
                         value={formData.uf}
                         onChange={(e) => handleChange("uf", e.target.value)}
                         placeholder="PR"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
 
-                  <div className="flex justify-between pt-4">
+                  <div className="flex justify-between pt-6">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setCurrentStep(1)}
-                      className="border-slate-800 text-slate-300 hover:bg-slate-800 rounded-xl"
+                      className="border-slate-200 text-slate-700 hover:bg-slate-100 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
                     >
-                      ⬅ Voltar
+                      <ArrowLeft className="w-4 h-4" /> Voltar
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setCurrentStep(3)}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 font-bold px-8 rounded-xl"
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-md flex items-center gap-2"
                     >
-                      Próximo: Profissão ➔
+                      Próximo: Profissão <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -582,70 +625,75 @@ export default function PreCadastro() {
               {/* ETAPA 3: PROFISSÃO & FINANCEIRO */}
               {currentStep === 3 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-800 pb-3 flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-cyan-400" />
-                    <h3 className="font-bold text-base text-white">Dados Profissionais & Renda</h3>
+                  <div className="border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                      <Briefcase className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900">Dados Profissionais & Renda</h3>
+                      <p className="text-xs text-slate-500 font-medium">Informações necessárias para o enquadramento do seu crédito.</p>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Profissão / Cargo *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Profissão / Cargo *</Label>
                       <Input
                         required
                         value={formData.profissao}
                         onChange={(e) => handleChange("profissao", e.target.value)}
                         placeholder="Ex: Engenheiro, Empresário, Autônomo..."
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Empresa / Ocupação</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Empresa / Ocupação</Label>
                       <Input
                         value={formData.empresa}
                         onChange={(e) => handleChange("empresa", e.target.value)}
                         placeholder="Nome da empresa ou negócio"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Renda Mensal Estimada (R$) *</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Renda Mensal Estimada (R$) *</Label>
                       <Input
                         required
                         value={formData.rendaMensal}
                         onChange={(e) => handleChange("rendaMensal", e.target.value)}
                         placeholder="R$ 8.500,00"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Patrimônio Declarado (Opcional)</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Patrimônio Declarado (Opcional)</Label>
                       <Input
                         value={formData.patrimonio}
                         onChange={(e) => handleChange("patrimonio", e.target.value)}
                         placeholder="R$ 350.000,00"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
 
-                  <div className="flex justify-between pt-4">
+                  <div className="flex justify-between pt-6">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setCurrentStep(2)}
-                      className="border-slate-800 text-slate-300 hover:bg-slate-800 rounded-xl"
+                      className="border-slate-200 text-slate-700 hover:bg-slate-100 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
                     >
-                      ⬅ Voltar
+                      <ArrowLeft className="w-4 h-4" /> Voltar
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setCurrentStep(4)}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 font-bold px-8 rounded-xl"
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-md flex items-center gap-2"
                     >
-                      Próximo: Dados Bancários ➔
+                      Próximo: Dados Bancários <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -654,82 +702,87 @@ export default function PreCadastro() {
               {/* ETAPA 4: DADOS BANCÁRIOS & ENVIO */}
               {currentStep === 4 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-800 pb-3 flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-cyan-400" />
-                    <h3 className="font-bold text-base text-white">Dados Bancários & Confirmação de Contrato</h3>
+                  <div className="border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900">Dados Bancários & Confirmação</h3>
+                      <p className="text-xs text-slate-500 font-medium">Dados para faturamento do boleto/débito da cota de consórcio.</p>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Banco Principal</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Banco Principal</Label>
                       <Input
                         value={formData.banco}
                         onChange={(e) => handleChange("banco", e.target.value)}
                         placeholder="Ex: Itaú, Bradesco, Nubank..."
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Agência</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Agência</Label>
                       <Input
                         value={formData.agencia}
                         onChange={(e) => handleChange("agencia", e.target.value)}
                         placeholder="0000"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-300">Conta com Dígito</Label>
+                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Conta com Dígito</Label>
                       <Input
                         value={formData.conta}
                         onChange={(e) => handleChange("conta", e.target.value)}
                         placeholder="00000-0"
-                        className="bg-slate-950 border-slate-800 text-white text-xs rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
 
-                  {/* Resumo do Consórcio */}
-                  <div className="bg-slate-950/90 p-5 rounded-2xl border border-slate-800 space-y-3">
-                    <h4 className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" /> Detalhes do Plano Escolhido
+                  {/* Resumo do Plano */}
+                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-blue-600" /> Resumo da Cota de Consórcio
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                      <div>
-                        <span className="text-slate-400 block">Tipo do Bem:</span>
-                        <strong className="text-white font-bold">{formData.tipoConsorcio || "Imóvel"}</strong>
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <span className="text-slate-500 block">Tipo de Bem:</span>
+                        <strong className="text-slate-900 font-black text-sm">{formData.tipoConsorcio || "Imóvel"}</strong>
                       </div>
-                      <div>
-                        <span className="text-slate-400 block">Valor do Crédito:</span>
-                        <strong className="text-white font-bold">{formData.valorCredito || "A definir"}</strong>
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <span className="text-slate-500 block">Valor do Crédito:</span>
+                        <strong className="text-slate-900 font-black text-sm">{formData.valorCredito || "Conforme proposta"}</strong>
                       </div>
-                      <div>
-                        <span className="text-slate-400 block">Prazo Estimado:</span>
-                        <strong className="text-white font-bold">{formData.prazoMeses ? `${formData.prazoMeses} meses` : "A definir"}</strong>
+                      <div className="bg-white p-3 rounded-xl border border-slate-200">
+                        <span className="text-slate-500 block">Prazo Desejado:</span>
+                        <strong className="text-slate-900 font-black text-sm">{formData.prazoMeses ? `${formData.prazoMeses} meses` : "A definir"}</strong>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-emerald-950/40 p-4 rounded-2xl border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-3">
-                    <Lock className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <span>Ao clicar em enviar, os dados serão salvos com criptografia no CRM para emissão imediata da proposta e contrato.</span>
+                  <div className="bg-blue-50/80 p-4 rounded-2xl border border-blue-200 text-xs text-blue-900 flex items-center gap-3">
+                    <Lock className="w-5 h-5 text-blue-600 shrink-0" />
+                    <span>Ao finalizar, seus dados serão registrados em ambiente seguro para emissão imediata da proposta e contrato.</span>
                   </div>
 
-                  <div className="flex justify-between pt-4">
+                  <div className="flex justify-between pt-6">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setCurrentStep(3)}
-                      className="border-slate-800 text-slate-300 hover:bg-slate-800 rounded-xl"
+                      className="border-slate-200 text-slate-700 hover:bg-slate-100 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
                     >
-                      ⬅ Voltar
+                      <ArrowLeft className="w-4 h-4" /> Voltar
                     </Button>
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 text-white font-black text-sm px-10 py-6 rounded-2xl shadow-xl shadow-emerald-900/30 flex items-center gap-2"
+                      className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:opacity-95 text-white font-black text-sm h-14 px-10 rounded-2xl shadow-xl shadow-blue-500/20 flex items-center gap-2 transition-all hover:scale-[1.01]"
                     >
                       {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                       Finalizar Pré-Cadastro & Emissão
@@ -741,6 +794,11 @@ export default function PreCadastro() {
             </form>
           </CardContent>
         </Card>
+
+        {/* Rodapé institucional */}
+        <div className="text-center pt-4 text-xs text-slate-500 font-medium">
+          Simulaja Consórcios © {new Date().getFullYear()} • Consultoria Especializada & Soluções Financeiras
+        </div>
       </div>
     </div>
   );
