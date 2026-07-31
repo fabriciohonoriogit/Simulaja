@@ -586,7 +586,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
       </div>
 
       <section id="simulator" className="relative z-10 flex-1 py-12">
-        <div className={`container mx-auto px-4 flex flex-col items-center ${isInternal ? 'max-w-4xl' : 'max-w-[420px]'}`}>
+        <div className={`container mx-auto px-4 flex flex-col items-center ${isInternal ? 'max-w-5xl' : 'max-w-2xl sm:max-w-3xl lg:max-w-4xl'}`}>
           
           <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
             <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">

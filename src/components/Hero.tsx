@@ -44,7 +44,7 @@ const Hero = () => {
 
         {/* Interactive Overlay Box for Categories & Simulator Button */}
         <div className="relative container max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 z-10">
-          <div className="max-w-xl mt-48 sm:mt-52 lg:mt-56 space-y-6">
+          <div className="max-w-xl mt-20 sm:mt-24 lg:mt-28 space-y-6">
             
             {/* Interactive Services Checklist */}
             <div className="bg-white/95 backdrop-blur-md p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-2xl shadow-slate-900/10">

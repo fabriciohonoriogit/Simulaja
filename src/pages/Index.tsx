@@ -133,8 +133,8 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Componente do Simulador (Container Ampliado e Responsivo) */}
-            <div className="bg-white rounded-3xl p-4 sm:p-8 lg:p-10 border border-slate-200/80 shadow-2xl shadow-slate-950/80 relative z-10">
+            {/* Componente do Simulador (Sem moldura externa, 100% fluído) */}
+            <div className="w-full relative z-10">
               <ConsortiumSimulator onSimulateSubmit={handleSimulateSubmit} />
             </div>
 
