@@ -30,12 +30,12 @@ const Hero = () => {
   return (
     <section className="relative w-full bg-[#0B132B] text-slate-900 pt-20 overflow-hidden">
       
-      {/* Full Image Banner (Sem nenhum corte ou truncamento) */}
-      <div className="relative w-full bg-[#0B132B] flex items-center justify-center">
+      {/* Full Image Banner (Cheia na tela de borda a borda) */}
+      <div className="relative w-full bg-[#0B132B] flex items-center justify-center overflow-hidden">
         <img
           src={heroBg}
           alt="Fabrício Honório — O Especialista Consórcio"
-          className="w-full h-auto block object-contain max-h-[85vh] mx-auto"
+          className="w-full h-auto block min-w-full object-cover sm:object-fill lg:object-cover"
         />
       </div>
 
