@@ -187,29 +187,7 @@ export function GlobalJarvisVoiceListener() {
     });
   };
 
-  if (isJarvisPage) return null;
-
-  return (
-    <button
-      onClick={toggleVoice}
-      type="button"
-      title={isVoiceEnabled ? "Jarvis Ativo (Clique para desativar)" : "Jarvis Desativado (Clique para ativar)"}
-      className={`fixed top-4 left-36 sm:top-6 sm:left-[490px] z-50 flex items-center justify-center h-8 w-8 rounded-full shadow-lg backdrop-blur-md border transition-all duration-200 cursor-pointer select-none active:scale-95 ${
-        isVoiceEnabled
-          ? "bg-slate-900/90 border-emerald-500/50 text-white hover:border-emerald-400"
-          : "bg-slate-900/70 border-slate-700/60 text-slate-500 hover:bg-slate-800"
-      }`}
-    >
-      {isVoiceEnabled ? (
-        activeCall ? (
-          <Sparkles className="h-4 w-4 text-emerald-400 animate-spin" />
-        ) : (
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-        )
-      ) : (
-        <MicOff className="h-3.5 w-3.5 text-slate-500" />
-      )}
-    </button>
-  );
+  // Desativado o botão flutuante para não se sobrepor aos botões da interface
+  return null;
 }
 

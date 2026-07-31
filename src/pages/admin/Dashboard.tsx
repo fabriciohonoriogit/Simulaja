@@ -364,7 +364,7 @@ export default function Dashboard() {
                   }}
                   className="h-10 px-4 border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
                 >
-                  <FileText className="h-4 w-4 text-amber-600" /> Link de Pré-Cadastro (Contrato)
+                  <FileText className="h-4 w-4 text-amber-600 shrink-0" /> Link de Pré-Cadastro (Contrato)
                 </Button>
 
                 <Button 
@@ -378,9 +378,9 @@ export default function Dashboard() {
                       description: "O link de indicações exclusivo do seu parceiro foi copiado para a área de transferência."
                     });
                   }}
-                  className="h-10 px-4 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100/80 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
+                  className="h-10 px-4 border-emerald-300 text-emerald-900 bg-emerald-50 hover:bg-emerald-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
                 >
-                  <Share2 className="h-4 w-4" /> Link de Indicações
+                  <Share2 className="h-4 w-4 text-emerald-600 shrink-0" /> Link de Indicações
                 </Button>
 
                 <Button 
@@ -394,9 +394,9 @@ export default function Dashboard() {
                       description: "O Link da Operação Jarvis SRV foi copiado para a área de transferência."
                     });
                   }}
-                  className="h-10 px-4 border-cyan-300 text-cyan-800 bg-cyan-50 hover:bg-cyan-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
+                  className="h-10 px-4 border-cyan-300 text-cyan-900 bg-cyan-50 hover:bg-cyan-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
                 >
-                  <Sparkles className="h-4 w-4 text-cyan-600" /> Operação Jarvis SRV
+                  <Sparkles className="h-4 w-4 text-cyan-600 shrink-0" /> Operação Jarvis SRV
                 </Button>
               </div>
             ) : <div />}
