@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
-// Trigger deploy: 2026-04-20 15:26
-import ConsortiumSimulator from "@/components/ConsortiumSimulator";
-import AIChatbot from "@/components/AIChatbot";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import AboutSection from "@/components/AboutSection";
 import SegmentCards from "@/components/SegmentCards";
-import Diferencial from "@/components/Diferencial";
-import MeetSpecialist from "@/components/MeetSpecialist";
+import ConsortiumSimulator from "@/components/ConsortiumSimulator";
+import HowItWorks from "@/components/HowItWorks";
+import WhyPlanning from "@/components/WhyPlanning";
+import Testimonials from "@/components/Testimonials";
+import FaqAccordion from "@/components/FaqAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import { StickySimulatorCTA } from "@/components/StickySimulatorCTA";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Sparkles, Clock, ShieldCheck } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
@@ -34,7 +34,7 @@ const Index = () => {
       v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
     try {
-      console.log("Tentando salvar no CRM...", { nome, celular });
+      console.log("Sincronizando lead com o CRM...", { nome, celular });
       const { error: dbError } = await supabase.from("leads").insert({
         nome: nome,
         celular: celular.replace(/\D/g, ""),
@@ -55,10 +55,10 @@ const Index = () => {
         });
       } else {
         console.log("✅ Lead salvo no CRM!");
-        toast({ title: "✅ Lead registrado no CRM com sucesso!" });
+        toast({ title: "✅ Sua simulação foi registrada com sucesso!" });
       }
     } catch (e: any) {
-      console.error("🚨 CRITICAL EXCEPTION CRM:", e);
+      console.error("🚨 EXCEÇÃO CRM:", e);
       toast({ title: "Erro Crítico", description: e.message, variant: "destructive" });
     }
 
@@ -78,8 +78,7 @@ const Index = () => {
       });
       
       if (response.ok) {
-        console.log("✅ Webhook enviado!");
-        toast({ title: "✅ Notificação enviada ao especialista!" });
+        console.log("✅ Webhook capturado!");
       }
     } catch (e) {
       console.error("Webhook Error:", e);
@@ -87,64 +86,78 @@ const Index = () => {
   };
 
   return (
-    <main className="min-h-screen bg-background selection:bg-primary/20">
+    <main className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-400/30 selection:text-amber-200">
       <StickySimulatorCTA />
       <Header />
 
-      
+      {/* 1ª DOBRA - Hero */}
       <Hero />
 
-      <div id="about" className="scroll-mt-20">
-        <AboutSection />
-      </div>
+      {/* 2ª SEÇÃO - Tipos de Consórcio */}
+      <SegmentCards />
 
-      <div id="segments" className="scroll-mt-20">
-        <SegmentCards />
-      </div>
-
-      <MeetSpecialist />
-
-      <Diferencial />
-
+      {/* 3ª SEÇÃO - SIMULADOR (Imediatamente abaixo dos segmentos) */}
       <div id="simulator" className="scroll-mt-20">
-        <section className="py-24 bg-gradient-to-b from-white via-blue-50/30 to-blue-50/80 relative overflow-hidden">
-          {/* Subtle decorative circles */}
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#FF7A00]/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+        <section className="py-24 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden border-t border-slate-800/80">
           
-          <div className="container max-w-4xl mx-auto px-4 relative z-10">
-            <div className="max-w-2xl mx-auto mb-12 bg-white/80 backdrop-blur-sm border border-blue-100/50 rounded-3xl p-8 md:p-10 text-center shadow-2xl shadow-blue-900/10 transition-all hover:scale-[1.01]">
-              <p className="text-sm font-bold tracking-[0.25em] uppercase text-[#C9A96A] mb-4">
-                Decisão Inteligente
+          {/* Subtle Decorative Elements */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="container max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
+            
+            {/* Header Acima do Simulador */}
+            <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Simulador Inteligente</span>
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
+                Descubra a melhor estratégia para o <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">seu objetivo</span>
+              </h2>
+
+              <p className="text-slate-300 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto">
+                Leva menos de 30 segundos para montar sua estratégia personalizada.
               </p>
-              <p className="text-foreground text-lg md:text-xl leading-relaxed font-medium">
-                "Consórcio não é sobre esperar — <span className="text-primary font-bold">é sobre planejar o momento certo.</span>"
-              </p>
-              <div className="h-1 w-20 bg-[#C9A96A]/20 mx-auto mt-6 rounded-full" />
-              <p className="text-sm text-muted-foreground mt-6 leading-relaxed">
-                A maioria das pessoas entra sem estratégia e paga essa decisão com tempo. <br className="hidden md:block" />
-                <strong className="text-foreground">Grupos com melhores condições iniciando este mês.</strong>
-              </p>
+
+              <div className="pt-2 flex items-center justify-center gap-6 text-xs text-slate-400 font-semibold">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-amber-400" />
+                  Rápido & Prático
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  100% Seguro
+                </span>
+              </div>
             </div>
 
-            <div className="text-center mb-12">
-              <p className="text-xs font-bold tracking-[0.2em] uppercase text-secondary mb-4">
-                Simulador Dinâmico
-              </p>
-              <h2 className="text-3xl md:text-5xl font-black text-foreground mb-4 tracking-tight">
-                Simule sua estratégia em segundos
-              </h2>
-              <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-                Visualize agora quanto investir, em quanto tempo contemplar e qual estratégia se encaixa no seu objetivo real.
-              </p>
+            {/* Componente do Simulador (Com total retenção de engrenagem de leads) */}
+            <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-2xl shadow-slate-950/80">
+              <ConsortiumSimulator onSimulateSubmit={handleSimulateSubmit} />
             </div>
-            <ConsortiumSimulator onSimulateSubmit={handleSimulateSubmit} />
+
           </div>
         </section>
       </div>
 
+      {/* 4ª SEÇÃO - Como Funciona (4 Etapas) */}
+      <HowItWorks />
+
+      {/* 5ª SEÇÃO - Por que fazer um consórcio com planejamento? (Cards de Benefícios) */}
+      <WhyPlanning />
+
+      {/* 6ª SEÇÃO - Depoimentos */}
+      <Testimonials />
+
+      {/* 7ª SEÇÃO - Perguntas Frequentes (Accordion) */}
+      <FaqAccordion />
+
+      {/* 8ª SEÇÃO - CTA Final */}
       <FinalCTA />
-      
+
+      {/* Footer */}
       <Footer />
     </main>
   );
