@@ -86,55 +86,51 @@ const Index = () => {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-400/30 selection:text-amber-200">
+    <main className="min-h-screen bg-white text-slate-900 selection:bg-amber-100 selection:text-[#B8860B]">
       <StickySimulatorCTA />
       <Header />
 
-      {/* 1ª DOBRA - Hero */}
+      {/* 1ª DOBRA - Hero (Clean Light) */}
       <Hero />
 
-      {/* 2ª SEÇÃO - Tipos de Consórcio */}
+      {/* 2ª SEÇÃO - Tipos de Consórcio (Clean Light) */}
       <SegmentCards />
 
-      {/* 3ª SEÇÃO - SIMULADOR (Imediatamente abaixo dos segmentos) */}
+      {/* 3ª SEÇÃO - SIMULADOR (Clean Light Container) */}
       <div id="simulator" className="scroll-mt-20">
-        <section className="py-24 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden border-t border-slate-800/80">
+        <section className="py-24 bg-gradient-to-b from-white via-slate-50 to-white relative overflow-hidden border-t border-slate-200/60">
           
-          {/* Subtle Decorative Elements */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
-
           <div className="container max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
             
             {/* Header Acima do Simulador */}
             <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-[#B8860B] text-xs font-bold uppercase tracking-widest">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                 <span>Simulador Inteligente</span>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
-                Descubra a melhor estratégia para o <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">seu objetivo</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#0F172A] leading-tight">
+                Descubra a melhor estratégia para o <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#966F1E]">seu objetivo</span>
               </h2>
 
-              <p className="text-slate-300 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto">
+              <p className="text-slate-600 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto">
                 Leva menos de 30 segundos para montar sua estratégia personalizada.
               </p>
 
-              <div className="pt-2 flex items-center justify-center gap-6 text-xs text-slate-400 font-semibold">
+              <div className="pt-2 flex items-center justify-center gap-6 text-xs text-slate-500 font-bold">
                 <span className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-amber-400" />
+                  <Clock className="w-4 h-4 text-amber-600" />
                   Rápido & Prático
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   100% Seguro
                 </span>
               </div>
             </div>
 
-            {/* Componente do Simulador (Com total retenção de engrenagem de leads) */}
-            <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-2xl shadow-slate-950/80">
+            {/* Componente do Simulador (Clean Container com retenção de captação de leads) */}
+            <div className="bg-white rounded-3xl p-4 sm:p-8 border border-slate-200/80 shadow-2xl shadow-slate-200/60">
               <ConsortiumSimulator onSimulateSubmit={handleSimulateSubmit} />
             </div>
 
@@ -142,19 +138,19 @@ const Index = () => {
         </section>
       </div>
 
-      {/* 4ª SEÇÃO - Como Funciona (4 Etapas) */}
+      {/* 4ª SEÇÃO - Como Funciona (4 Etapas Clean) */}
       <HowItWorks />
 
-      {/* 5ª SEÇÃO - Por que fazer um consórcio com planejamento? (Cards de Benefícios) */}
+      {/* 5ª SEÇÃO - Por que fazer um consórcio com planejamento? (Cards de Benefícios Clean) */}
       <WhyPlanning />
 
-      {/* 6ª SEÇÃO - Depoimentos */}
+      {/* 6ª SEÇÃO - Depoimentos (Clean) */}
       <Testimonials />
 
-      {/* 7ª SEÇÃO - Perguntas Frequentes (Accordion) */}
+      {/* 7ª SEÇÃO - Perguntas Frequentes (Accordion Clean) */}
       <FaqAccordion />
 
-      {/* 8ª SEÇÃO - CTA Final */}
+      {/* 8ª SEÇÃO - CTA Final (Navy & Gold Accent) */}
       <FinalCTA />
 
       {/* Footer */}

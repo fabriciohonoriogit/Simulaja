@@ -46,36 +46,36 @@ const faqItems = [
 
 const FaqAccordion = () => {
   return (
-    <section className="py-24 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white relative overflow-hidden border-t border-slate-800/60" id="faq">
+    <section className="py-24 bg-white text-slate-900 relative overflow-hidden border-t border-slate-200/60" id="faq">
       <div className="container max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 text-xs font-bold uppercase tracking-widest">
-            <HelpCircle className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-[#B8860B] text-xs font-bold uppercase tracking-widest">
+            <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
             Tire Suas Dúvidas
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
-            Perguntas <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">Frequentes</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#0F172A]">
+            Perguntas <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#966F1E]">Frequentes</span>
           </h2>
-          <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
+          <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
             Respostas transparentes para as principais dúvidas sobre o consórcio inteligente.
           </p>
         </div>
 
-        {/* Accordion Component */}
-        <div className="bg-slate-900/90 backdrop-blur-md rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl">
+        {/* Accordion Component - Clean White Light Styling */}
+        <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-md">
           <Accordion type="single" collapsible className="space-y-4">
             {faqItems.map((item, idx) => (
               <AccordionItem
                 key={idx}
                 value={`item-${idx}`}
-                className="border border-slate-800 rounded-2xl px-6 py-2 bg-slate-950/60 data-[state=open]:border-amber-400/50 data-[state=open]:bg-slate-950 transition-all duration-300"
+                className="border border-slate-200 rounded-2xl px-6 py-2 bg-white data-[state=open]:border-amber-300 data-[state=open]:shadow-md transition-all duration-200"
               >
-                <AccordionTrigger className="text-left font-bold text-base sm:text-lg text-white hover:text-amber-300 hover:no-underline py-4">
+                <AccordionTrigger className="text-left font-bold text-base sm:text-lg text-[#0F172A] hover:text-[#B8860B] hover:no-underline py-4">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-slate-400 text-sm leading-relaxed pb-4 pt-1">
+                <AccordionContent className="text-slate-600 text-sm leading-relaxed pb-4 pt-1">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>

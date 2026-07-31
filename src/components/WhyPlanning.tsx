@@ -42,49 +42,46 @@ const WhyPlanning = () => {
   };
 
   return (
-    <section className="py-24 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white relative overflow-hidden border-t border-slate-800/60" id="beneficios">
-      {/* Soft Glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
+    <section className="py-24 bg-white text-slate-900 relative overflow-hidden border-t border-slate-200/60" id="beneficios">
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 text-xs font-bold uppercase tracking-widest">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-[#B8860B] text-xs font-bold uppercase tracking-widest">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
             Vantagens Exclusivas
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
-            Por que fazer um consórcio <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">com planejamento?</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#0F172A]">
+            Por que fazer um consórcio <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#966F1E]">com planejamento?</span>
           </h2>
-          <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
+          <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
             Consórcio sem estratégia é depender apenas da sorte. Com consultoria especializada, transformamos seu objetivo em um plano de conquistas concreto.
           </p>
         </div>
 
-        {/* 6 Benefit Cards Grid */}
+        {/* 6 Benefit Cards Grid - Clean Light Theme */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {benefits.map((item, idx) => {
             const Icon = item.icon;
             return (
               <div
                 key={idx}
-                className="group relative bg-slate-900/90 backdrop-blur-md rounded-3xl p-8 border border-slate-800 hover:border-amber-400/50 shadow-xl hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-1.5 flex flex-col justify-between"
+                className="group relative bg-slate-50/80 rounded-3xl p-8 border border-slate-200/80 hover:border-amber-300 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-400 group-hover:text-slate-950 transition-all duration-300">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-100/70 border border-amber-300/60 flex items-center justify-center text-[#B8860B] group-hover:bg-[#0F172A] group-hover:text-white transition-all duration-300">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-300/80 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-700 bg-amber-100/60 px-3 py-1 rounded-full border border-amber-300/50">
                       ✔ Benefício
                     </span>
                   </div>
 
-                  <h3 className="font-extrabold text-xl text-white group-hover:text-amber-300 transition-colors mb-3">
+                  <h3 className="font-extrabold text-xl text-[#0F172A] group-hover:text-[#B8860B] transition-colors mb-3">
                     {item.title}
                   </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
@@ -97,10 +94,10 @@ const WhyPlanning = () => {
         <div className="mt-16 text-center">
           <button
             onClick={scrollToSimulator}
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 px-9 py-4 rounded-2xl text-sm font-black uppercase tracking-wider shadow-xl hover:shadow-amber-500/30 transition-all hover:scale-105"
+            className="inline-flex items-center gap-3 bg-[#0F172A] hover:bg-[#1E293B] text-white px-9 py-4 rounded-2xl text-sm font-black uppercase tracking-wider shadow-lg hover:shadow-xl transition-all hover:scale-105"
           >
-            Simular Estratégia Agora
-            <ArrowRight className="w-4 h-4" />
+            <span>Simular Estratégia Agora</span>
+            <ArrowRight className="w-4 h-4 text-amber-400" />
           </button>
         </div>
 
