@@ -12,6 +12,7 @@ const Hero = () => {
     { label: "Consórcio Náutico", id: "nautica" },
     { label: "Consórcio Pesados & Frotas", id: "caminhão" },
     { label: "Consórcio Agro", id: "agro" },
+    { label: "Serviços / Cirurgia Plástica", id: "servicos" },
     { label: "Consórcio para Investimento", id: "investimento" },
   ];
 
