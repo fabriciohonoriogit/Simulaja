@@ -32,6 +32,12 @@ const segments = [
     image: "/segment-agro.webp",
   },
   {
+    id: "servicos",
+    label: "Serviços / Cirurgia Plástica",
+    desc: "Cirurgias plásticas, tratamentos estéticos e serviços com parcelas sem juros.",
+    image: "/segment-cirurgia-plastica.png",
+  },
+  {
     id: "investimento",
     label: "Consórcio para Investimento",
     desc: "Construa patrimônio com estratégia e sem juros bancários.",

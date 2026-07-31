@@ -4,6 +4,7 @@ import cardMoto from "@/assets/card-moto.webp";
 import cardNautica from "@/assets/card-nautica.webp";
 import cardFrotas from "@/assets/segment-truck.webp";
 import cardAgro from "@/assets/card-agro.webp";
+import cardCirurgiaPlastica from "@/assets/card-cirurgia-plastica.png";
 import cardInvestimento from "@/assets/card-investment-chalets.webp";
 import { ArrowRight, Sparkles } from "lucide-react";
 
@@ -51,6 +52,13 @@ const segments = [
     categoryId: "agro",
   },
   {
+    title: "Serviços / Cirurgia Plástica",
+    desc: "Procedimentos estéticos, cirurgias plásticas, viagens e serviços com parcelas planejadas.",
+    image: cardCirurgiaPlastica,
+    tag: "Serviços",
+    categoryId: "servicos",
+  },
+  {
     title: "Consórcio para Investimento",
     desc: "Alavancagem patrimonial com galpões comerciais, barracões e renda passiva de aluguel.",
     image: cardInvestimento,
@@ -91,7 +99,7 @@ const SegmentCards = () => {
         </div>
 
         {/* Cards Grid - Clean White Styling */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {segments.map((seg, i) => (
             <div
               key={i}
