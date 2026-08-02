@@ -90,7 +90,7 @@ const AppContent = () => {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!isAdmin && !isIndicacoes && !isPreCadastro && <AIChatbot />}
+      {!isAdmin && !isPreCadastro && <AIChatbot />}
     </>
   );
 };

@@ -1,12 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { X, Send, Sparkles, Phone, MessageSquare } from "lucide-react";
+import { X, Send, Sparkles, Phone, MessageSquare, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import JarvisAvatar from "./JarvisAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-type Step = "welcome" | "sonho" | "velocidade" | "realidade" | "nome" | "telefone" | "final";
+type Step = 
+  | "welcome" 
+  | "sonho" 
+  | "realidade" 
+  | "velocidade" 
+  | "nome" 
+  | "telefone" 
+  | "final"
+  | "parceiro_faq";
 
 interface Message {
   role: "bot" | "user";
@@ -16,14 +24,19 @@ interface Message {
 
 const WHATSAPP_NUMBER = "5541997925357";
 
+const PARCEIRO_FAQ_OPTIONS = [
+  { label: "❓ Afinal o que é o consórcio?", value: "o_que_e" },
+  { label: "🏥 Que tipo de serviços?", value: "tipos_servicos" },
+  { label: "💡 Como posso vender o consórcio?", value: "como_vender" },
+  { label: "📊 Qual a diferença do consórcio para o financiamento?", value: "diferenca_financiamento" },
+  { label: "🏆 Como posso ser contemplado?", value: "como_contemplar" },
+  { label: "💬 Mais alguma dúvida? Fale com nosso especialista", value: "falar_especialista" },
+];
+
 const AIChatbot = () => {
   const location = useLocation();
   const { toast } = useToast();
   const isIndicacoes = location.pathname.startsWith("/indicacoes") || location.pathname.startsWith("/parceiro");
-
-  if (isIndicacoes) {
-    return null;
-  }
 
   // Captura organizacao_id da URL (caso acessado via Link de Operação do CRM)
   const searchParams = new URLSearchParams(window.location.search);
@@ -37,10 +50,12 @@ const AIChatbot = () => {
   const [showInput, setShowInput] = useState(false);
   const [inputPlaceholder, setInputPlaceholder] = useState("Escreva sua resposta...");
   const [isTyping, setIsTyping] = useState(false);
+  const [showSpecialistButton, setShowSpecialistButton] = useState(false);
+
   const [leadData, setLeadData] = useState({
     sonho: "",
-    velocidade: "",
     realidade: "",
+    velocidade: "",
     nome: "",
     telefone: "",
   });
@@ -63,7 +78,7 @@ const AIChatbot = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const addBotMessage = (content: string, options?: { label: string; value: string }[], delay = 800) => {
+  const addBotMessage = (content: string, options?: { label: string; value: string }[], delay = 700) => {
     setIsTyping(true);
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "bot", content, options }]);
@@ -78,63 +93,105 @@ const AIChatbot = () => {
   const handleOpen = () => {
     setIsOpen(true);
     if (messages.length === 0) {
-      setTimeout(() => {
-        addBotMessage(
-          "Olá! Tudo bem? 👋\nEu sou o **Jarvis**, seu consultor inteligente! 🤖✨\n\nVamos traçar o seu planejamento estratégico usando a metodologia **SRV (Sonho, Realidade e Velocidade)** 🚀."
-        );
+      if (isIndicacoes) {
+        // FLUXO DO PARCEIRO / SIMULADOR EXTERNO (Perguntas e Respostas)
+        setStep("parceiro_faq");
+        setShowInput(false);
         setTimeout(() => {
-          setStep("sonho");
-          setShowInput(false);
           addBotMessage(
-            "Para começarmos: **Qual é o seu Sonho hoje?** 💭",
-            [
-              { label: "🏠 IMÓVEL", value: "IMÓVEL" },
-              { label: "🚗 CARRO / MOTO", value: "CARRO / MOTO" },
-              { label: "🚜 PESADOS / AGRÍCOLA", value: "PESADOS / AGRÍCOLA" },
-              { label: "🏥 SERVIÇOS / CIRURGIA", value: "SERVIÇOS / CIRURGIA" },
-            ]
+            "Olá, Parceiro(a)! 🚀 Bem-vindo ao Simulador de Indicações!\nEu sou o **Jarvis**, seu copiloto de vendas de consórcios. 🤖💡\n\n**Como posso ajudar você a fechar mais negócios hoje?** Escolha uma dúvida abaixo:",
+            PARCEIRO_FAQ_OPTIONS
           );
-        }, 1000);
-      }, 300);
+        }, 300);
+      } else {
+        // FLUXO PÚBLICO (LANDING PAGE - METODOLOGIA SRV)
+        setTimeout(() => {
+          addBotMessage(
+            "Olá! Seja muito bem-vindo(a)! 👋✨\nEu sou o **Jarvis**, seu consultor inteligente! 🤖\n\n**Qual é o seu sonho e como posso lhe ajudar hoje?** 💭"
+          );
+          setTimeout(() => {
+            setStep("sonho");
+            setShowInput(false);
+            addBotMessage(
+              "Selecione a categoria do seu objetivo para começarmos:",
+              [
+                { label: "🚗 CARRO", value: "CARRO" },
+                { label: "🏍️ MOTO", value: "MOTO" },
+                { label: "🏠 CASA / INVESTIMENTO", value: "CASA / INVESTIMENTO" },
+                { label: "🚜 PESADOS / AGRO", value: "PESADOS / AGRO" },
+                { label: "🏥 SERVIÇOS / CIRURGIA PLÁSTICA", value: "SERVIÇOS / CIRURGIA PLÁSTICA" },
+              ]
+            );
+          }, 900);
+        }, 300);
+      }
     }
   };
 
   const handleOptionClick = (value: string, label: string) => {
     addUserMessage(label);
 
+    // FLUXO PARCEIRO
+    if (isIndicacoes) {
+      switch (value) {
+        case "o_que_e":
+          addBotMessage(
+            "**Consórcio é uma compra planejada de bens ou serviços.** 🛒🏠🚗\n\nVocê pode adquirir **Carro, moto, casa e/ou investimentos e alavancagem patrimonial** de forma inteligente e sem juros!",
+            PARCEIRO_FAQ_OPTIONS
+          );
+          break;
+        case "tipos_servicos":
+          addBotMessage(
+            "**Serviços abrange diversas categorias!** 🛠️✈️🏥\n\nVocê pode utilizar para **Reforma da casa, cirurgias plásticas, viagens, festas, cursos e outros.**",
+            PARCEIRO_FAQ_OPTIONS
+          );
+          break;
+        case "como_vender":
+          addBotMessage(
+            "**Você não vende o consórcio, você vende o sonho e a ideia!** 💡✨\n\nO consórcio é apenas a **ferramenta de aquisição**. Assim como ninguém vai ao banco querendo comprar um financiamento, mas sim o imóvel ou veículo, o consórcio é o formato inteligente de entrega.",
+            PARCEIRO_FAQ_OPTIONS
+          );
+          break;
+        case "diferenca_financiamento":
+          addBotMessage(
+            "**Consórcio x Financiamento:** 📊\n\n• **Consórcio:** É um planejamento, **não possui juros** (apenas uma taxa administrativa diluída) e a entrega pode acontecer a qualquer momento.\n• **Financiamento:** A entrega é imediata, porém possui **juros compostos** que podem encarecer até **3x mais** o valor do bem!",
+            PARCEIRO_FAQ_OPTIONS
+          );
+          break;
+        case "como_contemplar":
+          addBotMessage(
+            "**A contemplação acontece por Sorteio ou por Lances:** 🏆\n\n• **Sorteio:** Realizado mensalmente pela Loteria Federal.\n• **Lance Livre:** Com recursos próprios (dinheiro do bolso). Funciona como um leilão: as maiores ofertas levam o crédito.\n• **Lance Fixo:** Utilizar parte do próprio crédito (em média de 25% a 30% conforme o grupo). A contemplação no lance fixo é por aproximação do número sorteado.",
+            PARCEIRO_FAQ_OPTIONS
+          );
+          break;
+        case "falar_especialista":
+          setShowSpecialistButton(true);
+          addBotMessage(
+            "Ficou com alguma dúvida específica sobre uma simulação, cota ou comissão? 🤝\n\nClique no botão abaixo para conversar diretamente com nosso **Especialista de Suporte ao Parceiro** pelo WhatsApp!",
+            PARCEIRO_FAQ_OPTIONS
+          );
+          break;
+        default:
+          addBotMessage("Escolha uma das opções acima para visualizar a explicação completa:", PARCEIRO_FAQ_OPTIONS);
+      }
+      return;
+    }
+
+    // FLUXO PÚBLICO (SRV)
     switch (step) {
       case "sonho": {
         setLeadData((prev) => ({ ...prev, sonho: value }));
-        setStep("velocidade");
+        setStep("realidade");
         setShowInput(false);
         setTimeout(() => {
           addBotMessage(
-            `Incrível! 🎯 **${value}** é um excelente objetivo!\n\nNa etapa de **Velocidade ⚡**:\n**Tem algum recurso para dar de lance, ou FGTS?** 💰`,
+            `Incrível! 🎯 **${value}** é um excelente objetivo!\n\nNa etapa de **Realidade 📊**:\n**Possui Recursos Próprios, FGTS ou outro recurso para dar de lance? Vai usar o lance fixo da carta ou preferir usar o sorteio?** 💰`,
             [
               { label: "💵 Recursos Próprios", value: "Recursos Próprios" },
               { label: "📄 Usar FGTS", value: "Usar FGTS" },
-              { label: "💥 Recursos + FGTS", value: "Recursos + FGTS" },
-              { label: "🎲 Apenas Sorteio", value: "Apenas Sorteio" },
-            ]
-          );
-        }, 600);
-        break;
-      }
-
-      case "velocidade": {
-        setLeadData((prev) => ({ ...prev, velocidade: value }));
-        setStep("realidade");
-        setShowInput(true);
-        setInputPlaceholder("Ou digite um valor de parcela...");
-        setTimeout(() => {
-          addBotMessage(
-            `Perfeito! O planejamento de contemplação com **${value}** acelera muito o resultado! ⚡🎯\n\nAgora vamos alinhar a sua **Realidade 📊**:\n**Que valor de parcela ficaria bom para você?** 💳`,
-            [
-              { label: "💵 Até R$ 500/mês", value: "Até R$ 500/mês" },
-              { label: "💵 R$ 500 a R$ 1.000/mês", value: "R$ 500 a R$ 1.000/mês" },
-              { label: "💵 R$ 1.000 a R$ 2.500/mês", value: "R$ 1.000 a R$ 2.500/mês" },
-              { label: "💵 R$ 2.500 a R$ 5.000/mês", value: "R$ 2.500 a R$ 5.000/mês" },
-              { label: "💵 Acima de R$ 5.000/mês", value: "Acima de R$ 5.000/mês" },
+              { label: "💥 Recursos Próprios + FGTS", value: "Recursos Próprios + FGTS" },
+              { label: "📌 Usar Lance Fixo da Carta", value: "Usar Lance Fixo da Carta" },
+              { label: "🎲 Preferir usar Sorteio", value: "Preferir usar Sorteio" },
             ]
           );
         }, 600);
@@ -143,12 +200,29 @@ const AIChatbot = () => {
 
       case "realidade": {
         setLeadData((prev) => ({ ...prev, realidade: value }));
+        setStep("velocidade");
+        setShowInput(false);
+        setTimeout(() => {
+          addBotMessage(
+            `Perfeito! Mapeamos que você pretende utilizar: **${value}** ⚡🎯\n\nAgora vamos alinhar a sua **Velocidade 🚀**:\n**Seu planejamento é a curto, médio ou longo prazo? Qual a urgência da entrega?** ⏱️`,
+            [
+              { label: "⚡ Curto Prazo (Urgência Imediata)", value: "Curto Prazo (Urgência Imediata)" },
+              { label: "⏳ Médio Prazo (Planejamento Progressivo)", value: "Médio Prazo (Planejamento Progressivo)" },
+              { label: "🎯 Longo Prazo (Construção Patrimonial)", value: "Longo Prazo (Construção Patrimonial)" },
+            ]
+          );
+        }, 600);
+        break;
+      }
+
+      case "velocidade": {
+        setLeadData((prev) => ({ ...prev, velocidade: value }));
         setStep("nome");
         setShowInput(true);
         setInputPlaceholder("Digite seu nome completo...");
         setTimeout(() => {
           addBotMessage(
-            `Ótimo! Já mapeei a melhor estratégia SRV para o seu perfil! 📋✨\n\nPara eu personalizar sua proposta:\n**Qual o seu Nome?** 👤`
+            `Ótimo! Mapeei a melhor estratégia SRV para o seu perfil! 📋✨\n\nPara eu personalizar sua proposta:\n**Qual o seu Nome?** 👤`
           );
         }, 600);
         break;
@@ -163,17 +237,7 @@ const AIChatbot = () => {
 
     addUserMessage(text);
 
-    if (step === "realidade") {
-      setLeadData((prev) => ({ ...prev, realidade: text }));
-      setStep("nome");
-      setShowInput(true);
-      setInputPlaceholder("Digite seu nome completo...");
-      setTimeout(() => {
-        addBotMessage(
-          `Ótimo! Mapeei essa parcela ideal para você. 📋✨\n\nPara eu personalizar a proposta:\n**Qual o seu Nome?** 👤`
-        );
-      }, 600);
-    } else if (step === "nome") {
+    if (step === "nome") {
       const nomeDigitado = text;
       setLeadData((prev) => ({ ...prev, nome: nomeDigitado }));
       setStep("telefone");
@@ -196,7 +260,7 @@ const AIChatbot = () => {
 
       setTimeout(() => {
         addBotMessage(
-          `Muito obrigado, **${updatedLead.nome}**! 🙏✨\n\n**Em segundos retornaremos com a melhor proposta!** 🚀🔥\n\nSummary do seu planejamento **SRV**:\n💭 **Sonho:** ${updatedLead.sonho}\n⚡ **Velocidade:** ${updatedLead.velocidade}\n📊 **Realidade (Parcela):** ${updatedLead.realidade}\n\nNosso consultor sênior já está selecionando as melhores cotas para você!`
+          `Muito obrigado, **${updatedLead.nome}**! 🙏✨\n\n**Em segundos retornaremos com a melhor proposta!** 🚀🔥\n\nResumo do seu planejamento **SRV**:\n💭 **Sonho:** ${updatedLead.sonho}\n📊 **Realidade (Lance/Recursos):** ${updatedLead.realidade}\n⚡ **Velocidade (Prazo/Urgência):** ${updatedLead.velocidade}\n\nNosso consultor sênior já está selecionando as melhores cotas para você!`
         );
       }, 600);
     }
@@ -229,7 +293,7 @@ const AIChatbot = () => {
         lead_temperatura: "quente",
         organizacao_id: orgParam || null,
         origem: "Operação Jarvis SRV",
-        observacao: `SRV -> Sonho: ${currentLead.sonho} | Velocidade (Lance/FGTS): ${currentLead.velocidade} | Realidade (Parcela): ${currentLead.realidade}`,
+        observacao: `SRV -> Sonho: ${currentLead.sonho} | Realidade (Lance/Recursos): ${currentLead.realidade} | Velocidade (Prazo/Urgência): ${currentLead.velocidade}`,
       });
 
       if (error) {
@@ -242,15 +306,22 @@ const AIChatbot = () => {
     }
   };
 
-  const handleWhatsApp = () => {
+  const handleWhatsAppLead = () => {
     const msg = encodeURIComponent(
       `Olá! Fiz minha consultoria SRV com o Jarvis no site e quero receber a minha proposta personalizada:\n\n` +
       `👤 *Nome:* ${leadData.nome}\n` +
       `📱 *Telefone:* ${leadData.telefone}\n` +
       `💭 *Sonho:* ${leadData.sonho}\n` +
-      `⚡ *Velocidade (Lance/FGTS):* ${leadData.velocidade}\n` +
-      `📊 *Realidade (Parcela):* ${leadData.realidade}\n\n` +
+      `📊 *Realidade (Lance/Recursos):* ${leadData.realidade}\n` +
+      `⚡ *Velocidade (Prazo/Urgência):* ${leadData.velocidade}\n\n` +
       `Pode me enviar as melhores opções disponíveis?`
+    );
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
+  };
+
+  const handleWhatsAppPartnerSpecialist = () => {
+    const msg = encodeURIComponent(
+      `Olá! Sou parceiro/indicador no Simulador Externo e gostaria de tirar uma dúvida sobre consórcio com o especialista.`
     );
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
   };
@@ -259,27 +330,28 @@ const AIChatbot = () => {
     <>
       {/* Floating Button */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 group flex flex-col items-end gap-3">
+        <div className="fixed bottom-6 right-6 z-50 group flex flex-col items-end gap-2">
           {/* Tooltip Badge */}
-          <div className="px-3.5 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xl border border-cyan-500/30 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 pointer-events-none flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span>Consultoria SRV Inteligente 🚀</span>
+          <div className="px-3 py-1 bg-slate-900/90 text-slate-200 text-[11px] font-medium rounded-lg shadow-xl border border-slate-700/60 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none flex items-center gap-1.5">
+            <Sparkles className="w-3 h-3 text-cyan-400" />
+            <span>
+              {isIndicacoes ? "Ajuda ao Parceiro" : "Consultoria de Consórcio"}
+            </span>
           </div>
 
           <button
             onClick={handleOpen}
-            className="relative flex items-center gap-3 bg-slate-950 hover:bg-slate-900 text-white pl-2 pr-5 py-2 rounded-full shadow-2xl hover:scale-105 transition-all duration-300 border border-cyan-500/40"
+            className="flex items-center gap-2.5 bg-slate-950/90 hover:bg-slate-900 text-white pl-1.5 pr-4 py-1.5 rounded-full shadow-lg hover:shadow-cyan-500/10 border border-slate-700/80 hover:border-cyan-500/50 transition-all duration-200 backdrop-blur-md"
             aria-label="Falar com o Jarvis"
           >
-            <div className="w-11 h-11 rounded-full overflow-hidden relative border border-cyan-400/50">
-              <JarvisAvatar className="w-full h-full" />
-              <span className="absolute inset-0 rounded-full bg-cyan-400/20 animate-ping" />
-            </div>
+            <JarvisAvatar className="w-8 h-8" />
             <div className="flex flex-col text-left">
-              <span className="font-bold text-sm tracking-tight text-white flex items-center gap-1">
-                Falar com o Jarvis <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-semibold text-xs tracking-tight text-slate-100 flex items-center gap-1">
+                Falar com Jarvis <Sparkles className="w-3 h-3 text-cyan-400" />
               </span>
-              <span className="text-[10px] text-cyan-300 font-semibold uppercase tracking-wider">Metodologia SRV</span>
+              <span className="text-[9px] text-slate-400 font-medium">
+                {isIndicacoes ? "Dúvidas Rápidas" : "Assistente IA"}
+              </span>
             </div>
           </button>
         </div>
@@ -287,7 +359,7 @@ const AIChatbot = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[92vw] sm:w-96 h-[540px] max-h-[82vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-scale-in border border-slate-700/80 bg-slate-950 text-white">
+        <div className="fixed bottom-6 right-6 z-50 w-[92vw] sm:w-96 h-[560px] max-h-[84vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-scale-in border border-slate-700/80 bg-slate-950 text-white">
           {/* Header */}
           <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-4 py-3.5 flex items-center gap-3 border-b border-cyan-500/20">
             <div className="w-10 h-10 rounded-full overflow-hidden border border-cyan-400/40 relative">
@@ -298,12 +370,12 @@ const AIChatbot = () => {
               <div className="flex items-center gap-1.5">
                 <p className="text-white font-bold text-sm">Jarvis AI</p>
                 <span className="text-[9px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded font-black tracking-widest uppercase">
-                  SRV
+                  {isIndicacoes ? "PARCEIRO" : "SRV"}
                 </span>
               </div>
               <p className="text-slate-400 text-xs flex items-center gap-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Sonho • Realidade • Velocidade
+                {isIndicacoes ? "Guia & Treinamento de Vendas" : "Sonho • Realidade • Velocidade"}
               </p>
             </div>
             <button
@@ -326,7 +398,6 @@ const AIChatbot = () => {
                   }`}
                 >
                   {msg.content.split("\n").map((line, idx) => {
-                    // Trata negrito simples **texto**
                     const parts = line.split(/(\*\*.*?\*\*)/g);
                     return (
                       <span key={idx} className="block min-h-[1rem]">
@@ -368,18 +439,18 @@ const AIChatbot = () => {
                     onClick={() => handleOptionClick(opt.value, opt.label)}
                     className="w-full text-left px-4 py-2.5 rounded-xl border border-cyan-500/30 bg-slate-800/80 hover:bg-cyan-950/60 hover:border-cyan-400 text-cyan-100 text-xs font-semibold transition-all duration-200 shadow-md hover:translate-x-1 flex items-center justify-between group"
                   >
-                    <span>{opt.label}</span>
+                    <span className="pr-2">{opt.label}</span>
                     <span className="text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity">➔</span>
                   </button>
                 ))}
               </div>
             )}
 
-            {/* WhatsApp Final Action */}
-            {step === "final" && !isTyping && (
+            {/* WhatsApp Public Lead Action */}
+            {!isIndicacoes && step === "final" && !isTyping && (
               <div className="pt-2 animate-fade-in">
                 <Button
-                  onClick={handleWhatsApp}
+                  onClick={handleWhatsAppLead}
                   className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-5 rounded-xl text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 border border-emerald-400/30"
                 >
                   <Phone className="w-4 h-4 fill-white" />
@@ -388,11 +459,24 @@ const AIChatbot = () => {
               </div>
             )}
 
+            {/* WhatsApp Partner Specialist Action */}
+            {isIndicacoes && showSpecialistButton && !isTyping && (
+              <div className="pt-2 animate-fade-in">
+                <Button
+                  onClick={handleWhatsAppPartnerSpecialist}
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-5 rounded-xl text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 border border-emerald-400/30"
+                >
+                  <MessageSquare className="w-4 h-4 fill-white" />
+                  Falar com nosso Especialista no WhatsApp
+                </Button>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Text Input Footer */}
-          {(showInput || step === "nome" || step === "telefone" || step === "realidade") && (
+          {/* Text Input Footer (Only in Public SRV Mode for Nome / Telefone) */}
+          {!isIndicacoes && (showInput || step === "nome" || step === "telefone") && (
             <div className="bg-slate-950 border-t border-slate-800 px-3 py-3 flex gap-2 items-center">
               <input
                 type="text"
@@ -419,4 +503,3 @@ const AIChatbot = () => {
 };
 
 export default AIChatbot;
-

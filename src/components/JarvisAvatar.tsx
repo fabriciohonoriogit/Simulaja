@@ -1,50 +1,33 @@
 import React from 'react';
 
-const JarvisAvatar = ({ className = "w-full h-full" }: { className?: string }) => {
+const JarvisAvatar = ({ className = "w-10 h-10" }: { className?: string }) => {
   return (
-    <div className={`relative ${className} bg-[#0F172A] rounded-full overflow-hidden flex items-center justify-center border-2 border-cyan-500/30`}>
-      {/* Robot Face / Visor */}
-      <div className="absolute inset-2 bg-slate-900 rounded-[20%] flex flex-col items-center justify-center gap-2">
-        <div className="flex gap-4">
-          {/* Left Eye */}
-          <svg width="24" height="12" viewBox="0 0 24 12" className="eye">
-            <path 
-              d="M2,10 Q12,0 22,10" 
-              fill="none" 
-              stroke="#00F2FF" 
-              strokeWidth="3" 
-              strokeLinecap="round"
-              className="drop-shadow-[0_0_5px_rgba(0,242,255,0.8)]"
-            />
-          </svg>
-          {/* Right Eye */}
-          <svg width="24" height="12" viewBox="0 0 24 12" className="eye">
-            <path 
-              d="M2,10 Q12,0 22,10" 
-              fill="none" 
-              stroke="#00F2FF" 
-              strokeWidth="3" 
-              strokeLinecap="round"
-              className="drop-shadow-[0_0_5px_rgba(0,242,255,0.8)]"
-            />
-          </svg>
-        </div>
-        {/* Mouth */}
-        <svg width="16" height="8" viewBox="0 0 16 8">
-          <path 
-            d="M2,2 Q8,8 14,2" 
-            fill="none" 
-            stroke="#00F2FF" 
-            strokeWidth="2" 
-            strokeLinecap="round"
-            className="drop-shadow-[0_0_3px_rgba(0,242,255,0.5)]"
+    <div className={`relative ${className} rounded-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-[1px] shadow-lg shadow-cyan-500/10`}>
+      {/* Outer subtle glow ring */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/30 via-blue-500/20 to-purple-500/30 opacity-75" />
+
+      {/* Inner orb background */}
+      <div className="relative w-full h-full rounded-full bg-slate-950/90 backdrop-blur-md flex items-center justify-center overflow-hidden">
+        {/* Core AI Gradient Glow */}
+        <div className="absolute w-3/4 h-3/4 rounded-full bg-gradient-to-tr from-cyan-400/30 via-blue-500/20 to-purple-400/30 blur-sm" />
+
+        {/* Minimalist AI Spark Core SVG (Gemini / Apple Intelligence Style) */}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          className="w-3/5 h-3/5 text-cyan-300 relative z-10 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]"
+        >
+          <path
+            d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4771 12 22C12 16.4771 16.4771 12 22 12C16.4771 12 12 7.52285 12 2Z"
+            fill="currentColor"
+          />
+          <path
+            d="M18.5 2C18.5 3.933 16.933 5.5 15 5.5C16.933 5.5 18.5 7.067 18.5 9C18.5 7.067 20.067 5.5 22 5.5C20.067 5.5 18.5 3.933 18.5 2Z"
+            fill="currentColor"
+            className="opacity-75"
           />
         </svg>
       </div>
-      
-      {/* Headphones Glow */}
-      <div className="absolute -left-1 w-3 h-1/2 bg-cyan-500/20 blur-sm rounded-full" />
-      <div className="absolute -right-1 w-3 h-1/2 bg-cyan-500/20 blur-sm rounded-full" />
     </div>
   );
 };
