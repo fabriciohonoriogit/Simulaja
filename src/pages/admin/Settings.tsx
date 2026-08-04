@@ -58,14 +58,16 @@ export default function Settings() {
     setWaMode(mode);
     saveWhatsAppMode(mode);
     if (mode === "web") {
+      setEvolutionStatus("WEB_MODE");
+      setQrCodeImg(null);
       toast({
-        title: "Modo WhatsApp Web (Direto) Ativo",
-        description: "As conversas abrirão diretamente no WhatsApp Web sem necessidade de servidor.",
+        title: "🟢 Modo WhatsApp Web (Direto) Ativo!",
+        description: "Suas conversas e mensagens serão abertas diretamente no WhatsApp Web/App sem depender de servidor.",
       });
     } else {
       toast({
-        title: "Modo Evolution API Ativo",
-        description: "Configure o seu servidor Evolution API abaixo para envio automático via API.",
+        title: "⚡ Modo Evolution API Ativo",
+        description: "Configure abaixo o endereço do seu servidor Evolution API (VPS ou Docker).",
       });
     }
   };
@@ -79,10 +81,19 @@ export default function Settings() {
       if (res.state === "open" || res.state === "CONNECTED") {
         toast({ title: "WhatsApp Conectado!", description: "Sua instância do Evolution API está ativa e pronta." });
       } else {
-        toast({ title: "Instância Desconectada", description: `Status: ${res.state}. Verifique o QR Code ou a URL.`, variant: "destructive" });
+        toast({
+          title: "Instância Desconectada",
+          description: `Status: ${res.state}. Verifique a URL do seu servidor ou altere para o Modo WhatsApp Web Direto.`,
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
-      toast({ title: "Erro na conexão", description: err.message, variant: "destructive" });
+      setEvolutionStatus("DISCONNECTED");
+      toast({
+        title: "Servidor Evolution API Indisponível",
+        description: err.message || "Servidor offline. Clique para alternar para o Modo WhatsApp Web Direto.",
+        variant: "destructive",
+      });
     } finally {
       setTestingStatus(false);
     }
