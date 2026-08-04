@@ -13,6 +13,7 @@ import { Lead } from "@/types/funil";
 import { toast } from "sonner";
 import { sendWhatsAppMessage, getWhatsAppMode, getWhatsAppWebUrl, formatWhatsAppNumber } from "@/services/evolutionApiService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { QRCodeSVG } from "qrcode.react";
 
 interface Message {
   id: string;
@@ -220,11 +221,14 @@ export function LeadChat({ lead }: { lead: Lead }) {
                     </DialogTitle>
                   </DialogHeader>
                   <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl border border-slate-100 my-2 space-y-3">
-                    <div className="p-2 bg-slate-900 rounded-xl shadow-inner">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(getWhatsAppWebUrl(targetPhone))}`}
-                        alt="QR Code WhatsApp Lead"
-                        className="w-48 h-48 rounded-lg"
+                    <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-md">
+                      <QRCodeSVG
+                        value={getWhatsAppWebUrl(targetPhone)}
+                        size={190}
+                        bgColor="#ffffff"
+                        fgColor="#0f172a"
+                        level="M"
+                        includeMargin={true}
                       />
                     </div>
                     <div>

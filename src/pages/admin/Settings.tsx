@@ -13,6 +13,7 @@ import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createWhatsAppInstance } from "@/services/evolutionOnboardingService";
 import { getEvolutionConfig, saveEvolutionConfig, checkEvolutionStatus, fetchEvolutionQrCode, getWhatsAppMode, saveWhatsAppMode, WhatsAppMode } from "@/services/evolutionApiService";
+import { QRCodeSVG } from "qrcode.react";
 
 const ROLES = [
   { value: "admin", label: "Administrador" },
@@ -641,11 +642,14 @@ export default function Settings() {
                           <p className="text-xs font-black text-slate-800 uppercase tracking-wider">
                             Escaneie para Acessar WhatsApp Web
                           </p>
-                          <div className="p-2 bg-slate-900 rounded-xl shadow-inner">
-                            <img
-                              src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https%3A%2F%2Fweb.whatsapp.com"
-                              alt="QR Code WhatsApp Web"
-                              className="w-48 h-48 rounded-lg"
+                          <div className="p-3 bg-white rounded-xl border border-emerald-200 shadow-inner">
+                            <QRCodeSVG
+                              value="https://web.whatsapp.com"
+                              size={190}
+                              bgColor="#ffffff"
+                              fgColor="#0f172a"
+                              level="M"
+                              includeMargin={true}
                             />
                           </div>
                           <p className="text-[11px] text-slate-600 max-w-xs font-medium">
