@@ -342,7 +342,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     doc.rect(0, 277, 210, 20, 'F');
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(10);
-    doc.text("oespecialistaconsorcio.com.br", 105, 288, { align: "center" });
+    doc.text("www.oespecialistaconsorcio.com.br", 105, 288, { align: "center" });
     
     doc.save(`simulacao_consorcio_${simNome.replace(/\s+/g, '_').toLowerCase()}.pdf`);
     

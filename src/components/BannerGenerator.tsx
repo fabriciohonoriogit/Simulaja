@@ -172,7 +172,7 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
           </div>
 
           {/* CATEGORY ICONS ROW */}
-          <div className="w-full flex items-center justify-between px-[10px] max-w-[940px]">
+          <div className="w-full flex items-center justify-between px-[10px] max-w-[940px] mb-[25px]">
             {categoryIcons.map((item, idx) => (
               <div key={idx} className="flex flex-col items-center gap-[8px] max-w-[110px]">
                 <div className="w-[62px] h-[62px] rounded-full bg-[#EBF4FC] border border-[#BDE0FE] flex items-center justify-center text-[30px] shadow-sm">
@@ -183,6 +183,13 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
                 </span>
               </div>
             ))}
+          </div>
+
+          {/* WEBSITE FOOTER */}
+          <div className="w-full max-w-[940px] border-t-2 border-[#D0E1F5] pt-[15px] flex items-center justify-center">
+            <span className="text-[22px] font-black tracking-widest text-[#0F2F57] uppercase">
+              www.oespecialistaconsorcio.com.br
+            </span>
           </div>
 
         </div>

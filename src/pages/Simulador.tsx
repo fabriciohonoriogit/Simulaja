@@ -715,14 +715,25 @@ export default function Simulador() {
 
       </div>
       
-      {/* Footer Powered by Jarvis */}
-      <div className="absolute bottom-4 flex items-center justify-center space-x-2 z-10 pointer-events-none">
-        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-900/40 border border-blue-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(59,130,246,0.3)]">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#4ca8e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+      {/* Footer Powered by Jarvis & Website Link */}
+      <div className="absolute bottom-3 flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-3 z-10">
+        <a
+          href="https://www.oespecialistaconsorcio.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-amber-400 hover:text-amber-300 text-xs font-bold tracking-wider transition-colors drop-shadow"
+        >
+          www.oespecialistaconsorcio.com.br
+        </a>
+        <span className="hidden sm:inline text-white/40">•</span>
+        <div className="flex items-center space-x-2 pointer-events-none">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-900/40 border border-blue-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-[#4ca8e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          </div>
+          <p className="text-white/70 text-[11px] font-medium uppercase tracking-wider">
+            Powered by <span className="text-[#84CC16] font-bold">Jarvis AI</span>
+          </p>
         </div>
-        <p className="text-white/70 text-[12px] font-medium uppercase tracking-wider">
-          Powered by <span className="text-[#84CC16] font-bold">Jarvis AI</span>
-        </p>
       </div>
 
     </div>

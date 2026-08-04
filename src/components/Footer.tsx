@@ -97,7 +97,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Fabrício Rodrigues Honório — Especialista em Consórcio Inteligente.</p>
+          <p>© {new Date().getFullYear()} Fabrício Rodrigues Honório — <a href="https://www.oespecialistaconsorcio.com.br" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors font-bold">www.oespecialistaconsorcio.com.br</a></p>
           <p className="font-medium">Todos os direitos reservados.</p>
         </div>
       </div>
