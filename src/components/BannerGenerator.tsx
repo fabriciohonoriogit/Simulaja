@@ -105,8 +105,8 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
           transform: 'scale(1)',
         }}
       >
-        {/* Layer 1: Soft top gradient to highlight text */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-transparent to-white/95 pointer-events-none" />
+        {/* Layer 1: Soft top gradient for headline text & dark bottom gradient for white footer text */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-transparent via-60% to-black/75 pointer-events-none" />
 
         {/* TOP HEADER SECTION */}
         <div className="relative z-10 pt-[70px] px-[80px] flex flex-col items-center text-center">
@@ -133,14 +133,14 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
           </div>
         </div>
 
-        {/* BOTTOM SECTION: FLOATING CARD & CATEGORY ICONS */}
-        <div className="relative z-10 pb-[70px] px-[70px] flex flex-col items-center text-center w-full">
+        {/* BOTTOM SECTION: FLOATING CARD & CALL TO ACTION FOOTER */}
+        <div className="relative z-10 pb-[65px] px-[70px] flex flex-col items-center text-center w-full">
           
-          {/* FLOATING CARD DE SIMULAÇÃO */}
-          <div className="w-full max-w-[940px] bg-white/95 backdrop-blur-md border-2 border-[#D0E1F5] rounded-[36px] p-[45px] shadow-[0_25px_60px_rgba(15,47,87,0.15)] flex flex-col items-center mb-[45px]">
+          {/* FLOATING CARD DE SIMULAÇÃO (75% Translúcido) */}
+          <div className="w-full max-w-[940px] bg-white/75 backdrop-blur-md border-2 border-white/80 rounded-[36px] p-[45px] shadow-[0_25px_60px_rgba(0,0,0,0.25)] flex flex-col items-center mb-[35px]">
             
             {/* 2-Column Table (Crédito | Parcela) */}
-            <div className="w-full grid grid-cols-2 divide-x-2 divide-[#D0E1F5] mb-[25px]">
+            <div className="w-full grid grid-cols-2 divide-x-2 divide-[#0F2F57]/20 mb-[25px]">
               {/* Crédito */}
               <div className="flex flex-col items-center pr-[20px]">
                 <span className="text-[28px] font-semibold text-[#0F2F57] mb-[6px]">
@@ -163,7 +163,7 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
             </div>
 
             {/* Separator Line */}
-            <div className="w-full h-[2px] bg-[#D0E1F5] mb-[20px]" />
+            <div className="w-full h-[2px] bg-[#0F2F57]/20 mb-[20px]" />
 
             {/* Prazo */}
             <div className="text-[26px] font-extrabold tracking-[0.25em] text-[#0F2F57] uppercase">
@@ -171,25 +171,14 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
             </div>
           </div>
 
-          {/* CATEGORY ICONS ROW */}
-          <div className="w-full flex items-center justify-between px-[10px] max-w-[940px] mb-[25px]">
-            {categoryIcons.map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-[8px] max-w-[110px]">
-                <div className="w-[62px] h-[62px] rounded-full bg-[#EBF4FC] border border-[#BDE0FE] flex items-center justify-center text-[30px] shadow-sm">
-                  {item.icon}
-                </div>
-                <span className="text-[16px] font-bold text-[#0F2F57] leading-tight text-center">
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* WEBSITE FOOTER */}
-          <div className="w-full max-w-[940px] border-t-2 border-[#D0E1F5] pt-[15px] flex items-center justify-center">
-            <span className="text-[22px] font-black tracking-widest text-[#0F2F57] uppercase">
+          {/* FOOTER CALL TO ACTION & WEBSITE (TEXTO BRANCO PARA DESTACAR A IMAGEM) */}
+          <div className="flex flex-col items-center gap-[10px] w-full max-w-[940px]">
+            <p className="text-[34px] font-extrabold tracking-wide text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
+              Fale com o especialista
+            </p>
+            <p className="text-[26px] font-black tracking-widest text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
               www.oespecialistaconsorcio.com.br
-            </span>
+            </p>
           </div>
 
         </div>

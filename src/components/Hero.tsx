@@ -31,13 +31,15 @@ const Hero = () => {
   return (
     <section className="relative w-full bg-[#0B132B] text-slate-900 pt-20 overflow-hidden">
       
-      {/* Full Image Banner (Cheia na tela de borda a borda) */}
+      {/* Full Image Banner (Com efeito dinâmico Ken Burns de movimento contínuo) */}
       <div className="relative w-full bg-[#0B132B] flex items-center justify-center overflow-hidden">
         <img
           src={heroBg}
           alt="Fabrício Honório — O Especialista Consórcio"
-          className="w-full h-auto block min-w-full object-cover sm:object-fill lg:object-cover"
+          className="w-full h-auto block min-w-full object-cover sm:object-fill lg:object-cover animate-hero-kenburns scale-[1.02] origin-center"
         />
+        {/* Soft lighting overlay to elevate depth */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B132B]/30 via-transparent to-transparent pointer-events-none" />
       </div>
 
       {/* Navy Accent Bar separating banner and interactive card */}
