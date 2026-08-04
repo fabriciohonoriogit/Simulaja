@@ -14,12 +14,14 @@ import {
   CircleDollarSign,
   FileText,
   Share2,
-  CheckCircle2
+  CheckCircle2,
+  Image as ImageIcon
 } from "lucide-react";
 
 import { GRUPOS, CATEGORIAS, GrupoItem, GRUPO_CARACTERISTICAS, MEDIA_LANCES_GRUPOS } from "@/constants/simulador";
 import { createLead } from "@/services/leadService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
+import { BannerGenerator } from "@/components/BannerGenerator";
 
 const customAnimations = `
 @keyframes breathe {
@@ -133,8 +135,60 @@ export default function Simulador() {
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
   const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
 
+  const [fathersDayVar, setFathersDayVar] = useState<1 | 2 | 3 | 4>(1);
+
   const resultRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef<HTMLDivElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  const handleGerarImagem = async () => {
+    const bannerElement = document.getElementById("banner-generator-container") || bannerRef.current;
+    
+    if (!bannerElement) {
+      toast({
+        title: "Aviso",
+        description: "Realize uma simulação primeiro para gerar a arte.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: "Gerando Arte Dia dos Pais 🎁",
+      description: "Aguarde, processando arte em alta resolução...",
+    });
+
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      await new Promise(res => setTimeout(res, 350));
+      
+      const canvas = await html2canvas(bannerElement, { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        backgroundColor: null
+      });
+      
+      const link = document.createElement('a');
+      link.download = `Arte_Dia_dos_Pais_${categoria}_${g.credito}k.png`;
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Sucesso!",
+        description: "Arte de Dia dos Pais baixada com sucesso!",
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        title: "Erro ao gerar arte",
+        description: err?.message || "Não foi possível gerar a imagem.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const lista = useMemo(() => {
     const rawLista = (GRUPOS[categoria] || GRUPOS["imovel"]).filter(g => !g.isPlanoGold);
@@ -570,13 +624,50 @@ export default function Simulador() {
 
           {resultado && (
             <div className="mt-6 p-5 border border-emerald-200 rounded-2xl animate-in fade-in slide-in-from-bottom-4 bg-emerald-50/60 shadow-lg">
-              <h3 className="font-extrabold text-emerald-900 mb-4 text-center text-xs uppercase tracking-wider">Simulação Gerada com Sucesso!</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <h3 className="font-extrabold text-emerald-900 mb-3 text-center text-xs uppercase tracking-wider">
+                Simulação Gerada com Sucesso!
+              </h3>
+
+              {/* Seletor de Variação de Imagem do Dia dos Pais */}
+              <div className="mb-4 p-3 bg-white border border-slate-200 rounded-xl shadow-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                    🎁 Arte Dia dos Pais (Consórcio Magalu)
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium">Variação da Foto</span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { id: 1, label: "Familia" },
+                    { id: 2, label: "No Ombro" },
+                    { id: 3, label: "Chaves" },
+                    { id: 4, label: "Terreno" },
+                  ].map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setFathersDayVar(v.id as any)}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold transition-all border ${
+                        fathersDayVar === v.id
+                          ? "bg-[#0F2F57] text-white border-[#0F2F57] shadow-sm"
+                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                 <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-11 text-[11px] bg-white rounded-xl shadow-sm hover:bg-slate-50">
-                  <FileText className="mr-1.5 w-4 h-4 text-slate-500" /> Baixar PDF
+                  <FileText className="mr-1.5 w-4 h-4 text-slate-500" /> PDF Proposta
                 </Button>
                 <Button onClick={handleShareWhatsApp} className="bg-gradient-to-r from-[#25D366] to-[#1ebd59] hover:from-[#1ebd59] hover:to-[#17a84e] text-white font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5">
-                  <Share2 className="mr-1.5 w-4 h-4" /> Enviar WhatsApp
+                  <Share2 className="mr-1.5 w-4 h-4" /> WhatsApp
+                </Button>
+                <Button onClick={handleGerarImagem} className="bg-gradient-to-r from-[#FF7A00] to-[#FF5500] hover:from-[#FF5500] hover:to-[#E64D00] text-white font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5">
+                  <ImageIcon className="mr-1.5 w-4 h-4" /> Gerar Arte 🎁
                 </Button>
                 <Button 
                   onClick={() => {
@@ -591,7 +682,7 @@ export default function Simulador() {
                   }} 
                   className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5"
                 >
-                  <FileText className="mr-1.5 w-4 h-4" /> Ficha Pré-Cadastro
+                  <FileText className="mr-1.5 w-4 h-4" /> Pré-Cadastro
                 </Button>
               </div>
             </div>
@@ -606,6 +697,18 @@ export default function Simulador() {
               </Button>
             </div>
           )}
+        </div>
+
+        {/* Componente Offscreen para Renderizar e Baixar o Banner Dia dos Pais */}
+        <div id="offscreen-presentation-wrapper" style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
+          <BannerGenerator 
+            ref={bannerRef}
+            grupo={g}
+            categoria={categoria}
+            paymentMode={effectiveMode}
+            installmentValue={selectedInstallment}
+            fathersDayVariation={fathersDayVar}
+          />
         </div>
 
         <CRMDrawer onLoadLead={handleLoadLead} onSaveSim={handleSaveSimToCRM} />
