@@ -727,36 +727,44 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
               ))}
             </div>
 
-            {isInternal && (
               <div className="mt-2 w-full max-w-[400px] mx-auto">
                 {lista[safeIdx]?.seguro ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                    <label
-                      htmlFor="chk-seguro"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '6px',
-                        cursor: 'pointer', userSelect: 'none',
-                        fontSize: '11px', fontWeight: 700,
-                        color: incluirSeguro ? '#15803d' : '#64748b',
-                        background: incluirSeguro ? '#f0fdf4' : '#f8fafc',
-                        border: `1.5px solid ${incluirSeguro ? '#86efac' : '#cbd5e1'}`,
-                        borderRadius: '999px', padding: '4px 10px',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <input
-                        id="chk-seguro"
-                        type="checkbox"
-                        checked={incluirSeguro}
-                        onChange={() => setIncluirSeguro(!incluirSeguro)}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <label
+                        htmlFor="chk-seguro"
                         style={{
-                          width: '13px', height: '13px',
-                          accentColor: '#16a34a', cursor: 'pointer', flexShrink: 0
+                          display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          cursor: 'pointer', userSelect: 'none',
+                          fontSize: '12px', fontWeight: 800,
+                          color: incluirSeguro ? '#15803d' : '#475569',
+                          background: incluirSeguro ? '#f0fdf4' : '#f8fafc',
+                          border: `1.5px solid ${incluirSeguro ? '#86efac' : '#cbd5e1'}`,
+                          borderRadius: '999px', padding: '6px 14px',
+                          transition: 'all 0.2s',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                         }}
-                      />
-                      <Shield style={{ width: '12px', height: '12px', flexShrink: 0 }} />
-                      {incluirSeguro ? 'Seguro incluso' : 'Sem seguro'}
-                    </label>
+                      >
+                        <input
+                          id="chk-seguro"
+                          type="checkbox"
+                          checked={incluirSeguro}
+                          onChange={() => setIncluirSeguro(!incluirSeguro)}
+                          style={{
+                            width: '14px', height: '14px',
+                            accentColor: '#16a34a', cursor: 'pointer', flexShrink: 0
+                          }}
+                        />
+                        <Shield style={{ width: '13px', height: '13px', flexShrink: 0 }} />
+                        {incluirSeguro ? 'Com Seguro de Vida' : 'Sem Seguro'}
+                      </label>
+                    </div>
+                    <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                      {incluirSeguro 
+                        ? `(Sem seguro: ${fmtFull(selectedInstallment - valorSeguroMensal)})` 
+                        : `(Com seguro: ${fmtFull(selectedInstallment + valorSeguroMensal)})`
+                      }
+                    </p>
                   </div>
                 ) : null}
                 <div className="rounded-2xl p-5 text-center mb-5 relative overflow-hidden shadow-lg border-2 border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50/60 to-emerald-100/50">
@@ -841,7 +849,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   );
                 })()}
               </div>
-            )}
 
               </div> {/* FIM COLUNA ESQUERDA */}
 

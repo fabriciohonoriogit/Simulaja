@@ -647,12 +647,13 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
 export const GRUPOS: Record<string, GrupoItem[]> = {
   imovel: [
     // Grupo 6043 - Promocional Agosto/26
-    { grupo: "6043", credito: 110000, prazo: 218, r50: 397.12, r100: 633.45, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6043", credito: 130000, prazo: 218, r50: 469.32, r100: 748.62, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6043", credito: 150000, prazo: 218, r50: 541.53, r100: 863.79, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6043", credito: 180000, prazo: 218, r50: 649.83, r100: 1036.55, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6043", credito: 200000, prazo: 218, r50: 722.04, r100: 1151.72, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6043", credito: 220000, prazo: 218, r50: 794.24, r100: 1266.89, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 110000, prazo: 218, r50: 396.93, r100: 633.45, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 120000, prazo: 218, r50: 433.01, r100: 691.04, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 130000, prazo: 218, r50: 469.10, r100: 748.62, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 150000, prazo: 218, r50: 541.26, r100: 863.79, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 180000, prazo: 218, r50: 649.52, r100: 1036.55, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 200000, prazo: 218, r50: 721.68, r100: 1151.72, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 220000, prazo: 218, r50: 793.85, r100: 1266.89, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
 
     // Grupo 6027 - Promocional Agosto/26
     { grupo: "6027", credito: 140000, prazo: 188, r50: 555.81, r100: 904.75, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
