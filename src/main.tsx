@@ -21,12 +21,15 @@ const updateSW = registerSW({
   },
 });
 
-// Força checagem de nova versão do Service Worker ao carregar a página
+// Força checagem de nova versão do Service Worker ao carregar a página (com tratamento silencioso de erros)
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
     for (const registration of registrations) {
-      registration.update();
+      registration.update().catch((err) => {
+        console.warn("[PWA] SW não encontrado no host. Removendo registro desatualizado...", err);
+        registration.unregister().catch(() => {});
+      });
     }
-  });
+  }).catch(() => {});
 }
 
