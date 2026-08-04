@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileRow, ConviteRow, OrganizationRow } from "@/types";
-import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Upload, CalendarDays, Settings as SettingsIcon, MessageSquare, Loader2, Link2 } from "lucide-react";
+import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Upload, CalendarDays, Settings as SettingsIcon, MessageSquare, Loader2, Link2, QrCode, ExternalLink } from "lucide-react";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createWhatsAppInstance } from "@/services/evolutionOnboardingService";
@@ -45,6 +45,7 @@ export default function Settings() {
   const [evolutionStatus, setEvolutionStatus] = useState<string>("UNKNOWN");
   const [testingStatus, setTestingStatus] = useState(false);
   const [qrCodeImg, setQrCodeImg] = useState<string | null>(null);
+  const [webQrOpen, setWebQrOpen] = useState(false);
 
   useEffect(() => {
     const cfg = getEvolutionConfig();
@@ -610,18 +611,56 @@ export default function Settings() {
                   </div>
 
                   {waMode === "web" ? (
-                    <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs text-emerald-950 space-y-2">
-                      <p className="font-bold flex items-center gap-1.5 text-emerald-900">
-                        🟢 Modo WhatsApp Web (Direto) Ativo
-                      </p>
+                    <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs text-emerald-950 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <p className="font-bold flex items-center gap-1.5 text-emerald-900">
+                          🟢 Modo WhatsApp Web (Direto) Ativo
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setWebQrOpen(!webQrOpen)}
+                          className="h-7 text-[11px] font-bold text-emerald-800 border-emerald-300 bg-white hover:bg-emerald-100/60 gap-1 rounded-lg shrink-0 shadow-sm"
+                        >
+                          <QrCode className="h-3.5 w-3.5 text-emerald-700" />
+                          {webQrOpen ? "Ocultar QR Code" : "QR Code WhatsApp Web"}
+                        </Button>
+                      </div>
                       <p className="text-[11.5px] text-emerald-800 leading-relaxed">
-                        Nenhuma configuração ou servidor externo é necessário. Ao clicar em enviar mensagens ou conversar com leads no CRM:
+                        Nenhuma configuração ou servidor externo é necessário. Ao conversar com leads no CRM:
                       </p>
                       <ul className="list-disc pl-4 text-[11px] text-emerald-800 space-y-1">
                         <li>A mensagem é registrada no histórico do CRM.</li>
                         <li>O sistema abre diretamente o WhatsApp Web / App com o número do cliente e o texto pronto.</li>
                         <li>Zero mensagens de erro de servidor ou QR code quebrado!</li>
                       </ul>
+
+                      {webQrOpen && (
+                        <div className="mt-3 p-4 bg-white rounded-xl border border-emerald-300 flex flex-col items-center justify-center text-center space-y-3 shadow-md animate-in fade-in zoom-in-95">
+                          <p className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                            Escaneie para Acessar WhatsApp Web
+                          </p>
+                          <div className="p-2 bg-slate-900 rounded-xl shadow-inner">
+                            <img
+                              src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https%3A%2F%2Fweb.whatsapp.com"
+                              alt="QR Code WhatsApp Web"
+                              className="w-48 h-48 rounded-lg"
+                            />
+                          </div>
+                          <p className="text-[11px] text-slate-600 max-w-xs font-medium">
+                            Escaneie com o leitor do seu celular para abrir o WhatsApp Web ou clique no botão abaixo:
+                          </p>
+                          <Button
+                            size="sm"
+                            onClick={() => window.open("https://web.whatsapp.com", "_blank")}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-8 gap-1.5 rounded-lg shadow-sm"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Abrir web.whatsapp.com
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <>

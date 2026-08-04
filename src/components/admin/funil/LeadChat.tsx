@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Send, Bot, User, MessageSquare, ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
-import { format, parseISO, isValid } from "date-fns";
+import { RefreshCw, Send, Bot, User, MessageSquare, ChevronUp, ChevronDown, ExternalLink, QrCode } from "lucide-react";
+import { format, parseISO, isValid, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Lead } from "@/types/funil";
 import { toast } from "sonner";
 import { sendWhatsAppMessage, getWhatsAppMode, getWhatsAppWebUrl, formatWhatsAppNumber } from "@/services/evolutionApiService";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Message {
   id: string;
@@ -185,20 +186,64 @@ export function LeadChat({ lead }: { lead: Lead }) {
             {aiEnabled ? "IA Ativa" : "Atendimento Humano"}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {targetPhone && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(getWhatsAppWebUrl(targetPhone), "_blank")}
-              className="h-7 text-[11px] font-bold text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100 gap-1 rounded-lg"
-            >
-              <ExternalLink className="h-3 w-3 text-emerald-600" />
-              Whats Web
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(getWhatsAppWebUrl(targetPhone), "_blank")}
+                className="h-7 text-[11px] font-bold text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100 gap-1 rounded-lg shadow-sm"
+              >
+                <ExternalLink className="h-3 w-3 text-emerald-600" />
+                Whats Web
+              </Button>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[11px] font-bold text-slate-700 border-slate-200 bg-white hover:bg-slate-50 gap-1 rounded-lg shadow-sm"
+                    title="Escaneie o QR Code no seu celular para abrir o WhatsApp"
+                  >
+                    <QrCode className="h-3.5 w-3.5 text-slate-600" />
+                    QR Code
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-xs text-center p-6 rounded-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-sm font-black text-slate-800 uppercase tracking-wider text-center">
+                      QR Code WhatsApp Web
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl border border-slate-100 my-2 space-y-3">
+                    <div className="p-2 bg-slate-900 rounded-xl shadow-inner">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(getWhatsAppWebUrl(targetPhone))}`}
+                        alt="QR Code WhatsApp Lead"
+                        className="w-48 h-48 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 truncate max-w-[200px] mx-auto">
+                        {lead.nome}
+                      </p>
+                      <p className="text-[11px] font-mono text-emerald-700 font-bold">
+                        {targetPhone}
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-snug">
+                      Escaneie com a câmera do celular para iniciar a conversa direta no seu WhatsApp.
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
             <Label htmlFor="ai-toggle" className="text-[10px] font-bold uppercase text-slate-400">Automação IA</Label>
             <Switch 
               id="ai-toggle" 
@@ -232,12 +277,19 @@ export function LeadChat({ lead }: { lead: Lead }) {
                     <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
                       {msg.sender === 'client' ? 'Cliente' : msg.sender === 'ai' ? 'Jarvis AI' : 'Consultor'}
                     </span>
-                    <span className="text-[8px] text-slate-300">
+                    <span className="text-[10px] font-bold text-slate-400">
                       {(() => {
                         if (!msg.created_at) return "";
                         try {
                           const date = parseISO(msg.created_at);
-                          return isValid(date) ? format(date, "HH:mm") : "";
+                          if (!isValid(date)) return "";
+                          if (isToday(date)) {
+                            return `Hoje, ${format(date, "HH:mm")}`;
+                          }
+                          if (isYesterday(date)) {
+                            return `Ontem, ${format(date, "HH:mm")}`;
+                          }
+                          return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
                         } catch (e) {
                           return "";
                         }
