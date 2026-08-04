@@ -59,7 +59,15 @@ export const useSimuladorStore = create<SimuladorState>()(
     }),
     {
       name: "simulador-storage",
+      version: 2,
       partialize: (state) => ({ historico: state.historico }), // persiste apenas o histórico
+      migrate: (persistedState: any, version: number) => {
+        return {
+          ...persistedState,
+          categorias: CATEGORIAS,
+          grupos: GRUPOS,
+        };
+      },
     }
   )
 );
