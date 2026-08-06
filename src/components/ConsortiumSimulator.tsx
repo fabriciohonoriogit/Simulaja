@@ -241,7 +241,10 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";
   const isLinear = effectiveMode === "linear";
 
-  const valorSeguroMensal = (_g.credito * (_g.seguro ?? 0)) / 100;
+  const txAtual = isLinear ? (_g.txLinear ?? _g.tx ?? 20) : (_g.tx5050 ?? _g.tx ?? 20);
+  const frAtual = isLinear ? (_g.frLinear ?? _g.fr ?? 1) : (_g.fr5050 ?? _g.fr ?? 1);
+  const saldoTotalContrato = _g.credito * (1 + (txAtual + frAtual) / 100);
+  const valorSeguroMensal = (saldoTotalContrato * (_g.seguro ?? 0)) / 100;
 
   const g = {
     ..._g,

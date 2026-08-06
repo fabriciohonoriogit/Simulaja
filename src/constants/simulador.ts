@@ -647,13 +647,28 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
 export const GRUPOS: Record<string, GrupoItem[]> = {
   imovel: [
     // Grupo 6043 - Promocional Agosto/26
-    { grupo: "6043", credito: 110000, prazo: 218, r50: 396.93, r100: 633.45, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6043", credito: 120000, prazo: 218, r50: 433.01, r100: 691.04, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6043", credito: 130000, prazo: 218, r50: 469.10, r100: 748.62, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6043", credito: 150000, prazo: 218, r50: 541.26, r100: 863.79, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 110000, prazo: 218, r50: 396.93, r100: 633.37, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 120000, prazo: 218, r50: 433.01, r100: 690.95, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 130000, prazo: 218, r50: 469.10, r100: 748.52, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 140000, prazo: 218, r50: 505.18, r100: 806.10, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 150000, prazo: 218, r50: 541.27, r100: 863.68, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 160000, prazo: 218, r50: 577.35, r100: 921.26, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6043", credito: 170000, prazo: 218, r50: 613.43, r100: 1032.10, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6043", credito: 180000, prazo: 218, r50: 649.52, r100: 1036.55, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6043", credito: 200000, prazo: 218, r50: 721.68, r100: 1151.72, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6043", credito: 220000, prazo: 218, r50: 793.85, r100: 1266.89, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+
+    // Grupo 6043 - Plano Golden Agosto/26
+    { grupo: "6043", credito: 110000, prazo: 218, r50: 423.72, r100: 677.37, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 120000, prazo: 218, r50: 462.24, r100: 738.95, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 130000, prazo: 218, r50: 500.77, r100: 800.53, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 140000, prazo: 218, r50: 539.29, r100: 862.11, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 150000, prazo: 218, r50: 577.81, r100: 923.69, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 160000, prazo: 218, r50: 635.06, r100: 985.27, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 170000, prazo: 218, r50: 654.85, r100: 1046.85, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 180000, prazo: 218, r50: 693.36, r100: 1108.43, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 200000, prazo: 218, r50: 770.40, r100: 1231.59, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    { grupo: "6043", credito: 220000, prazo: 218, r50: 847.44, r100: 1354.75, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
 
     // Grupo 6027 - Promocional Agosto/26
     { grupo: "6027", credito: 140000, prazo: 188, r50: 555.81, r100: 904.75, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
