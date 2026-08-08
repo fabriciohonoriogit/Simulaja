@@ -688,7 +688,10 @@ export default function Jarvis() {
         // Simulações disponíveis (Grupos)
         const gruposInfo = Object.entries(GRUPOS).map(([tipo, lista]) => {
             return `Segmento ${tipo.toUpperCase()}:\n` + (lista as any[]).map(g => {
-                const valorSeguro = (g.credito * (g.seguro || 0)) / 100;
+                const tx = g.tx5050 ?? g.txLinear ?? 20;
+                const fr = g.fr5050 ?? g.frLinear ?? 1;
+                const saldoTotalContrato = g.credito * (1 + (tx + fr) / 100);
+                const valorSeguro = (saldoTotalContrato * (g.seguro || 0)) / 100;
                 const r50SemSeguro = (g.r50 - valorSeguro).toFixed(2);
                 const c = GRUPO_CARACTERISTICAS[g.grupo];
                 const infoCarac = c ? ` | Reajuste: ${c.reajuste} (1ª Ass: ${c.primeiraAssembleia}, Próxima Ass: ${c.proximaAssembleia}) | Ordem: ${c.ordemContemplacao} | Lance: ${c.opcaoDiluir} | Regra Reajuste: ${c.regraReajuste}` : "";
