@@ -123,17 +123,22 @@ export default function Indicacoes() {
   const [lanceDinheiroPct, setLanceDinheiroPct] = useState(0);
   const [lanceEmbutidoPct, setLanceEmbutidoPct] = useState(25);
   const [parcelasContemplar, setParcelasContemplar] = useState(1);
+  const [filterPlanoGold, setFilterPlanoGold] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const lista = useMemo(() => {
-    const rawLista = (GRUPOS[categoria] || GRUPOS["imovel"]).filter(g => !g.isPlanoGold);
+    const rawLista = GRUPOS[categoria] || GRUPOS["imovel"];
+    let filtered = filterPlanoGold && categoria === 'imovel'
+      ? rawLista.filter(g => g.isPlanoGold)
+      : rawLista.filter(g => !g.isPlanoGold);
+
     const seen = new Set<number>();
-    return rawLista.filter(g => {
+    return filtered.filter(g => {
       if (seen.has(g.credito)) return false;
       seen.add(g.credito);
       return true;
     });
-  }, [categoria]);
+  }, [categoria, filterPlanoGold]);
   const _g = lista[idx] || lista[0];
 
   useEffect(() => {
@@ -426,7 +431,7 @@ export default function Indicacoes() {
             style={{ background: `linear-gradient(to right, #0057a8 ${pct}%, #e2e8f0 ${pct}%)` }}
           />
 
-          <div className="flex flex-wrap gap-1.5 justify-center mb-5">
+          <div className="flex flex-wrap gap-1.5 justify-center mb-4">
             {CATEGORIAS.map((cat) => (
               <button
                 key={cat.id}
@@ -438,7 +443,25 @@ export default function Indicacoes() {
             ))}
           </div>
 
-          
+          {categoria === 'imovel' && (
+            <div className="flex justify-center mb-4">
+              <div className="flex bg-amber-50/80 p-1 rounded-xl border border-amber-200">
+                <button
+                  onClick={() => setFilterPlanoGold(false)}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${!filterPlanoGold ? 'bg-[#0f2044] text-white shadow-sm' : 'text-amber-800 hover:text-amber-950'}`}
+                >
+                  50/50 & Linear
+                </button>
+                <button
+                  onClick={() => setFilterPlanoGold(true)}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${filterPlanoGold ? 'bg-amber-600 text-white shadow-sm' : 'text-amber-800 hover:text-amber-950'}`}
+                >
+                  👑 Plano Golden
+                </button>
+              </div>
+            </div>
+          )}
+
           {hasBothPlans && (
             <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">

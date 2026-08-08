@@ -134,6 +134,7 @@ export default function Simulador() {
   const [isSaving, setIsSaving] = useState(false);
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
   const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
+  const [filterPlanoGold, setFilterPlanoGold] = useState(false);
 
   const [fathersDayVar, setFathersDayVar] = useState<1 | 2 | 3 | 4>(1);
 
@@ -191,14 +192,18 @@ export default function Simulador() {
   };
 
   const lista = useMemo(() => {
-    const rawLista = (GRUPOS[categoria] || GRUPOS["imovel"]).filter(g => !g.isPlanoGold);
+    const rawLista = GRUPOS[categoria] || GRUPOS["imovel"];
+    let filtered = filterPlanoGold && categoria === 'imovel'
+      ? rawLista.filter(g => g.isPlanoGold)
+      : rawLista.filter(g => !g.isPlanoGold);
+
     const seen = new Set<number>();
-    return rawLista.filter(g => {
+    return filtered.filter(g => {
       if (seen.has(g.credito)) return false;
       seen.add(g.credito);
       return true;
     });
-  }, [categoria]);
+  }, [categoria, filterPlanoGold]);
 
   const g = lista[idx] || lista[0];
 
@@ -473,7 +478,7 @@ export default function Simulador() {
             style={{ background: `linear-gradient(to right, #0057a8 ${pct}%, #e2e8f0 ${pct}%)` }}
           />
 
-          <div className="flex flex-wrap gap-1.5 justify-center mb-5">
+          <div className="flex flex-wrap gap-1.5 justify-center mb-4">
             {CATEGORIAS.map((cat) => (
               <button
                 key={cat.id}
@@ -484,6 +489,25 @@ export default function Simulador() {
               </button>
             ))}
           </div>
+
+          {categoria === 'imovel' && (
+            <div className="flex justify-center mb-4">
+              <div className="flex bg-amber-50/80 p-1 rounded-xl border border-amber-200">
+                <button
+                  onClick={() => setFilterPlanoGold(false)}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${!filterPlanoGold ? 'bg-[#0f2044] text-white shadow-sm' : 'text-amber-800 hover:text-amber-950'}`}
+                >
+                  50/50 & Linear
+                </button>
+                <button
+                  onClick={() => setFilterPlanoGold(true)}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${filterPlanoGold ? 'bg-amber-600 text-white shadow-sm' : 'text-amber-800 hover:text-amber-950'}`}
+                >
+                  👑 Plano Golden
+                </button>
+              </div>
+            </div>
+          )}
 
           {hasBothPlans && (
             <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
