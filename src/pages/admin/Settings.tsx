@@ -209,6 +209,7 @@ export default function Settings() {
   const handleCreateWhatsApp = async () => {
     setCreatingInstance(true);
     setQrCodeImg(null);
+    setPairingCode(null);
     saveEvolutionConfig({ apiUrl: evolutionUrl, apiKey: evolutionKey, instanceName: evolutionInstance || "simulaja" });
     try {
       const qrRes = await fetchEvolutionQrCode(evolutionInstance || "simulaja");
@@ -221,12 +222,13 @@ export default function Settings() {
         return;
       }
 
-      if (qrRes.success && qrRes.qrcode) {
-        setQrCodeImg(qrRes.qrcode);
+      if (qrRes.success && (qrRes.qrcode || qrRes.pairingCode)) {
+        if (qrRes.qrcode) setQrCodeImg(qrRes.qrcode);
+        if (qrRes.pairingCode) setPairingCode(qrRes.pairingCode);
         setEvolutionStatus("connecting");
         toast({
-          title: "QR Code Gerado!",
-          description: "Escaneie o QR Code exibido na tela com o WhatsApp do seu celular.",
+          title: "QR Code Gerado com Sucesso!",
+          description: "Escaneie o QR Code exibido na tela no seu WhatsApp > Aparelhos Conectados.",
         });
         return;
       }
@@ -234,8 +236,9 @@ export default function Settings() {
       if (profile?.organizacao_id) {
         const instanceName = evolutionInstance || `simulaja_org_${profile.organizacao_id.substring(0, 8)}`;
         const createRes: any = await createWhatsAppInstance(profile.organizacao_id, instanceName);
-        if (createRes?.qrcode) {
-          setQrCodeImg(createRes.qrcode);
+        if (createRes?.qrcode || createRes?.pairingCode) {
+          if (createRes.qrcode) setQrCodeImg(createRes.qrcode);
+          if (createRes.pairingCode) setPairingCode(createRes.pairingCode);
           setEvolutionStatus("connecting");
           toast({
             title: "QR Code Gerado!",
@@ -247,8 +250,8 @@ export default function Settings() {
 
       setEvolutionStatus("DISCONNECTED");
       toast({
-        title: "Erro na Evolution API",
-        description: qrRes.error || "Servidor offline ou inalcançável. Altere para o Modo WhatsApp Web Direto se não possuir servidor rodando.",
+        title: "Servidor Evolution API Indisponível",
+        description: qrRes.error || "Servidor offline ou inalcançável. Altere para o Modo WhatsApp Web (Direto) se não possuir servidor próprio rodando.",
         variant: "destructive",
       });
     } catch (err: any) {
@@ -720,21 +723,46 @@ export default function Settings() {
                         </div>
                       )}
 
-                      {qrCodeImg && (
-                        <div className="mt-4 p-4 bg-slate-900 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-emerald-500/40 shadow-xl">
-                          <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                            Escaneie o QR Code abaixo com seu WhatsApp:
-                          </p>
-                          <div className="p-2 bg-white rounded-xl shadow-lg border border-slate-200">
-                            <img
-                              src={qrCodeImg.startsWith("data:") ? qrCodeImg : `data:image/png;base64,${qrCodeImg}`}
-                              alt="QR Code WhatsApp"
-                              className="w-48 h-48 object-contain"
-                            />
+                      {(qrCodeImg || pairingCode) && (
+                        <div className="mt-4 p-5 bg-slate-900 rounded-2xl flex flex-col items-center justify-center text-center space-y-4 border border-emerald-500/40 shadow-xl animate-in fade-in zoom-in-95">
+                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                            <span className="relative flex h-2.5 w-2.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            Aguardando Pareamento com o Celular...
                           </div>
-                          <p className="text-[11px] text-slate-300 font-medium">
-                            Abra o WhatsApp no celular &gt; Aparelhos Conectados &gt; Conectar um Aparelho
-                          </p>
+
+                          {qrCodeImg && (
+                            <div className="p-3 bg-white rounded-xl shadow-2xl border border-slate-200">
+                              <img
+                                src={qrCodeImg.startsWith("data:") ? qrCodeImg : `data:image/png;base64,${qrCodeImg}`}
+                                alt="QR Code WhatsApp Baileys"
+                                className="w-52 h-52 object-contain"
+                              />
+                            </div>
+                          )}
+
+                          {pairingCode && (
+                            <div className="p-3 bg-slate-800/90 rounded-xl border border-emerald-500/30 text-center w-full max-w-xs space-y-1">
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+                                Código de Pareamento de 8 dígitos:
+                              </p>
+                              <p className="text-xl font-mono font-black text-emerald-400 tracking-widest">
+                                {pairingCode}
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="text-[11px] text-slate-300 space-y-1 max-w-xs leading-snug">
+                            <p className="font-bold text-white">No seu Celular:</p>
+                            <p>Abra o WhatsApp &gt; <strong>Aparelhos Conectados</strong> &gt; <strong>Conectar um Aparelho</strong></p>
+                            {pairingCode && (
+                              <p className="text-emerald-300 font-bold">
+                                Ou toque na opção &quot;Conectar com número de telefone&quot; no rodapé da tela do WhatsApp e digite o código acima!
+                              </p>
+                            )}
+                          </div>
                         </div>
                       )}
                     </>
