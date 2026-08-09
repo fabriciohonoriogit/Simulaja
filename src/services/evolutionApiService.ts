@@ -201,39 +201,43 @@ export const checkEvolutionStatus = async () => {
 export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
   const config = getEvolutionConfig();
   try {
-    // 1. Tenta buscar o QR Code da instância existente
+    // 1. Tenta buscar o QR Code ou status da instância existente
     let res = await fetch(`${config.apiUrl}/instance/connect/${instanceName}`, {
       headers: { apikey: config.apiKey },
     });
     
-    // 2. Se a instância ainda não existir, tenta criar a instância
-    if (!res.ok) {
+    let data: any = null;
+    if (res.ok) {
+      data = await res.json();
+    } else {
+      // 2. Se a instância ainda não existir, tenta criar a instância
       const createRes = await fetch(`${config.apiUrl}/instance/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: config.apiKey },
-        body: JSON.stringify({ instanceName, qrcode: true, integration: "WHATSAPP-BAILEYS" }),
+        body: JSON.stringify({ instanceName, token: instanceName, qrcode: true, integration: "WHATSAPP-BAILEYS" }),
       });
       if (createRes.ok) {
-        const createData = await createRes.json();
-        if (createData?.qrcode?.base64) {
-          return { success: true, qrcode: createData.qrcode.base64, code: createData.qrcode.code };
-        }
+        data = await createRes.json();
+      } else {
+        res = await fetch(`${config.apiUrl}/instance/connect/${instanceName}`, {
+          headers: { apikey: config.apiKey },
+        });
+        if (res.ok) data = await res.json();
       }
-      res = await fetch(`${config.apiUrl}/instance/connect/${instanceName}`, {
-        headers: { apikey: config.apiKey },
-      });
     }
 
-    if (res.ok) {
-      const data = await res.json();
-      const state = data?.instance?.state || data?.state;
-      const qrcode = data?.base64 || data?.qrcode?.base64;
+    if (data) {
+      const state = data?.instance?.state || data?.state || data?.status;
+      const rawQr = data?.base64 || data?.qrcode?.base64 || data?.code || data?.qrcode?.code;
 
       if (state === "open" || state === "CONNECTED") {
         return { success: true, connected: true, message: "WhatsApp já está conectado e pronto!" };
       }
 
-      if (qrcode) {
+      if (rawQr) {
+        const qrcode = rawQr.startsWith("data:") 
+          ? rawQr 
+          : `data:image/png;base64,${rawQr.replace(/^data:image\/png;base64,/, "")}`;
         return { success: true, qrcode, code: data?.code, pairingCode: data?.pairingCode };
       }
 
@@ -256,7 +260,11 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
           return { success: true, connected: true, message: "WhatsApp já está conectado!" };
         }
         if (data.qrcode) {
-          return { success: true, qrcode: data.qrcode };
+          const rawQr = data.qrcode;
+          const qrcode = rawQr.startsWith("data:") 
+            ? rawQr 
+            : `data:image/png;base64,${rawQr.replace(/^data:image\/png;base64,/, "")}`;
+          return { success: true, qrcode };
         }
       }
     } catch (e) {
@@ -265,7 +273,7 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
 
     return { 
       success: false, 
-      error: `Servidor Evolution API não encontrado em ${config.apiUrl}. Verifique se a aplicação/container está em execução ou altere para o Modo WhatsApp Web (Direto).` 
+      error: `Servidor Evolution API não encontrado em ${config.apiUrl}. Verifique se o servidor está em execução ou mude para o Modo WhatsApp Web (Direto).` 
     };
   }
 };

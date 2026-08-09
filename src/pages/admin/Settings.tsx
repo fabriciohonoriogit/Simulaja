@@ -621,50 +621,21 @@ export default function Settings() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => setWebQrOpen(!webQrOpen)}
+                          onClick={() => window.open("https://web.whatsapp.com", "_blank")}
                           className="h-7 text-[11px] font-bold text-emerald-800 border-emerald-300 bg-white hover:bg-emerald-100/60 gap-1 rounded-lg shrink-0 shadow-sm"
                         >
-                          <QrCode className="h-3.5 w-3.5 text-emerald-700" />
-                          {webQrOpen ? "Ocultar QR Code" : "QR Code WhatsApp Web"}
+                          <ExternalLink className="h-3.5 w-3.5 text-emerald-700" />
+                          Abrir WhatsApp Web no PC
                         </Button>
                       </div>
                       <p className="text-[11.5px] text-emerald-800 leading-relaxed">
-                        Nenhuma configuração ou servidor externo é necessário. Ao conversar com leads no CRM:
+                        Nenhuma configuração ou servidor de QR Code é necessário neste modo! Ao conversar com leads no CRM:
                       </p>
                       <ul className="list-disc pl-4 text-[11px] text-emerald-800 space-y-1">
+                        <li>O sistema abre diretamente o WhatsApp Web/App com o número do cliente e o texto pronto.</li>
                         <li>A mensagem é registrada no histórico do CRM.</li>
-                        <li>O sistema abre diretamente o WhatsApp Web / App com o número do cliente e o texto pronto.</li>
-                        <li>Zero mensagens de erro de servidor ou QR code quebrado!</li>
+                        <li>Se desejar conectar via escaneamento de QR Code com servidor automático de mensagens, altere acima para o <strong>Modo Automação API (Evolution)</strong>.</li>
                       </ul>
-
-                      {webQrOpen && (
-                        <div className="mt-3 p-4 bg-white rounded-xl border border-emerald-300 flex flex-col items-center justify-center text-center space-y-3 shadow-md animate-in fade-in zoom-in-95">
-                          <p className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                            Escaneie para Acessar WhatsApp Web
-                          </p>
-                          <div className="p-3 bg-white rounded-xl border border-emerald-200 shadow-inner">
-                            <QRCodeSVG
-                              value="https://web.whatsapp.com"
-                              size={190}
-                              bgColor="#ffffff"
-                              fgColor="#0f172a"
-                              level="M"
-                              includeMargin={true}
-                            />
-                          </div>
-                          <p className="text-[11px] text-slate-600 max-w-xs font-medium">
-                            Escaneie com o leitor do seu celular para abrir o WhatsApp Web ou clique no botão abaixo:
-                          </p>
-                          <Button
-                            size="sm"
-                            onClick={() => window.open("https://web.whatsapp.com", "_blank")}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-8 gap-1.5 rounded-lg shadow-sm"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            Abrir web.whatsapp.com
-                          </Button>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <>

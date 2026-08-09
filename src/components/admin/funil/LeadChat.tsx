@@ -239,10 +239,18 @@ export function LeadChat({ lead }: { lead: Lead }) {
                         {targetPhone}
                       </p>
                     </div>
-                    <p className="text-[10px] text-slate-500 leading-snug">
-                      Escaneie com a câmera do celular para iniciar a conversa direta no seu WhatsApp.
-                    </p>
                   </div>
+                  <p className="text-[11px] text-slate-500 leading-tight font-medium">
+                    Escaneie com a <strong>Câmera do Celular</strong> para abrir o chat direto com o cliente, ou clique no botão abaixo.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => window.open(getWhatsAppWebUrl(targetPhone), "_blank")}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 gap-1.5 rounded-xl shadow-sm mt-2"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Abrir no WhatsApp Web
+                  </Button>
                 </DialogContent>
               </Dialog>
             </div>
