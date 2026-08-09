@@ -104,14 +104,15 @@ const tools = [
       },
       {
         name: "mover_lead_etapa",
-        description: "Altera a etapa/status de um lead no funil de vendas do CRM.",
+        description: "Altera a etapa/status de um lead no funil de vendas do CRM. Aceita o ID (UUID) ou o NOME do lead (ex: 'Rosana Alves').",
         parameters: {
           type: "OBJECT",
           properties: {
-            lead_id: { type: "STRING", description: "ID do lead que será movido." },
-            nova_etapa: { type: "STRING", description: "A nova etapa (ex: 'proposta', 'negociacao', 'fechado', 'perdido', 'morto')." }
+            lead_id: { type: "STRING", description: "ID do lead (UUID) ou NOME do lead que será movido (ex: 'Rosana Alves')." },
+            nome_lead: { type: "STRING", description: "Nome do lead caso o ID não seja conhecido (ex: 'Rosana Alves')." },
+            nova_etapa: { type: "STRING", description: "A nova etapa (ex: 'novo_lead', 'primeiro_contato', 'qualificacao', 'simulacao_enviada', 'negociacao', 'aguardando_pagamento', 'fechado', 'perdido', 'morto')." }
           },
-          required: ["lead_id", "nova_etapa"]
+          required: ["nova_etapa"]
         }
       },
       {
@@ -313,56 +314,82 @@ async function executeTool(supabase: any, name: string, args: any) {
       return { results: data || [] };
     }
     if (name === "mover_lead_etapa") {
-      let targetLeadId = args.lead_id;
-      const leadName = args.nome_lead || args.lead_id || "";
-      
-      const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(targetLeadId);
-      
-      if (!isUuid && leadName) {
-        const searchTerms = leadName.split(/\s+/).filter((w: string) => w.length > 2);
-        const mainTerm = searchTerms[0] || leadName;
-        let query = client.from('leads').select('id, nome, cidade');
-        if (useAdmin) query = query.eq('organizacao_id', orgId);
+      const rawLeadRef = (args.nome_lead || args.lead_id || args.nome || "").trim();
+      const rawEtapa = (args.nova_etapa || "").toLowerCase().trim();
+
+      if (!rawLeadRef) {
+        return { success: false, error: "Nome ou ID do lead não informado." };
+      }
+
+      const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(rawLeadRef);
+      let targetLeadId = isUuid ? rawLeadRef : null;
+
+      if (!targetLeadId) {
+        const searchTerms = rawLeadRef.split(/\s+/).filter((w: string) => w.length > 1);
+        const mainTerm = searchTerms[0] || rawLeadRef;
+
+        let query = client.from('leads').select('id, nome, cidade, status');
+        if (useAdmin && orgId) query = query.eq('organizacao_id', orgId);
+
         const { data: found } = await query.ilike('nome', `%${mainTerm}%`).limit(10);
-        
-        if (found && found.length > 0) {
-          const bestMatch = found.find((l: any) => {
-            const fullName = ((l.nome || "") + " " + (l.cidade || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return searchTerms.every((term: string) => fullName.includes(term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
-          }) || found[0];
-          targetLeadId = bestMatch.id;
+
+        if (!found || found.length === 0) {
+          return { success: false, error: `Não foi possível encontrar o lead '${rawLeadRef}' no CRM.` };
         }
+
+        const bestMatch = found.find((l: any) => {
+          const fullName = ((l.nome || "") + " " + (l.cidade || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          return searchTerms.every((term: string) => fullName.includes(term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+        }) || found[0];
+
+        targetLeadId = bestMatch.id;
       }
 
       const statusMap: Record<string, string> = {
         novo: "novo_lead",
+        "novo lead": "novo_lead",
         novo_lead: "novo_lead",
         contato: "primeiro_contato",
         contatado: "primeiro_contato",
+        "primeiro contato": "primeiro_contato",
         primeiro_contato: "primeiro_contato",
         qualificacao: "qualificacao",
         "qualificação": "qualificacao",
         proposta: "simulacao_enviada",
+        simulacao: "simulacao_enviada",
+        "simulação": "simulacao_enviada",
+        "simulação enviada": "simulacao_enviada",
         simulacao_enviada: "simulacao_enviada",
         negociacao: "negociacao",
         "negociação": "negociacao",
         aguardando_pagamento: "aguardando_pagamento",
+        "aguardando pagamento": "aguardando_pagamento",
         fechado: "fechado",
-        venda_fechada: "fechado",
+        "venda fechada": "fechado",
         perdido: "perdido",
-        morto: "morto"
+        perdidos: "perdido",
+        morto: "morto",
+        mortos: "morto"
       };
 
-      const rawEtapa = (args.nova_etapa || "").toLowerCase().trim();
       const finalEtapa = statusMap[rawEtapa] || rawEtapa || "novo_lead";
 
       const { data, error } = await client.from('leads').update({
         status: finalEtapa,
         status_updated_at: new Date().toISOString()
-      }).eq('id', targetLeadId).select();
+      }).eq('id', targetLeadId).select('id, nome, status');
 
-      if (error) return { error: error.message };
-      return { success: true, message: `Lead movido com sucesso para a etapa '${finalEtapa}'`, results: data };
+      if (error) return { success: false, error: error.message };
+
+      if (!data || data.length === 0) {
+        return { success: false, error: `Falha ao mover o lead '${rawLeadRef}'. Nenhum registro foi alterado no banco de dados.` };
+      }
+
+      return { 
+        success: true, 
+        message: `Lead '${data[0].nome}' movido com sucesso para a etapa '${data[0].status}'!`, 
+        lead: data[0] 
+      };
     }
     if (name === "create_lead") {
       const { data, error } = await client.from('leads').insert({
@@ -647,8 +674,9 @@ ESPECIALIDADE:
 - Você também conversa com naturalidade sobre qualquer assunto do dia a dia, mas sempre volta o foco para ajudar o gestor a bater metas e organizar a operação.
 
 AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emitir boleto):
+- Para mover/transferir um lead de etapa (ex: "transfira a cliente Rosana Alves para a coluna perdidos"), acione a ferramenta `mover_lead_etapa` IMEDIATAMENTE passando `lead_id: 'Rosana Alves'` e `nova_etapa: 'perdido'`.
 - Se o pedido for ambíguo (ex: mais de um lead com nome parecido), confirme antes de agir.
-- Se o pedido for claro e específico, execute direto e informe o que foi feito ao final, em uma frase.`;
+- Se o pedido for claro e específico, execute a ferramenta direto e informe a confirmação retornada pela ferramenta ao final.`;
 
     let maxLoops = 4;
     let loopCount = 0;
