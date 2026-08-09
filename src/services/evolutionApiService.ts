@@ -36,10 +36,17 @@ export const getEvolutionConfig = (): EvolutionConfig => {
   if (typeof window === "undefined") {
     return { apiUrl: "", apiKey: "", instanceName: "simulaja" };
   }
+  // Sem fallback para localhost/chave fixa: se não estiver configurado,
+  // o valor fica vazio e quem chamar deve tratar isso como "não configurado".
   const savedUrl = localStorage.getItem("evolution_api_url") || "";
   const savedKey = localStorage.getItem("evolution_api_key") || "";
   const savedInstance = localStorage.getItem("evolution_instance_name") || "simulaja";
   return { apiUrl: savedUrl, apiKey: savedKey, instanceName: savedInstance };
+};
+
+export const isEvolutionConfigured = (): boolean => {
+  const { apiUrl, apiKey } = getEvolutionConfig();
+  return Boolean(apiUrl && apiKey && !apiUrl.includes("localhost"));
 };
 
 export const saveEvolutionConfig = (config: Partial<EvolutionConfig>) => {
@@ -68,12 +75,12 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
 
   const config = getEvolutionConfig();
 
-  if (!config.apiUrl?.trim() || !config.apiKey?.trim()) {
-    console.warn("[Evolution API] Configurações de API URL ou API Key ausentes.");
+  if (!isEvolutionConfigured()) {
+    console.warn("[Evolution API] Configurações de API URL ou API Key ausentes/inválidas.");
     return {
       success: false,
-      error: "Configure a URL e a chave da Evolution API em Configurações antes de conectar.",
-      webUrl
+      error: "A Evolution API não está configurada (URL ou chave ausentes, ou apontando para localhost). Configure em Configurações > WhatsApp, ou use o Modo WhatsApp Web Direto.",
+      webUrl,
     };
   }
 
@@ -160,7 +167,6 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
 
 export const ensureWebhookConfigured = async (instanceName = "simulaja") => {
   const config = getEvolutionConfig();
-  if (!config.apiUrl?.trim() || !config.apiKey?.trim()) return;
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://pfedvdqpnpbrlhfbzjcj.supabase.co";
     const webhookUrl = `${supabaseUrl}/functions/v1/webhook-evolution`;
@@ -183,10 +189,10 @@ export const ensureWebhookConfigured = async (instanceName = "simulaja") => {
 
 export const checkEvolutionStatus = async () => {
   const config = getEvolutionConfig();
-  if (!config.apiUrl?.trim() || !config.apiKey?.trim()) {
-    return { 
-      state: "DISCONNECTED", 
-      reason: "Configure a URL e a chave da Evolution API em Configurações antes de conectar." 
+  if (!isEvolutionConfigured()) {
+    return {
+      state: "DISCONNECTED",
+      reason: "Configure a URL pública e a chave da Evolution API em Configurações antes de conectar.",
     };
   }
 
@@ -211,10 +217,11 @@ export const checkEvolutionStatus = async () => {
 
 export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
   const config = getEvolutionConfig();
-  if (!config.apiUrl?.trim() || !config.apiKey?.trim()) {
+
+  if (!isEvolutionConfigured()) {
     return {
       success: false,
-      error: "Configure a URL e a chave da Evolution API em Configurações antes de conectar."
+      error: "A Evolution API não está configurada. Preencha a URL pública e a chave da API em Configurações antes de gerar o QR Code, ou use o Modo WhatsApp Web Direto.",
     };
   }
 

@@ -670,10 +670,12 @@ AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emi
             data = resData;
             break;
           } else {
-            console.warn(`[Jarvis API] Modelo ${modelName} retornou status ${res.status}. Tentando próximo modelo...`, resData?.error?.message);
+            console.warn(
+              `[Jarvis API] Modelo ${modelName} falhou. status=${res.status} statusText=${res.statusText} error=${JSON.stringify(resData?.error) ?? "sem detalhe"}`
+            );
           }
         } catch (mErr) {
-          console.error(`[Jarvis API] Exceção ao chamar ${modelName}:`, mErr);
+          console.error(`[Jarvis API] Exceção de rede ao chamar ${modelName}:`, mErr?.message || mErr);
         }
       }
 
@@ -734,9 +736,12 @@ AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emi
               if (openAiText) {
                 return new Response(JSON.stringify({ text: openAiText }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
               }
+            } else {
+              const oaiErrBody = await openaiRes.text().catch(() => "");
+              console.error(`[Jarvis API] Fallback OpenAI falhou. status=${openaiRes.status} body=${oaiErrBody}`);
             }
           } catch (oaiErr) {
-            console.error("Fallback OpenAI falhou:", oaiErr);
+            console.error("[Jarvis API] Exceção no fallback OpenAI:", oaiErr?.message || oaiErr);
           }
         }
 
