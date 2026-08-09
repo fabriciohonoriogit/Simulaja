@@ -620,7 +620,15 @@ Deno.serve(async (req) => {
       contents.push({ role: "user", parts: userParts });
     }
 
-    const CANDIDATE_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash-exp", "gemini-1.5-pro"];
+    const userConfiguredModel = Deno.env.get("GEMINI_MODEL") || Deno.env.get("JARVIS_MODEL");
+    const CANDIDATE_MODELS = [
+      userConfiguredModel,
+      "gemini-2.0-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-1.5-flash-latest",
+      "gemini-2.0-flash-exp",
+      "gemini-1.5-pro"
+    ].filter(Boolean) as string[];
 
     const systemInstructionText = `Você é o Jarvis, assistente de inteligência artificial e diretor comercial do Contemplar CRM.
 
