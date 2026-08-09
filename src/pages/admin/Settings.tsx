@@ -74,33 +74,6 @@ export default function Settings() {
     }
   };
 
-  const handleTestConnection = async () => {
-    setTestingStatus(true);
-    saveEvolutionConfig({ apiUrl: evolutionUrl, apiKey: evolutionKey, instanceName: evolutionInstance });
-    try {
-      const res = await checkEvolutionStatus();
-      setEvolutionStatus(res.state);
-      if (res.state === "open" || res.state === "CONNECTED") {
-        toast({ title: "WhatsApp Conectado!", description: "Sua instância do Evolution API está ativa e pronta." });
-      } else {
-        toast({
-          title: "Instância Desconectada",
-          description: `Status: ${res.state}. Verifique a URL do seu servidor ou altere para o Modo WhatsApp Web Direto.`,
-          variant: "destructive",
-        });
-      }
-    } catch (err: any) {
-      setEvolutionStatus("DISCONNECTED");
-      toast({
-        title: "Servidor Evolution API Indisponível",
-        description: err.message || "Servidor offline. Clique para alternar para o Modo WhatsApp Web Direto.",
-        variant: "destructive",
-      });
-    } finally {
-      setTestingStatus(false);
-    }
-  };
-
   useEffect(() => { fetchData(); }, [profile]);
 
   const fetchData = async () => {
