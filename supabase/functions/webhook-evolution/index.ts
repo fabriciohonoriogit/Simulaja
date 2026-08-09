@@ -217,21 +217,23 @@ serve(async (req) => {
               });
 
               // 2. Envia para o WhatsApp do cliente via Evolution API
-              const evoUrl = Deno.env.get("EVOLUTION_API_URL") || "http://localhost:8080";
-              const evoKey = Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "B6D711FCDE4D4FD5936544120E713976";
+              const evoUrl = (Deno.env.get("EVOLUTION_API_URL") || Deno.env.get("EVOLUTION_URL") || "").replace(/\/+$/, "");
+              const evoKey = Deno.env.get("EVOLUTION_GLOBAL_KEY") || Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "";
               
-              await fetch(`${evoUrl}/message/sendText/simulaja`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "apikey": evoKey
-                },
-                body: JSON.stringify({
-                  number: rawNumber,
-                  text: aiText,
-                  delay: 1200
-                })
-              }).catch(e => console.error("Erro ao enviar mensagem via Evolution API:", e));
+              if (evoUrl && evoKey) {
+                await fetch(`${evoUrl}/message/sendText/simulaja`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "apikey": evoKey
+                  },
+                  body: JSON.stringify({
+                    number: rawNumber,
+                    text: aiText,
+                    delay: 1200
+                  })
+                }).catch(e => console.error("Erro ao enviar mensagem via Evolution API:", e));
+              }
             }
           } else {
             console.error("Erro na resposta da Gemini API:", await geminiRes.text());

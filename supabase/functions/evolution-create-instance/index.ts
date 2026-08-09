@@ -35,8 +35,23 @@ serve(async (req) => {
     // TODO: Validate that the user is an admin of this organizacaoId
     // ...
 
-    const EVOLUTION_API_URL = (Deno.env.get("EVOLUTION_API_URL") || Deno.env.get("EVOLUTION_URL") || "http://localhost:8080").replace(/\/+$/, "");
-    const EVOLUTION_GLOBAL_KEY = Deno.env.get("EVOLUTION_GLOBAL_KEY") || Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "B6D711FCDE4D4FD5936544120E713976";
+    const rawUrl = Deno.env.get("EVOLUTION_API_URL") || Deno.env.get("EVOLUTION_URL") || "";
+    const rawKey = Deno.env.get("EVOLUTION_GLOBAL_KEY") || Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "";
+
+    if (!rawUrl || !rawKey) {
+      return new Response(
+        JSON.stringify({ 
+          error: "EVOLUTION_API_URL ou EVOLUTION_GLOBAL_KEY não configurados nos secrets do projeto Supabase" 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    const EVOLUTION_API_URL = rawUrl.replace(/\/+$/, "");
+    const EVOLUTION_GLOBAL_KEY = rawKey;
 
     let createData: any = null;
     let qrcodeBase64: string | null = null;

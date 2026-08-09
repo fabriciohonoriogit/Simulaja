@@ -34,10 +34,10 @@ export const getWhatsAppWebUrl = (number: string, text?: string): string => {
 
 export const getEvolutionConfig = (): EvolutionConfig => {
   if (typeof window === "undefined") {
-    return { apiUrl: "http://localhost:8080", apiKey: "B6D711FCDE4D4FD5936544120E713976", instanceName: "simulaja" };
+    return { apiUrl: "", apiKey: "", instanceName: "simulaja" };
   }
-  const savedUrl = localStorage.getItem("evolution_api_url") || "http://localhost:8080";
-  const savedKey = localStorage.getItem("evolution_api_key") || "B6D711FCDE4D4FD5936544120E713976";
+  const savedUrl = localStorage.getItem("evolution_api_url") || "";
+  const savedKey = localStorage.getItem("evolution_api_key") || "";
   const savedInstance = localStorage.getItem("evolution_instance_name") || "simulaja";
   return { apiUrl: savedUrl, apiKey: savedKey, instanceName: savedInstance };
 };
@@ -68,8 +68,13 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
 
   const config = getEvolutionConfig();
 
-  if (!config.apiUrl || !config.apiKey) {
+  if (!config.apiUrl?.trim() || !config.apiKey?.trim()) {
     console.warn("[Evolution API] Configurações de API URL ou API Key ausentes.");
+    return {
+      success: false,
+      error: "Configure a URL e a chave da Evolution API em Configurações antes de conectar.",
+      webUrl
+    };
   }
 
   try {
@@ -155,6 +160,7 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
 
 export const ensureWebhookConfigured = async (instanceName = "simulaja") => {
   const config = getEvolutionConfig();
+  if (!config.apiUrl?.trim() || !config.apiKey?.trim()) return;
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://pfedvdqpnpbrlhfbzjcj.supabase.co";
     const webhookUrl = `${supabaseUrl}/functions/v1/webhook-evolution`;
@@ -177,7 +183,12 @@ export const ensureWebhookConfigured = async (instanceName = "simulaja") => {
 
 export const checkEvolutionStatus = async () => {
   const config = getEvolutionConfig();
-  if (!config.apiUrl || !config.apiKey) return { state: "DISCONNECTED", reason: "Configurações ausentes" };
+  if (!config.apiUrl?.trim() || !config.apiKey?.trim()) {
+    return { 
+      state: "DISCONNECTED", 
+      reason: "Configure a URL e a chave da Evolution API em Configurações antes de conectar." 
+    };
+  }
 
   try {
     const endpoint = `${config.apiUrl}/instance/connectionState/${config.instanceName}`;
@@ -200,6 +211,13 @@ export const checkEvolutionStatus = async () => {
 
 export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
   const config = getEvolutionConfig();
+  if (!config.apiUrl?.trim() || !config.apiKey?.trim()) {
+    return {
+      success: false,
+      error: "Configure a URL e a chave da Evolution API em Configurações antes de conectar."
+    };
+  }
+
   try {
     // 1. Tenta buscar o QR Code ou status da instância existente
     let res = await fetch(`${config.apiUrl}/instance/connect/${instanceName}`, {

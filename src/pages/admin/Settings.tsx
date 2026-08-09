@@ -206,7 +206,73 @@ export default function Settings() {
     }
   };
 
+  const validateEvolutionUrl = (url: string): { valid: boolean; error?: string } => {
+    const trimmed = url.trim();
+    if (!trimmed) {
+      return { valid: false, error: "Configure a URL da Evolution API em Configurações antes de conectar." };
+    }
+    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+      return { valid: false, error: "A URL da Evolution API deve iniciar com http:// ou https://" };
+    }
+    if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1" && (trimmed.includes("localhost") || trimmed.includes("127.0.0.1"))) {
+      return { valid: false, error: "URLs com 'localhost' não funcionam em produção. Configure a URL com o IP público ou domínio com HTTPS da sua VPS/servidor." };
+    }
+    return { valid: true };
+  };
+
+  const handleTestConnection = async () => {
+    const urlCheck = validateEvolutionUrl(evolutionUrl);
+    if (!urlCheck.valid) {
+      toast({ title: "Configuração Inválida", description: urlCheck.error, variant: "destructive" });
+      return;
+    }
+    if (!evolutionKey.trim()) {
+      toast({ title: "Chave Ausente", description: "Configure a chave da Evolution API em Configurações antes de conectar.", variant: "destructive" });
+      return;
+    }
+
+    setTestingStatus(true);
+    saveEvolutionConfig({ apiUrl: evolutionUrl, apiKey: evolutionKey, instanceName: evolutionInstance || "simulaja" });
+    try {
+      const res = await checkEvolutionStatus();
+      setEvolutionStatus(res.state);
+      if (res.state === "open" || res.state === "CONNECTED") {
+        setQrCodeImg(null);
+        setPairingCode(null);
+        toast({
+          title: "Status: CONECTADO! 🟢",
+          description: "Sua instância da Evolution API está conectada e operacional.",
+        });
+      } else {
+        toast({
+          title: `Status: ${res.state}`,
+          description: res.reason || "Não foi possível confirmar a conexão.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      setEvolutionStatus("DISCONNECTED");
+      toast({
+        title: "Erro no Teste de Conexão",
+        description: err?.message || "Falha ao conectar com a Evolution API.",
+        variant: "destructive",
+      });
+    } finally {
+      setTestingStatus(false);
+    }
+  };
+
   const handleCreateWhatsApp = async () => {
+    const urlCheck = validateEvolutionUrl(evolutionUrl);
+    if (!urlCheck.valid) {
+      toast({ title: "Configuração Inválida", description: urlCheck.error, variant: "destructive" });
+      return;
+    }
+    if (!evolutionKey.trim()) {
+      toast({ title: "Chave Ausente", description: "Configure a chave da Evolution API em Configurações antes de conectar.", variant: "destructive" });
+      return;
+    }
+
     setCreatingInstance(true);
     setQrCodeImg(null);
     setPairingCode(null);
@@ -646,7 +712,7 @@ export default function Settings() {
                         <div>
                           <Label className="text-xs font-bold text-slate-700">Server URL (Evolution API)</Label>
                           <Input
-                            placeholder="http://localhost:8080 ou https://sua-vps.com"
+                            placeholder="https://sua-api-evolution.com"
                             value={evolutionUrl}
                             onChange={(e) => setEvolutionUrl(e.target.value)}
                             className="h-10 text-xs font-mono mt-1"
