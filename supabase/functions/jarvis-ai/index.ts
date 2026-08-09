@@ -231,24 +231,33 @@ const tools = [
 
 async function executeTool(supabase: any, name: string, args: any) {
   try {
-    // Busca a organização do usuário logado via RLS (seguro) com maybeSingle para nunca estourar exceção
-    let orgId: string | null = null;
-    try {
-      const { data: profile } = await supabase.from('perfis').select('organizacao_id').limit(1).maybeSingle();
-      orgId = profile?.organizacao_id || null;
-    } catch (e) {
-      console.warn("Perfil query error in executeTool:", e);
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const adminClient = supabaseServiceRole ? createClient(supabaseUrl, supabaseServiceRole) : null;
+    const client = adminClient || supabase;
 
-    // Se temos a chave de admin e a org, criamos um cliente com privilégios de admin
-    // que ignora as restrições normais de RLS do vendedor, mas filtra pela mesma organização.
-    const useAdmin = !!(supabaseServiceRole && orgId);
-    const client = useAdmin 
-      ? createClient(supabaseUrl, supabaseServiceRole) 
-      : supabase;
+    // Busca a organização do usuário logado via token ou RLS com fallback
+    let orgId: string | null = null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        const { data: profile } = await client.from('perfis').select('organizacao_id').eq('id', user.id).maybeSingle();
+        orgId = profile?.organizacao_id || null;
+      }
+    } catch (e) {
+      console.warn("Perfil query by user error in executeTool:", e);
+    }
+
+    if (!orgId) {
+      try {
+        const { data: firstProfile } = await client.from('perfis').select('organizacao_id').limit(1).maybeSingle();
+        orgId = firstProfile?.organizacao_id || null;
+      } catch (e) {
+        console.warn("Fallback perfil query error:", e);
+      }
+    }
+
+    const useAdmin = Boolean(adminClient && orgId);
 
     if (name === "get_dashboard_metrics") {
       let leadsQuery = client.from('leads').select('*', { count: 'exact', head: true });
@@ -329,20 +338,36 @@ async function executeTool(supabase: any, name: string, args: any) {
         const mainTerm = searchTerms[0] || rawLeadRef;
 
         let query = client.from('leads').select('id, nome, cidade, status');
-        if (useAdmin && orgId) query = query.eq('organizacao_id', orgId);
+        if (orgId) query = query.eq('organizacao_id', orgId);
 
-        const { data: found } = await query.ilike('nome', `%${mainTerm}%`).limit(10);
+        const { data: found } = await query.ilike('nome', `%${mainTerm}%`).limit(15);
 
-        if (!found || found.length === 0) {
-          return { success: false, error: `Não foi possível encontrar o lead '${rawLeadRef}' no CRM.` };
+        let resolvedLead = null;
+
+        if (found && found.length > 0) {
+          resolvedLead = found.find((l: any) => {
+            const fullName = ((l.nome || "") + " " + (l.cidade || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return searchTerms.every((term: string) => fullName.includes(term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+          }) || found[0];
+        } else {
+          // Fallback: busca ampla nos últimos 100 leads da organização sem filtro estrito de ilike
+          let fallbackQuery = client.from('leads').select('id, nome, cidade, status');
+          if (orgId) fallbackQuery = fallbackQuery.eq('organizacao_id', orgId);
+          const { data: allLeads } = await fallbackQuery.order('created_at', { ascending: false }).limit(100);
+
+          if (allLeads && allLeads.length > 0) {
+            resolvedLead = allLeads.find((l: any) => {
+              const fullName = (l.nome || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+              return searchTerms.some((term: string) => fullName.includes(term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+            });
+          }
         }
 
-        const bestMatch = found.find((l: any) => {
-          const fullName = ((l.nome || "") + " " + (l.cidade || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-          return searchTerms.every((term: string) => fullName.includes(term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
-        }) || found[0];
+        if (!resolvedLead) {
+          return { success: false, error: `Não encontrei nenhum lead com o nome '${rawLeadRef}' no CRM. Verifique a ortografia do nome no funil.` };
+        }
 
-        targetLeadId = bestMatch.id;
+        targetLeadId = resolvedLead.id;
       }
 
       const statusMap: Record<string, string> = {
