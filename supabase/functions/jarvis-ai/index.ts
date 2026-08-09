@@ -623,6 +623,8 @@ Deno.serve(async (req) => {
     const userConfiguredModel = Deno.env.get("GEMINI_MODEL") || Deno.env.get("JARVIS_MODEL");
     const CANDIDATE_MODELS = [
       userConfiguredModel,
+      "gemini-spark-beta",
+      "gemini-spark",
       "gemini-2.0-flash",
       "gemini-2.5-flash-lite",
       "gemini-1.5-flash-latest",
