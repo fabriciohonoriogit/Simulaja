@@ -67,9 +67,19 @@ export const getAdemiconParticipants = (grupoStr: string | null, tipoConsorcio: 
   if (isNaN(g)) return 9999;
 
   const cleanTipo = tipoConsorcio?.trim().toLowerCase() || "";
-  const isVehicle = cleanTipo.includes("veiculo") || cleanTipo.includes("carro") || cleanTipo.includes("moto") || cleanTipo.includes("pesado") || cleanTipo.includes("caminhao");
+  const isVehicleKeyword = cleanTipo.includes("veiculo") || cleanTipo.includes("carro") || cleanTipo.includes("moto") || cleanTipo.includes("pesado") || cleanTipo.includes("caminhao") || cleanTipo.includes("bens");
 
-  if (isVehicle) {
+  // Checagem de Grupos de Bens Móveis / Veículos da Ademicon (Tabela Oficial Comassetto)
+  const isAdemiconVehicleGroup = 
+    g === 4116 ||
+    [1171, 1172, 1502, 1503, 1504, 3013, 4109, 4110, 4115].includes(g) ||
+    [1173, 4111, 4112, 4113, 4114, 1681, 1682, 1684, 1685, 1694, 1695, 1697, 1700, 1701, 1706, 1708].includes(g) ||
+    (g >= 1601 && g <= 1679) ||
+    (g >= 8000 && g <= 8003) ||
+    [1680, 1683, 1686, 1687, 1688, 1689, 1691, 1692, 1696, 1698, 1699, 1702, 1703, 1704, 1705, 1707, 1709, 1710].includes(g) ||
+    g === 1690 || g === 1693;
+
+  if (isVehicleKeyword || isAdemiconVehicleGroup) {
     // GRUPO 4116: 250 participantes
     if (g === 4116) return 250;
 
@@ -77,12 +87,12 @@ export const getAdemiconParticipants = (grupoStr: string | null, tipoConsorcio: 
     if ([1171, 1172, 1502, 1503, 1504, 3013, 4109, 4110, 4115].includes(g)) return 500;
 
     // GRUPO 2: 1000 participantes
-    if ([1173, 4111, 4112, 4113, 4114, 1681, 1682, 1684, 1685, 1694, 1695, 1697, 1700, 1706].includes(g)) return 1000;
+    if ([1173, 4111, 4112, 4113, 4114, 1681, 1682, 1684, 1685, 1694, 1695, 1697, 1700, 1701, 1706, 1708].includes(g)) return 1000;
     if (g >= 1601 && g <= 1679) return 1000;
     if (g >= 8000 && g <= 8003) return 1000;
 
     // GRUPO 3: 2000 participantes
-    if ([1680, 1683, 1686, 1687, 1688, 1689, 1691, 1696, 1698, 1699, 1701, 1702, 1703, 1704, 1705].includes(g)) return 2000;
+    if ([1680, 1683, 1686, 1687, 1688, 1689, 1691, 1692, 1696, 1698, 1699, 1702, 1703, 1704, 1705, 1707, 1709, 1710].includes(g)) return 2000;
 
     // GRUPO 4: 5000 participantes
     if (g === 1690 || g === 1693) return 5000;

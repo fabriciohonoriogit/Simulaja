@@ -8,7 +8,11 @@ export const GRUPOS_ADEMICON = {
     { nome: "GRUPO 5", participantes: 9999 },
   ],
   BENS_MOVEIS: [
-    { nome: "GRUPO DE BENS MÓVEIS", participantes: 500 },
+    { nome: "GRUPO 4116", participantes: 250 },
+    { nome: "GRUPO 1", participantes: 500 },
+    { nome: "GRUPO 2", participantes: 1000 },
+    { nome: "GRUPO 3", participantes: 2000 },
+    { nome: "GRUPO 4", participantes: 5000 },
   ],
 };
 
