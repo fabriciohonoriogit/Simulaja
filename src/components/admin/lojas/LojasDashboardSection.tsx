@@ -28,7 +28,8 @@ import {
   Send,
   Handshake,
   Percent,
-  Sparkles
+  Sparkles,
+  UserCheck
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
