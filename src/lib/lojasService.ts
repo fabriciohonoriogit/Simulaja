@@ -26,6 +26,7 @@ export interface LojaPerformance {
   taxaConversaoIndicacoes: number;
   taxaConversaoOutros: number;
   percentualVolumeIndicacao: number;
+  indicacoesLeadsList: any[]; // Lista detalhada de leads com indicação para auditoria
 }
 
 export function getLojasConfig(): LojaConfig[] {
@@ -65,31 +66,26 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
   if (!lead) return null;
   const dc = lead.dados_cadastro || {};
   
-  // 1. Verificação por código de filial
+  // 1. Verificação por código de filial no dados_cadastro
   const codDirect = String(dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || "").trim();
   if (codDirect) {
     const matched = lojas.find(l => l.codigo === codDirect || l.id === codDirect);
     if (matched) return matched;
   }
 
-  // 2. Verificação por nome da cidade ou filial
-  const textFields = [
-    dc.filial_nome,
-    dc.filial,
-    dc.loja,
-    dc.unidade,
-    lead.cidade,
-    dc.cidade
-  ].filter(Boolean).map(s => normalizeStr(String(s)));
+  // 2. Verificação estrita por nome de cidade ou filial
+  const cityStr = normalizeStr(lead.cidade || dc.cidade || "");
+  const filialStr = normalizeStr(dc.filial_nome || dc.filial || dc.loja || dc.unidade || "");
 
   for (const loja of lojas) {
     const code = loja.codigo;
     const city = normalizeStr(loja.cidade);
     
-    for (const text of textFields) {
-      if (text.includes(city) || text.includes(code)) {
-        return loja;
-      }
+    if (cityStr && (cityStr.includes(city) || city.includes(cityStr))) {
+      return loja;
+    }
+    if (filialStr && (filialStr.includes(city) || filialStr.includes(code))) {
+      return loja;
     }
   }
 
@@ -98,7 +94,7 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
 
 /**
  * Identifica estritamente se o lead veio como INDICAÇÃO (possui indicador ou origem de indicação).
- * NOTA: Indicação NÃO é venda realizada por padrão. É apenas a origem do lead!
+ * NOTA: Indicação NÃO é venda por padrão. É a origem do lead!
  */
 export function isLeadIndicacao(lead: any): boolean {
   if (!lead) return false;
@@ -116,6 +112,45 @@ export function isLeadIndicacao(lead: any): boolean {
   const eOrigemIndicacao = origemStr.includes("indica") || origemStr === "parceiro";
   
   return temIndicadorCampos || eOrigemIndicacao;
+}
+
+/**
+ * Verifica se o lead foi CRIADO dentro do período selecionado (Dia, Semana, Quinzena, Mês).
+ */
+export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame): boolean {
+  if (!lead) return false;
+  const dateStr = lead.created_at || lead.status_updated_at || lead.updated_at;
+  if (!dateStr) return false;
+
+  const leadDate = new Date(dateStr);
+  const now = new Date();
+
+  if (isNaN(leadDate.getTime())) return false;
+
+  switch (timeFrame) {
+    case "dia": {
+      const todayStr = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+      const leadDateStr = leadDate.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+      return todayStr === leadDateStr;
+    }
+    case "semana": {
+      const diffTime = Math.abs(now.getTime() - leadDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 7;
+    }
+    case "quinzena": {
+      const diffTime = Math.abs(now.getTime() - leadDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 15;
+    }
+    case "mes": {
+      const currentMonthStr = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }).substring(0, 7);
+      const leadMonthStr = leadDate.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }).substring(0, 7);
+      return leadMonthStr === currentMonthStr;
+    }
+    default:
+      return true;
+  }
 }
 
 /**
@@ -158,6 +193,7 @@ export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame): boolean {
 /**
  * Calcula o desempenho real das 5 lojas.
  * VENDA REALIZADA considera ESTRITAMENTE leads com status 'venda_fechada' ou 'fechado' no funil de vendas.
+ * INDICAÇÕES considera ESTRITAMENTE leads criados no período selecionado (ex: Agosto/2026).
  */
 export function calculateLojasPerformance(
   leads: any[],
@@ -196,6 +232,9 @@ export function calculateLojasPerformance(
       return matched ? matched.id === loja.id : false;
     });
 
+    // Leads desta loja criados no período selecionado
+    const storeLeadsNoPeriodo = storeLeads.filter(l => isLeadCreatedInTimeFrame(l, timeFrame));
+
     // LEADS COM VENDA FECHADA NO FUNIL (Strict Status 'venda_fechada' ou 'fechado')
     const leadsFechadosPeriodo = storeLeads.filter(l => {
       const status = (l.status || "").toLowerCase().replace("_", " ").trim();
@@ -230,19 +269,20 @@ export function calculateLojasPerformance(
     const ritmoDiario = realizadoMensal / currentDay;
     const projecaoMes = Math.round(ritmoDiario * daysInMonth);
 
-    // INDICAÇÕES E ANÁLISE DE CONVERSÃO
-    const indicacoesLeads = storeLeads.filter(isLeadIndicacao);
-    const totalIndicacoes = indicacoesLeads.length;
+    // INDICAÇÕES E ANÁLISE DE CONVERSÃO NO PERÍODO SELECIONADO
+    const indicacoesLeadsList = storeLeadsNoPeriodo.filter(isLeadIndicacao);
+    const totalIndicacoes = indicacoesLeadsList.length;
 
-    // Vendas oriundas de INDICAÇÃO (Lead que é indicação E tem status fechado no funil)
+    // Vendas oriundas de INDICAÇÃO que foram fechadas no período
     const closedIndicacoesLeads = leadsFechadosUsados.filter(isLeadIndicacao);
     const closedIndicacoesCount = closedIndicacoesLeads.length;
     const realizadoIndicacoes = closedIndicacoesLeads.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
 
-    const taxaConversaoGeral = storeLeads.length > 0 ? (closedLeadsCount / storeLeads.length) * 100 : 0;
+    const totalLeadsPeriodo = storeLeadsNoPeriodo.length;
+    const taxaConversaoGeral = totalLeadsPeriodo > 0 ? (closedLeadsCount / totalLeadsPeriodo) * 100 : 0;
     const taxaConversaoIndicacoes = totalIndicacoes > 0 ? (closedIndicacoesCount / totalIndicacoes) * 100 : 0;
     
-    const otherLeadsCount = Math.max(0, storeLeads.length - totalIndicacoes);
+    const otherLeadsCount = Math.max(0, totalLeadsPeriodo - totalIndicacoes);
     const closedOtherLeadsCount = Math.max(0, closedLeadsCount - closedIndicacoesCount);
     const taxaConversaoOutros = otherLeadsCount > 0 ? (closedOtherLeadsCount / otherLeadsCount) * 100 : 0;
 
@@ -257,7 +297,7 @@ export function calculateLojasPerformance(
       atingimentoMensal,
       faltanteMensal,
       superavitMensal,
-      totalLeads: storeLeads.length,
+      totalLeads: totalLeadsPeriodo,
       closedLeadsCount,
       ticketMedio,
       projecaoMes,
@@ -267,7 +307,8 @@ export function calculateLojasPerformance(
       taxaConversaoGeral,
       taxaConversaoIndicacoes,
       taxaConversaoOutros,
-      percentualVolumeIndicacao
+      percentualVolumeIndicacao,
+      indicacoesLeadsList
     };
   });
 
@@ -368,15 +409,15 @@ export function generateWhatsAppManagerReport(
 📈 *Atingimento da Meta:* ${percentText}% ${emojiStatus}
 ${item.faltanteMensal > 0 ? `🔻 *Faltante para Meta:* ${formatCurrency(item.faltanteMensal)}` : `🎉 *Superávit de Vendas:* ${formatCurrency(item.superavitMensal)}`}
 
-🤝 *ANÁLISE DE INDICAÇÕES DA LOJA:*
-📩 *Indicações Recebidas:* ${item.totalIndicacoes} cadastros
+🤝 *ANÁLISE DE INDICAÇÕES DA LOJA (PERÍODO):*
+📩 *Indicações Recebidas no Período:* ${item.totalIndicacoes} cadastros
 ✅ *Vendas Fechadas via Indicação:* ${item.closedIndicacoesCount} contratos
 🔥 *Taxa de Conversão de Indicações:* *${item.taxaConversaoIndicacoes.toFixed(1)}%*
 💰 *Volume Vendido via Indicação:* ${formatCurrency(item.realizadoIndicacoes)} (${item.percentualVolumeIndicacao.toFixed(1)}% do total fechado)
 
 📊 *INDICADORES DE FUNIL & CONVERSÃO:*
 🤝 *Total Contratos Fechados no Funil:* ${item.closedLeadsCount} vendas
-🎯 *Total Leads da Unidade:* ${item.totalLeads} atendimentos
+🎯 *Total Leads da Unidade no Período:* ${item.totalLeads} atendimentos
 ⚡ *Taxa de Conversão Geral da Loja:* *${item.taxaConversaoGeral.toFixed(1)}%*
 💡 *Ticket Médio da Loja:* ${formatCurrency(item.ticketMedio)}
 🔮 *Projeção de Fechamento Mês:* ${formatCurrency(item.projecaoMes)}
@@ -402,7 +443,7 @@ ${item.faltanteMensal > 0 ? `🔻 *Faltante para Meta:* ${formatCurrency(item.fa
     lojaTextList += `
 ${trophy} *${item.loja.nome}*
    • Vendas Fechadas: *${formatCurrency(item.realizado)}* (${item.atingimentoMensal.toFixed(1)}% da Meta)
-   • Indicações: ${item.totalIndicacoes} rec. | ${item.closedIndicacoesCount} fechadas (*${item.taxaConversaoIndicacoes.toFixed(1)}% conv.*)
+   • Indicações no Período: ${item.totalIndicacoes} rec. | ${item.closedIndicacoesCount} fechadas (*${item.taxaConversaoIndicacoes.toFixed(1)}% conv.*)
    • Vol. Indicações Fechadas: ${formatCurrency(item.realizadoIndicacoes)}
    • Conversão Geral Loja: ${item.taxaConversaoGeral.toFixed(1)}% | Ticket Médio: ${formatCurrency(item.ticketMedio)}
 `;
@@ -419,7 +460,7 @@ ${trophy} *${item.loja.nome}*
 ${faltanteGlobal > 0 ? `🔻 *FALTANTE PARA META GLOBAL:* ${formatCurrency(faltanteGlobal)}` : `🎉 *SUPERÁVIT GLOBAL:* ${formatCurrency(Math.abs(realizadoGlobal - metaGlobal))}`}
 
 🤝 *PAINEL CONSOLIDADO DE INDICAÇÕES:*
-📩 *Total Indicações Recebidas:* ${totalIndicacoesGlobal} cadastros
+📩 *Total Indicações Recebidas no Período:* ${totalIndicacoesGlobal} cadastros
 ✅ *Vendas Fechadas via Indicação:* ${closedIndicacoesGlobal} contratos
 📈 *Taxa de Conversão de Indicações:* *${taxaConversaoIndicacoesGlobal.toFixed(1)}%*
 💰 *Volume Fechado via Indicações:* ${formatCurrency(realizadoIndicacoesGlobal)}

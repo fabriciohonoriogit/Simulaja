@@ -54,6 +54,7 @@ import {
 } from "@/lib/lojasService";
 import { formatCurrency } from "@/lib/utils";
 import { RelatorioGerentesModal } from "./RelatorioGerentesModal";
+import { AuditIndicacoesModal } from "./AuditIndicacoesModal";
 
 interface LojasDashboardSectionProps {
   leads: any[];
@@ -71,6 +72,8 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
   const [reportModalType, setReportModalType] = useState<"gerencial" | "coordenador">("gerencial");
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingLojas, setEditingLojas] = useState<LojaConfig[]>([]);
+  const [auditModalOpen, setAuditModalOpen] = useState(false);
+  const [selectedAuditLoja, setSelectedAuditLoja] = useState<LojaPerformance | null>(null);
 
   // Calcular performance das 5 lojas incluindo métricas de indicação e conversão estrita
   const {
@@ -518,13 +521,22 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
                   </div>
                 </div>
 
-                {/* BLOCO DE INDICAÇÕES E CONVERSÃO (CLEAN LIGHT) */}
-                <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-100 space-y-1">
+                {/* BLOCO DE INDICAÇÕES E CONVERSÃO (CLICKABLE AUDIT) */}
+                <div 
+                  onClick={() => {
+                    setSelectedAuditLoja(m);
+                    setAuditModalOpen(true);
+                  }}
+                  className="p-2.5 rounded-xl bg-purple-50/80 hover:bg-purple-100 border border-purple-200/80 cursor-pointer transition-all space-y-1 group/ind shadow-sm hover:shadow"
+                  title="Clique para auditagem completa dos leads de indicação"
+                >
                   <div className="flex items-center justify-between text-[10px] font-bold">
                     <span className="text-purple-800 flex items-center gap-1">
-                      <Handshake className="h-3 w-3" /> Indicações
+                      <Handshake className="h-3 w-3 text-purple-600" /> Indicações
                     </span>
-                    <span className="text-purple-900 font-black">{m.totalIndicacoes} rec.</span>
+                    <span className="text-purple-900 font-black flex items-center gap-1 bg-purple-200/60 px-1.5 py-0.5 rounded-md group-hover/ind:bg-purple-600 group-hover/ind:text-white transition-all">
+                      {m.totalIndicacoes} rec. <Search className="h-2.5 w-2.5" />
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-slate-600">Fechadas:</span>
@@ -549,14 +561,28 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickCopyStoreReport(m)}
-                    className="w-full h-8 text-[10px] font-black uppercase tracking-wider bg-slate-50 hover:bg-blue-600 hover:text-white text-blue-700 border-slate-200 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-none"
-                  >
-                    <Send className="h-3 w-3" /> Copiar p/ Gerente
-                  </Button>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAuditLoja(m);
+                        setAuditModalOpen(true);
+                      }}
+                      className="h-8 text-[9px] font-black uppercase tracking-wider bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-800 border-purple-200 rounded-xl flex items-center justify-center gap-1 transition-all shadow-none"
+                    >
+                      <Search className="h-3 w-3" /> Conferir
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuickCopyStoreReport(m)}
+                      className="h-8 text-[9px] font-black uppercase tracking-wider bg-slate-50 hover:bg-blue-600 hover:text-white text-blue-700 border-slate-200 rounded-xl flex items-center justify-center gap-1 transition-all shadow-none"
+                    >
+                      <Send className="h-3 w-3" /> Copiar
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
@@ -574,6 +600,14 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         realizadoGlobal={realizadoGlobalMensal}
         currentTimeFrame={timeFrame}
         initialReportType={reportModalType}
+      />
+
+      {/* MODAL DE AUDITORIA DE INDICAÇÕES */}
+      <AuditIndicacoesModal
+        open={auditModalOpen}
+        onOpenChange={setAuditModalOpen}
+        lojaPerformance={selectedAuditLoja}
+        timeFrame={timeFrame}
       />
 
       {/* MODAL DE EDIÇÃO DE METAS DAS LOJAS (LIGHT THEME) */}
