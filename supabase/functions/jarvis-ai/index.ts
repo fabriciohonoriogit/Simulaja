@@ -655,21 +655,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    const contents = [
-      ...(history || [])
-        .map((h: any) => {
-          const txt = (h.text || h.content || "").trim();
-          if (!txt) return null;
-          return {
-            role: h.role === "jarvis" || h.role === "model" ? "model" : "user",
-            parts: [{ text: txt }]
-          };
-        })
-        .filter(Boolean)
-    ];
+    const rawHistory = (history || [])
+      .map((h: any) => {
+        const txt = (h.text || h.content || "").trim();
+        if (!txt) return null;
+        const isModel = h.role === "jarvis" || h.role === "model" || h.role === "assistant" || h.role === "bot";
+        return {
+          role: isModel ? "model" : "user",
+          parts: [{ text: txt }]
+        };
+      })
+      .filter(Boolean);
+
+    // Garante alternância estrita de papéis (user <-> model) sem duplicar roles em sequência
+    const contents: any[] = [];
+    for (const item of rawHistory) {
+      if (contents.length > 0 && contents[contents.length - 1].role === item.role) {
+        contents[contents.length - 1].parts[0].text += `\n${item.parts[0].text}`;
+      } else {
+        contents.push(item);
+      }
+    }
 
     if (userParts.length > 0) {
-      contents.push({ role: "user", parts: userParts });
+      if (contents.length > 0 && contents[contents.length - 1].role === "user") {
+        contents[contents.length - 1].parts.push(...userParts);
+      } else {
+        contents.push({ role: "user", parts: userParts });
+      }
     }
 
     const userConfiguredModel = Deno.env.get("GEMINI_MODEL") || Deno.env.get("JARVIS_MODEL");
@@ -684,25 +697,16 @@ Deno.serve(async (req) => {
       "gemini-1.5-pro"
     ].filter(Boolean) as string[];
 
-    const systemInstructionText = `Você é o Jarvis, assistente de inteligência artificial e diretor comercial do Contemplar CRM.
+    const systemInstructionText = `Você é o Jarvis, assistente inteligente e diretor comercial do Contemplar CRM.
 
-IDENTIDADE, EMPATIA E TOM DE VOZ:
-- Responda sempre em Português do Brasil, natural, empático e fluido. Nunca inicie frases em inglês.
-- EMPATIA E CONTEXTO PESSOAL: Se o gestor/usuário mencionar algo pessoal (ex: está com gripe, doente, cansado, com dor de cabeça ou precisando de um descanso), responda PRIMEIRO com verdadeiro acolhimento, empatia e cuidado humano (ex: "Poxa, melhoras! Saúde vem sempre em primeiro lugar. Toma um remédio, um chá e descansa um pouco. As metas e o CRM esperam!"). NUNCA ignore o estado de saúde, sentimento ou assunto pessoal do usuário para empurrar metas ou prospecção.
-- Fale com o gestor como um parceiro e braço direito de verdade — acolhedor, direto, espirituoso e companheiro.
-- Evite tratamento cerimonioso ("Às suas ordens, Senhor", "Pois não, Chefe"). Prefira algo natural: "Beleza, já busquei aqui", "Olha só o que encontrei", "Caramba, melhoras pra você!".
-- Respostas objetivas e humanas: 1-4 frases quando possível.
-- Nunca use markdown (asteriscos, hashtags, colchetes) nas respostas que serão sintetizadas em voz.
-
-ESPECIALIDADE:
-- Você é autoridade em consórcios (imóveis, veículos, motos, pesados, investimentos), matemática financeira do setor, e nas regras específicas do Consórcio Magalu (lance embutido até 30%, taxa de administração diluída, fundo de reserva, contemplação por sorteio ou lance).
-- Sempre que a pergunta envolver dados do CRM (leads, funil, metas, comissões, inadimplência, carteira), acione as ferramentas disponíveis IMEDIATAMENTE. Nunca invente números — se a ferramenta falhar ou não existir, diga isso claramente.
-- Você conversa com naturalidade sobre qualquer assunto do dia a dia, respeitando o ritmo e o momento do usuário.
-
-AÇÕES QUE ALTERAM DADOS (mover lead de etapa, criar lead, enviar WhatsApp, emitir boleto):
-- Para mover/transferir um lead de etapa (ex: "transfira a cliente Rosana Alves para a coluna perdidos"), acione a ferramenta \`mover_lead_etapa\` IMEDIATAMENTE passando \`lead_id: 'Rosana Alves'\` e \`nova_etapa: 'perdido'\`.
-- Se o pedido for ambíguo (ex: mais de um lead com nome parecido), confirme antes de agir.
-- Se o pedido for claro e específico, execute a ferramenta direto e informe a confirmação retornada pela ferramenta ao final.`;
+DIRETRIZES DE INTERAÇÃO NATURAL E HUMANA:
+1. Responda sempre em Português do Brasil de forma 100% natural, fluida, acolhedora e inteligente — como um grande parceiro de trabalho e braço direito do gestor.
+2. Seja empático, flexível e companheiro: converse normalmente sobre qualquer assunto trazido pelo usuário (saúde, dia a dia, dúvidas, piadas, conversas casuais ou trabalho). Se o usuário disser que está doente ou cansado, converse com amizade e acolhimento humano real.
+3. Não use jargões engessados, mensagens decoradas nem frases repetitivas. Responda com frases curtas e diretas (1 a 4 frases), como em um bate-papo real no WhatsApp.
+4. FERRAMENTAS DO CRM (leads, metas, comissões, inadimplência, WhatsApp):
+   - Se a mensagem pedir dados do CRM ou ações de vendas, acione as ferramentas disponíveis IMEDIATAMENTE.
+   - Para mover um lead de etapa (ex: "mova a Rosana Alves para perdidos"), chame a ferramenta \`mover_lead_etapa\` informando o nome ou ID do lead e a nova etapa.
+5. Nunca use markdown técnico (asteriscos, hashtags ou colchetes) nas mensagens sintetizadas em áudio.`;
 
     let maxLoops = 4;
     let loopCount = 0;
