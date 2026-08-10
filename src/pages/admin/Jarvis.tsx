@@ -38,6 +38,7 @@ import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import jarvisAvatar from "@/assets/jarvis-avatar.png";
+import { COLUMNS } from "@/components/admin/funil/constants";
 import { ESTATISTICAS_LANCES, GRUPOS, GRUPO_CARACTERISTICAS, obterEstatisticasGrupo } from "@/constants/simulador";
 import { aiService } from "@/services/aiService";
 import { sendWhatsAppMessage } from "@/services/evolutionApiService";
