@@ -14,7 +14,7 @@ import {
   Building2,
   FileSpreadsheet
 } from "lucide-react";
-import { LojaPerformance, getTimeFrameLabel, TimeFrame } from "@/lib/lojasService";
+import { LojaPerformance, getTimeFrameLabel, TimeFrame, CustomDateRange } from "@/lib/lojasService";
 import { formatCurrency } from "@/lib/utils";
 
 interface AuditIndicacoesModalProps {
@@ -22,13 +22,15 @@ interface AuditIndicacoesModalProps {
   onOpenChange: (open: boolean) => void;
   lojaPerformance: LojaPerformance | null;
   timeFrame: TimeFrame;
+  customRange?: CustomDateRange;
 }
 
 export const AuditIndicacoesModal: React.FC<AuditIndicacoesModalProps> = ({
   open,
   onOpenChange,
   lojaPerformance,
-  timeFrame
+  timeFrame,
+  customRange
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -63,7 +65,7 @@ export const AuditIndicacoesModal: React.FC<AuditIndicacoesModalProps> = ({
                   </Badge>
                 </DialogTitle>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Conferência linha a linha dos leads com indicação registrados no período {getTimeFrameLabel(timeFrame)}.
+                  Conferência linha a linha dos leads com indicação registrados no período {getTimeFrameLabel(timeFrame, customRange)}.
                 </p>
               </div>
             </div>
@@ -81,7 +83,7 @@ export const AuditIndicacoesModal: React.FC<AuditIndicacoesModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="p-3 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase text-purple-700">Total Recebidas ({getTimeFrameLabel(timeFrame)})</p>
+                <p className="text-[10px] font-bold uppercase text-purple-700">Total Recebidas ({getTimeFrameLabel(timeFrame, customRange)})</p>
                 <p className="text-lg font-black text-purple-950">{totalIndicacoes} cadastros</p>
               </div>
               <Handshake className="h-5 w-5 text-purple-600" />

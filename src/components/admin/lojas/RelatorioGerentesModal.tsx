@@ -24,6 +24,7 @@ import { WhatsAppIcon } from "@/components/SocialIcons";
 import { LojaConfig, COORDENADOR_REGIONAL } from "@/constants/lojas";
 import { 
   TimeFrame, 
+  CustomDateRange,
   LojaPerformance, 
   generateWhatsAppManagerReport, 
   generateWhatsAppRegionalCoordinatorReport,
@@ -40,6 +41,7 @@ interface RelatorioGerentesModalProps {
   realizadoGlobal: number;
   currentTimeFrame?: TimeFrame;
   initialReportType?: "gerencial" | "coordenador";
+  customRange?: CustomDateRange;
 }
 
 export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
@@ -50,7 +52,8 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
   metaGlobal,
   realizadoGlobal,
   currentTimeFrame = "mes",
-  initialReportType = "gerencial"
+  initialReportType = "gerencial",
+  customRange
 }) => {
   const { toast } = useToast();
   const [timeFrame, setTimeFrame] = useState<TimeFrame>(currentTimeFrame);
@@ -61,8 +64,8 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
   const isCoordenador = reportType === "coordenador";
 
   const reportText = isCoordenador
-    ? generateWhatsAppRegionalCoordinatorReport(lojasMetrics, timeFrame, metaGlobal, realizadoGlobal)
-    : generateWhatsAppManagerReport(lojasMetrics, timeFrame, metaGlobal, realizadoGlobal, selectedLojaId);
+    ? generateWhatsAppRegionalCoordinatorReport(lojasMetrics, timeFrame, metaGlobal, realizadoGlobal, customRange)
+    : generateWhatsAppManagerReport(lojasMetrics, timeFrame, metaGlobal, realizadoGlobal, selectedLojaId, customRange);
 
   const totalIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.totalIndicacoes, 0);
   const closedIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.closedIndicacoesCount, 0);

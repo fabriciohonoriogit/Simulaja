@@ -1,7 +1,12 @@
 import { LojaConfig, INITIAL_LOJAS, STORAGE_KEY_LOJAS, COORDENADOR_REGIONAL } from "@/constants/lojas";
 import { isVendaRealizadaNoMes, formatCurrency } from "./utils";
 
-export type TimeFrame = "dia" | "semana" | "quinzena" | "mes";
+export type TimeFrame = "dia" | "semana" | "quinzena" | "mes" | "personalizado";
+
+export interface CustomDateRange {
+  startDate?: string; // formato "YYYY-MM-DD"
+  endDate?: string;   // formato "YYYY-MM-DD"
+}
 
 export interface LojaPerformance {
   loja: LojaConfig;
@@ -57,6 +62,14 @@ export function normalizeStr(str: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+export function isDateInCustomRange(dateStr: string | null | undefined, startDate?: string, endDate?: string): boolean {
+  if (!dateStr) return false;
+  const leadDateStr = String(dateStr).substring(0, 10);
+  if (startDate && leadDateStr < startDate) return false;
+  if (endDate && leadDateStr > endDate) return false;
+  return true;
 }
 
 /**
@@ -115,12 +128,16 @@ export function isLeadIndicacao(lead: any): boolean {
 }
 
 /**
- * Verifica se o lead foi CRIADO dentro do período selecionado (Dia, Semana, Quinzena, Mês).
+ * Verifica se o lead foi CRIADO dentro do período selecionado (Dia, Semana, Quinzena, Mês ou Personalizado).
  */
-export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame): boolean {
+export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?: CustomDateRange): boolean {
   if (!lead) return false;
   const dateStr = lead.created_at || lead.status_updated_at || lead.updated_at;
   if (!dateStr) return false;
+
+  if (timeFrame === "personalizado") {
+    return isDateInCustomRange(dateStr, customRange?.startDate, customRange?.endDate);
+  }
 
   const leadDate = new Date(dateStr);
   const now = new Date();
@@ -154,9 +171,16 @@ export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame): boole
 }
 
 /**
- * Verifica se a venda realizada ocorreu dentro da janela de tempo selecionada.
+ * Verifica se a venda realizada ocorreu dentro da janela de tempo selecionada (ou intervalo personalizado).
  */
-export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame): boolean {
+export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?: CustomDateRange): boolean {
+  if (!lead) return false;
+
+  if (timeFrame === "personalizado") {
+    const saleDate = lead.dados_cadastro?.data_venda || lead.dados_cadastro?.data_fechamento || lead.status_updated_at || lead.created_at;
+    return isDateInCustomRange(saleDate, customRange?.startDate, customRange?.endDate);
+  }
+
   const dateStr = lead.status_updated_at || lead.created_at || lead.updated_at;
   if (!dateStr) return false;
 
@@ -192,13 +216,14 @@ export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame): boolean {
 
 /**
  * Calcula o desempenho real das 5 lojas.
- * VENDA REALIZADA considera ESTRITAMENTE leads com status 'venda_fechada' ou 'fechado' no funil de vendas.
- * INDICAÇÕES considera ESTRITAMENTE leads criados no período selecionado (ex: Agosto/2026).
+ * VENDA REALIZADA considera ESTRITAMENTE leads com status 'venda_fechada' ou 'fechado' no funil.
+ * INDICAÇÕES considera ESTRITAMENTE leads criados no período/intervalo selecionado.
  */
 export function calculateLojasPerformance(
   leads: any[],
   lojas: LojaConfig[],
-  timeFrame: TimeFrame = "mes"
+  timeFrame: TimeFrame = "mes",
+  customRange?: CustomDateRange
 ): {
   lojasMetrics: LojaPerformance[];
   metaGlobalMensal: number;
@@ -222,6 +247,13 @@ export function calculateLojasPerformance(
   if (timeFrame === "dia") periodFactor = 1 / daysInMonth;
   else if (timeFrame === "semana") periodFactor = 7 / daysInMonth;
   else if (timeFrame === "quinzena") periodFactor = 15 / daysInMonth;
+  else if (timeFrame === "personalizado" && customRange?.startDate && customRange?.endDate) {
+    const s = new Date(customRange.startDate + "T00:00:00");
+    const e = new Date(customRange.endDate + "T23:59:59");
+    const diffMs = Math.abs(e.getTime() - s.getTime());
+    const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    periodFactor = diffDays / daysInMonth;
+  }
 
   const currentMonthStr = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }).substring(0, 7);
 
@@ -233,14 +265,14 @@ export function calculateLojasPerformance(
     });
 
     // Leads desta loja criados no período selecionado
-    const storeLeadsNoPeriodo = storeLeads.filter(l => isLeadCreatedInTimeFrame(l, timeFrame));
+    const storeLeadsNoPeriodo = storeLeads.filter(l => isLeadCreatedInTimeFrame(l, timeFrame, customRange));
 
-    // LEADS COM VENDA FECHADA NO FUNIL (Strict Status 'venda_fechada' ou 'fechado')
+    // LEADS COM VENDA FECHADA NO FUNIL
     const leadsFechadosPeriodo = storeLeads.filter(l => {
       const status = (l.status || "").toLowerCase().replace("_", " ").trim();
       const isClosed = status === "fechado" || status === "venda fechada" || status === "venda_fechada";
       const isShadow = (l as any).origem === "carteira_shadow";
-      return isClosed && !isShadow && isLeadInTimeFrame(l, timeFrame);
+      return isClosed && !isShadow && isLeadInTimeFrame(l, timeFrame, customRange);
     });
 
     const leadsFechadosMes = storeLeads.filter(l => {
@@ -253,8 +285,8 @@ export function calculateLojasPerformance(
     const realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
     const realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
 
-    const realizadoUsado = timeFrame === "mes" ? realizadoMensal : realizadoPeriodo;
-    const leadsFechadosUsados = timeFrame === "mes" ? leadsFechadosMes : leadsFechadosPeriodo;
+    const realizadoUsado = (timeFrame === "mes" || timeFrame === "personalizado") ? realizadoPeriodo : realizadoPeriodo;
+    const leadsFechadosUsados = leadsFechadosPeriodo;
 
     const metaPeriodo = Math.round(loja.metaMensal * periodFactor);
     const atingimentoPeriodo = metaPeriodo > 0 ? (realizadoUsado / metaPeriodo) * 100 : 0;
@@ -367,12 +399,23 @@ export function calculateLojasPerformance(
   };
 }
 
-export function getTimeFrameLabel(timeFrame: TimeFrame): string {
+export function getTimeFrameLabel(timeFrame: TimeFrame, customRange?: CustomDateRange): string {
   switch (timeFrame) {
     case "dia": return "DO DIA (Hoje)";
     case "semana": return "DA SEMANA (7 dias)";
     case "quinzena": return "DA QUINZENA (15 dias)";
     case "mes": return "DO MÊS (Agosto/2026)";
+    case "personalizado": {
+      const formatDate = (dStr?: string) => {
+        if (!dStr) return "";
+        const parts = dStr.split("-");
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return dStr;
+      };
+      const start = formatDate(customRange?.startDate) || "Início";
+      const end = formatDate(customRange?.endDate) || "Hoje";
+      return `PERÍODO PERSONALIZADO (${start} até ${end})`;
+    }
   }
 }
 
@@ -381,9 +424,10 @@ export function generateWhatsAppManagerReport(
   timeFrame: TimeFrame,
   metaGlobal: number,
   realizadoGlobal: number,
-  selectedLojaId: string = "all"
+  selectedLojaId: string = "all",
+  customRange?: CustomDateRange
 ): string {
-  const timeLabel = getTimeFrameLabel(timeFrame);
+  const timeLabel = getTimeFrameLabel(timeFrame, customRange);
   const dateFormatted = new Date().toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -481,9 +525,10 @@ export function generateWhatsAppRegionalCoordinatorReport(
   lojasMetrics: LojaPerformance[],
   timeFrame: TimeFrame,
   metaGlobal: number,
-  realizadoGlobal: number
+  realizadoGlobal: number,
+  customRange?: CustomDateRange
 ): string {
-  const timeLabel = getTimeFrameLabel(timeFrame);
+  const timeLabel = getTimeFrameLabel(timeFrame, customRange);
   const dateFormatted = new Date().toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "2-digit",

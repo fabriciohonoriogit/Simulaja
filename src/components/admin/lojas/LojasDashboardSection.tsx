@@ -75,6 +75,18 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
   const [auditModalOpen, setAuditModalOpen] = useState(false);
   const [selectedAuditLoja, setSelectedAuditLoja] = useState<LojaPerformance | null>(null);
 
+  // Intervalo de Datas Personalizado
+  const [startDate, setStartDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  });
+  const [endDate, setEndDate] = useState<string>(() => {
+    const d = new Date();
+    return d.toISOString().substring(0, 10);
+  });
+
+  const customRange = useMemo(() => ({ startDate, endDate }), [startDate, endDate]);
+
   // Calcular performance das 5 lojas incluindo métricas de indicação e conversão estrita
   const {
     lojasMetrics,
@@ -90,8 +102,8 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
     taxaConversaoGlobalIndicacoes,
     taxaConversaoGlobalGeral
   } = useMemo(() => {
-    return calculateLojasPerformance(leads, lojas, timeFrame);
-  }, [leads, lojas, timeFrame]);
+    return calculateLojasPerformance(leads, lojas, timeFrame, customRange);
+  }, [leads, lojas, timeFrame, customRange]);
 
   // Preparar dados para o gráfico de Vendas vs Meta
   const chartDataVendas = useMemo(() => {
@@ -182,9 +194,9 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         {/* CONTROLES E BOTÕES DE AÇÃO */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Seletor de Período */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200/80">
-            {(["dia", "semana", "quinzena", "mes"] as TimeFrame[]).map(tf => {
-              const labels = { dia: "Dia", semana: "Semana", quinzena: "Quinzena", mes: "Mês" };
+          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200/80">
+            {(["dia", "semana", "quinzena", "mes", "personalizado"] as TimeFrame[]).map(tf => {
+              const labels = { dia: "Dia", semana: "Semana", quinzena: "Quinzena", mes: "Mês", personalizado: "📅 Personalizado" };
               const active = timeFrame === tf;
               return (
                 <button
@@ -201,6 +213,30 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
               );
             })}
           </div>
+
+          {/* INPUTS DE DATA PARA PERÍODO PERSONALIZADO */}
+          {timeFrame === "personalizado" && (
+            <div className="flex items-center gap-2 bg-slate-50 border border-blue-200 p-1.5 rounded-xl shadow-sm animate-in fade-in duration-200">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase px-1">De:</span>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="h-8 w-32 bg-white text-slate-900 font-mono text-xs font-bold border-slate-200 rounded-lg p-1"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase px-1">Até:</span>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="h-8 w-32 bg-white text-slate-900 font-mono text-xs font-bold border-slate-200 rounded-lg p-1"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Botão de Edição de Metas */}
           <Button
@@ -600,6 +636,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         realizadoGlobal={realizadoGlobalMensal}
         currentTimeFrame={timeFrame}
         initialReportType={reportModalType}
+        customRange={customRange}
       />
 
       {/* MODAL DE AUDITORIA DE INDICAÇÕES */}
@@ -608,6 +645,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         onOpenChange={setAuditModalOpen}
         lojaPerformance={selectedAuditLoja}
         timeFrame={timeFrame}
+        customRange={customRange}
       />
 
       {/* MODAL DE EDIÇÃO DE METAS DAS LOJAS (LIGHT THEME) */}
