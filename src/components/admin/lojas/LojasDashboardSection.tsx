@@ -56,6 +56,7 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { RelatorioGerentesModal } from "./RelatorioGerentesModal";
 import { AuditIndicacoesModal } from "./AuditIndicacoesModal";
+import { AnaliseConversaoModal } from "./AnaliseConversaoModal";
 
 interface LojasDashboardSectionProps {
   leads: any[];
@@ -83,6 +84,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
   const [editingLojas, setEditingLojas] = useState<LojaConfig[]>([]);
   const [auditModalOpen, setAuditModalOpen] = useState(false);
   const [selectedAuditLoja, setSelectedAuditLoja] = useState<LojaPerformance | null>(null);
+  const [analiseModalOpen, setAnaliseModalOpen] = useState(false);
 
   // Intervalo de Datas Personalizado
   const [startDate, setStartDate] = useState<string>(() => {
@@ -440,7 +442,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
 
         {/* Gráfico 2: Análise de Taxa de Conversão (%) por Filial */}
         <div className="p-5 rounded-2xl bg-slate-50/60 border border-slate-200/80 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
                 <Percent className="h-4 w-4 text-purple-600" /> Análise de Conversão: Indicações vs Geral
@@ -449,9 +451,15 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
                 Taxa de fechamento de vendas (%) comparando indicações e leads normais por loja.
               </p>
             </div>
-            <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700 text-[10px] font-bold">
-              Eficiência
-            </Badge>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAnaliseModalOpen(true)}
+              className="h-8 px-3 text-[10px] font-black uppercase bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-600 hover:to-indigo-600 hover:text-white text-purple-800 border-purple-200 rounded-xl flex items-center gap-1.5 transition-all shadow-sm shrink-0"
+            >
+              <BarChart3 className="h-3.5 w-3.5" /> Diagnóstico Loja x Especialista
+            </Button>
           </div>
 
           <div className="h-72 w-full pt-2">
@@ -657,6 +665,15 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         customRange={customRange}
       />
 
+      {/* MODAL DE ANÁLISE DE CONVERSÃO LOJA X ESPECIALISTA */}
+      <AnaliseConversaoModal
+        open={analiseModalOpen}
+        onOpenChange={setAnaliseModalOpen}
+        lojasMetrics={lojasMetrics}
+        timeFrame={timeFrame}
+        customRange={customRange}
+      />
+
       {/* MODAL DE EDIÇÃO DE METAS DAS LOJAS (LIGHT THEME) */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent className="max-w-2xl bg-white border-slate-200 text-slate-900 p-6 rounded-3xl shadow-2xl">
@@ -676,7 +693,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
                   <span className="text-xs font-bold text-slate-700">{loja.cidade}</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs font-bold text-slate-600">Nome da Unidade</Label>
                     <Input
@@ -698,6 +715,20 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
                       onChange={(e) => {
                         const copy = [...editingLojas];
                         copy[idx].metaMensal = Number(e.target.value) || 0;
+                        setEditingLojas(copy);
+                      }}
+                      className="bg-white border-slate-200 text-slate-900 text-xs font-bold h-9 rounded-xl"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-slate-600">Nº Func. Ativos</Label>
+                    <Input
+                      type="number"
+                      value={loja.qtdFuncionarios || 10}
+                      onChange={(e) => {
+                        const copy = [...editingLojas];
+                        copy[idx].qtdFuncionarios = Number(e.target.value) || 1;
                         setEditingLojas(copy);
                       }}
                       className="bg-white border-slate-200 text-slate-900 text-xs font-bold h-9 rounded-xl"

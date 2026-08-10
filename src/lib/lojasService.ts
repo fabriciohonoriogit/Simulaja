@@ -595,13 +595,16 @@ export function generateWhatsAppRegionalCoordinatorReport(
   let lojasBreakdown = "";
   sortedByRank.forEach(m => {
     const trophy = m.posicao === 1 ? "🥇" : m.posicao === 2 ? "🥈" : m.posicao === 3 ? "🥉" : "🏬";
+    const analise = getAnaliseConversaoEspecialista(m);
+
     lojasBreakdown += `
 ${trophy} *${m.loja.nome}*
    • Vendas Fechadas no Funil: *${formatCurrency(m.realizado)}* (${m.closedLeadsCount} contratos | ${m.atingimentoMensal.toFixed(1)}% da Meta)
-   • Indicações Recebidas: *${m.totalIndicacoes}* cadastros
-   • Indicações Fechadas: *${m.closedIndicacoesCount}* vendas (*${m.taxaConversaoIndicacoes.toFixed(1)}% conv.*)
+   • Indicações Recebidas: *${m.totalIndicacoes}* cadastros (${analise.taxaGeracaoIndicao} ind./func. — *${analise.classificacaoGeracao}*)
+   • Indicações Fechadas: *${m.closedIndicacoesCount}* vendas (*${m.taxaConversaoEspecialista}% conv. Especialista* — *${analise.classificacaoConversao}*)
    • Vol. R$ Fechado via Indicação: ${formatCurrency(m.realizadoIndicacoes)}
-   • Conversão Geral da Loja: ${m.taxaConversaoGeral.toFixed(1)}% | Ticket Médio: ${formatCurrency(m.ticketMedio)}
+   • Diagnóstico Funil: *${analise.diagnostico}* (Vendas Nec.: ${analise.vendasNecessarias})
+   • Ticket Médio: ${formatCurrency(m.ticketMedio)}
 `;
   });
 
@@ -623,13 +626,94 @@ ${faltanteGlobal > 0 ? `🔻 *Faltante Global:* ${formatCurrency(faltanteGlobal)
 💰 *Volume Fechado via Indicação:* ${formatCurrency(realizadoIndicacoesGlobal)}
 ========================================
 
-🏆 *DETALHAMENTO POR FILIAL & INDICAÇÕES:*
+🏆 *DETALHAMENTO POR FILIAL & ANÁLISE DE CONVERSÃO (LOJA X ESPECIALISTA):*
 ${lojasBreakdown}
 ----------------------------------------
-📌 *Síntese Operacional de Fechamento:*
-• Relatório consolidado de fechamento das 5 unidades Magalu da Regional Curitiba.
-• Foco da equipe regional em aumentar a conversão de indicações ativas e vendas fechadas.
+📌 *Síntese Operacional & Diretrizes de Fechamento:*
+• *Separar Responsabilidades:* Geração de indicações é engajamento da Loja; Conversão em vendas é execução do Especialista.
+• *Foco do Gestor de Loja:* Manter a cultura de indicação ativa nas matinais.
+• *Foco do Especialista:* Agilidade no primeiro contato (<30min) e dar feedback ao funcionário indicador.
 
 🤝 *Atenciosamente,*
 *Equipe de Gestão Comercial - SimulaJá CRM Magalu*`;
+}
+
+export interface AnaliseConversaoEspecialistaResult {
+  vendasNecessarias: number;
+  taxaGeracaoIndicao: number;
+  classificacaoGeracao: "ABAIXO" | "NA MÉDIA" | "ACIMA";
+  taxaConversaoEspecialista: number;
+  classificacaoConversao: "ABAIXO" | "NA MÉDIA" | "ACIMA";
+  diagnostico: "GARGALO DE CONVERSÃO" | "GARGALO DE VOLUME" | "EXCELENTE DESEMPENHO";
+  diagnosticoDetalhado: string;
+  acoesEspecialista: string[];
+  acoesGestorLoja: string[];
+}
+
+export function getAnaliseConversaoEspecialista(m: LojaPerformance): AnaliseConversaoEspecialistaResult {
+  const qtdFunc = m.loja.qtdFuncionarios || 10;
+  const ticketRef = m.ticketMedio > 0 ? m.ticketMedio : 100000;
+  const vendasNecessarias = Math.max(1, Math.ceil(m.metaMensal / ticketRef));
+
+  // 1. Taxa de geração de indicação (Loja / Funcionários)
+  const taxaGeracaoIndicao = Number((m.totalIndicacoes / (qtdFunc || 1)).toFixed(2));
+  let classificacaoGeracao: "ABAIXO" | "NA MÉDIA" | "ACIMA" = "NA MÉDIA";
+  if (taxaGeracaoIndicao < 0.5) classificacaoGeracao = "ABAIXO";
+  else if (taxaGeracaoIndicao > 1.5) classificacaoGeracao = "ACIMA";
+
+  // 2. Taxa de conversão do especialista (Vendas Fechadas / Indicações)
+  const taxaConversaoEspecialista = Number(m.taxaConversaoIndicacoes.toFixed(1));
+  let classificacaoConversao: "ABAIXO" | "NA MÉDIA" | "ACIMA" = "NA MÉDIA";
+  if (taxaConversaoEspecialista < 20) classificacaoConversao = "ABAIXO";
+  else if (taxaConversaoEspecialista > 40) classificacaoConversao = "ACIMA";
+
+  // 3. Lógica de Diagnóstico (Volume vs Conversão)
+  const potencialVendasComIndicacoes = Math.floor(m.totalIndicacoes * 0.25);
+  
+  let diagnostico: "GARGALO DE CONVERSÃO" | "GARGALO DE VOLUME" | "EXCELENTE DESEMPENHO" = "GARGALO DE VOLUME";
+  let diagnosticoDetalhado = "";
+
+  if (m.closedIndicacoesCount >= vendasNecessarias) {
+    diagnostico = "EXCELENTE DESEMPENHO";
+    diagnosticoDetalhado = `A meta de indicações já foi superada no período com ${m.closedIndicacoesCount} vendas fechadas via indicação.`;
+  } else if (potencialVendasComIndicacoes >= vendasNecessarias || m.totalIndicacoes >= vendasNecessarias * 2.5) {
+    diagnostico = "GARGALO DE CONVERSÃO";
+    diagnosticoDetalhado = `O volume de indicações (${m.totalIndicacoes} rec.) é suficiente para atingir a meta de ${vendasNecessarias} vendas. A prioridade máxima de ação é o fechamento e execução pelo Especialista.`;
+  } else {
+    diagnostico = "GARGALO DE VOLUME";
+    diagnosticoDetalhado = `O volume de indicações (${m.totalIndicacoes} rec.) ainda é insuficiente para bater a meta de ${vendasNecessarias} vendas. A prioridade é engajar a equipe da loja a indicar mais clientes.`;
+  }
+
+  // 4. Plano de Ação Estruturado por Responsável
+  const acoesEspecialista: string[] = [];
+  const acoesGestorLoja: string[] = [];
+
+  if (diagnostico === "GARGALO DE CONVERSÃO" || classificacaoConversao === "ABAIXO") {
+    acoesEspecialista.push("⏱️ Reduzir tempo de primeiro contato com a indicação para menos de 30 minutos.");
+    acoesEspecialista.push("🔄 Enviar feedback/status da indicação de volta ao funcionário da loja em até 24h.");
+    acoesEspecialista.push("📞 Executar régua intensiva de agendamento presencial/virtual (D0, D+1, D+3).");
+  } else {
+    acoesEspecialista.push("✅ Manter a velocidade de primeiro contato em D0 e continuar alimentando o feedback aos vendedores.");
+    acoesEspecialista.push("🎯 Focar no fechamento de cotas de maior ticket médio.");
+  }
+
+  if (diagnostico === "GARGALO DE VOLUME" || classificacaoGeracao === "ABAIXO") {
+    acoesGestorLoja.push("📢 Realizar pauta diária de consórcio nas reuniões matinais da loja.");
+    acoesGestorLoja.push("🏆 Reconhecer os 3 funcionários destaques em indicações da semana.");
+    acoesGestorLoja.push("💡 Treinar a equipe de caixa/balcão para identificar gatilhos de consórcio no atendimento.");
+  } else {
+    acoesGestorLoja.push("👏 Manter o engajamento da equipe e celebrar os funcionários destaques em indicações.");
+  }
+
+  return {
+    vendasNecessarias,
+    taxaGeracaoIndicao,
+    classificacaoGeracao,
+    taxaConversaoEspecialista,
+    classificacaoConversao,
+    diagnostico,
+    diagnosticoDetalhado,
+    acoesEspecialista,
+    acoesGestorLoja
+  };
 }

@@ -6,6 +6,7 @@ export interface LojaConfig {
   metaMensal: number;
   gerente?: string;
   contatoGerente?: string;
+  qtdFuncionarios?: number; // Nº de funcionários ativos na loja indicadores
   corHex: string;
 }
 
@@ -17,6 +18,7 @@ export const INITIAL_LOJAS: LojaConfig[] = [
     nome: "PARANAGUÁ - MAGALU FILIAL 952",
     metaMensal: 108464,
     gerente: "Gerente Paranaguá",
+    qtdFuncionarios: 12,
     corHex: "#3b82f6" // blue
   },
   {
@@ -26,6 +28,7 @@ export const INITIAL_LOJAS: LojaConfig[] = [
     nome: "SÃO MATEUS DO SUL - MAGALU FILIAL 927",
     metaMensal: 103502,
     gerente: "Gerente São Mateus",
+    qtdFuncionarios: 10,
     corHex: "#10b981" // emerald
   },
   {
@@ -35,6 +38,7 @@ export const INITIAL_LOJAS: LojaConfig[] = [
     nome: "IRATI - MAGALU FILIAL 929",
     metaMensal: 124802,
     gerente: "Gerente Irati",
+    qtdFuncionarios: 14,
     corHex: "#8b5cf6" // purple
   },
   {
@@ -44,6 +48,7 @@ export const INITIAL_LOJAS: LojaConfig[] = [
     nome: "CANOINHAS - MAGALU FILIAL 646",
     metaMensal: 50545,
     gerente: "Gerente Canoinhas",
+    qtdFuncionarios: 8,
     corHex: "#f59e0b" // amber
   },
   {
@@ -53,6 +58,7 @@ export const INITIAL_LOJAS: LojaConfig[] = [
     nome: "CAMPO LARGO - MAGALU FILIAL 909",
     metaMensal: 70071,
     gerente: "Gerente Campo Largo",
+    qtdFuncionarios: 9,
     corHex: "#ec4899" // pink
   }
 ];
