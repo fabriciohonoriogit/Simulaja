@@ -1,8 +1,8 @@
 require('dotenv').config();
 const axios = require('axios');
 
-const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || "http://localhost:8080";
-const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || "B6D711FCDE4D4FD5936544120E713976";
+const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || "";
+const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || "";
 const INSTANCE_NAME = process.env.INSTANCE_NAME || "simulaja";
 
 async function sendMessage(remoteJid, text) {

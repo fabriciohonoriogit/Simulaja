@@ -15,8 +15,8 @@ serve(async (req) => {
     const { grupo, cota, tipoConsulta } = body;
 
     // As credenciais de acesso ao Portal Magalu são obtidas diretamente das variáveis de ambiente isoladas do Supabase
-    const MAGALU_PORTAL_USER = Deno.env.get("MAGALU_PORTAL_USER") || "representante_simulaja";
-    const MAGALU_PORTAL_PASS = Deno.env.get("MAGALU_PORTAL_PASS") || "segredo_protegido_cofre";
+    const MAGALU_PORTAL_USER = Deno.env.get("MAGALU_PORTAL_USER") || "";
+    const MAGALU_PORTAL_PASS = Deno.env.get("MAGALU_PORTAL_PASS") || "";
 
     console.log(`[Magalu Playwright Worker] Autenticando com usuário '${MAGALU_PORTAL_USER}' e consultando Grupo ${grupo} Cota ${cota}`);
 

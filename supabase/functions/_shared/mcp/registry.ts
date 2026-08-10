@@ -257,8 +257,8 @@ mcpRegistry.register({
     }
 
     const cleanPhone = targetPhone.replace(/\D/g, "");
-    const evoUrl = Deno.env.get("EVOLUTION_API_URL") || "http://localhost:8080";
-    const evoKey = Deno.env.get("EVOLUTION_GLOBAL_KEY") || "B6D711FCDE4D4FD5936544120E713976";
+    const evoUrl = Deno.env.get("EVOLUTION_API_URL") || "";
+    const evoKey = Deno.env.get("EVOLUTION_GLOBAL_KEY") || "";
 
     // Grava histórico no CRM
     if (leadId) {
@@ -300,7 +300,7 @@ mcpRegistry.register({
     },
   },
   handler: async (_, args) => {
-    const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "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";
+    const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "";
     const res = await fetch("https://api.tavily.com/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -496,7 +496,7 @@ mcpRegistry.register({
     }
 
     // 2. Fallback via busca Tavily Web
-    const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "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";
+    const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "";
     try {
       const searchRes = await fetch("https://api.tavily.com/search", {
         method: "POST",

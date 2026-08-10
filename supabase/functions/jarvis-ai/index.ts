@@ -440,7 +440,7 @@ async function executeTool(supabase: any, name: string, args: any) {
       return { success: true, results: data };
     }
     if (name === "search_web") {
-      const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "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";
+      const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "";
       let searchAnswer = "";
       let searchResults: any[] = [];
 
@@ -525,8 +525,8 @@ async function executeTool(supabase: any, name: string, args: any) {
       }
 
       const cleanPhone = targetPhone.replace(/\D/g, '');
-      const evoUrl = Deno.env.get("EVOLUTION_API_URL") || "http://localhost:8080";
-      const evoKey = Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "B6D711FCDE4D4FD5936544120E713976";
+      const evoUrl = Deno.env.get("EVOLUTION_API_URL") || "";
+      const evoKey = Deno.env.get("EVOLUTION_GLOBAL_API_KEY") || "";
 
       // 1. Grava a mensagem no chat do lead no CRM
       if (leadId) {
