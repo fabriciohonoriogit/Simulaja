@@ -34,9 +34,15 @@ export interface LojaPerformance {
   indicacoesLeadsList: any[]; // Lista detalhada de leads com indicação para auditoria
 }
 
-export function getLojasConfig(): LojaConfig[] {
+export function getLojasStorageKey(organizacaoId?: string | null): string {
+  if (!organizacaoId) return STORAGE_KEY_LOJAS;
+  return `${STORAGE_KEY_LOJAS}_${organizacaoId}`;
+}
+
+export function getLojasConfig(organizacaoId?: string | null): LojaConfig[] {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY_LOJAS);
+    const key = getLojasStorageKey(organizacaoId);
+    const saved = localStorage.getItem(key);
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -49,9 +55,10 @@ export function getLojasConfig(): LojaConfig[] {
   return INITIAL_LOJAS;
 }
 
-export function saveLojasConfig(lojas: LojaConfig[]): void {
+export function saveLojasConfig(lojas: LojaConfig[], organizacaoId?: string | null): void {
   try {
-    localStorage.setItem(STORAGE_KEY_LOJAS, JSON.stringify(lojas));
+    const key = getLojasStorageKey(organizacaoId);
+    localStorage.setItem(key, JSON.stringify(lojas));
   } catch (err) {
     console.error("Erro ao salvar configurações das lojas:", err);
   }

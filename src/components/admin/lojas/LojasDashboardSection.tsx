@@ -59,14 +59,22 @@ import { AuditIndicacoesModal } from "./AuditIndicacoesModal";
 interface LojasDashboardSectionProps {
   leads: any[];
   carteira?: any[];
+  organizacaoId?: string | null;
 }
 
 export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
   leads,
-  carteira = []
+  carteira = [],
+  organizacaoId
 }) => {
   const { toast } = useToast();
-  const [lojas, setLojas] = useState<LojaConfig[]>(() => getLojasConfig());
+  const [lojas, setLojas] = useState<LojaConfig[]>(() => getLojasConfig(organizacaoId));
+
+  useEffect(() => {
+    if (organizacaoId) {
+      setLojas(getLojasConfig(organizacaoId));
+    }
+  }, [organizacaoId]);
   const [timeFrame, setTimeFrame] = useState<TimeFrame>("mes");
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportModalType, setReportModalType] = useState<"gerencial" | "coordenador">("gerencial");
@@ -140,7 +148,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
   // Salvar edições das metas das lojas
   const handleSaveMetas = () => {
     setLojas(editingLojas);
-    saveLojasConfig(editingLojas);
+    saveLojasConfig(editingLojas, organizacaoId);
     setEditModalOpen(false);
     toast({
       title: "Metas Atualizadas com Sucesso! 🎯",

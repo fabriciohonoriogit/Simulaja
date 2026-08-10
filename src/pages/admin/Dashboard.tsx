@@ -406,8 +406,8 @@ export default function Dashboard() {
           <HallOfFame ranking={ranking} profileId={profile?.id} />
         </div>
 
-        {/* SEÇÃO MULTI-LOJA MAGALU: METAS, GRÁFICOS E RELATÓRIOS GERENCIAIS */}
-        <LojasDashboardSection leads={leads} carteira={carteira} />
+        {/* SEÇÃO MULTI-LOJA MAGALU: METAS, GRÁFICOS E RELATÓRIOS GERENCIAIS (EXCLUSIVO DA ORGANIZAÇÃO) */}
+        <LojasDashboardSection leads={leads} carteira={carteira} organizacaoId={profile?.organizacao_id} />
 
         {/* MÉTRICAS CLÁSSICAS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

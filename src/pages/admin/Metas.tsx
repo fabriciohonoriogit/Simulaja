@@ -560,8 +560,8 @@ export default function Metas() {
                     )}
                 </div>
 
-                {/* PAINEL MULTI-LOJA MAGALU: ACOMPANHAMENTO DAS 5 FILIAIS */}
-                <LojasDashboardSection leads={leads} carteira={carteira} />
+                {/* PAINEL MULTI-LOJA MAGALU: ACOMPANHAMENTO DAS 5 FILIAIS (EXCLUSIVO DA ORGANIZAÇÃO) */}
+                <LojasDashboardSection leads={leads} carteira={carteira} organizacaoId={profile?.organizacao_id} />
 
                 {/* Meta Anual Card — stacked on mobile */}
                 <Card className="bg-primary/5 border-primary/20">
