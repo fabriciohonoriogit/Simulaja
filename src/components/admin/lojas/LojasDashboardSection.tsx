@@ -29,7 +29,8 @@ import {
   Handshake,
   Percent,
   Sparkles,
-  UserCheck
+  UserCheck,
+  Search
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
