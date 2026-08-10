@@ -57,4 +57,12 @@ export const INITIAL_LOJAS: LojaConfig[] = [
   }
 ];
 
+export const COORDENADOR_REGIONAL = {
+  nome: "Rafael Leder",
+  cargo: "Coordenador Regional do Consórcio Magalu",
+  regional: "Regional Curitiba",
+  whatsapp: "5549999492726",
+  whatsappFormatado: "(49) 99949-2726"
+};
+
 export const STORAGE_KEY_LOJAS = "simulaja_lojas_config_v1";

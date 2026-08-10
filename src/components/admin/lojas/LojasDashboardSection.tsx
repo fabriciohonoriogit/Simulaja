@@ -67,6 +67,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
   const [lojas, setLojas] = useState<LojaConfig[]>(() => getLojasConfig());
   const [timeFrame, setTimeFrame] = useState<TimeFrame>("mes");
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportModalType, setReportModalType] = useState<"gerencial" | "coordenador">("gerencial");
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingLojas, setEditingLojas] = useState<LojaConfig[]>([]);
 
@@ -210,10 +211,25 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
           {/* Botão Gerar Relatório Gerentes */}
           <Button
             size="sm"
-            onClick={() => setReportModalOpen(true)}
+            onClick={() => {
+              setReportModalType("gerencial");
+              setReportModalOpen(true);
+            }}
             className="h-10 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-600/20 flex items-center gap-2"
           >
             <FileText className="h-4 w-4" /> Relatório para Gerentes
+          </Button>
+
+          {/* Botão Relatório Coordenador Regional Rafael Leder */}
+          <Button
+            size="sm"
+            onClick={() => {
+              setReportModalType("coordenador");
+              setReportModalOpen(true);
+            }}
+            className="h-10 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-purple-600/20 flex items-center gap-2"
+          >
+            <UserCheck className="h-4 w-4" /> Relatório Coordenador (Rafael Leder)
           </Button>
         </div>
       </div>
@@ -547,7 +563,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         </div>
       </div>
 
-      {/* MODAL DE RELATÓRIOS PARA GERENTES */}
+      {/* MODAL DE RELATÓRIOS PARA GERENTES E COORDENADOR REGIONAL */}
       <RelatorioGerentesModal
         open={reportModalOpen}
         onOpenChange={setReportModalOpen}
@@ -556,6 +572,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         metaGlobal={metaGlobalMensal}
         realizadoGlobal={realizadoGlobalMensal}
         currentTimeFrame={timeFrame}
+        initialReportType={reportModalType}
       />
 
       {/* MODAL DE EDIÇÃO DE METAS DAS LOJAS (LIGHT THEME) */}

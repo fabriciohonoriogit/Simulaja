@@ -1,4 +1,4 @@
-import { LojaConfig, INITIAL_LOJAS, STORAGE_KEY_LOJAS } from "@/constants/lojas";
+import { LojaConfig, INITIAL_LOJAS, STORAGE_KEY_LOJAS, COORDENADOR_REGIONAL } from "@/constants/lojas";
 import { isVendaRealizadaNoMes, formatCurrency } from "./utils";
 
 export type TimeFrame = "dia" | "semana" | "quinzena" | "mes";
@@ -434,4 +434,69 @@ ${lojaTextList}
 3. Realizar follow-up diário com os especialistas de vendas.
 
 🔥 *SIMULAJÁ CRM - GESTÃO MULTI-LOJA MAGALU*`;
+}
+
+export function generateWhatsAppRegionalCoordinatorReport(
+  lojasMetrics: LojaPerformance[],
+  timeFrame: TimeFrame,
+  metaGlobal: number,
+  realizadoGlobal: number
+): string {
+  const timeLabel = getTimeFrameLabel(timeFrame);
+  const dateFormatted = new Date().toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+
+  const atingimentoGlobal = metaGlobal > 0 ? (realizadoGlobal / metaGlobal) * 100 : 0;
+  const faltanteGlobal = Math.max(0, metaGlobal - realizadoGlobal);
+  const sortedByRank = [...lojasMetrics].sort((a, b) => a.posicao - b.posicao);
+
+  const totalIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.totalIndicacoes, 0);
+  const closedIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.closedIndicacoesCount, 0);
+  const realizadoIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.realizadoIndicacoes, 0);
+  const taxaConversaoIndicacoesGlobal = totalIndicacoesGlobal > 0 ? (closedIndicacoesGlobal / totalIndicacoesGlobal) * 100 : 0;
+  const totalContratosFechados = lojasMetrics.reduce((acc, l) => acc + l.closedLeadsCount, 0);
+
+  let lojasBreakdown = "";
+  sortedByRank.forEach(m => {
+    const trophy = m.posicao === 1 ? "🥇" : m.posicao === 2 ? "🥈" : m.posicao === 3 ? "🥉" : "🏬";
+    lojasBreakdown += `
+${trophy} *${m.loja.nome}*
+   • Vendas Fechadas no Funil: *${formatCurrency(m.realizado)}* (${m.closedLeadsCount} contratos | ${m.atingimentoMensal.toFixed(1)}% da Meta)
+   • Indicações Recebidas: *${m.totalIndicacoes}* cadastros
+   • Indicações Fechadas: *${m.closedIndicacoesCount}* vendas (*${m.taxaConversaoIndicacoes.toFixed(1)}% conv.*)
+   • Vol. R$ Fechado via Indicação: ${formatCurrency(m.realizadoIndicacoes)}
+   • Conversão Geral da Loja: ${m.taxaConversaoGeral.toFixed(1)}% | Ticket Médio: ${formatCurrency(m.ticketMedio)}
+`;
+  });
+
+  return `👔 *RELATÓRIO REGIONAL DE FECHAMENTO - CONSÓRCIO MAGALU* 🚀
+👤 *Coordenador Regional:* ${COORDENADOR_REGIONAL.nome} (${COORDENADOR_REGIONAL.regional})
+📅 *Data do Fechamento:* ${dateFormatted} (${timeLabel})
+🏬 *Unidades da Regional Curitiba:* 5 Lojas (Paranaguá, São Mateus, Irati, Canoinhas, Campo Largo)
+
+========================================
+🎯 *META GLOBAL CONSOLIDADA:* ${formatCurrency(metaGlobal)}
+💰 *VENDAS FECHADAS NO FUNIL:* *${formatCurrency(realizadoGlobal)}* (${totalContratosFechados} contratos)
+📈 *ATINGIMENTO REGIONAL:* *${atingimentoGlobal.toFixed(1)}%*
+${faltanteGlobal > 0 ? `🔻 *Faltante Global:* ${formatCurrency(faltanteGlobal)}` : `🎉 *Superávit Global:* ${formatCurrency(Math.abs(realizadoGlobal - metaGlobal))}`}
+
+🤝 *PAINEL CONSOLIDADO DE INDICAÇÕES (REGIONAL CURITIBA):*
+📩 *Total Indicações Recebidas:* ${totalIndicacoesGlobal} cadastros
+✅ *Vendas Fechadas via Indicação:* ${closedIndicacoesGlobal} contratos
+📈 *Taxa de Conversão de Indicações:* *${taxaConversaoIndicacoesGlobal.toFixed(1)}%*
+💰 *Volume Fechado via Indicação:* ${formatCurrency(realizadoIndicacoesGlobal)}
+========================================
+
+🏆 *DETALHAMENTO POR FILIAL & INDICAÇÕES:*
+${lojasBreakdown}
+----------------------------------------
+📌 *Síntese Operacional de Fechamento:*
+• Relatório consolidado de fechamento das 5 unidades Magalu da Regional Curitiba.
+• Foco da equipe regional em aumentar a conversão de indicações ativas e vendas fechadas.
+
+🤝 *Atenciosamente,*
+*Equipe de Gestão Comercial - SimulaJá CRM Magalu*`;
 }

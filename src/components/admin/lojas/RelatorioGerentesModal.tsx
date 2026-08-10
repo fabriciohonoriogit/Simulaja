@@ -16,14 +16,17 @@ import {
   Sparkles, 
   Users, 
   TrendingUp, 
-  Flame 
+  Flame,
+  UserCheck,
+  Send
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/SocialIcons";
-import { LojaConfig } from "@/constants/lojas";
+import { LojaConfig, COORDENADOR_REGIONAL } from "@/constants/lojas";
 import { 
   TimeFrame, 
   LojaPerformance, 
   generateWhatsAppManagerReport, 
+  generateWhatsAppRegionalCoordinatorReport,
   getTimeFrameLabel 
 } from "@/lib/lojasService";
 import { formatCurrency } from "@/lib/utils";
@@ -36,6 +39,7 @@ interface RelatorioGerentesModalProps {
   metaGlobal: number;
   realizadoGlobal: number;
   currentTimeFrame?: TimeFrame;
+  initialReportType?: "gerencial" | "coordenador";
 }
 
 export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
@@ -45,20 +49,20 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
   lojasMetrics,
   metaGlobal,
   realizadoGlobal,
-  currentTimeFrame = "mes"
+  currentTimeFrame = "mes",
+  initialReportType = "gerencial"
 }) => {
   const { toast } = useToast();
   const [timeFrame, setTimeFrame] = useState<TimeFrame>(currentTimeFrame);
   const [selectedLojaId, setSelectedLojaId] = useState<string>("all");
+  const [reportType, setReportType] = useState<"gerencial" | "coordenador">(initialReportType);
   const [copied, setCopied] = useState(false);
 
-  const reportText = generateWhatsAppManagerReport(
-    lojasMetrics,
-    timeFrame,
-    metaGlobal,
-    realizadoGlobal,
-    selectedLojaId
-  );
+  const isCoordenador = reportType === "coordenador";
+
+  const reportText = isCoordenador
+    ? generateWhatsAppRegionalCoordinatorReport(lojasMetrics, timeFrame, metaGlobal, realizadoGlobal)
+    : generateWhatsAppManagerReport(lojasMetrics, timeFrame, metaGlobal, realizadoGlobal, selectedLojaId);
 
   const totalIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.totalIndicacoes, 0);
   const closedIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.closedIndicacoesCount, 0);
@@ -70,14 +74,21 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
     setCopied(true);
     toast({
       title: "Relatório Copiado com Sucesso! 📱",
-      description: "O texto formatado para envio via WhatsApp aos gerentes foi copiado.",
+      description: isCoordenador 
+        ? `Relatório formatado para o Coordenador Regional ${COORDENADOR_REGIONAL.nome} copiado.`
+        : "O texto formatado para envio via WhatsApp aos gerentes foi copiado.",
     });
     setTimeout(() => setCopied(false), 3000);
   };
 
   const handleOpenDirectWhatsApp = () => {
     const encoded = encodeURIComponent(reportText);
-    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    const phone = isCoordenador ? COORDENADOR_REGIONAL.whatsapp : "";
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encoded}`, "_blank");
+    } else {
+      window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    }
   };
 
   const handlePrint = () => {
@@ -88,7 +99,7 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Relatório Gerencial Multi-Lojas Magalu & Indicações</title>
+          <title>${isCoordenador ? "Relatório Regional - Consórcio Magalu" : "Relatório Gerencial Multi-Lojas Magalu"}</title>
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #1e293b; }
             h1 { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 10px; }
@@ -106,9 +117,10 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
           </style>
         </head>
         <body>
-          <h1>📊 RELATÓRIO DE DESEMPENHO, INDICAÇÕES E CONVERSÃO MAGALU</h1>
+          <h1>📊 RELATÓRIO ${isCoordenador ? "REGIONAL DE FECHAMENTO (REGIONAL CURITIBA)" : "DE DESEMPENHO E INDICAÇÕES MAGALU"}</h1>
           <p><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString("pt-BR")} | <strong>Período:</strong> ${getTimeFrameLabel(timeFrame)}</p>
-          
+          ${isCoordenador ? `<p><strong>Destinatário:</strong> ${COORDENADOR_REGIONAL.nome} - ${COORDENADOR_REGIONAL.cargo} (${COORDENADOR_REGIONAL.regional})</p>` : ''}
+
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label">Meta Consolidada</div>
@@ -128,7 +140,7 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
             </div>
           </div>
 
-          <h2>🏬 Análise Detalhada de Vendas, Indicações e Conversão por Filial</h2>
+          <h2>🏬 Detalhamento de Vendas, Indicações e Conversão por Filial</h2>
           <table>
             <thead>
               <tr>
@@ -158,7 +170,7 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
             </tbody>
           </table>
 
-          <footer>Relatório emitido via SimulaJá CRM - Acompanhamento Multi-Loja Magalu</footer>
+          <footer>Relatório emitido via SimulaJá CRM - Consórcio Magalu Regional Curitiba</footer>
           <script>window.print();</script>
         </body>
       </html>
@@ -170,27 +182,77 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden bg-white border border-slate-200 text-slate-900 p-6 shadow-2xl rounded-3xl">
         <DialogHeader className="border-b border-slate-100 pb-4 shrink-0">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
-                <FileText className="h-6 w-6" />
+              <div className={`p-2.5 rounded-2xl text-white shadow-lg ${isCoordenador ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-purple-500/20' : 'bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-blue-500/20'}`}>
+                {isCoordenador ? <UserCheck className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
               </div>
               <div>
-                <DialogTitle className="text-xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-                  Relatório para Gerentes (Vendas, Indicações & Conversão)
-                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 uppercase text-[10px] font-bold tracking-wider">
-                    WhatsApp & PDF
+                <DialogTitle className="text-xl font-black tracking-tight text-slate-900 flex items-center gap-2 flex-wrap">
+                  {isCoordenador ? `Relatório p/ Coordenador Regional` : `Relatório para Gerentes`}
+                  <Badge className={`uppercase text-[10px] font-bold tracking-wider ${isCoordenador ? 'bg-purple-100 text-purple-800 border-purple-200' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>
+                    {isCoordenador ? `${COORDENADOR_REGIONAL.nome} (${COORDENADOR_REGIONAL.regional})` : 'WhatsApp & PDF'}
                   </Badge>
                 </DialogTitle>
                 <p className="text-xs text-slate-500 font-medium">
-                  Selecione o período (Dia, Semana, Quinzena, Mês) e a unidade para envio dos maiores indicadores.
+                  {isCoordenador 
+                    ? `Relatório consolidado de fechamento das 5 lojas para envio ao Coordenador ${COORDENADOR_REGIONAL.nome}.`
+                    : `Selecione o período (Dia, Semana, Quinzena, Mês) e a unidade para envio aos gerentes.`}
                 </p>
               </div>
+            </div>
+
+            {/* SELETOR DE TIPO DE RELATÓRIO */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setReportType("gerencial")}
+                className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all ${
+                  reportType === "gerencial"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                🏬 Gerentes
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportType("coordenador")}
+                className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all ${
+                  reportType === "coordenador"
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                👔 Coordenador
+              </button>
             </div>
           </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-5 py-4 custom-scrollbar pr-1">
+          {/* BANNER INFORMATIVO SE FOR COORDENADOR REGIONAL */}
+          {isCoordenador && (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200/80 flex items-center justify-between gap-3 text-purple-950 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-purple-600 text-white">
+                  <UserCheck className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-purple-950">
+                    Destinatário: {COORDENADOR_REGIONAL.nome} — {COORDENADOR_REGIONAL.cargo}
+                  </p>
+                  <p className="text-[11px] text-purple-700 font-medium">
+                    {COORDENADOR_REGIONAL.regional} • WhatsApp Direct: {COORDENADOR_REGIONAL.whatsappFormatado}
+                  </p>
+                </div>
+              </div>
+              <Badge className="bg-purple-600 text-white font-bold text-[10px] hidden sm:inline-flex">
+                Fechamento do Dia
+              </Badge>
+            </div>
+          )}
+
           {/* SELETORES DE FILTRO (LIGHT THEME) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
             {/* Filtro de Período */}
@@ -219,26 +281,33 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
               </div>
             </div>
 
-            {/* Filtro de Loja / Filial */}
+            {/* Filtro de Loja / Filial (Apenas se for visão Gerentes) */}
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5 text-emerald-600" /> Unidade / Loja Destino
+                <Building2 className="h-3.5 w-3.5 text-emerald-600" /> Unidade / Visão do Relatório
               </Label>
-              <Select value={selectedLojaId} onValueChange={setSelectedLojaId}>
-                <SelectTrigger className="bg-white border-slate-200 text-slate-900 font-bold h-10 rounded-xl">
-                  <SelectValue placeholder="Selecione a loja" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200 text-slate-900">
-                  <SelectItem value="all" className="font-bold text-amber-700">
-                    🌐 TODAS AS 5 LOJAS (Relatório Consolidado)
-                  </SelectItem>
-                  {lojas.map(l => (
-                    <SelectItem key={l.id} value={l.id} className="font-medium">
-                      🏬 {l.nome}
+              {isCoordenador ? (
+                <div className="h-10 px-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs font-black text-slate-800">
+                  <span>🌐 VISÃO CONSOLIDADA REGIONAL (5 Lojas)</span>
+                  <Badge className="bg-purple-100 text-purple-800 text-[9px] border-none">Regional</Badge>
+                </div>
+              ) : (
+                <Select value={selectedLojaId} onValueChange={setSelectedLojaId}>
+                  <SelectTrigger className="bg-white border-slate-200 text-slate-900 font-bold h-10 rounded-xl">
+                    <SelectValue placeholder="Selecione a loja" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200 text-slate-900">
+                    <SelectItem value="all" className="font-bold text-amber-700">
+                      🌐 TODAS AS 5 LOJAS (Relatório Consolidado)
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {lojas.map(l => (
+                      <SelectItem key={l.id} value={l.id} className="font-medium">
+                        🏬 {l.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
@@ -246,7 +315,7 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Pré-visualização do Relatório (Pronto para WhatsApp)
+                <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Pré-visualização da Mensagem WhatsApp
               </Label>
               <span className="text-[11px] text-slate-500 font-medium">
                 {reportText.length} caracteres
@@ -316,7 +385,7 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Copy className="h-4 w-4 text-blue-600" /> Copiar para WhatsApp
+                  <Copy className="h-4 w-4 text-blue-600" /> Copiar Texto
                 </>
               )}
             </Button>
@@ -324,9 +393,14 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
             <Button
               type="button"
               onClick={handleOpenDirectWhatsApp}
-              className="w-full sm:w-auto h-11 px-6 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-600/20 flex items-center gap-2"
+              className={`w-full sm:w-auto h-11 px-6 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center gap-2 text-white ${
+                isCoordenador 
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-600/20"
+                  : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-emerald-600/20"
+              }`}
             >
-              <WhatsAppIcon className="h-4 w-4 fill-current" /> Enviar Direct no WhatsApp
+              <WhatsAppIcon className="h-4 w-4 fill-current" />
+              {isCoordenador ? `Enviar p/ Rafael Leder (${COORDENADOR_REGIONAL.whatsappFormatado})` : "Enviar Direct no WhatsApp"}
             </Button>
           </div>
         </DialogFooter>
