@@ -258,13 +258,14 @@ async function executeTool(supabase: any, name: string, args: any) {
     }
 
     const useAdmin = Boolean(adminClient && orgId);
+    const dbClient = adminClient || client;
 
     if (name === "get_dashboard_metrics") {
-      let leadsQuery = client.from('leads').select('*', { count: 'exact', head: true });
+      let leadsQuery = dbClient.from('leads').select('*', { count: 'exact', head: true });
       if (useAdmin) leadsQuery = leadsQuery.eq('organizacao_id', orgId);
       const { count: leadsCount } = await leadsQuery;
 
-      let inadQuery = client.from('inadimplentes').select('valor_parcela, parcelas_atrasadas');
+      let inadQuery = dbClient.from('inadimplentes').select('valor_parcela, parcelas_atrasadas');
       if (useAdmin) inadQuery = inadQuery.eq('organizacao_id', orgId);
       const { data: inadimplentes } = await inadQuery;
 
@@ -272,7 +273,7 @@ async function executeTool(supabase: any, name: string, args: any) {
       return { leadsCount, dividaTotal, message: "Métricas gerais retornadas com sucesso." };
     }
     if (name === "search_leads") {
-      let query = client.from('leads').select('id, nome, telefone, status, valor_credito, created_at, lead_temperatura, cidade, tipo_consorcio');
+      let query = dbClient.from('leads').select('id, nome, telefone, status, valor_credito, created_at, lead_temperatura, cidade, tipo_consorcio');
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       if (args.nome) query = query.ilike('nome', `%${args.nome}%`);
       if (args.status) query = query.eq('status', args.status);
@@ -280,44 +281,44 @@ async function executeTool(supabase: any, name: string, args: any) {
       return { results: data || [] };
     }
     if (name === "get_carteira") {
-      let query = client.from('carteira').select('id, nome, grupo, cota, data_adesao, status');
+      let query = dbClient.from('carteira').select('id, nome, grupo, cota, data_adesao, status');
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       const { data } = await query.limit(20);
       return { results: data || [] };
     }
     if (name === "get_inadimplentes") {
-      let query = client.from('inadimplentes').select('id, nome, valor_parcela, parcelas_atrasadas, status');
+      let query = dbClient.from('inadimplentes').select('id, nome, valor_parcela, parcelas_atrasadas, status');
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       const { data } = await query.limit(20);
       return { results: data || [] };
     }
     if (name === "get_metas") {
-      let query = client.from('meta').select('*');
+      let query = dbClient.from('meta').select('*');
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       const { data } = await query.limit(10);
       return { results: data || [] };
     }
     if (name === "get_comissoes") {
-      let query = client.from('comissoes').select('*');
+      let query = dbClient.from('comissoes').select('*');
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       const { data } = await query.order('created_at', { ascending: false }).limit(20);
       return { results: data || [] };
     }
     if (name === "get_missoes") {
-      let query = client.from('missoes_concluidas').select('*');
+      let query = dbClient.from('missoes_concluidas').select('*');
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       const { data } = await query.order('created_at', { ascending: false }).limit(30);
       return { results: data || [] };
     }
     if (name === "get_historico_contatos") {
-      let query = client.from('historico_contatos').select('*');
+      let query = dbClient.from('historico_contatos').select('*');
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       if (args.lead_id) query = query.eq('lead_id', args.lead_id);
       const { data } = await query.order('data_contato', { ascending: false }).limit(20);
       return { results: data || [] };
     }
     if (name === "get_fechamentos_mensais") {
-      let query = client.from('fechamentos_mensais').select('*');
+      let query = dbClient.from('fechamentos_mensais').select('*');
       if (useAdmin) query = query.eq('organizacao_id', orgId);
       const { data } = await query.order('created_at', { ascending: false }).limit(20);
       return { results: data || [] };

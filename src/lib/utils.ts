@@ -52,13 +52,29 @@ export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolea
   const isRetroativo = lead.dados_cadastro?.is_retroativo === true;
   if (isShadow || isRetroativo) return false;
 
-  const closingDate = lead.dados_cadastro?.data_venda || 
-                      lead.dados_cadastro?.data_fechamento || 
-                      lead.dados_cadastro?.data_adesao || 
-                      lead.status_updated_at;
+  // 1. Data explícita de venda cadastrada no lead (prioridade máxima)
+  const explicitSaleDate = lead.dados_cadastro?.data_venda || 
+                           lead.dados_cadastro?.data_fechamento || 
+                           lead.dados_cadastro?.data_adesao;
 
-  if (!closingDate) return false;
+  if (explicitSaleDate) {
+    return explicitSaleDate.startsWith(targetMonthStr);
+  }
 
-  return closingDate.startsWith(targetMonthStr);
+  // 2. Se a data for proveniente de status_updated_at:
+  if (lead.status_updated_at) {
+    const createdAtMonth = (lead.created_at || "").substring(0, 7);
+    const statusUpdatedMonth = lead.status_updated_at.substring(0, 7);
+
+    // Se o lead foi criado num mês anterior ao mês alvo sem data explícita de venda no mês alvo,
+    // a atualização recente do registro NÃO constitui uma venda realizada no mês atual.
+    if (createdAtMonth && createdAtMonth < targetMonthStr) {
+      return false;
+    }
+
+    return statusUpdatedMonth === targetMonthStr;
+  }
+
+  return false;
 }
 
