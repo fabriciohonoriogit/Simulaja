@@ -56,6 +56,7 @@ import { Badge } from '@/components/ui/badge';
 import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart as RechartsPieChart, Pie, Cell } from "recharts";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { LojasDashboardSection } from "@/components/admin/lojas/LojasDashboardSection";
 
 export interface TermometroMercado {
   id: string;
@@ -558,6 +559,10 @@ export default function Metas() {
                         </div>
                     )}
                 </div>
+
+                {/* PAINEL MULTI-LOJA MAGALU: ACOMPANHAMENTO DAS 5 FILIAIS */}
+                <LojasDashboardSection leads={leads} carteira={carteira} />
+
                 {/* Meta Anual Card — stacked on mobile */}
                 <Card className="bg-primary/5 border-primary/20">
                     <CardContent className="p-3">

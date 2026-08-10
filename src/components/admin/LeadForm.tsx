@@ -52,6 +52,14 @@ export const ORIGEM_OPTIONS = [
   { value: "outros", label: "Outros" },
 ];
 
+export const LOJAS_OPTIONS = [
+  { value: "filial-952", label: "PARANAGUÁ - MAGALU FILIAL 952", codigo: "952" },
+  { value: "filial-927", label: "SÃO MATEUS DO SUL - MAGALU FILIAL 927", codigo: "927" },
+  { value: "filial-929", label: "IRATI - MAGALU FILIAL 929", codigo: "929" },
+  { value: "filial-646", label: "CANOINHAS - MAGALU FILIAL 646", codigo: "646" },
+  { value: "filial-909", label: "CAMPO LARGO - MAGALU FILIAL 909", codigo: "909" },
+];
+
 const ADMINISTRADORAS = ["MAGALU", "ADEMICON", "SERVOPA"];
 
 const STATUS_FECHADOS = ["venda_fechada", "fechado"];
@@ -72,6 +80,7 @@ export interface LeadFormData {
   indicador_nome?: string;
   indicador_celular?: string;
   is_retroativo?: boolean;
+  filial_id?: string;
   // Campos de venda fechada
   grupo?: string;
   cota?: string;
@@ -291,6 +300,38 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-bold text-xs uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+              🏬 Unidade / Filial Magalu
+            </Label>
+            <Select 
+              value={form.filial_id || (form.dados_cadastro?.filial_id || "")} 
+              onValueChange={(val) => {
+                const opt = LOJAS_OPTIONS.find(l => l.value === val);
+                setForm(prev => ({
+                  ...prev,
+                  filial_id: val,
+                  dados_cadastro: {
+                    ...(prev.dados_cadastro || {}),
+                    filial_id: val,
+                    filial_codigo: opt?.codigo || "",
+                    filial_nome: opt?.label || ""
+                  }
+                }));
+              }}
+            >
+              <SelectTrigger className="rounded-xl h-11 border-blue-200 bg-blue-50/50">
+                <SelectValue placeholder="Selecione a Filial Magalu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Auto-Atribuir (Por Cidade/Código)</SelectItem>
+                {LOJAS_OPTIONS.map(o => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Venda Fechada Panel */}

@@ -26,6 +26,7 @@ import { EliteRewardsPanel } from "@/components/admin/gamification/EliteRewardsP
 import { useGamificationStore } from "@/stores/gamificationStore";
 import { calcularComissaoRecorrenteLead } from "@/lib/gamificationUtils";
 import { WeatherWidget } from "@/components/admin/WeatherWidget";
+import { LojasDashboardSection } from "@/components/admin/lojas/LojasDashboardSection";
 
 interface Lead {
   id: string;
@@ -404,6 +405,9 @@ export default function Dashboard() {
           />
           <HallOfFame ranking={ranking} profileId={profile?.id} />
         </div>
+
+        {/* SEÇÃO MULTI-LOJA MAGALU: METAS, GRÁFICOS E RELATÓRIOS GERENCIAIS */}
+        <LojasDashboardSection leads={leads} carteira={carteira} />
 
         {/* MÉTRICAS CLÁSSICAS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
