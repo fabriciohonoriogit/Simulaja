@@ -25,7 +25,10 @@ import {
   BarChart3, 
   PieChart, 
   Copy, 
-  Send 
+  Send,
+  Handshake,
+  Percent,
+  Sparkles
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
@@ -68,7 +71,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingLojas, setEditingLojas] = useState<LojaConfig[]>([]);
 
-  // Calcular performance das 5 lojas
+  // Calcular performance das 5 lojas incluindo métricas de indicação e conversão
   const {
     lojasMetrics,
     metaGlobalMensal,
@@ -76,13 +79,18 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
     realizadoGlobalPeriodo,
     realizadoGlobalMensal,
     atingimentoGlobalMensal,
-    lojaDestaque
+    lojaDestaque,
+    totalIndicacoesGlobal,
+    closedIndicacoesGlobal,
+    realizadoIndicacoesGlobal,
+    taxaConversaoGlobalIndicacoes,
+    taxaConversaoGlobalGeral
   } = useMemo(() => {
     return calculateLojasPerformance(leads, lojas, timeFrame);
   }, [leads, lojas, timeFrame]);
 
-  // Preparar dados para o gráfico de Recharts Vendas vs Meta
-  const chartData = useMemo(() => {
+  // Preparar dados para o gráfico de Vendas vs Meta
+  const chartDataVendas = useMemo(() => {
     return lojasMetrics.map(m => ({
       name: m.loja.cidade,
       fullName: m.loja.nome,
@@ -92,6 +100,18 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
       atingimento: m.atingimentoMensal,
       faltante: m.faltanteMensal,
       corHex: m.loja.corHex
+    }));
+  }, [lojasMetrics]);
+
+  // Preparar dados para o gráfico de Análise de Conversão por Loja
+  const chartDataConversao = useMemo(() => {
+    return lojasMetrics.map(m => ({
+      name: m.loja.cidade,
+      "Conversão Indicações (%)": Number(m.taxaConversaoIndicacoes.toFixed(1)),
+      "Conversão Geral Loja (%)": Number(m.taxaConversaoGeral.toFixed(1)),
+      "Conversão Demais Leads (%)": Number(m.taxaConversaoOutros.toFixed(1)),
+      totalIndicacoes: m.totalIndicacoes,
+      closedIndicacoes: m.closedIndicacoesCount
     }));
   }, [lojasMetrics]);
 
@@ -150,7 +170,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
               </Badge>
             </div>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
-              Monitoramento em tempo real de metas, vendas e maiores indicadores para envio aos gerentes.
+              Gestão em tempo real de metas, vendas, indicações e análise de taxa de conversão por filial.
             </p>
           </div>
         </div>
@@ -200,25 +220,24 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
       </div>
 
       {/* CARDS CONSOLIDADOS DE ALTO IMPACTO */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Card 1: Meta Global Consolidada */}
         <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700/80 text-white shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-              Meta Global Consolidada
+              Meta Global 5 Lojas
             </p>
             <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400">
               <Target className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white mt-1">
+          <p className="text-xl font-black text-white mt-1">
             {formatCurrency(metaGlobalMensal)}
           </p>
           <div className="mt-2 flex items-center gap-2">
-            <Badge variant="outline" className="bg-blue-950/60 text-blue-300 border-blue-800 text-[10px]">
+            <Badge variant="outline" className="bg-blue-950/60 text-blue-300 border-blue-800 text-[9px]">
               5 Lojas Magalu
             </Badge>
-            <span className="text-[11px] text-slate-400">Agosto/2026</span>
           </div>
         </div>
 
@@ -226,40 +245,58 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700/80 text-white shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-              Realizado ({getTimeFrameLabel(timeFrame)})
+              Vendas Realizadas
             </p>
             <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
               <DollarSign className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-emerald-400 mt-1">
+          <p className="text-xl font-black text-emerald-400 mt-1">
             {formatCurrency(realizadoGlobalMensal)}
           </p>
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+          <div className="mt-2 flex items-center gap-1 text-xs text-emerald-400 font-bold">
             <ArrowUpRight className="h-3.5 w-3.5" />
             <span>{atingimentoGlobalMensal.toFixed(1)}% da Meta</span>
           </div>
         </div>
 
-        {/* Card 3: % Atingimento da Meta Global */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700/80 text-white shadow-lg relative overflow-hidden">
+        {/* Card 3: Indicações Recebidas e Fechadas */}
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-950/70 to-slate-800 border border-purple-500/30 text-white shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-              Atingimento Global
+            <p className="text-[10px] font-black uppercase text-purple-300 tracking-wider">
+              Indicações de Clientes
             </p>
-            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
-              <TrendingUp className="h-4 w-4" />
+            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-300">
+              <Handshake className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-purple-300 mt-1">
-            {atingimentoGlobalMensal.toFixed(1)}%
+          <p className="text-xl font-black text-purple-200 mt-1">
+            {totalIndicacoesGlobal} <span className="text-xs text-purple-400 font-normal">rec.</span>
           </p>
-          <div className="mt-2.5">
-            <Progress value={Math.min(100, atingimentoGlobalMensal)} className="h-2 bg-slate-700" />
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-purple-300 font-bold">
+            <span>✅ {closedIndicacoesGlobal} vendas fechadas</span>
           </div>
         </div>
 
-        {/* Card 4: Filial Destaque / 1º Lugar */}
+        {/* Card 4: Taxa de Conversão de Indicações */}
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/70 to-slate-800 border border-indigo-500/30 text-white shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase text-indigo-300 tracking-wider">
+              Conversão Indicações
+            </p>
+            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300">
+              <Percent className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-xl font-black text-indigo-200 mt-1">
+            {taxaConversaoGlobalIndicacoes.toFixed(1)}%
+          </p>
+          <div className="mt-2 text-[10px] text-slate-400">
+            <span>Vol: <strong>{formatCurrency(realizadoIndicacoesGlobal)}</strong></span>
+          </div>
+        </div>
+
+        {/* Card 5: Filial Destaque / 1º Lugar */}
         <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-950/60 to-slate-800 border border-amber-500/30 text-white shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1">
@@ -276,24 +313,21 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
             <span className="text-lg font-black text-amber-300">
               {lojaDestaque ? formatCurrency(lojaDestaque.realizado) : "R$ 0"}
             </span>
-            <span className="text-[10px] text-amber-200 font-bold">
-              ({lojaDestaque ? lojaDestaque.atingimentoMensal.toFixed(1) : 0}%)
-            </span>
           </div>
         </div>
       </div>
 
-      {/* SEÇÃO DE GRÁFICOS: VENDAS VS META & RANKING POR LOJA */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Gráfico 1: Comparativo Vendas vs Meta das 5 Lojas */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-4">
+      {/* SEÇÃO DE GRÁFICOS: VENDAS VS META & ANÁLISE DE CONVERSÃO */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico 1: Vendas Realizadas vs Meta Mensal por Filial */}
+        <div className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-black text-white flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-blue-400" /> Vendas Realizadas vs Meta Mensal por Filial
+                <BarChart3 className="h-4 w-4 text-blue-400" /> Vendas Realizadas vs Meta Mensal
               </h3>
               <p className="text-xs text-slate-400">
-                Comparativo direto dos R$ vendidos em relação à meta de cada unidade Magalu.
+                Volume de R$ vendido em relação à meta de cada unidade Magalu.
               </p>
             </div>
             <Badge variant="outline" className="border-slate-700 text-slate-300 text-[10px]">
@@ -303,7 +337,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
 
           <div className="h-72 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 20, left: 10, bottom: 25 }}>
+              <BarChart data={chartDataVendas} margin={{ top: 20, right: 20, left: 10, bottom: 25 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
                 <XAxis 
                   dataKey="name" 
@@ -326,9 +360,9 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
                 <Legend 
                   wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
                 />
-                <Bar dataKey="Meta" fill="#475569" radius={[6, 6, 0, 0]} barSize={26} name="Meta R$" />
-                <Bar dataKey="Vendas" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={26} name="Vendas R$">
-                  {chartData.map((entry, index) => (
+                <Bar dataKey="Meta" fill="#475569" radius={[6, 6, 0, 0]} barSize={24} name="Meta R$" />
+                <Bar dataKey="Vendas" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} name="Vendas R$">
+                  {chartDataVendas.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={entry.atingimento >= 100 ? '#10b981' : entry.atingimento >= 75 ? '#3b82f6' : '#f59e0b'} 
@@ -340,68 +374,63 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
           </div>
         </div>
 
-        {/* Gráfico 2: Ranking de Atingimento (%) por Loja */}
-        <div className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-4 flex flex-col justify-between">
-          <div>
-            <h3 className="text-base font-black text-white flex items-center gap-2">
-              <Flame className="h-4 w-4 text-amber-400" /> Atingimento de Meta (%)
-            </h3>
-            <p className="text-xs text-slate-400">
-              Desempenho relativo em % de cada uma das 5 unidades.
-            </p>
-
-            <div className="space-y-4 mt-5">
-              {lojasMetrics.map((m) => {
-                const isLeader = m.posicao === 1;
-                return (
-                  <div key={m.loja.id} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-white flex items-center gap-1.5 truncate max-w-[170px]">
-                        <span className="text-slate-400 font-mono text-[11px]">{m.posicao}º</span>
-                        <span className="truncate">{m.loja.cidade}</span>
-                        {isLeader && <Trophy className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
-                      </span>
-                      <span className={`font-black ${m.atingimentoMensal >= 100 ? 'text-emerald-400' : m.atingimentoMensal >= 75 ? 'text-blue-400' : 'text-amber-400'}`}>
-                        {m.atingimentoMensal.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          m.atingimentoMensal >= 100 
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-400' 
-                            : m.atingimentoMensal >= 75 
-                            ? 'bg-gradient-to-r from-blue-500 to-cyan-400' 
-                            : 'bg-gradient-to-r from-amber-500 to-orange-400'
-                        }`}
-                        style={{ width: `${Math.min(100, m.atingimentoMensal)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center text-[10px] text-slate-400">
-                      <span>Realizado: {formatCurrency(m.realizado)}</span>
-                      <span>Meta: {formatCurrency(m.metaMensal)}</span>
-                    </div>
-                  </div>
-                );
-              })}
+        {/* Gráfico 2: Análise de Taxa de Conversão (%) por Filial */}
+        <div className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                <Percent className="h-4 w-4 text-purple-400" /> Análise de Conversão: Indicações vs Geral
+              </h3>
+              <p className="text-xs text-slate-400">
+                Taxa de fechamento de vendas (%) comparando indicações e leads normais por loja.
+              </p>
             </div>
+            <Badge variant="outline" className="border-purple-800/50 bg-purple-950/40 text-purple-300 text-[10px]">
+              Eficiência
+            </Badge>
           </div>
 
-          <div className="pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
-            <span>🎯 Meta Global: <strong>{formatCurrency(metaGlobalMensal)}</strong></span>
-            <span className="text-emerald-400 font-bold">Total: {formatCurrency(realizadoGlobalMensal)}</span>
+          <div className="h-72 w-full pt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartDataConversao} margin={{ top: 20, right: 20, left: 10, bottom: 25 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#94a3b8" 
+                  fontSize={11}
+                  fontWeight="bold"
+                  tickLine={false}
+                />
+                <YAxis 
+                  stroke="#94a3b8" 
+                  fontSize={10} 
+                  tickFormatter={(val) => `${val}%`}
+                  tickLine={false}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
+                  formatter={(value: any, name: string) => [`${value}%`, name]}
+                  labelFormatter={(label) => `Filial Magalu: ${label}`}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
+                />
+                <Bar dataKey="Conversão Indicações (%)" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={22} name="Conv. Indicações (%)" />
+                <Bar dataKey="Conversão Geral Loja (%)" fill="#0284c7" radius={[6, 6, 0, 0]} barSize={22} name="Conv. Geral Loja (%)" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* CARDS INDIVIDUAIS DAS 5 UNIDADES MAGALU */}
+      {/* CARDS INDIVIDUAIS DAS 5 UNIDADES MAGALU COM MÉTRICAS DE INDICAÇÃO */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-black text-white flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-blue-400" /> Detalhamento Individual das 5 Lojas
+            <Building2 className="h-5 w-5 text-blue-400" /> Detalhamento por Loja (Vendas, Metas & Indicações)
           </h3>
           <span className="text-xs text-slate-400 font-medium">
-            Clique no botão do WhatsApp para gerar relatório instantâneo da unidade
+            Clique no botão do WhatsApp para enviar o relatório da unidade
           </span>
         </div>
 
@@ -473,12 +502,30 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
                   </div>
                 </div>
 
+                {/* BLOCO DE INDICAÇÕES E CONVERSÃO */}
+                <div className="p-2 rounded-xl bg-purple-950/40 border border-purple-900/40 space-y-1">
+                  <div className="flex items-center justify-between text-[10px] font-bold">
+                    <span className="text-purple-300 flex items-center gap-1">
+                      <Handshake className="h-3 w-3" /> Indicações
+                    </span>
+                    <span className="text-purple-200">{m.totalIndicacoes} rec.</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400">Convertidas:</span>
+                    <span className="font-black text-purple-300">{m.closedIndicacoesCount} vendas ({m.taxaConversaoIndicacoes.toFixed(0)}%)</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[9px] text-slate-400 pt-0.5 border-t border-purple-900/30">
+                    <span>Vol. Indicação:</span>
+                    <span className="font-bold text-slate-200">{formatCurrency(m.realizadoIndicacoes)}</span>
+                  </div>
+                </div>
+
                 {/* Métricas Secundárias & Ação */}
-                <div className="space-y-2 pt-2 border-t border-slate-700/60">
+                <div className="space-y-2 pt-1 border-t border-slate-700/60">
                   <div className="grid grid-cols-2 gap-1 text-[10px]">
                     <div className="bg-slate-900/60 p-1.5 rounded-lg">
-                      <span className="text-slate-400 block font-bold">Vendas</span>
-                      <span className="font-black text-white">{m.closedLeadsCount} contratos</span>
+                      <span className="text-slate-400 block font-bold">Conv. Loja</span>
+                      <span className="font-black text-white">{m.taxaConversaoGeral.toFixed(1)}%</span>
                     </div>
                     <div className="bg-slate-900/60 p-1.5 rounded-lg">
                       <span className="text-slate-400 block font-bold">Ticket</span>

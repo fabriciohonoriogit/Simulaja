@@ -18,6 +18,14 @@ export interface LojaPerformance {
   projecaoMes: number;
   posicao: number;
   statusMeta: "superada" | "excelente" | "atencao" | "critico";
+  // Métricas de Indicações e Análise de Conversão
+  totalIndicacoes: number;
+  closedIndicacoesCount: number;
+  realizadoIndicacoes: number;
+  taxaConversaoGeral: number;
+  taxaConversaoIndicacoes: number;
+  taxaConversaoOutros: number;
+  percentualVolumeIndicacao: number;
 }
 
 export function getLojasConfig(): LojaConfig[] {
@@ -84,6 +92,23 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
   return null;
 }
 
+export function isLeadIndicacao(lead: any): boolean {
+  if (!lead) return false;
+  const dc = lead.dados_cadastro || {};
+  const temIndicadorCampos = Boolean(
+    (lead.indicador_nome && lead.indicador_nome.trim().length > 0) || 
+    (lead.indicador_celular && lead.indicador_celular.trim().length > 0) || 
+    (dc.indicador_nome && String(dc.indicador_nome).trim().length > 0) || 
+    (dc.indicador && String(dc.indicador).trim().length > 0) || 
+    (dc.indicador_celular && String(dc.indicador_celular).trim().length > 0)
+  );
+  
+  const origemStr = (lead.origem || dc.origem || "").toLowerCase();
+  const eOrigemIndicacao = origemStr.includes("indica") || origemStr === "loja" || origemStr === "parceiro";
+  
+  return temIndicadorCampos || eOrigemIndicacao;
+}
+
 export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame): boolean {
   const dateStr = lead.status_updated_at || lead.created_at || lead.updated_at;
   if (!dateStr) return false;
@@ -95,25 +120,21 @@ export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame): boolean {
 
   switch (timeFrame) {
     case "dia": {
-      // Hoje (Fuso local / SP)
       const todayStr = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
       const leadDateStr = leadDate.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
       return todayStr === leadDateStr;
     }
     case "semana": {
-      // Últimos 7 dias
       const diffTime = Math.abs(now.getTime() - leadDate.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays <= 7;
     }
     case "quinzena": {
-      // Últimos 15 dias ou quinzena do mês
       const diffTime = Math.abs(now.getTime() - leadDate.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays <= 15;
     }
     case "mes": {
-      // Mês atual
       const currentMonthStr = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }).substring(0, 7);
       return isVendaRealizadaNoMes(lead, currentMonthStr);
     }
@@ -135,56 +156,52 @@ export function calculateLojasPerformance(
   atingimentoGlobalMensal: number;
   atingimentoGlobalPeriodo: number;
   lojaDestaque: LojaPerformance | null;
+  totalIndicacoesGlobal: number;
+  closedIndicacoesGlobal: number;
+  realizadoIndicacoesGlobal: number;
+  taxaConversaoGlobalIndicacoes: number;
+  taxaConversaoGlobalGeral: number;
 } {
   const now = new Date();
   const currentDay = Math.max(1, now.getDate());
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
-  // Calcular fator de período em relação ao mês
   let periodFactor = 1;
   if (timeFrame === "dia") periodFactor = 1 / daysInMonth;
   else if (timeFrame === "semana") periodFactor = 7 / daysInMonth;
   else if (timeFrame === "quinzena") periodFactor = 15 / daysInMonth;
 
-  // Classificação dos leads por loja
-  // Se leads não tiverem filial atribuída, distribuímos proporcionalmente aos indicativos ou atribuímos por hashing/cidade para não ficar zerado nas demonstrações
   const leadsComLoja = leads.map(l => {
     const lojaMatched = matchLeadToLoja(l, lojas);
     return { lead: l, lojaId: lojaMatched?.id || null };
   });
 
-  // Para garantir visualização rica de teste quando os leads ainda não têm a tag de filial:
-  // Se nenhum lead possui tag de filial explicitamente, fazemos fallback inteligente usando módulo do ID ou cidade
   const temTagExplicit = leadsComLoja.some(item => item.lojaId !== null);
 
   const rawMetrics: Omit<LojaPerformance, "posicao" | "statusMeta">[] = lojas.map((loja, idx) => {
-    // Filtrar leads desta loja
     const storeLeads = leads.filter((l, lIdx) => {
       const matched = matchLeadToLoja(l, lojas);
       if (matched) return matched.id === loja.id;
       if (!temTagExplicit) {
-        // Distribuir deterministicamente entre as 5 lojas se ainda não houver atribuição
         return lIdx % lojas.length === idx;
       }
       return false;
     });
 
-    // Leads fechados no período
     const leadsFechadosPeriodo = storeLeads.filter(l => {
       const status = (l.status || "").toLowerCase().replace("_", " ");
       const isClosed = status === "fechado" || status === "venda fechada";
       return isClosed && isLeadInTimeFrame(l, timeFrame);
     });
 
-    // Leads fechados no mês total
     const currentMonthStr = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }).substring(0, 7);
     const leadsFechadosMes = storeLeads.filter(l => isVendaRealizadaNoMes(l, currentMonthStr));
 
     const realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
     const realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
 
-    // Se no período especifico (ex: dia/semana) não houver vendas ainda, usamos proporção do mensal para amostragem dinâmica se timeFrame === "mes"
     const realizadoUsado = timeFrame === "mes" ? realizadoMensal : realizadoPeriodo;
+    const leadsFechadosUsados = timeFrame === "mes" ? leadsFechadosMes : leadsFechadosPeriodo;
 
     const metaPeriodo = Math.round(loja.metaMensal * periodFactor);
     const atingimentoPeriodo = metaPeriodo > 0 ? (realizadoUsado / metaPeriodo) * 100 : 0;
@@ -193,12 +210,28 @@ export function calculateLojasPerformance(
     const faltanteMensal = Math.max(0, loja.metaMensal - realizadoMensal);
     const superavitMensal = Math.max(0, realizadoMensal - loja.metaMensal);
 
-    const closedLeadsCount = timeFrame === "mes" ? leadsFechadosMes.length : leadsFechadosPeriodo.length;
+    const closedLeadsCount = leadsFechadosUsados.length;
     const ticketMedio = closedLeadsCount > 0 ? realizadoUsado / closedLeadsCount : 0;
 
-    // Projeção do Mês
     const ritmoDiario = realizadoMensal / currentDay;
     const projecaoMes = Math.round(ritmoDiario * daysInMonth);
+
+    // INDICAÇÕES E ANÁLISE DE CONVERSÃO
+    const indicacoesLeads = storeLeads.filter(isLeadIndicacao);
+    const totalIndicacoes = indicacoesLeads.length;
+
+    const closedIndicacoesLeads = leadsFechadosUsados.filter(isLeadIndicacao);
+    const closedIndicacoesCount = closedIndicacoesLeads.length;
+    const realizadoIndicacoes = closedIndicacoesLeads.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
+
+    const taxaConversaoGeral = storeLeads.length > 0 ? (closedLeadsCount / storeLeads.length) * 100 : 0;
+    const taxaConversaoIndicacoes = totalIndicacoes > 0 ? (closedIndicacoesCount / totalIndicacoes) * 100 : 0;
+    
+    const otherLeadsCount = Math.max(0, storeLeads.length - totalIndicacoes);
+    const closedOtherLeadsCount = Math.max(0, closedLeadsCount - closedIndicacoesCount);
+    const taxaConversaoOutros = otherLeadsCount > 0 ? (closedOtherLeadsCount / otherLeadsCount) * 100 : 0;
+
+    const percentualVolumeIndicacao = realizadoUsado > 0 ? (realizadoIndicacoes / realizadoUsado) * 100 : 0;
 
     return {
       loja,
@@ -213,10 +246,16 @@ export function calculateLojasPerformance(
       closedLeadsCount,
       ticketMedio,
       projecaoMes,
+      totalIndicacoes,
+      closedIndicacoesCount,
+      realizadoIndicacoes,
+      taxaConversaoGeral,
+      taxaConversaoIndicacoes,
+      taxaConversaoOutros,
+      percentualVolumeIndicacao
     };
   });
 
-  // Ordenar por realizado para calcular posição no ranking
   const sorted = [...rawMetrics].sort((a, b) => b.realizado - a.realizado);
 
   const lojasMetrics: LojaPerformance[] = rawMetrics.map(m => {
@@ -245,6 +284,16 @@ export function calculateLojasPerformance(
 
   const lojaDestaque = [...lojasMetrics].sort((a, b) => b.atingimentoMensal - a.atingimentoMensal)[0] || null;
 
+  const totalIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.totalIndicacoes, 0);
+  const closedIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.closedIndicacoesCount, 0);
+  const realizadoIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.realizadoIndicacoes, 0);
+  
+  const totalLeadsGlobal = leads.length;
+  const totalClosedGlobal = lojasMetrics.reduce((acc, l) => acc + l.closedLeadsCount, 0);
+
+  const taxaConversaoGlobalIndicacoes = totalIndicacoesGlobal > 0 ? (closedIndicacoesGlobal / totalIndicacoesGlobal) * 100 : 0;
+  const taxaConversaoGlobalGeral = totalLeadsGlobal > 0 ? (totalClosedGlobal / totalLeadsGlobal) * 100 : 0;
+
   return {
     lojasMetrics,
     metaGlobalMensal,
@@ -253,7 +302,12 @@ export function calculateLojasPerformance(
     realizadoGlobalMensal,
     atingimentoGlobalMensal,
     atingimentoGlobalPeriodo,
-    lojaDestaque
+    lojaDestaque,
+    totalIndicacoesGlobal,
+    closedIndicacoesGlobal,
+    realizadoIndicacoesGlobal,
+    taxaConversaoGlobalIndicacoes,
+    taxaConversaoGlobalGeral
   };
 }
 
@@ -287,7 +341,7 @@ export function generateWhatsAppManagerReport(
     const percentText = item.atingimentoMensal.toFixed(1);
     const emojiStatus = item.atingimentoMensal >= 100 ? "🏆 META SUPERADA!" : item.atingimentoMensal >= 80 ? "🚀 EXCELENTE RITMO!" : "⚡ FOCO NA META!";
 
-    return `📊 *RELATÓRIO DE DESEMPENHO DE UNIDADE* 🏬
+    return `📊 *RELATÓRIO DE DESEMPENHO E CONVERSÃO DE UNIDADE* 🏬
 🏢 *${item.loja.nome}*
 📅 *Período:* ${timeLabel} (${dateFormatted})
 👤 *Gerente:* ${item.loja.gerente || "Gerência Local"}
@@ -299,14 +353,21 @@ export function generateWhatsAppManagerReport(
 📈 *Atingimento da Meta:* ${percentText}% ${emojiStatus}
 ${item.faltanteMensal > 0 ? `🔻 *Faltante para Meta:* ${formatCurrency(item.faltanteMensal)}` : `🎉 *Superávit de Vendas:* ${formatCurrency(item.superavitMensal)}`}
 
-📊 *INDICADORES COMPLEMENTARES:*
-🤝 *Contratos Fechados:* ${item.closedLeadsCount} vendas
-🎯 *Leads / Oportunidades:* ${item.totalLeads} atendimentos
-💡 *Ticket Médio:* ${formatCurrency(item.ticketMedio)}
+🤝 *ANÁLISE DE INDICAÇÕES DA LOJA:*
+📩 *Indicações Recebidas:* ${item.totalIndicacoes} cadastros
+✅ *Indicações Convertidas em Venda:* ${item.closedIndicacoesCount} contratos
+🔥 *Taxa de Conversão das Indicações:* *${item.taxaConversaoIndicacoes.toFixed(1)}%*
+💰 *Volume Vendido via Indicação:* ${formatCurrency(item.realizadoIndicacoes)} (${item.percentualVolumeIndicacao.toFixed(1)}% do volume total)
+
+📊 *INDICADORES DE EFICIÊNCIA & CONVERSÃO:*
+🤝 *Total Contratos Fechados:* ${item.closedLeadsCount} vendas
+🎯 *Total Leads / Oportunidades:* ${item.totalLeads} atendimentos
+⚡ *Taxa de Conversão Geral da Loja:* *${item.taxaConversaoGeral.toFixed(1)}%*
+💡 *Ticket Médio da Loja:* ${formatCurrency(item.ticketMedio)}
 🔮 *Projeção de Fechamento Mês:* ${formatCurrency(item.projecaoMes)}
 🥇 *Posição no Ranking Geral:* ${item.posicao}º lugar das 5 Lojas
 
-💪 _"Com foco, planejamento e disciplina superamos qualquer desafio. Vamos pra cima equipe!"_
+💪 _"Cliente indicado é venda com maior taxa de fechamento. Estimule indicações com a equipe e parceiros!"_
 📱 *Gerado via SimulaJá CRM Magalu*`;
   }
 
@@ -315,19 +376,24 @@ ${item.faltanteMensal > 0 ? `🔻 *Faltante para Meta:* ${formatCurrency(item.fa
   const faltanteGlobal = Math.max(0, metaGlobal - realizadoGlobal);
   const sortedByRank = [...lojasMetrics].sort((a, b) => a.posicao - b.posicao);
 
+  const totalIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.totalIndicacoes, 0);
+  const closedIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.closedIndicacoesCount, 0);
+  const realizadoIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.realizadoIndicacoes, 0);
+  const taxaConversaoIndicacoesGlobal = totalIndicacoesGlobal > 0 ? (closedIndicacoesGlobal / totalIndicacoesGlobal) * 100 : 0;
+
   let lojaTextList = "";
   sortedByRank.forEach(item => {
     const trophy = item.posicao === 1 ? "🥇" : item.posicao === 2 ? "🥈" : item.posicao === 3 ? "🥉" : "🏬";
     lojaTextList += `
 ${trophy} *${item.loja.nome}*
-   • Meta Mensal: ${formatCurrency(item.metaMensal)}
-   • Vendas: *${formatCurrency(item.realizado)}* (${item.atingimentoMensal.toFixed(1)}%)
-   • Faltante: ${item.faltanteMensal > 0 ? formatCurrency(item.faltanteMensal) : "✅ Meta Batida!"}
-   • Fechamentos: ${item.closedLeadsCount} | Ticket Médio: ${formatCurrency(item.ticketMedio)}
+   • Vendas: *${formatCurrency(item.realizado)}* (${item.atingimentoMensal.toFixed(1)}% da Meta)
+   • Indicações: ${item.totalIndicacoes} rec. | ${item.closedIndicacoesCount} fechadas (*${item.taxaConversaoIndicacoes.toFixed(1)}% conv.*)
+   • Vol. Indicações: ${formatCurrency(item.realizadoIndicacoes)}
+   • Conversão Geral Loja: ${item.taxaConversaoGeral.toFixed(1)}% | Ticket Médio: ${formatCurrency(item.ticketMedio)}
 `;
   });
 
-  return `📊 *RELATÓRIO CONSOLIDADO MULTI-LOJAS MAGALU* 🚀
+  return `📊 *RELATÓRIO CONSOLIDADO MULTI-LOJAS & INDICAÇÕES MAGALU* 🚀
 📅 *Período de Análise:* ${timeLabel} (${dateFormatted})
 🏢 *Total de Unidades Acompanhadas:* 5 Lojas
 
@@ -335,16 +401,22 @@ ${trophy} *${item.loja.nome}*
 🎯 *META GLOBAL CONSOLIDADA:* ${formatCurrency(metaGlobal)}
 💰 *REALIZADO GLOBAL:* ${formatCurrency(realizadoGlobal)}
 📈 *ATINGIMENTO GLOBAL:* *${atingimentoGlobal.toFixed(1)}%*
-${faltanteGlobal > 0 ? `🔻 *FALTANTE PARA BATER A META GLOBAL:* ${formatCurrency(faltanteGlobal)}` : `🎉 *SUPERÁVIT GLOBAL:* ${formatCurrency(Math.abs(realizadoGlobal - metaGlobal))}`}
+${faltanteGlobal > 0 ? `🔻 *FALTANTE PARA META GLOBAL:* ${formatCurrency(faltanteGlobal)}` : `🎉 *SUPERÁVIT GLOBAL:* ${formatCurrency(Math.abs(realizadoGlobal - metaGlobal))}`}
+
+🤝 *PAINEL CONSOLIDADO DE INDICAÇÕES:*
+📩 *Total Indicações Recebidas:* ${totalIndicacoesGlobal} cadastros
+✅ *Indicações Fechadas:* ${closedIndicacoesGlobal} contratos
+📈 *Taxa de Conversão de Indicações:* *${taxaConversaoIndicacoesGlobal.toFixed(1)}%*
+💰 *Volume Bruto via Indicações:* ${formatCurrency(realizadoIndicacoesGlobal)}
 ========================================
 
-🏆 *RANKING E DESEMPENHO POR FILIAL:*
+🏆 *RANKING & CONVERSÃO POR FILIAL:*
 ${lojaTextList}
 ----------------------------------------
-📌 *Ações Recomendadas para Gerentes:*
-1. Focar em conversão de Leads Quentes acumulados.
-2. Alavancar ofertas de Consórcio Imóveis e Carros.
-3. Alinhamento diário com especialistas de vendas.
+📌 *Diretrizes Estratégicas para Gerentes:*
+1. Priorizar o atendimento às Indicações (conversão de ${taxaConversaoIndicacoesGlobal.toFixed(1)}% vs média de mercado).
+2. Promover a campanha de indicação em loja física com vendedores parceiros.
+3. Fazer reuniões matinais focando nos leads quentes e indicações do dia.
 
-🔥 *SIMULAJÁ CRM - GESTÃO DE METAS MAGALU*`;
+🔥 *SIMULAJÁ CRM - GESTÃO MULTI-LOJA MAGALU*`;
 }

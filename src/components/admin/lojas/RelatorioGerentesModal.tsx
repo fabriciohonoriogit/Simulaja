@@ -10,14 +10,13 @@ import {
   FileText, 
   Copy, 
   Printer, 
-  Share2, 
   Building2, 
   Calendar, 
   CheckCircle2, 
-  Trophy, 
-  TrendingUp, 
   Sparkles, 
-  Send 
+  Users, 
+  TrendingUp, 
+  Flame 
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { LojaConfig } from "@/constants/lojas";
@@ -61,6 +60,11 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
     selectedLojaId
   );
 
+  const totalIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.totalIndicacoes, 0);
+  const closedIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.closedIndicacoesCount, 0);
+  const realizadoIndicacoesGlobal = lojasMetrics.reduce((acc, l) => acc + l.realizadoIndicacoes, 0);
+  const taxaConversaoIndicacoesGlobal = totalIndicacoesGlobal > 0 ? (closedIndicacoesGlobal / totalIndicacoesGlobal) * 100 : 0;
+
   const handleCopyWhatsApp = () => {
     navigator.clipboard.writeText(reportText);
     setCopied(true);
@@ -84,24 +88,25 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Relatório Gerencial Multi-Lojas Magalu</title>
+          <title>Relatório Gerencial Multi-Lojas Magalu & Indicações</title>
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #1e293b; }
             h1 { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 10px; }
             h2 { color: #334155; margin-top: 25px; }
             .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
-            .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-            .kpi-value { font-size: 22px; font-weight: bold; color: #0f172a; }
-            .kpi-label { font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: bold; }
+            .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+            .kpi-value { font-size: 20px; font-weight: bold; color: #0f172a; }
+            .kpi-label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 13px; }
+            th, td { border: 1px solid #cbd5e1; padding: 9px; text-align: left; font-size: 12px; }
             th { background-color: #f1f5f9; color: #334155; font-weight: bold; }
             .highlight { font-weight: bold; color: #16a34a; }
+            .highlight-purple { font-weight: bold; color: #7c3aed; }
             footer { margin-top: 40px; font-size: 11px; text-align: center; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
           </style>
         </head>
         <body>
-          <h1>📊 RELATÓRIO GERENCIAL DE DESEMPENHO MULTI-LOJAS MAGALU</h1>
+          <h1>📊 RELATÓRIO DE DESEMPENHO, INDICAÇÕES E CONVERSÃO MAGALU</h1>
           <p><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString("pt-BR")} | <strong>Período:</strong> ${getTimeFrameLabel(timeFrame)}</p>
           
           <div class="kpi-grid">
@@ -114,23 +119,27 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
               <div class="kpi-value">${formatCurrency(realizadoGlobal)}</div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label">Atingimento Global</div>
-              <div class="kpi-value">${(metaGlobal > 0 ? (realizadoGlobal / metaGlobal) * 100 : 0).toFixed(1)}%</div>
+              <div class="kpi-label">Indicações Recebidas</div>
+              <div class="kpi-value">${totalIndicacoesGlobal} (${closedIndicacoesGlobal} conv.)</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Conversão de Indicações</div>
+              <div class="kpi-value" style="color: #7c3aed;">${taxaConversaoIndicacoesGlobal.toFixed(1)}%</div>
             </div>
           </div>
 
-          <h2>🏬 Detalhamento por Filial Magalu</h2>
+          <h2>🏬 Análise Detalhada de Vendas, Indicações e Conversão por Filial</h2>
           <table>
             <thead>
               <tr>
                 <th>Pos.</th>
                 <th>Unidade Magalu</th>
-                <th>Meta Mensal</th>
-                <th>Vendas Realizadas</th>
-                <th>Atingimento (%)</th>
-                <th>Faltante / Superávit</th>
-                <th>Fechamentos</th>
-                <th>Ticket Médio</th>
+                <th>Vendas R$</th>
+                <th>Atingimento</th>
+                <th>Indicações (Rec. / Fech.)</th>
+                <th>Vol. Indicações R$</th>
+                <th>Conv. Indicações (%)</th>
+                <th>Conv. Geral (%)</th>
               </tr>
             </thead>
             <tbody>
@@ -138,12 +147,12 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
                 <tr>
                   <td><strong>${m.posicao}º</strong></td>
                   <td><strong>${m.loja.nome}</strong></td>
-                  <td>${formatCurrency(m.metaMensal)}</td>
                   <td><strong>${formatCurrency(m.realizado)}</strong></td>
                   <td class="highlight">${m.atingimentoMensal.toFixed(1)}%</td>
-                  <td>${m.faltanteMensal > 0 ? formatCurrency(m.faltanteMensal) : '🎉 Batida!'}</td>
-                  <td>${m.closedLeadsCount}</td>
-                  <td>${formatCurrency(m.ticketMedio)}</td>
+                  <td>${m.totalIndicacoes} rec. / <strong>${m.closedIndicacoesCount} fech.</strong></td>
+                  <td>${formatCurrency(m.realizadoIndicacoes)}</td>
+                  <td class="highlight-purple">${m.taxaConversaoIndicacoes.toFixed(1)}%</td>
+                  <td><strong>${m.taxaConversaoGeral.toFixed(1)}%</strong></td>
                 </tr>
               `).join('')}
             </tbody>
@@ -168,13 +177,13 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
               </div>
               <div>
                 <DialogTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                  Gerador de Relatórios para Gerentes
+                  Relatório para Gerentes (Vendas, Indicações & Conversão)
                   <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 uppercase text-[10px] font-bold tracking-wider">
                     WhatsApp & PDF
                   </Badge>
                 </DialogTitle>
                 <p className="text-xs text-slate-400 font-medium">
-                  Selecione o período (Dia, Semana, Quinzena, Mês) e a unidade para envio dos maiores indicadores aos gerentes locais.
+                  Selecione o período (Dia, Semana, Quinzena, Mês) e a unidade para envio dos maiores indicadores e análise de indicações.
                 </p>
               </div>
             </div>
@@ -246,12 +255,12 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
             <Textarea
               value={reportText}
               readOnly
-              rows={12}
+              rows={11}
               className="font-mono text-xs bg-slate-950/90 border-slate-800 text-slate-200 p-4 rounded-2xl resize-none focus:outline-none custom-scrollbar leading-relaxed shadow-inner"
             />
           </div>
 
-          {/* RESUMO DOS PRINCIPAIS INDICADORES DO PERÍODO */}
+          {/* RESUMO DOS PRINCIPAIS INDICADORES DO PERÍODO & ANÁLISE DE INDICAÇÕES */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-900/40 text-blue-200">
               <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Período Selecionado</p>
@@ -259,19 +268,21 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
             </div>
 
             <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-900/40 text-emerald-200">
-              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Meta Consolidada</p>
-              <p className="text-base font-black text-white">{formatCurrency(metaGlobal)}</p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-900/40 text-purple-200">
-              <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Vendas Realizadas</p>
+              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Vendas Realizadas</p>
               <p className="text-base font-black text-white">{formatCurrency(realizadoGlobal)}</p>
             </div>
 
+            <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-900/40 text-purple-200">
+              <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Indicações Recebidas</p>
+              <p className="text-base font-black text-white">
+                {totalIndicacoesGlobal} <span className="text-xs text-purple-300 font-normal">({closedIndicacoesGlobal} fechadas)</span>
+              </p>
+            </div>
+
             <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-900/40 text-amber-200">
-              <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Atingimento Global</p>
+              <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Conversão Indicações</p>
               <p className="text-base font-black text-amber-300">
-                {(metaGlobal > 0 ? (realizadoGlobal / metaGlobal) * 100 : 0).toFixed(1)}%
+                {taxaConversaoIndicacoesGlobal.toFixed(1)}%
               </p>
             </div>
           </div>
