@@ -80,32 +80,38 @@ export function isDateInCustomRange(dateStr: string | null | undefined, startDat
 }
 
 /**
- * Associa um lead à loja com base no código de filial ou nome da cidade.
+ * Associa um lead à loja com base no código de filial ou NOME EXATO da cidade.
+ * CORREÇÃO CRÍTICA: Evita que 'Paraná' ou 'PR' dê match parcial em 'Paranaguá'.
  */
 export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | null {
   if (!lead) return null;
   const dc = lead.dados_cadastro || {};
   
-  // 1. Verificação por código de filial no dados_cadastro
+  // 1. Verificação por código de filial no dados_cadastro (prioridade máxima)
   const codDirect = String(dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || "").trim();
   if (codDirect) {
     const matched = lojas.find(l => l.codigo === codDirect || l.id === codDirect);
     if (matched) return matched;
   }
 
-  // 2. Verificação estrita por nome de cidade ou filial
-  const cityStr = normalizeStr(lead.cidade || dc.cidade || "");
-  const filialStr = normalizeStr(dc.filial_nome || dc.filial || dc.loja || dc.unidade || "");
+  // 2. Verificação estrita por nome de cidade ou filial (Match exato ou prefixo exato)
+  const cityStr = normalizeStr(lead.cidade || dc.cidade || "").trim();
+  const filialStr = normalizeStr(dc.filial_nome || dc.filial || dc.loja || dc.unidade || "").trim();
 
   for (const loja of lojas) {
     const code = loja.codigo;
-    const city = normalizeStr(loja.cidade);
+    const city = normalizeStr(loja.cidade).trim(); // ex: "paranagua", "irati", "canoinhas", "campo largo", "sao mateus do sul"
     
-    if (cityStr && (cityStr.includes(city) || city.includes(cityStr))) {
+    // Match EXATO da cidade
+    if (cityStr && cityStr === city) {
       return loja;
     }
-    if (filialStr && (filialStr.includes(city) || filialStr.includes(code))) {
-      return loja;
+    
+    // Match por filial explícita com o código da loja ou nome da cidade
+    if (filialStr) {
+      if (filialStr === city || filialStr.includes(`filial ${code}`) || filialStr.includes(`${code}`)) {
+        return loja;
+      }
     }
   }
 
@@ -113,29 +119,41 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
 }
 
 /**
- * Identifica estritamente se o lead veio como INDICAÇÃO (possui indicador ou origem de indicação).
- * NOTA: Indicação NÃO é venda por padrão. É a origem do lead!
+ * Identifica estritamente se o lead veio como INDICAÇÃO de cliente.
+ * Sanitiza valores negativos como "Nenhum", "Não", "Sem indicador".
  */
 export function isLeadIndicacao(lead: any): boolean {
   if (!lead) return false;
   const dc = lead.dados_cadastro || {};
+
+  const sanitizeStr = (s: any) => {
+    if (!s) return "";
+    const str = String(s).trim().toLowerCase();
+    const invalidValues = [
+      "", "nao", "não", "nenhum", "nenhuma", "sem indicador", "sem indicação", 
+      "nao possui", "não possui", "n/a", "null", "undefined", "sem", 
+      "não informado", "nao informado", "loja", "facebook", "instagram"
+    ];
+    if (invalidValues.includes(str)) return "";
+    return str;
+  };
   
   const temIndicadorCampos = Boolean(
-    (lead.indicador_nome && lead.indicador_nome.trim().length > 0) || 
-    (lead.indicador_celular && lead.indicador_celular.trim().length > 0) || 
-    (dc.indicador_nome && String(dc.indicador_nome).trim().length > 0) || 
-    (dc.indicador && String(dc.indicador).trim().length > 0) || 
-    (dc.indicador_celular && String(dc.indicador_celular).trim().length > 0)
+    sanitizeStr(lead.indicador_nome) || 
+    sanitizeStr(lead.indicador_celular) || 
+    sanitizeStr(dc.indicador_nome) || 
+    sanitizeStr(dc.indicador) || 
+    sanitizeStr(dc.indicador_celular)
   );
   
-  const origemStr = (lead.origem || dc.origem || "").toLowerCase().trim();
+  const origemStr = sanitizeStr(lead.origem || dc.origem);
   const eOrigemIndicacao = origemStr.includes("indica") || origemStr === "parceiro";
   
   return temIndicadorCampos || eOrigemIndicacao;
 }
 
 /**
- * Verifica se o lead foi CRIADO dentro do período selecionado (Dia, Semana, Quinzena, Mês ou Personalizado).
+ * Verifica se o lead foi CRIADO dentro do período selecionado.
  */
 export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?: CustomDateRange): boolean {
   if (!lead) return false;
@@ -178,13 +196,35 @@ export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame, custom
 }
 
 /**
- * Verifica se a venda realizada ocorreu dentro da janela de tempo selecionada (ou intervalo personalizado).
+ * Verifica se a VENDA REALIZADA ocorreu dentro da janela de tempo selecionada.
+ * Requer status 'venda_fechada' ou 'fechado' e data de venda dentro do período.
  */
 export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?: CustomDateRange): boolean {
   if (!lead) return false;
+  const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
+  const isClosed = s === "fechado" || s === "venda fechada" || s === "venda_fechada";
+  if (!isClosed) return false;
+
+  const isShadow = lead.origem === "carteira_shadow";
+  const isRetroativo = lead.dados_cadastro?.is_retroativo === true;
+  if (isShadow || isRetroativo) return false;
 
   if (timeFrame === "personalizado") {
-    const saleDate = lead.dados_cadastro?.data_venda || lead.dados_cadastro?.data_fechamento || lead.status_updated_at || lead.created_at;
+    const saleDate = lead.dados_cadastro?.data_venda || 
+                     lead.dados_cadastro?.data_fechamento || 
+                     lead.dados_cadastro?.data_adesao || 
+                     lead.status_updated_at || 
+                     lead.created_at;
+
+    // Se o lead foi criado há mais de 60 dias sem data explícita de venda, não é venda no período atual
+    if (!lead.dados_cadastro?.data_venda && !lead.dados_cadastro?.data_fechamento) {
+      const createdDate = new Date(lead.created_at || 0);
+      if (customRange?.startDate) {
+        const customStart = new Date(customRange.startDate + "T00:00:00");
+        if (createdDate < customStart) return false;
+      }
+    }
+
     return isDateInCustomRange(saleDate, customRange?.startDate, customRange?.endDate);
   }
 
@@ -223,8 +263,8 @@ export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?:
 
 /**
  * Calcula o desempenho real das 5 lojas.
- * VENDA REALIZADA considera ESTRITAMENTE leads com status 'venda_fechada' ou 'fechado' no funil.
- * INDICAÇÕES considera ESTRITAMENTE leads criados no período/intervalo selecionado.
+ * VENDA REALIZADA considera ESTRITAMENTE leads com status 'venda_fechada' ou 'fechado' no funil de vendas.
+ * INDICAÇÕES considera ESTRITAMENTE leads com origem/indicador válido criados no período.
  */
 export function calculateLojasPerformance(
   leads: any[],
@@ -265,7 +305,7 @@ export function calculateLojasPerformance(
   const currentMonthStr = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }).substring(0, 7);
 
   const rawMetrics: Omit<LojaPerformance, "posicao" | "statusMeta">[] = lojas.map((loja) => {
-    // Leads associados a esta loja
+    // Leads associados a esta loja (verificação estrita)
     const storeLeads = leads.filter(l => {
       const matched = matchLeadToLoja(l, lojas);
       return matched ? matched.id === loja.id : false;
@@ -292,7 +332,7 @@ export function calculateLojasPerformance(
     const realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
     const realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
 
-    const realizadoUsado = (timeFrame === "mes" || timeFrame === "personalizado") ? realizadoPeriodo : realizadoPeriodo;
+    const realizadoUsado = realizadoPeriodo;
     const leadsFechadosUsados = leadsFechadosPeriodo;
 
     const metaPeriodo = Math.round(loja.metaMensal * periodFactor);
