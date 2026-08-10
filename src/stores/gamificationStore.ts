@@ -110,9 +110,19 @@ export const useGamificationStore = create<GamificationStore>()(
     }),
     {
       name: 'contemplar-gamification-storage',
-      version: 1,
+      version: 2,
+      partialize: (state) => ({
+        patenteAtual: state.patenteAtual,
+        previousPatente: state.previousPatente,
+        xp: state.xp,
+        streak: state.streak,
+        conquistas: state.conquistas,
+        bossDaSemanaAtual: state.bossDaSemanaAtual,
+      }),
       migrate: (persistedState: any, version: number) => {
         if (persistedState) {
+          persistedState.producaoMes = 0;
+          persistedState.comissaoMensalAtual = 0;
           if (persistedState.patenteAtual === 'INICIANTE' || !persistedState.patenteAtual) {
             persistedState.patenteAtual = 'STONE';
           }
@@ -131,12 +141,17 @@ setTimeout(() => {
   try {
     const state = useGamificationStore.getState();
     const legacyValue = 'INICIANTE' as any;
+    const updates: Partial<GamificationStore> = {
+      producaoMes: 0,
+      comissaoMensalAtual: 0,
+    };
     if (state.patenteAtual === legacyValue) {
-      useGamificationStore.setState({ patenteAtual: 'STONE' });
+      updates.patenteAtual = 'STONE';
     }
     if (state.previousPatente === legacyValue) {
-      useGamificationStore.setState({ previousPatente: null });
+      updates.previousPatente = null;
     }
+    useGamificationStore.setState(updates);
   } catch (e) {
     console.error("Migration error:", e);
   }
