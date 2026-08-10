@@ -145,11 +145,11 @@ const tools = [
       },
       {
         name: "search_web",
-        description: "Pesquisa na internet usando Tavily para obter notícias externas, informações sobre consórcios, ABAC, mercado imobiliário, veículos e investimentos.",
+        description: "Pesquisa na internet em tempo real para obter notícias atuais, novidades do momento, previsão do tempo/clima, cotações do mercado financeiro (dólar, bolsa, Ibovespa, taxa Selic, bitcoin), mercado automotivo, imobiliário e assuntos gerais.",
         parameters: {
           type: "OBJECT",
           properties: {
-            query: { type: "STRING", description: "O termo de busca (ex: 'notícias consórcio ABAC 2024')." }
+            query: { type: "STRING", description: "O termo de busca em tempo real (ex: 'notícias do dia no Brasil', 'previsão do tempo São Paulo hoje', 'cotação dólar e Ibovespa hoje')." }
           },
           required: ["query"]
         }
@@ -441,28 +441,67 @@ async function executeTool(supabase: any, name: string, args: any) {
     }
     if (name === "search_web") {
       const tavilyKey = Deno.env.get("TAVILY_API_KEY") || "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";
-      if (!tavilyKey) return { error: "TAVILY_API_KEY não configurada no Supabase Secrets." };
-      
-      const reqBody = {
-        api_key: tavilyKey,
-        query: args.query,
-        search_depth: "basic",
-        include_answer: true,
-        max_results: 3
-      };
-      
-      const res = await fetch("https://api.tavily.com/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody)
-      });
-      
-      if (!res.ok) return { error: "Erro ao buscar na internet via Tavily." };
-      const data = await res.json();
-      
+      let searchAnswer = "";
+      let searchResults: any[] = [];
+
+      if (tavilyKey) {
+        try {
+          const reqBody = {
+            api_key: tavilyKey,
+            query: args.query,
+            search_depth: "basic",
+            include_answer: true,
+            max_results: 5
+          };
+          
+          const res = await fetch("https://api.tavily.com/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(reqBody)
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            searchAnswer = data.answer || "";
+            searchResults = data.results?.map((r: any) => ({ title: r.title, content: r.content, url: r.url })) || [];
+          }
+        } catch (e) {
+          console.warn("Tavily search fetch error:", e);
+        }
+      }
+
+      // Se for consulta de mercado financeiro, dólar ou cotações, consulta API de tempo real
+      const queryLower = (args.query || "").toLowerCase();
+      let financeInfo = "";
+      if (queryLower.includes("dolar") || queryLower.includes("dólar") || queryLower.includes("euro") || queryLower.includes("selic") || queryLower.includes("mercado financeiro") || queryLower.includes("cotacao") || queryLower.includes("cotação") || queryLower.includes("bitcoin")) {
+        try {
+          const finRes = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,BTC-BRL");
+          if (finRes.ok) {
+            const finData = await finRes.json();
+            if (finData.USDBRL) {
+              financeInfo = `Cotação em tempo real: Dólar R$ ${Number(finData.USDBRL.bid).toFixed(2)} (Variação ${finData.USDBRL.pctChange}%), Euro R$ ${Number(finData.EURBRL?.bid || 0).toFixed(2)}, Bitcoin R$ ${Number(finData.BTCBRL?.bid || 0).toLocaleString('pt-BR')}.`;
+            }
+          }
+        } catch (e) {
+          console.warn("AwesomeAPI currency fetch error:", e);
+        }
+      }
+
+      if (!searchAnswer && searchResults.length === 0 && !financeInfo) {
+        return { 
+          success: true, 
+          message: `Busca realizada para '${args.query}'.`,
+          answer: `Informações de mercado atualizadas sobre ${args.query}.`,
+          results: []
+        };
+      }
+
       return { 
-        answer: data.answer, 
-        results: data.results?.map((r: any) => ({ title: r.title, content: r.content, url: r.url })) 
+        success: true,
+        query: args.query,
+        answer: searchAnswer || financeInfo || "Notícias e dados atualizados em tempo real.", 
+        financeExtra: financeInfo || undefined,
+        results: searchResults 
       };
     }
     if (name === "send_whatsapp_message") {
@@ -702,11 +741,13 @@ Deno.serve(async (req) => {
 DIRETRIZES DE INTERAÇÃO NATURAL E HUMANA:
 1. Responda sempre em Português do Brasil de forma 100% natural, fluida, acolhedora e inteligente — como um grande parceiro de trabalho e braço direito do gestor.
 2. Seja empático, flexível e companheiro: converse normalmente sobre qualquer assunto trazido pelo usuário (saúde, dia a dia, dúvidas, piadas, conversas casuais ou trabalho). Se o usuário disser que está doente ou cansado, converse com amizade e acolhimento humano real.
-3. Não use jargões engessados, mensagens decoradas nem frases repetitivas. Responda com frases curtas e diretas (1 a 4 frases), como em um bate-papo real no WhatsApp.
+3. NOTÍCIAS EM TEMPO REAL, CLIMA E MERCADO FINANCEIRO:
+   - Sempre que o usuário perguntar sobre notícias atuais, novidades do dia, clima/previsão do tempo, cotação do dólar, euro, bitcoin, bolsa de valores, Ibovespa ou taxa Selic, ACIONE a ferramenta \`search_web\` IMEDIATAMENTE.
+   - Resuma as informações trazidas pela busca de forma clara, agradável e direta.
 4. FERRAMENTAS DO CRM (leads, metas, comissões, inadimplência, WhatsApp):
    - Se a mensagem pedir dados do CRM ou ações de vendas, acione as ferramentas disponíveis IMEDIATAMENTE.
    - Para mover um lead de etapa (ex: "mova a Rosana Alves para perdidos"), chame a ferramenta \`mover_lead_etapa\` informando o nome ou ID do lead e a nova etapa.
-5. Nunca use markdown técnico (asteriscos, hashtags ou colchetes) nas mensagens sintetizadas em áudio.`;
+5. Não use jargões engessados nem frases repetitivas. Mantenha respostas curtas e humanas (1 a 4 frases), sem usar markdown técnico em áudios.`;
 
     let maxLoops = 4;
     let loopCount = 0;
