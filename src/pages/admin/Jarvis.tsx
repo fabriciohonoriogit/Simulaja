@@ -30,7 +30,7 @@ import {
     Camera,
     RefreshCw
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, isVendaRealizadaNoMes } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -644,15 +644,7 @@ export default function Jarvis() {
         const currentMonthStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).substring(0, 7);
         const metaMensal = metaAnual / 12;
         
-        const fechados = leads.filter(l => {
-            const s = (l.status || "").toLowerCase().replace("_", " ");
-            return s === "fechado" || s === "venda fechada";
-        });
-
-        const fechadosMes = fechados.filter(l => {
-            const dateToCheck = l.status_updated_at || l.created_at || "";
-            return dateToCheck.startsWith(currentMonthStr);
-        });
+        const fechadosMes = leads.filter(l => isVendaRealizadaNoMes(l, currentMonthStr));
 
         const realizadoMes = fechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
         

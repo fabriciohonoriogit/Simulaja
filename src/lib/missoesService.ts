@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isVendaRealizadaNoMes } from "@/lib/utils";
 
 export interface MissaoLead {
   id: string;
@@ -213,15 +214,8 @@ export const calcularMissoes = async (
     .select("valor_credito, status_updated_at, created_at, updated_at, status, responsavel_id, dados_cadastro")
     .eq("organizacao_id", orgId);
 
-  let vendas = (allLeads || []).filter(l => {
-    const s = (l.status || "").toLowerCase().replace("_", " ");
-    const isClosed = s === "fechado" || s === "venda fechada";
-    const isShadow = (l as any).origem === "carteira_shadow";
-    const dateToCheck = l.status_updated_at || l.created_at || "";
-    const currentMonthStr = inicioMesAtual.substring(0, 7);
-    const isInMonth = dateToCheck.startsWith(currentMonthStr);
-    return isClosed && isInMonth && !isShadow;
-  });
+  const currentMonthStr = inicioMesAtual.substring(0, 7);
+  let vendas = (allLeads || []).filter(l => isVendaRealizadaNoMes(l, currentMonthStr));
 
   if (isVendedor) {
     vendas = vendas.filter((l: any) => l.responsavel_id === userId);

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, isVendaRealizadaNoMes } from "@/lib/utils";
 import { useProfile } from "@/hooks/useProfile";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -261,15 +261,7 @@ export default function Metas() {
                 });
                 
                 const currentMonthLeads = segmentLeads.filter(l => l.created_at?.startsWith(mesStr));
-                const segmentVendas = segmentLeads.filter(l => {
-                    const s = (l.status || "").toLowerCase().replace("_", " ");
-                    const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-                    return (s === "fechado" || s === "venda fechada");
-                });
-                const currentMonthVendas = segmentVendas.filter(l => {
-                    const dateToCheck = l.status_updated_at || l.created_at || "";
-                    return dateToCheck.startsWith(mesStr);
-                });
+                const currentMonthVendas = segmentLeads.filter(l => isVendaRealizadaNoMes(l, mesStr));
                 
                 const valorTotal = currentMonthVendas.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
                 const metaValue = currentSegmentMetas[config.segmento as keyof typeof currentSegmentMetas] || 0;
@@ -446,16 +438,13 @@ export default function Metas() {
     const fechados = leads.filter(l => {
         const s = (l.status || "").toLowerCase().replace("_", " ");
         const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-        return (s === "fechado" || s === "venda fechada");
+        const isShadow = (l as any).origem === "carteira_shadow";
+        return (s === "fechado" || s === "venda fechada") && !isRetroativo && !isShadow;
     });
-    const realizadoMes = fechados.filter(l => {
-        const dateToCheck = l.status_updated_at || l.created_at || "";
-        return dateToCheck.startsWith(mesStr);
-    }).reduce((a, l) => a + Number(l.valor_credito || 0), 0);
-    const vendasMesCount = fechados.filter(l => {
-        const dateToCheck = l.status_updated_at || l.created_at || "";
-        return dateToCheck.startsWith(mesStr);
-    }).length;
+
+    const leadsFechadosNoMes = leads.filter(l => isVendaRealizadaNoMes(l, mesStr));
+    const realizadoMes = leadsFechadosNoMes.reduce((a, l) => a + Number(l.valor_credito || 0), 0);
+    const vendasMesCount = leadsFechadosNoMes.length;
     const realizadoAno = fechados.filter(l => {
         const dateToCheck = l.status_updated_at || l.created_at || "";
         return dateToCheck.startsWith(String(currentYear));

@@ -6,7 +6,7 @@ import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTria
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/SocialIcons";
-import { formatCurrency, formatLeadValue } from "@/lib/utils";
+import { formatCurrency, formatLeadValue, isVendaRealizadaNoMes } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import DashboardCalendar from "@/components/admin/DashboardCalendar";
 import { format, parseISO } from "date-fns";
@@ -265,15 +265,7 @@ export default function Dashboard() {
 
   const metaMensal = metaAnual / 12;
   const currentMonthStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).substring(0, 7);
-  const leadsFechadosMes = leads.filter(l => {
-    const s = (l.status || "").toLowerCase().replace("_", " ");
-    const isClosed = s === "fechado" || s === "venda fechada";
-    const isShadow = (l as any).origem === "carteira_shadow";
-    const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-    const dateToCheck = l.status_updated_at || l.created_at || "";
-    const isInMonth = dateToCheck.startsWith(currentMonthStr);
-    return isClosed && isInMonth && !isShadow;
-  });
+  const leadsFechadosMes = leads.filter(l => isVendaRealizadaNoMes(l, currentMonthStr));
 
   const realizadoMes = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
   const comissaoTotalMes = leadsFechadosMes.reduce((acc, l) => acc + calcularComissaoRecorrenteLead(l), 0);
