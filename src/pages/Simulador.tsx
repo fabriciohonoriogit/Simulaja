@@ -114,6 +114,7 @@ export default function Simulador() {
   const [idx, setIdx] = useState(4);
   const [nome, setNome] = useState("");
   const [wpp, setWpp] = useState("");
+  const [createdLeadId, setCreatedLeadId] = useState<string | null>(null);
 
   useEffect(() => {
     if (searchParams.get("segmento")) {
@@ -252,6 +253,10 @@ export default function Simulador() {
         indicador_celular: isIndicacao ? refCelular : undefined,
         organizacao_id: orgParam
       });
+
+      if (lead?.id) {
+        setCreatedLeadId(lead.id);
+      }
 
       const novaConsulta = consultas + 1;
       setConsultas(novaConsulta);
@@ -630,9 +635,12 @@ export default function Simulador() {
                 const orgId = searchParams.get("org") || searchParams.get("organizacao_id");
                 let url = `/pre-cadastro`;
                 const params = new URLSearchParams();
+                if (createdLeadId) params.append("lead_id", createdLeadId);
                 if (orgId) params.append("org", orgId);
                 if (credito[0]) params.append("valor", String(credito[0]));
                 if (categoria) params.append("segmento", categoria);
+                if (nome.trim()) params.append("nome", nome.trim());
+                if (wpp.trim()) params.append("celular", wpp.trim());
                 if (params.toString()) url += `?${params.toString()}`;
                 window.open(url, "_blank");
               }}
@@ -698,9 +706,12 @@ export default function Simulador() {
                     const orgId = searchParams.get("org") || searchParams.get("organizacao_id");
                     let url = `/pre-cadastro`;
                     const params = new URLSearchParams();
+                    if (createdLeadId) params.append("lead_id", createdLeadId);
                     if (orgId) params.append("org", orgId);
                     if (credito[0]) params.append("valor", String(credito[0]));
                     if (categoria) params.append("segmento", categoria);
+                    if (nome.trim()) params.append("nome", nome.trim());
+                    if (wpp.trim()) params.append("celular", wpp.trim());
                     if (params.toString()) url += `?${params.toString()}`;
                     window.open(url, "_blank");
                   }} 

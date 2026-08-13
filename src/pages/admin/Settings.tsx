@@ -877,14 +877,14 @@ export default function Settings() {
                   <div className="flex items-center gap-2 pt-1">
                     <Input 
                       readOnly 
-                      value={`${window.location.origin}/pre-cadastro`}
+                      value={`${window.location.origin}/pre-cadastro?org=${profile?.organizacao_id}`}
                       className="font-mono text-xs bg-slate-900 border-slate-800 text-slate-200"
                     />
                     <Button
                       variant="outline"
                       className="border-amber-500/40 bg-amber-950/50 hover:bg-amber-900 text-amber-300 shrink-0"
                       onClick={() => {
-                        const link = `${window.location.origin}/pre-cadastro`;
+                        const link = `${window.location.origin}/pre-cadastro?org=${profile?.organizacao_id}`;
                         navigator.clipboard.writeText(link);
                         toast({ title: "Link Copiado! 📋", description: "Link do Formulário de Pré-Cadastro copiado." });
                       }}

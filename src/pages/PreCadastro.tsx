@@ -27,6 +27,7 @@ import {
 export default function PreCadastro() {
   const [searchParams] = useSearchParams();
   const leadId = searchParams.get("lead_id") || searchParams.get("id") || searchParams.get("lead");
+  const orgId = searchParams.get("org") || searchParams.get("organizacao_id") || searchParams.get("org_id");
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -81,12 +82,30 @@ export default function PreCadastro() {
     prazoMeses: "",
   });
 
-  // Carrega os dados existentes do lead se houver lead_id
+  // Carrega os dados existentes do lead se houver lead_id ou preenche da URL
   useEffect(() => {
     if (leadId) {
       fetchLeadData(leadId);
+    } else {
+      // Pre-fill from URL parameters if available (e.g. from simulator)
+      const paramValor = searchParams.get("valor");
+      const paramSegmento = searchParams.get("segmento");
+      const paramNome = searchParams.get("nome");
+      const paramCelular = searchParams.get("celular") || searchParams.get("wpp");
+      const paramEmail = searchParams.get("email");
+
+      if (paramValor || paramSegmento || paramNome || paramCelular || paramEmail) {
+        setFormData((prev) => ({
+          ...prev,
+          nome: paramNome ? decodeURIComponent(paramNome) : prev.nome,
+          celular: paramCelular ? decodeURIComponent(paramCelular) : prev.celular,
+          email: paramEmail ? decodeURIComponent(paramEmail) : prev.email,
+          valorCredito: paramValor ? paramValor : prev.valorCredito,
+          tipoConsorcio: paramSegmento ? (paramSegmento.charAt(0).toUpperCase() + paramSegmento.slice(1)) : prev.tipoConsorcio,
+        }));
+      }
     }
-  }, [leadId]);
+  }, [leadId, searchParams]);
 
   const fetchLeadData = async (id: string) => {
     try {
@@ -183,8 +202,28 @@ export default function PreCadastro() {
       const rawCredit = parseFloat(formData.valorCredito.replace(/[^\d.]/g, "")) || null;
       const rawPrazo = parseInt(formData.prazoMeses.replace(/\D/g, ""), 10) || null;
 
-      if (leadId) {
-        // Atualiza lead existente no CRM
+      let targetLeadId = leadId;
+
+      // Se não recebemos lead_id na URL, tentamos buscar se já existe um lead com o mesmo número de celular
+      if (!targetLeadId && rawPhone && rawPhone.length >= 10) {
+        try {
+          const { data: existingLead } = await (supabase.from("leads") as any)
+            .select("id")
+            .eq("celular", rawPhone)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingLead?.id) {
+            targetLeadId = existingLead.id;
+          }
+        } catch (findErr) {
+          console.warn("Aviso: Falha ao buscar lead por celular existente:", findErr);
+        }
+      }
+
+      if (targetLeadId) {
+        // Atualiza lead existente no CRM e faz avançar de etapa automaticamente no funil (para 'negociacao')
         const { error } = await (supabase.from("leads") as any)
           .update({
             nome: formData.nome.trim(),
@@ -194,14 +233,19 @@ export default function PreCadastro() {
             tipo_consorcio: formData.tipoConsorcio,
             valor_credito: rawCredit,
             prazo_meses: rawPrazo,
+            status: "negociacao",
+            lead_temperatura: "quente",
+            lead_score_valor: "alto",
             dados_cadastro: payloadDadosCadastro,
-            observacao: `Ficha de Pré-Cadastro preenchida pelo cliente para geração de contrato em ${new Date().toLocaleDateString("pt-BR")}.`,
+            updated_at: new Date().toISOString(),
+            observacao: `Ficha de Pré-Cadastro concluída pelo cliente em ${new Date().toLocaleDateString("pt-BR")}. Contrato em fase de geração.`,
           })
-          .eq("id", leadId);
+          .eq("id", targetLeadId);
 
         if (error) throw error;
       } else {
-        // Se não houver lead_id, insere como novo pré-cadastro no CRM
+        // Se não houver lead_id nem lead existente por telefone, insere como novo pré-cadastro no CRM na etapa de negociacao
+        const orgToUse = orgId || "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4";
         const { error } = await (supabase.from("leads") as any).insert({
           nome: formData.nome.trim(),
           celular: rawPhone,
@@ -210,9 +254,12 @@ export default function PreCadastro() {
           tipo_consorcio: formData.tipoConsorcio,
           valor_credito: rawCredit,
           prazo_meses: rawPrazo,
-          status: "novo_lead",
+          status: "negociacao",
+          lead_temperatura: "quente",
+          lead_score_valor: "alto",
           origem: "Ficha de Pré-Cadastro Contrato",
           dados_cadastro: payloadDadosCadastro,
+          organizacao_id: orgToUse,
         });
 
         if (error) throw error;
