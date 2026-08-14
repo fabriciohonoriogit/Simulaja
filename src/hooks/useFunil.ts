@@ -653,8 +653,8 @@ export function useFunil() {
     let taxa_comissao = 4; // DEMAIS
     if (comissaoRegra === "GOLDEN") taxa_comissao = 5;
     if (comissaoRegra === "SILVER") taxa_comissao = 3;
-    if (comissaoRegra === "INDICACAO_MAGALU") taxa_comissao = 0.8;
     if (finalAdmin === "ADEMICON") taxa_comissao = 2.5;
+    if (comissaoRegra === "INDICACAO_MAGALU") taxa_comissao = 0.8; // Comissão Filial Magalu = sempre 0.80% independente do segmento ou administradora
 
     let finalTipoComissionamento = comissaoRegra === "INDICACAO_MAGALU" ? "LINEAR" : comissaoTipo;
     if (finalAdmin === "ADEMICON" && !finalTipoComissionamento.startsWith("ADEMICON_")) {
@@ -900,13 +900,15 @@ export function useFunil() {
             let taxa_comissao = 4; // DEMAIS
             if (formData.comissao_regra === "GOLDEN") taxa_comissao = 5;
             if (formData.comissao_regra === "SILVER") taxa_comissao = 3;
-            if (formData.comissao_regra === "INDICACAO_MAGALU") taxa_comissao = 0.8;
             
             // Se for retroativo (vendas até Março), a taxa é obrigatoriamente 3.5%
             if (formData.is_retroativo) taxa_comissao = 3.5;
             
             // Regra específica Ademicon
             if (formData.administradora === "ADEMICON") taxa_comissao = 2.5;
+
+            // Comissão Filial Magalu é sempre 0.80% independente de administradora, retroativo ou segmento
+            if (formData.comissao_regra === "INDICACAO_MAGALU") taxa_comissao = 0.8;
 
             let finalTipoComissionamento = formData.comissao_regra === "INDICACAO_MAGALU" ? "LINEAR" : (formData.comissao_tipo || "REDUZIDA");
             if (formData.administradora === "ADEMICON" && !finalTipoComissionamento.startsWith("ADEMICON_")) {

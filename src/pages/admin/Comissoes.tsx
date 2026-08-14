@@ -246,9 +246,9 @@ export default function Comissoes() {
     let taxa_comissao = 4; // DEMAIS
     if (regra === "GOLDEN") taxa_comissao = 5;
     if (regra === "SILVER") taxa_comissao = 3;
-    if (regra === "INDICACAO_MAGALU") taxa_comissao = 0.8;
     if (regra === "RETROATIVO") taxa_comissao = 3.5;
     if (regra === "ADEMICON") taxa_comissao = 2.5;
+    if (regra === "INDICACAO_MAGALU") taxa_comissao = 0.8; // Comissão Filial Magalu = sempre 0.80% independente do segmento
 
     let finalTipoComissionamento = regra === "INDICACAO_MAGALU" ? "LINEAR" : tipoComissionamento;
     if (regra === "ADEMICON" && !finalTipoComissionamento.startsWith("ADEMICON_")) {

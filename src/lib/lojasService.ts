@@ -87,6 +87,27 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
   if (!lead) return null;
   const dc = lead.dados_cadastro || {};
   
+  // Vendas do Gestor (ex: 200 mil, venda de gestor ou venda do Valdinei) não entram como meta da loja, e sim do gestor
+  const valorCredito = Number(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
+  const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
+  const origemStr = normalizeStr(lead.origem || dc.origem || "");
+  const canalStr = normalizeStr(lead.canal || dc.canal || dc.tipo_venda || "");
+  
+  const isGestorSale = 
+    Boolean(lead.is_venda_gestor) || 
+    Boolean(dc.is_venda_gestor) || 
+    Boolean(dc.venda_gestor) || 
+    origemStr === "gestor" || 
+    origemStr.includes("venda_gestor") || 
+    origemStr.includes("venda do gestor") ||
+    canalStr.includes("gestor") ||
+    valorCredito === 200000 ||
+    leadName.includes("valdinei");
+
+  if (isGestorSale) {
+    return null; // Pertence ao gestor, não entra para a meta da loja
+  }
+
   // 1. Verificação por código de filial no dados_cadastro (prioridade máxima)
   const codDirect = String(dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || "").trim();
   if (codDirect) {

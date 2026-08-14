@@ -20,6 +20,13 @@ export function calcularComissaoRecorrenteLead(lead: any): number {
 
   const administradora = (lead.administradora || lead.dados_cadastro?.administradora || "").toUpperCase();
   const tipo = (lead.tipo_consorcio || lead.dados_cadastro?.tipo_consorcio || "").toLowerCase();
+  const regra = (lead.comissao_regra || lead.regra_comissao || lead.dados_cadastro?.comissao_regra || "").toUpperCase();
+
+  // Regra Específica: INDICAÇÃO / FILIAL MAGALU (0.80% em 4x)
+  if (regra === "INDICACAO_MAGALU") {
+    const comissaoTotal = valorVendido * 0.008; // 0.80%
+    return comissaoTotal / 4;
+  }
 
   // Regra Específica: ADEMICON
   if (administradora === "ADEMICON") {

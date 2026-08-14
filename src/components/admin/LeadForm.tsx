@@ -338,17 +338,36 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
           <div className={`p-4 rounded-2xl border space-y-4 transition-colors ${isVendaFechada ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
              <div className="flex items-center justify-between">
                <h4 className="text-[10px] uppercase font-black text-emerald-600 tracking-widest">💰 Detalhes da Venda</h4>
-               <div className="flex items-center gap-2">
-                 <input 
-                  type="checkbox" 
-                  id="is_retroativo" 
-                  checked={form.is_retroativo} 
-                  onChange={handleChange}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                 />
-                 <Label htmlFor="is_retroativo" className="text-[9px] font-black uppercase text-slate-500 cursor-pointer">Inclusão Retroativa</Label>
-               </div>
-             </div>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <input 
+                     type="checkbox" 
+                     id="is_venda_gestor" 
+                     checked={Boolean(form.is_venda_gestor || form.dados_cadastro?.is_venda_gestor)} 
+                     onChange={(e) => {
+                       const checked = e.target.checked;
+                       setForm(prev => ({
+                         ...prev,
+                         is_venda_gestor: checked,
+                         dados_cadastro: { ...(prev.dados_cadastro || {}), is_venda_gestor: checked }
+                       }));
+                     }}
+                     className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    <Label htmlFor="is_venda_gestor" className="text-[9px] font-black uppercase text-purple-600 cursor-pointer">Venda do Gestor (Meta Gestor)</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input 
+                     type="checkbox" 
+                     id="is_retroativo" 
+                     checked={form.is_retroativo} 
+                     onChange={handleChange}
+                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="is_retroativo" className="text-[9px] font-black uppercase text-slate-500 cursor-pointer">Inclusão Retroativa</Label>
+                  </div>
+                </div>
+              </div>
 
             {form.is_retroativo && (
               <div className="grid grid-cols-2 gap-4 pb-2 border-b border-emerald-100">
