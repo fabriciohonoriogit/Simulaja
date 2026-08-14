@@ -87,9 +87,8 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
   if (!lead) return null;
   const dc = lead.dados_cadastro || {};
   
-  // Vendas do Gestor (ex: 200 mil, venda de gestor ou venda do Valdinei) não entram como meta da loja, e sim do gestor
+  // Vendas do Gestor (ex: 200 mil ou com a flag de gestor) não entram como meta da loja
   const valorCredito = Number(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
-  const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
   const origemStr = normalizeStr(lead.origem || dc.origem || "");
   const canalStr = normalizeStr(lead.canal || dc.canal || dc.tipo_venda || "");
   
@@ -101,8 +100,7 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     origemStr.includes("venda_gestor") || 
     origemStr.includes("venda do gestor") ||
     canalStr.includes("gestor") ||
-    valorCredito === 200000 ||
-    leadName.includes("valdinei");
+    valorCredito === 200000; // Apenas a venda de 200mil é do gestor
 
   if (isGestorSale) {
     return null; // Pertence ao gestor, não entra para a meta da loja
@@ -115,22 +113,29 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     if (matched) return matched;
   }
 
+  // Se for o cliente Valdinei, associa diretamente à Filial São Mateus do Sul (927)
+  const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
+  if (leadName.includes("valdinei")) {
+    const saoMateusLoja = lojas.find(l => l.codigo === "927" || normalizeStr(l.cidade).includes("sao mateus"));
+    if (saoMateusLoja) return saoMateusLoja;
+  }
+
   // 2. Verificação estrita por nome de cidade ou filial (Match exato ou prefixo exato)
   const cityStr = normalizeStr(lead.cidade || dc.cidade || "").trim();
   const filialStr = normalizeStr(dc.filial_nome || dc.filial || dc.loja || dc.unidade || "").trim();
 
   for (const loja of lojas) {
     const code = loja.codigo;
-    const city = normalizeStr(loja.cidade).trim(); // ex: "paranagua", "irati", "canoinhas", "campo largo", "sao mateus do sul"
+    const city = normalizeStr(loja.cidade).trim(); // ex: "paranagua", "sao mateus do sul", "irati", "canoinhas", "campo largo"
     
-    // Match EXATO da cidade
-    if (cityStr && cityStr === city) {
+    // Match EXATO ou contido na cidade
+    if (cityStr && (cityStr === city || city.includes(cityStr) || cityStr.includes(city))) {
       return loja;
     }
     
     // Match por filial explícita com o código da loja ou nome da cidade
     if (filialStr) {
-      if (filialStr === city || filialStr.includes(`filial ${code}`) || filialStr.includes(`${code}`)) {
+      if (filialStr === city || filialStr.includes(city) || filialStr.includes(`filial ${code}`) || filialStr.includes(`${code}`)) {
         return loja;
       }
     }

@@ -70,7 +70,7 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
   });
 
   describe("Atribuição de Vendas de Gestor vs Loja", () => {
-    it("deve excluir a venda de 200mil ou marcada como Venda do Gestor das metas da loja", () => {
+    it("deve excluir a venda de 200mil das metas da loja e manter como venda do gestor", () => {
       const lead200kGestor = {
         nome: "Cliente Gestor 200k",
         valor_credito: 200000,
@@ -78,17 +78,27 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
         origem: "venda_gestor"
       };
 
-      const leadValdinei = {
-        nome: "Valdinei da Silva",
+      const lead200k = {
+        nome: "Outro Cliente 200k",
         valor_credito: 200000,
         cidade: "PARANAGUÁ"
       };
 
-      const matchedGestor200k = matchLeadToLoja(lead200kGestor, MOCK_LOJAS);
-      expect(matchedGestor200k).toBeNull(); // Não entra para a loja
+      expect(matchLeadToLoja(lead200kGestor, MOCK_LOJAS)).toBeNull(); // Não entra para a loja
+      expect(matchLeadToLoja(lead200k, MOCK_LOJAS)).toBeNull(); // Não entra para a loja
+    });
 
-      const matchedValdinei = matchLeadToLoja(leadValdinei, MOCK_LOJAS);
-      expect(matchedValdinei).toBeNull(); // Não entra para a loja
+    it("deve atribuir a venda de 40mil do Valdinei para a Filial São Mateus do Sul", () => {
+      const leadValdinei40k = {
+        nome: "Valdinei da Silva",
+        valor_credito: 40000,
+        cidade: "São Mateus do Sul"
+      };
+
+      const matchedValdinei = matchLeadToLoja(leadValdinei40k, MOCK_LOJAS);
+      expect(matchedValdinei).not.toBeNull();
+      expect(matchedValdinei?.id).toBe("filial-927"); // São Mateus do Sul
+      expect(matchedValdinei?.cidade).toBe("SÃO MATEUS DO SUL");
     });
 
     it("deve associar corretamente vendas comuns de loja", () => {
