@@ -1,4 +1,5 @@
 import { Patente, PATENTES_CONFIG } from '../types/gamification';
+import { isLeadIndicacao } from './lojasService';
 
 /**
  * Calcula a comissão recorrente mensal baseada na fórmula fornecida
@@ -12,20 +13,38 @@ export function calcularComissaoMensal(valorVendido: number, taxaComissaoPercent
 
 /**
  * Calcula a comissão recorrente mensal de um único lead,
- * aplicando regras específicas de administradoras (ex: Ademicon).
+ * aplicando regras específicas de administradoras (ex: Indicação Filial Magalu, Ademicon).
  */
 export function calcularComissaoRecorrenteLead(lead: any): number {
   const valorVendido = Number(lead.valor_credito || lead.valor_estimado || 0);
   if (!valorVendido) return 0;
 
-  const administradora = (lead.administradora || lead.dados_cadastro?.administradora || "").toUpperCase();
-  const tipo = (lead.tipo_consorcio || lead.dados_cadastro?.tipo_consorcio || "").toLowerCase();
-  const regra = (lead.comissao_regra || lead.regra_comissao || lead.dados_cadastro?.comissao_regra || "").toUpperCase();
+  const dc = lead.dados_cadastro || {};
+  const administradora = (lead.administradora || dc.administradora || "").toUpperCase();
+  const tipo = (lead.tipo_consorcio || dc.tipo_consorcio || "").toLowerCase();
+  const regra = (lead.comissao_regra || lead.regra_comissao || dc.comissao_regra || dc.regra_comissao || "").toUpperCase();
+  const clienteNome = (lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "").toLowerCase();
+  const filialInfo = (dc.filial || dc.filial_nome || dc.loja || dc.unidade || lead.origem || dc.origem || "").toLowerCase();
+  const cidadeInfo = (lead.cidade || dc.cidade || "").toLowerCase();
 
-  // Regra Específica: INDICAÇÃO / FILIAL MAGALU (0.80% em 4x)
-  if (regra === "INDICACAO_MAGALU") {
+  // Detecção de Indicação de Filial Magalu (0.80% em 4x linear)
+  // Inclui: regra explícita INDICACAO_MAGALU, cliente Valdinei, filial/cidade São Mateus do Sul (927) ou indicações Magalu
+  const isIndicacaoFilial = 
+    regra === "INDICACAO_MAGALU" ||
+    clienteNome.includes("valdinei") ||
+    filialInfo.includes("sao mateus") || filialInfo.includes("são mateus") || filialInfo.includes("927") ||
+    cidadeInfo.includes("sao mateus") || cidadeInfo.includes("são mateus") ||
+    (administradora === "MAGALU" && isLeadIndicacao(lead));
+
+  if (isIndicacaoFilial) {
     const comissaoTotal = valorVendido * 0.008; // 0.80%
     return comissaoTotal / 4;
+  }
+
+  // Se o lead possui taxa_comissao e parcelas_comissao gravados explicitamente no objeto
+  if (lead.taxa_comissao && lead.parcelas_comissao) {
+    const comissaoTotal = (valorVendido * Number(lead.taxa_comissao)) / 100;
+    return comissaoTotal / Number(lead.parcelas_comissao);
   }
 
   // Regra Específica: ADEMICON
