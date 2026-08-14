@@ -228,12 +228,15 @@ export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame, custom
 export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?: CustomDateRange): boolean {
   if (!lead) return false;
   const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
-  const isClosed = s === "fechado" || s === "venda fechada" || s === "venda_fechada";
+  const isClosed = [
+    "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
+    "contrato_assinado", "comissao paga", "comissao_paga", "aguardando", "ativo", "contemplada"
+  ].includes(s) || Boolean(lead.data_adesao);
+
   if (!isClosed) return false;
 
   const isShadow = lead.origem === "carteira_shadow";
-  const isRetroativo = lead.dados_cadastro?.is_retroativo === true;
-  if (isShadow || isRetroativo) return false;
+  if (isShadow) return false;
 
   if (timeFrame === "personalizado") {
     const saleDate = lead.dados_cadastro?.data_venda || 
@@ -343,14 +346,20 @@ export function calculateLojasPerformance(
     // LEADS COM VENDA FECHADA NO FUNIL
     const leadsFechadosPeriodo = storeLeads.filter(l => {
       const status = (l.status || "").toLowerCase().replace("_", " ").trim();
-      const isClosed = status === "fechado" || status === "venda fechada" || status === "venda_fechada";
+      const isClosed = [
+        "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
+        "contrato_assinado", "comissao paga", "comissao_paga", "aguardando", "ativo", "contemplada"
+      ].includes(status) || Boolean(l.data_adesao);
       const isShadow = (l as any).origem === "carteira_shadow";
       return isClosed && !isShadow && isLeadInTimeFrame(l, timeFrame, customRange);
     });
 
     const leadsFechadosMes = storeLeads.filter(l => {
       const status = (l.status || "").toLowerCase().replace("_", " ").trim();
-      const isClosed = status === "fechado" || status === "venda fechada" || status === "venda_fechada";
+      const isClosed = [
+        "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
+        "contrato_assinado", "comissao paga", "comissao_paga", "aguardando", "ativo", "contemplada"
+      ].includes(status) || Boolean(l.data_adesao);
       const isShadow = (l as any).origem === "carteira_shadow";
       return isClosed && !isShadow && isVendaRealizadaNoMes(l, currentMonthStr);
     });

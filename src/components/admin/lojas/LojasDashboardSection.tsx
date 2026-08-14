@@ -98,6 +98,24 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
 
   const customRange = useMemo(() => ({ startDate, endDate }), [startDate, endDate]);
 
+  // Unificar leads do funil e itens da carteira de vendas
+  const combinedLeads = useMemo(() => {
+    const all = [...(leads || [])];
+    if (Array.isArray(carteira) && carteira.length > 0) {
+      carteira.forEach(c => {
+        if (!all.some(l => l.id === c.id || (l.id && c.lead_id && l.id === c.lead_id))) {
+          all.push({
+            ...c,
+            status: c.status || "fechado",
+            valor_credito: c.valor_credito || c.valor_venda || 0,
+            origem: c.origem || "indicacao"
+          });
+        }
+      });
+    }
+    return all;
+  }, [leads, carteira]);
+
   // Calcular performance das 5 lojas incluindo métricas de indicação e conversão estrita
   const {
     lojasMetrics,
@@ -113,8 +131,8 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
     taxaConversaoGlobalIndicacoes,
     taxaConversaoGlobalGeral
   } = useMemo(() => {
-    return calculateLojasPerformance(leads, lojas, timeFrame, customRange);
-  }, [leads, lojas, timeFrame, customRange]);
+    return calculateLojasPerformance(combinedLeads, lojas, timeFrame, customRange);
+  }, [combinedLeads, lojas, timeFrame, customRange]);
 
   // Preparar dados para o gráfico de Vendas vs Meta
   const chartDataVendas = useMemo(() => {
