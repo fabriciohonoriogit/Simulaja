@@ -166,7 +166,8 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     origemStr === "gestor" || 
     origemStr.includes("venda_gestor") || 
     origemStr.includes("venda do gestor") ||
-    canalStr.includes("gestor");
+    canalStr.includes("gestor") ||
+    valorCredito === 200000; // Venda de 200mil é do gestor e NÃO entra para meta de nenhuma filial
 
   if (isGestorSale) {
     return null; // Pertence ao gestor, não entra para a meta da loja
