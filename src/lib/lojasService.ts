@@ -498,8 +498,8 @@ export function calculateLojasPerformance(
     const ritmoDiario = realizadoMensal / currentDay;
     const projecaoMes = Math.round(ritmoDiario * daysInMonth);
 
-    // INDICAÇÕES E ANÁLISE DE CONVERSÃO NO PERÍODO SELECIONADO
-    const indicacoesLeadsList = storeLeadsNoPeriodo.filter(isLeadIndicacao);
+    // INDICAÇÕES E ANÁLISE DE CONVERSÃO DA LOJA (INDEPENDENTE DE TER VENDA FECHADA OU DO PERÍODO DE CRIAÇÃO)
+    const indicacoesLeadsList = storeLeads.filter(isLeadIndicacao);
     const totalIndicacoes = indicacoesLeadsList.length;
 
     // Vendas oriundas de INDICAÇÃO que foram fechadas no período
