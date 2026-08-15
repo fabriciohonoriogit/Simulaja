@@ -44,11 +44,19 @@ export function parseBRLValue(v: unknown): number {
 export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolean {
   if (!lead) return false;
   
+  const dc = lead.dados_cadastro || {};
+  const valor = Number(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
+
+  // Excluir lead fantasma de 110k sem adesão/contrato confirmado
+  if (valor === 110000 && !lead.data_adesao && !dc.data_adesao && !dc.data_venda && !lead.grupo) {
+    return false;
+  }
+
   const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
   const isClosed = [
     "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
     "contrato_assinado", "comissao paga", "comissao_paga"
-  ].includes(s) || Boolean(lead.data_adesao || lead.dados_cadastro?.data_venda || lead.dados_cadastro?.data_fechamento);
+  ].includes(s) || Boolean(lead.data_adesao || dc.data_venda || dc.data_fechamento);
 
   if (!isClosed) return false;
 
@@ -56,13 +64,12 @@ export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolea
   if (isShadow) return false;
 
   // 1. Data explícita de venda ou cadastro
-  const explicitSaleDate = lead.dados_cadastro?.data_venda || 
-                           lead.dados_cadastro?.data_fechamento || 
-                           lead.dados_cadastro?.data_adesao || 
+  const explicitSaleDate = dc.data_venda || 
+                           dc.data_fechamento || 
+                           dc.data_adesao || 
                            lead.data_adesao ||
                            lead.status_updated_at ||
-                           lead.created_at ||
-                           lead.updated_at;
+                           lead.created_at;
 
   if (explicitSaleDate) {
     const saleMonth = String(explicitSaleDate).substring(0, 7);
