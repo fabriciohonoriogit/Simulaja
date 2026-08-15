@@ -258,13 +258,35 @@ export function isLeadIndicacao(lead: any): boolean {
   if (!lead) return false;
   const dc = lead.dados_cadastro || {};
 
+  const getIndicadorRaw = (s: any) => (s ? String(s).trim().toLowerCase() : "");
+  
+  const allIndicadorText = [
+    getIndicadorRaw(lead.indicador_nome), 
+    getIndicadorRaw(lead.indicador_celular), 
+    getIndicadorRaw(lead.indicador),
+    getIndicadorRaw(lead.indicacao),
+    getIndicadorRaw(lead.indicado_por),
+    getIndicadorRaw(lead.quem_indicou),
+    getIndicadorRaw(dc.indicador_nome), 
+    getIndicadorRaw(dc.indicador), 
+    getIndicadorRaw(dc.indicador_celular),
+    getIndicadorRaw(dc.indicacao),
+    getIndicadorRaw(dc.indicado_por),
+    getIndicadorRaw(dc.quem_indicou)
+  ].join(" ");
+
+  // Dorys não entra como indicação de Magalu
+  if (allIndicadorText.includes("dorys")) {
+    return false;
+  }
+
   const sanitizeStr = (s: any) => {
     if (!s) return "";
     const str = String(s).trim().toLowerCase();
     const invalidValues = [
       "", "nao", "não", "nenhum", "nenhuma", "sem indicador", "sem indicação", 
       "nao possui", "não possui", "n/a", "null", "undefined", "sem", 
-      "não informado", "nao informado"
+      "não informado", "nao informado", "dorys"
     ];
     if (invalidValues.includes(str)) return "";
     return str;
@@ -286,7 +308,7 @@ export function isLeadIndicacao(lead: any): boolean {
   );
   
   const origemStr = sanitizeStr(lead.origem || dc.origem);
-  const eOrigemIndicacao = origemStr.includes("indica") || origemStr.includes("parceiro") || origemStr.includes("recomend");
+  const eOrigemIndicacao = origemStr.includes("indica") || origemStr.includes("parceiro") || origemStr.includes("magalu");
   
   return temIndicadorCampos || eOrigemIndicacao;
 }
@@ -498,8 +520,19 @@ export function calculateLojasPerformance(
     const ritmoDiario = realizadoMensal / currentDay;
     const projecaoMes = Math.round(ritmoDiario * daysInMonth);
 
-    // INDICAÇÕES E ANÁLISE DE CONVERSÃO DA LOJA (INDEPENDENTE DE TER VENDA FECHADA OU DO PERÍODO DE CRIAÇÃO)
-    const indicacoesLeadsList = storeLeads.filter(isLeadIndicacao);
+    // INDICAÇÕES DA LOJA: Apenas indicações a partir de 01/08/2026 e excetuando Dorys / não-Magalu
+    const indicacoesLeadsList = storeLeads.filter(l => {
+      if (!isLeadIndicacao(l)) return false;
+      const dateStr = l.created_at || l.status_updated_at || l.updated_at;
+      if (dateStr) {
+        const leadDate = new Date(dateStr);
+        if (!isNaN(leadDate.getTime())) {
+          const aug01 = new Date("2026-08-01T00:00:00");
+          if (leadDate < aug01) return false;
+        }
+      }
+      return true;
+    });
     const totalIndicacoes = indicacoesLeadsList.length;
 
     // Vendas oriundas de INDICAÇÃO que foram fechadas no período
