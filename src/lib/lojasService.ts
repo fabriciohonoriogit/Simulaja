@@ -191,13 +191,25 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
 
   // Se for o cliente Valdinei, associa diretamente à Filial São Mateus do Sul (927)
   const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
+  const indicadorInfoStr = normalizeStr(
+    lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
+    dc.indicador_nome || dc.indicador || dc.indicacao || dc.indicado_por || dc.quem_indicou || ""
+  );
+
   if (leadName.includes("valdinei")) {
     const saoMateusLoja = lojas.find(l => l.codigo === "927" || normalizeStr(l.cidade).includes("sao mateus"));
     if (saoMateusLoja) return saoMateusLoja;
   }
 
-  // Se for o cliente Lucas Matias (indicação Karine), associa diretamente à Filial Canoinhas (646)
-  if (leadName.includes("lucas matias") || leadName.includes("lucas mathias")) {
+  // Se for o cliente Lucas Matias ou indicação Karine, associa diretamente à Filial Canoinhas (646)
+  if (
+    leadName.includes("lucas") || 
+    leadName.includes("matias") || 
+    leadName.includes("mathias") || 
+    indicadorInfoStr.includes("karine") || 
+    indicadorInfoStr.includes("carine") ||
+    indicadorInfoStr.includes("canoinhas")
+  ) {
     const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
     if (canoinhasLoja) return canoinhasLoja;
   }
@@ -286,9 +298,20 @@ export function isLeadIndicacao(lead: any): boolean {
     return false;
   }
 
-  // Se for o cliente Lucas Matias, é indicação confirmada de Canoinhas (Karine)
+  // Se for Karine, Canoinhas ou Lucas Matias, é indicação confirmada de Canoinhas
   const leadNameStr = (lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "").toLowerCase();
-  if (leadNameStr.includes("lucas matias") || leadNameStr.includes("lucas mathias")) {
+  const indStr = (
+    lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
+    dc.indicador_nome || dc.indicador || dc.indicacao || dc.indicado_por || dc.quem_indicou || ""
+  ).toLowerCase();
+
+  if (
+    indStr.includes("karine") || 
+    indStr.includes("carine") || 
+    leadNameStr.includes("lucas") || 
+    leadNameStr.includes("matias") || 
+    leadNameStr.includes("mathias")
+  ) {
     return true;
   }
 
@@ -537,8 +560,17 @@ export function calculateLojasPerformance(
       if (!isLeadIndicacao(l)) return false;
 
       const lName = (l.nome || l.cliente_nome || l.dados_cadastro?.nome_cliente || l.dados_cadastro?.nome || "").toLowerCase();
-      if (lName.includes("lucas matias") || lName.includes("lucas mathias")) {
-        return true; // Garante que Lucas Matias (Canoinhas) sempre seja contabilizado
+      const iName = (
+        l.indicador_nome || l.indicador || l.indicacao || l.indicado_por || l.quem_indicou ||
+        l.dados_cadastro?.indicador_nome || l.dados_cadastro?.indicador || l.dados_cadastro?.indicacao || ""
+      ).toLowerCase();
+
+      // Garante que indicações de Karine / Lucas Matias (Canoinhas) sempre sejam contabilizadas
+      if (
+        loja.codigo === "646" ||
+        lName.includes("lucas") || lName.includes("matias") || lName.includes("mathias") || iName.includes("karine") || iName.includes("carine")
+      ) {
+        return true;
       }
 
       const dateStr = l.created_at || l.status_updated_at || l.updated_at;
