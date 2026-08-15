@@ -345,8 +345,8 @@ export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?:
   const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
   const isClosed = [
     "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-    "contrato_assinado", "comissao paga", "comissao_paga", "aguardando", "ativo", "contemplada"
-  ].includes(s) || Boolean(lead.data_adesao);
+    "contrato_assinado", "comissao paga", "comissao_paga"
+  ].includes(s) || Boolean(lead.data_adesao || lead.dados_cadastro?.data_venda || lead.dados_cadastro?.data_fechamento);
 
   if (!isClosed) return false;
 
@@ -463,8 +463,8 @@ export function calculateLojasPerformance(
       const status = (l.status || "").toLowerCase().replace("_", " ").trim();
       const isClosed = [
         "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-        "contrato_assinado", "comissao paga", "comissao_paga", "aguardando", "ativo", "contemplada"
-      ].includes(status) || Boolean(l.data_adesao);
+        "contrato_assinado", "comissao paga", "comissao_paga"
+      ].includes(status) || Boolean(l.data_adesao || l.dados_cadastro?.data_venda || l.dados_cadastro?.data_fechamento);
       const isShadow = (l as any).origem === "carteira_shadow";
       return isClosed && !isShadow && isLeadInTimeFrame(l, timeFrame, customRange);
     });
@@ -473,8 +473,8 @@ export function calculateLojasPerformance(
       const status = (l.status || "").toLowerCase().replace("_", " ").trim();
       const isClosed = [
         "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-        "contrato_assinado", "comissao paga", "comissao_paga", "aguardando", "ativo", "contemplada"
-      ].includes(status) || Boolean(l.data_adesao);
+        "contrato_assinado", "comissao paga", "comissao_paga"
+      ].includes(status) || Boolean(l.data_adesao || l.dados_cadastro?.data_venda || l.dados_cadastro?.data_fechamento);
       const isShadow = (l as any).origem === "carteira_shadow";
       return isClosed && !isShadow && isVendaRealizadaNoMes(l, currentMonthStr);
     });

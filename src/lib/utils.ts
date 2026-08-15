@@ -47,8 +47,8 @@ export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolea
   const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
   const isClosed = [
     "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-    "contrato_assinado", "comissao paga", "comissao_paga", "aguardando", "ativo", "contemplada"
-  ].includes(s) || Boolean(lead.data_adesao);
+    "contrato_assinado", "comissao paga", "comissao_paga"
+  ].includes(s) || Boolean(lead.data_adesao || lead.dados_cadastro?.data_venda || lead.dados_cadastro?.data_fechamento);
 
   if (!isClosed) return false;
 
