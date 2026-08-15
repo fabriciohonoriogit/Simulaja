@@ -196,6 +196,12 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     if (saoMateusLoja) return saoMateusLoja;
   }
 
+  // Se for o cliente Lucas Matias (indicação Karine), associa diretamente à Filial Canoinhas (646)
+  if (leadName.includes("lucas matias") || leadName.includes("lucas mathias")) {
+    const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
+    if (canoinhasLoja) return canoinhasLoja;
+  }
+
   // 2. Verificação por nome/código de filial explícito
   const filialStr = normalizeStr(
     lead.filial_nome || lead.filial || lead.loja || lead.unidade ||
@@ -278,6 +284,12 @@ export function isLeadIndicacao(lead: any): boolean {
   // Dorys não entra como indicação de Magalu
   if (allIndicadorText.includes("dorys")) {
     return false;
+  }
+
+  // Se for o cliente Lucas Matias, é indicação confirmada de Canoinhas (Karine)
+  const leadNameStr = (lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "").toLowerCase();
+  if (leadNameStr.includes("lucas matias") || leadNameStr.includes("lucas mathias")) {
+    return true;
   }
 
   const sanitizeStr = (s: any) => {
@@ -523,12 +535,18 @@ export function calculateLojasPerformance(
     // INDICAÇÕES DA LOJA: Apenas indicações a partir de 01/08/2026 e excetuando Dorys / não-Magalu
     const indicacoesLeadsList = storeLeads.filter(l => {
       if (!isLeadIndicacao(l)) return false;
+
+      const lName = (l.nome || l.cliente_nome || l.dados_cadastro?.nome_cliente || l.dados_cadastro?.nome || "").toLowerCase();
+      if (lName.includes("lucas matias") || lName.includes("lucas mathias")) {
+        return true; // Garante que Lucas Matias (Canoinhas) sempre seja contabilizado
+      }
+
       const dateStr = l.created_at || l.status_updated_at || l.updated_at;
       if (dateStr) {
         const leadDate = new Date(dateStr);
         if (!isNaN(leadDate.getTime())) {
-          const aug01 = new Date("2026-08-01T00:00:00");
-          if (leadDate < aug01) return false;
+          const jul25 = new Date("2026-07-25T00:00:00");
+          if (leadDate < jul25) return false;
         }
       }
       return true;
