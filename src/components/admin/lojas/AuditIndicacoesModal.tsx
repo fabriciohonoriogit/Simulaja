@@ -14,7 +14,7 @@ import {
   Building2,
   FileSpreadsheet
 } from "lucide-react";
-import { LojaPerformance, getTimeFrameLabel, TimeFrame, CustomDateRange } from "@/lib/lojasService";
+import { LojaPerformance, getTimeFrameLabel, TimeFrame, CustomDateRange, getLeadPhone, getLeadIndicadorInfo } from "@/lib/lojasService";
 import { formatCurrency } from "@/lib/utils";
 
 interface AuditIndicacoesModalProps {
@@ -41,11 +41,15 @@ export const AuditIndicacoesModal: React.FC<AuditIndicacoesModalProps> = ({
   const filteredLeads = (indicacoesLeadsList || []).filter(lead => {
     const term = searchTerm.toLowerCase();
     const dc = lead.dados_cadastro || {};
+    const phone = getLeadPhone(lead).toLowerCase();
+    const { nome: indName, celular: indCel, origem: orig } = getLeadIndicadorInfo(lead);
+
     const nameMatch = (lead.nome || "").toLowerCase().includes(term);
-    const indNameMatch = (lead.indicador_nome || dc.indicador_nome || dc.indicador || "").toLowerCase().includes(term);
-    const origemMatch = (lead.origem || dc.origem || "").toLowerCase().includes(term);
+    const phoneMatch = phone.includes(term);
+    const indNameMatch = indName.toLowerCase().includes(term) || indCel.toLowerCase().includes(term);
+    const origemMatch = (lead.origem || dc.origem || orig || "").toLowerCase().includes(term);
     const statusMatch = (lead.status || "").toLowerCase().includes(term);
-    return nameMatch || indNameMatch || origemMatch || statusMatch;
+    return nameMatch || phoneMatch || indNameMatch || origemMatch || statusMatch;
   });
 
   return (
@@ -110,7 +114,7 @@ export const AuditIndicacoesModal: React.FC<AuditIndicacoesModalProps> = ({
           <div className="relative">
             <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Buscar por cliente, nome do indicador, origem ou status..."
+              placeholder="Buscar por cliente, telefone, nome do indicador, origem ou status..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 h-10 bg-slate-50 border-slate-200 text-slate-900 text-xs font-bold rounded-xl"
@@ -140,9 +144,8 @@ export const AuditIndicacoesModal: React.FC<AuditIndicacoesModalProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                     {filteredLeads.map((lead, idx) => {
-                      const dc = lead.dados_cadastro || {};
-                      const indicadorNome = lead.indicador_nome || dc.indicador_nome || dc.indicador || "—";
-                      const indicadorCel = lead.indicador_celular || dc.indicador_celular || "";
+                      const phone = getLeadPhone(lead);
+                      const { nome: indicadorNome, celular: indicadorCel, origem: origemLabel } = getLeadIndicadorInfo(lead);
                       const status = (lead.status || "").toLowerCase().replace("_", " ").trim();
                       const isClosed = status === "fechado" || status === "venda fechada";
 
@@ -155,7 +158,7 @@ export const AuditIndicacoesModal: React.FC<AuditIndicacoesModalProps> = ({
                           <td className="p-3 font-bold text-slate-400">{idx + 1}</td>
                           <td className="p-3">
                             <p className="font-black text-slate-900 line-clamp-1">{lead.nome || "Cliente sem nome"}</p>
-                            <p className="text-[10px] text-slate-500">{lead.celular || lead.telefone || "Sem contato"}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">{phone}</p>
                           </td>
                           <td className="p-3">
                             <div className="space-y-0.5">
@@ -165,7 +168,7 @@ export const AuditIndicacoesModal: React.FC<AuditIndicacoesModalProps> = ({
                                 </Badge>
                               ) : (
                                 <Badge variant="outline" className="border-slate-200 text-slate-600 text-[10px]">
-                                  Origem: {lead.origem || dc.origem || "Indicação"}
+                                  Origem: {origemLabel}
                                 </Badge>
                               )}
                             </div>

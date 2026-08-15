@@ -80,6 +80,73 @@ export function isDateInCustomRange(dateStr: string | null | undefined, startDat
 }
 
 /**
+ * Retorna o telefone de contato formatado/sanitizado do cliente (lead),
+ * buscando em todos os campos possíveis do objeto e de dados_cadastro.
+ */
+export function getLeadPhone(lead: any): string {
+  if (!lead) return "Sem contato";
+  const dc = lead.dados_cadastro || {};
+  const phone = (
+    lead.celular ||
+    lead.telefone ||
+    lead.whatsapp ||
+    lead.fone ||
+    lead.contato ||
+    dc.celular ||
+    dc.telefone ||
+    dc.whatsapp ||
+    dc.fone ||
+    dc.contato ||
+    ""
+  );
+  const str = String(phone).trim();
+  return str && str !== "null" && str !== "undefined" ? str : "Sem contato";
+}
+
+/**
+ * Retorna informações do indicador e origem do lead de forma unificada.
+ */
+export function getLeadIndicadorInfo(lead: any): { nome: string; celular: string; origem: string } {
+  if (!lead) return { nome: "—", celular: "", origem: "—" };
+  const dc = lead.dados_cadastro || {};
+
+  const sanitize = (val: any) => {
+    if (!val) return "";
+    const s = String(val).trim();
+    const invalid = [
+      "nao", "não", "nenhum", "nenhuma", "sem indicador", "sem indicação", 
+      "n/a", "null", "undefined", "sem", "não informado", "nao informado"
+    ];
+    if (invalid.includes(s.toLowerCase())) return "";
+    return s;
+  };
+
+  const nome = 
+    sanitize(lead.indicador_nome) ||
+    sanitize(lead.indicador) ||
+    sanitize(lead.indicacao) ||
+    sanitize(lead.indicado_por) ||
+    sanitize(lead.quem_indicou) ||
+    sanitize(dc.indicador_nome) ||
+    sanitize(dc.indicador) ||
+    sanitize(dc.indicacao) ||
+    sanitize(dc.indicado_por) ||
+    sanitize(dc.quem_indicou) ||
+    "—";
+
+  const celular = 
+    sanitize(lead.indicador_celular) ||
+    sanitize(lead.indicador_telefone) ||
+    sanitize(dc.indicador_celular) ||
+    sanitize(dc.indicador_telefone) ||
+    "";
+
+  const origem = sanitize(lead.origem) || sanitize(dc.origem) || "Indicação";
+
+  return { nome, celular, origem };
+}
+
+/**
  * Associa um lead à loja com base no código de filial ou NOME EXATO da cidade.
  * CORREÇÃO CRÍTICA: Evita que 'Paraná' ou 'PR' dê match parcial em 'Paranaguá'.
  */
@@ -106,10 +173,19 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     return null; // Pertence ao gestor, não entra para a meta da loja
   }
 
-  // 1. Verificação por código de filial no dados_cadastro (prioridade máxima)
-  const codDirect = String(dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || "").trim();
-  if (codDirect) {
-    const matched = lojas.find(l => l.codigo === codDirect || l.id === codDirect);
+  // 1. Verificação por código/ID de filial no topo do lead ou no dados_cadastro (prioridade máxima)
+  const codDirect = String(
+    lead.filial_codigo || lead.codigo_filial || lead.filial_id || lead.loja_id || lead.unidade_id ||
+    dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || ""
+  ).trim();
+
+  if (codDirect && codDirect !== "none") {
+    const matched = lojas.find(l => 
+      l.codigo === codDirect || 
+      l.id === codDirect || 
+      l.id === `filial-${codDirect}` ||
+      codDirect.endsWith(l.codigo)
+    );
     if (matched) return matched;
   }
 
@@ -120,23 +196,53 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     if (saoMateusLoja) return saoMateusLoja;
   }
 
-  // 2. Verificação estrita por nome de cidade ou filial (Match exato ou prefixo exato)
-  const cityStr = normalizeStr(lead.cidade || dc.cidade || "").trim();
-  const filialStr = normalizeStr(dc.filial_nome || dc.filial || dc.loja || dc.unidade || "").trim();
+  // 2. Verificação por nome/código de filial explícito
+  const filialStr = normalizeStr(
+    lead.filial_nome || lead.filial || lead.loja || lead.unidade ||
+    dc.filial_nome || dc.filial || dc.loja || dc.unidade || ""
+  ).trim();
 
-  for (const loja of lojas) {
-    const code = loja.codigo;
-    const city = normalizeStr(loja.cidade).trim(); // ex: "paranagua", "sao mateus do sul", "irati", "canoinhas", "campo largo"
-    
-    // Match EXATO ou contido na cidade
-    if (cityStr && (cityStr === city || city.includes(cityStr) || cityStr.includes(city))) {
-      return loja;
-    }
-    
-    // Match por filial explícita com o código da loja ou nome da cidade
-    if (filialStr) {
-      if (filialStr === city || filialStr.includes(city) || filialStr.includes(`filial ${code}`) || filialStr.includes(`${code}`)) {
+  if (filialStr && filialStr !== "none") {
+    for (const loja of lojas) {
+      const code = loja.codigo;
+      const city = normalizeStr(loja.cidade).trim();
+      
+      if (
+        filialStr === city || 
+        filialStr === loja.id || 
+        filialStr.includes(`filial ${code}`) || 
+        filialStr.includes(`filial-${code}`) ||
+        filialStr.includes(`${code}`) ||
+        filialStr.includes(city)
+      ) {
         return loja;
+      }
+    }
+  }
+
+  // 3. Verificação por NOME DE CIDADE DO CLIENTE (Match Estrito)
+  // EVITAR MATCH FALSO: 'Paraná', 'PR', 'Estado do Paraná' NÃO é a cidade Paranaguá!
+  const cityStr = normalizeStr(lead.cidade || dc.cidade || "").trim();
+
+  if (cityStr && cityStr !== "none") {
+    const stateBlacklist = ["pr", "parana", "estado do parana", "sc", "santa catarina", "sp", "sao paulo"];
+    const isStateOnly = stateBlacklist.includes(cityStr);
+
+    if (!isStateOnly) {
+      for (const loja of lojas) {
+        const city = normalizeStr(loja.cidade).trim(); // ex: "paranagua", "sao mateus do sul", "irati", "canoinhas", "campo largo"
+        
+        // Match EXATO de cidade (ex: "paranagua" === "paranagua")
+        if (cityStr === city) {
+          return loja;
+        }
+
+        // Match onde cityStr contém a cidade (ex: "Canoinhas - SC" contém "canoinhas")
+        if (cityStr.includes(city)) {
+          return loja;
+        }
+
+        // IMPORTANTE: NÃO fazer city.includes(cityStr), pois "paranagua".includes("parana") dá true!
       }
     }
   }
@@ -158,7 +264,7 @@ export function isLeadIndicacao(lead: any): boolean {
     const invalidValues = [
       "", "nao", "não", "nenhum", "nenhuma", "sem indicador", "sem indicação", 
       "nao possui", "não possui", "n/a", "null", "undefined", "sem", 
-      "não informado", "nao informado", "loja", "facebook", "instagram"
+      "não informado", "nao informado"
     ];
     if (invalidValues.includes(str)) return "";
     return str;
@@ -167,13 +273,20 @@ export function isLeadIndicacao(lead: any): boolean {
   const temIndicadorCampos = Boolean(
     sanitizeStr(lead.indicador_nome) || 
     sanitizeStr(lead.indicador_celular) || 
+    sanitizeStr(lead.indicador) ||
+    sanitizeStr(lead.indicacao) ||
+    sanitizeStr(lead.indicado_por) ||
+    sanitizeStr(lead.quem_indicou) ||
     sanitizeStr(dc.indicador_nome) || 
     sanitizeStr(dc.indicador) || 
-    sanitizeStr(dc.indicador_celular)
+    sanitizeStr(dc.indicador_celular) ||
+    sanitizeStr(dc.indicacao) ||
+    sanitizeStr(dc.indicado_por) ||
+    sanitizeStr(dc.quem_indicou)
   );
   
   const origemStr = sanitizeStr(lead.origem || dc.origem);
-  const eOrigemIndicacao = origemStr.includes("indica") || origemStr === "parceiro";
+  const eOrigemIndicacao = origemStr.includes("indica") || origemStr.includes("parceiro") || origemStr.includes("recomend");
   
   return temIndicadorCampos || eOrigemIndicacao;
 }
@@ -184,7 +297,9 @@ export function isLeadIndicacao(lead: any): boolean {
 export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?: CustomDateRange): boolean {
   if (!lead) return false;
   const dateStr = lead.created_at || lead.status_updated_at || lead.updated_at;
-  if (!dateStr) return false;
+  
+  // Se o lead for um lead ativo no funil mas não possuir data válida, mantém para não descartar
+  if (!dateStr) return true;
 
   if (timeFrame === "personalizado") {
     return isDateInCustomRange(dateStr, customRange?.startDate, customRange?.endDate);
@@ -193,7 +308,7 @@ export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame, custom
   const leadDate = new Date(dateStr);
   const now = new Date();
 
-  if (isNaN(leadDate.getTime())) return false;
+  if (isNaN(leadDate.getTime())) return true;
 
   switch (timeFrame) {
     case "dia": {
