@@ -166,8 +166,7 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     origemStr === "gestor" || 
     origemStr.includes("venda_gestor") || 
     origemStr.includes("venda do gestor") ||
-    canalStr.includes("gestor") ||
-    valorCredito === 200000; // Apenas a venda de 200mil é do gestor
+    canalStr.includes("gestor");
 
   if (isGestorSale) {
     return null; // Pertence ao gestor, não entra para a meta da loja
@@ -203,12 +202,10 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
 
   // Se for o cliente Lucas Matias ou indicação Karine, associa diretamente à Filial Canoinhas (646)
   if (
-    leadName.includes("lucas") || 
-    leadName.includes("matias") || 
-    leadName.includes("mathias") || 
+    leadName.includes("lucas matias") || 
+    leadName.includes("lucas mathias") || 
     indicadorInfoStr.includes("karine") || 
-    indicadorInfoStr.includes("carine") ||
-    indicadorInfoStr.includes("canoinhas")
+    indicadorInfoStr.includes("carine")
   ) {
     const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
     if (canoinhasLoja) return canoinhasLoja;
@@ -559,28 +556,15 @@ export function calculateLojasPerformance(
     const indicacoesLeadsList = storeLeads.filter(l => {
       if (!isLeadIndicacao(l)) return false;
 
-      const lName = (l.nome || l.cliente_nome || l.dados_cadastro?.nome_cliente || l.dados_cadastro?.nome || "").toLowerCase();
-      const iName = (
-        l.indicador_nome || l.indicador || l.indicacao || l.indicado_por || l.quem_indicou ||
-        l.dados_cadastro?.indicador_nome || l.dados_cadastro?.indicador || l.dados_cadastro?.indicacao || ""
-      ).toLowerCase();
-
-      // Garante que indicações de Karine / Lucas Matias (Canoinhas) sempre sejam contabilizadas
-      if (
-        loja.codigo === "646" ||
-        lName.includes("lucas") || lName.includes("matias") || lName.includes("mathias") || iName.includes("karine") || iName.includes("carine")
-      ) {
-        return true;
-      }
-
       const dateStr = l.created_at || l.status_updated_at || l.updated_at;
       if (dateStr) {
-        const leadDate = new Date(dateStr);
-        if (!isNaN(leadDate.getTime())) {
-          const jul25 = new Date("2026-07-25T00:00:00");
-          if (leadDate < jul25) return false;
+        const leadDateStr = String(dateStr).substring(0, 10);
+        // Filtro estrito: Apenas cadastros a partir de 01/08/2026
+        if (leadDateStr < "2026-08-01") {
+          return false;
         }
       }
+
       return true;
     });
     const totalIndicacoes = indicacoesLeadsList.length;
