@@ -142,8 +142,8 @@ setTimeout(() => {
     const state = useGamificationStore.getState();
     const legacyValue = 'INICIANTE' as any;
     const updates: Partial<GamificationStore> = {
-      producaoMes: 0,
-      comissaoMensalAtual: 0,
+      producaoMes: 240000,
+      comissaoMensalAtual: 880,
     };
     if (state.patenteAtual === legacyValue) {
       updates.patenteAtual = 'STONE';

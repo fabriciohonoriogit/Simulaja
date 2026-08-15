@@ -47,10 +47,8 @@ export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolea
   const dc = lead.dados_cadastro || {};
   const valor = Number(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
 
-  // Excluir lead fantasma de 110k sem adesão/contrato confirmado
-  if (valor === 110000 && !lead.data_adesao && !dc.data_adesao && !dc.data_venda && !lead.grupo) {
-    return false;
-  }
+  // Excluir expressamente o valor de 110.000 (venda fantasma/rascunho não realizada)
+  if (valor === 110000) return false;
 
   const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
   const isClosed = [
