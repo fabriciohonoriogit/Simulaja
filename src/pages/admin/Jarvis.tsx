@@ -127,7 +127,7 @@ export default function Jarvis() {
         {
             id: "1",
             role: "jarvis",
-            content: `Boa tarde, Chefe! Sou o Jarvis, seu estrategista e copiloto de inteligência. Às suas ordens. O que vamos analisar hoje?`,
+            content: `Boa tarde, Chefe! Adorei o nome Bela! 💖 Sou sua assistente e copiloto de inteligência. A partir de hoje, nossa conversa é contínua e em tempo real, sem precisar apertar o microfone. Como posso ajudar você agora, Chefe?`,
             timestamp: new Date()
         }
     ]);
@@ -291,22 +291,27 @@ export default function Jarvis() {
         const allVoices = window.speechSynthesis.getVoices();
         const ptVoices = allVoices.filter(v => v.lang.toLowerCase().startsWith('pt'));
         
-        let ptVoice = ptVoices.find(v => (v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br')) && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google')));
+        let femaleVoice = ptVoices.find(v => 
+            (v.name.includes('Luciana') || v.name.includes('Francisca') || v.name.includes('Helena') || 
+             v.name.includes('Vitória') || v.name.includes('Camila') || v.name.includes('Fernanda') || 
+             v.name.includes('Maria') || v.name.includes('Google português do Brasil') || 
+             v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('feminina'))
+        );
         
-        if (!ptVoice) {
-            ptVoice = ptVoices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br'));
+        if (!femaleVoice) {
+            femaleVoice = ptVoices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br'));
         }
         
-        if (!ptVoice && ptVoices.length > 0) {
-            ptVoice = ptVoices[0];
+        if (!femaleVoice && ptVoices.length > 0) {
+            femaleVoice = ptVoices[0];
         }
             
-        if (ptVoice) {
-            msg.voice = ptVoice;
+        if (femaleVoice) {
+            msg.voice = femaleVoice;
         }
 
         msg.rate = 1.02; 
-        msg.pitch = 0.95;
+        msg.pitch = 1.15; // Tom feminino natural e fluido
         
         setOrbState("speaking");
         
@@ -316,8 +321,13 @@ export default function Jarvis() {
                 speakingTimeoutRef.current = null;
             }
             setOrbState("idle");
-            // Limpa qualquer transcrição residual de áudio sintetizado para evitar auto-realimentação do microfone
             finalTranscriptRef.current = "";
+            // Se o modo Mãos Livres (conversa contínua) estiver ativo, volta a ouvir automaticamente sem apertar botão
+            if (isHandsFreeRef.current) {
+                setTimeout(() => {
+                    try { startRecording(); } catch (e) {}
+                }, 500);
+            }
         };
 
         msg.onend = finishSpeaking;
@@ -1168,7 +1178,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                     <span>Boa tarde, Chefe</span>
                 </div>
                 <p className="text-cyan-400/60 text-[10px] sm:text-xs md:text-sm tracking-[0.3em] mt-3 uppercase font-semibold">
-                    J.A.R.V.I.S STRATEGIST • OMNIROUTE GATEWAY INTEGRATED
+                    BELA STRATEGIST • CONVERSA CONTÍNUA & VOZ FEMININA
                 </p>
             </div>
 
