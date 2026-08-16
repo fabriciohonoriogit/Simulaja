@@ -127,7 +127,7 @@ export default function Jarvis() {
         {
             id: "1",
             role: "jarvis",
-            content: `Fala ${profile?.nome_completo?.split(' ')[0] || 'Parceiro'}! Sou o Jarvis, seu estrategista comercial. O que vamos atacar hoje?`,
+            content: `Boa tarde, Chefe! Sou o Jarvis, seu estrategista e copiloto de inteligência. Às suas ordens. O que vamos analisar hoje?`,
             timestamp: new Date()
         }
     ]);
@@ -1161,13 +1161,14 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                 <JarvisOrb state={orbState} />
             </div>
 
-            {/* Top Text */}
-            <div className="z-10 w-full text-center pt-8 sm:pt-12 pb-4">
-                <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-[0.2em] md:tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 drop-shadow-[0_0_20px_rgba(56,189,248,0.4)] uppercase">
-                    J.A.R.V.I.S STRATEGIST
-                </h1>
-                <p className="text-blue-400/60 text-[10px] sm:text-xs md:text-sm tracking-[0.4em] mt-3 uppercase font-semibold">
-                    Sistema Central de Inteligência
+            {/* Top Text / Minimalist Greeting Header */}
+            <div className="z-10 w-full text-center pt-8 sm:pt-12 pb-4 flex flex-col items-center justify-center">
+                <div className="flex items-center gap-3 text-3xl sm:text-5xl font-serif tracking-tight text-slate-100 drop-shadow-lg">
+                    <span className="text-orange-400 text-3xl sm:text-4xl animate-pulse">✴</span>
+                    <span>Boa tarde, Chefe</span>
+                </div>
+                <p className="text-cyan-400/60 text-[10px] sm:text-xs md:text-sm tracking-[0.3em] mt-3 uppercase font-semibold">
+                    J.A.R.V.I.S STRATEGIST • OMNIROUTE GATEWAY INTEGRATED
                 </p>
             </div>
 
@@ -1233,7 +1234,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                             ) : <Mic className="h-5 w-5 sm:h-7 sm:w-7" />}
                         </Button>
                         <Input 
-                            placeholder="Comande o Jarvis..."
+                            placeholder="Digite / para habilidades ou comande o Jarvis..."
                             className="h-12 sm:h-16 text-sm sm:text-lg border-none bg-transparent focus-visible:ring-0 text-white placeholder:text-slate-500 flex-1 min-w-0"
                             value={question}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
