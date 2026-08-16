@@ -130,13 +130,13 @@ export default function Jarvis() {
         {
             id: "1",
             role: "jarvis",
-            content: `Boa tarde, Chefe! Adorei o nome Bela! 💖 Sou sua assistente e copiloto de inteligência. A partir de hoje, nossa conversa é contínua e em tempo real, sem precisar apertar o microfone. Como posso ajudar você agora, Chefe?`,
+            content: `Boa tarde, Chefe! Eu sou a Bella IA! 💖 A partir de agora nossa conversa é 100% contínua e sem precisar apertar o microfone: eu respondo na hora e temos total autonomia para conversar sobre qualquer assunto. Sobre o que gostaria de falar comigo hoje, Chefe?`,
             timestamp: new Date()
         }
     ]);
     const [economiaDados, setEconomiaDados] = useState<BcbData | null>(null);
     const [isListening, setIsListening] = useState(false);
-    const [isHandsFree, setIsHandsFree] = useState(false);
+    const [isHandsFree, setIsHandsFree] = useState(true);
     const [orbState, setOrbState] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
     const isHandsFreeRef = useRef(false);
     const handsFreeRecognitionRef = useRef<any>(null);
@@ -391,7 +391,7 @@ export default function Jarvis() {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     silenceTimerRef.current = setTimeout(() => {
                         try { rec.stop(); } catch (e) {}
-                    }, 1800);
+                    }, 700);
                 }
             };
 
@@ -1181,7 +1181,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                     <span>Boa tarde, Chefe</span>
                 </div>
                 <p className="text-cyan-400/60 text-[10px] sm:text-xs md:text-sm tracking-[0.3em] mt-3 uppercase font-semibold">
-                    BELA STRATEGIST • CONVERSA CONTÍNUA & VOZ FEMININA
+                    BELLA IA • CONVERSA CONTÍNUA & RESPOSTAS IMEDIATAS
                 </p>
             </div>
 

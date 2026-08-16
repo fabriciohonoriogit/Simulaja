@@ -71,7 +71,7 @@ const menuGroups: MenuGroup[] = [
     {
         label: "SUPORTE / IA",
         items: [
-            { icon: Sparkles, label: "Pergunte ao Jarvis", path: "/admin/jarvis", color: "text-purple-500" },
+            { icon: Sparkles, label: "Bella IA", path: "/admin/jarvis", color: "text-purple-500" },
         ]
     }
 ];
