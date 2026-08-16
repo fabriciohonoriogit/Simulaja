@@ -31,8 +31,11 @@ import {
     RefreshCw,
     Copy,
     Download,
-    Check
+    Check,
+    History,
+    FileText
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { formatCurrency, isVendaRealizadaNoMes } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { useProfile } from "@/hooks/useProfile";
@@ -1195,93 +1198,51 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                 </p>
             </div>
 
-            {/* Chat Area - Floating */}
+            {/* Chat Area - Floating Immersive Mode */}
             <div className="z-10 flex-1 min-h-0 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8 relative">
-                {/* Messages Container (glassmorphism) */}
-                <div id="jarvis-main-container" className="w-full flex-1 overflow-y-auto no-scrollbar max-h-[50vh] sm:max-h-[55vh] my-4 pr-1 scroll-smooth">
-                    <div className="space-y-6 pb-4">
-                        {messages.map((msg) => (
-                            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start animate-in slide-in-from-bottom-4 duration-500"}`}>
-                                <div className={`max-w-[85%] sm:max-w-[80%] flex gap-3 sm:gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                                    <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center shrink-0 shadow-lg border border-white/10 ${msg.role === "user" ? "bg-indigo-600 text-white" : "bg-slate-900/80 text-cyan-400 backdrop-blur-md"}`}>
-                                        {msg.role === "user" ? <User className="h-4 w-4 sm:h-5 sm:w-5" /> : <Bot className="h-4 w-4 sm:h-5 sm:w-5" />}
-                                    </div>
-                                    <div className={`p-4 sm:p-5 rounded-3xl shadow-xl text-sm sm:text-base leading-relaxed backdrop-blur-md border border-white/5 relative group ${msg.role === "user" ? "bg-indigo-600/90 text-white rounded-tr-sm" : "bg-slate-900/80 text-slate-200 rounded-tl-sm border-cyan-500/20"}`}>
-                                        <div className="whitespace-pre-wrap font-medium">{msg.content}</div>
-                                        
-                                        {/* Action Bar for Copy & Download (Bela Responses) */}
-                                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10 gap-2">
-                                            <p className={`text-[10px] sm:text-xs opacity-50 ${msg.role === "user" ? "text-indigo-200" : "text-cyan-200"}`}>
-                                                {format(msg.timestamp, "HH:mm")}
-                                            </p>
-                                            {msg.role === "jarvis" && (
-                                                <div className="flex items-center gap-1.5">
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-7 px-2 text-[11px] text-cyan-300 hover:bg-cyan-950/60 hover:text-cyan-100 rounded-lg flex items-center gap-1 transition-all"
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(msg.content);
-                                                            toast({
-                                                                title: "✅ Copy Copiada!",
-                                                                description: "Texto copiado para a área de transferência com sucesso.",
-                                                            });
-                                                        }}
-                                                        title="Copiar texto da copy"
-                                                    >
-                                                        <Copy className="h-3.5 w-3.5" />
-                                                        <span>Copiar</span>
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-7 px-2 text-[11px] text-cyan-300 hover:bg-cyan-950/60 hover:text-cyan-100 rounded-lg flex items-center gap-1 transition-all"
-                                                        onClick={() => {
-                                                            const element = document.createElement("a");
-                                                            const file = new Blob([msg.content], {type: 'text/plain;charset=utf-8'});
-                                                            element.href = URL.createObjectURL(file);
-                                                            element.download = `copy-bela-${format(msg.timestamp, "yyyyMMdd-HHmm")}.txt`;
-                                                            document.body.appendChild(element);
-                                                            element.click();
-                                                            document.body.removeChild(element);
-                                                            toast({
-                                                                title: "📥 Download Concluído!",
-                                                                description: "Arquivo de copy salvo em formato .txt.",
-                                                            });
-                                                        }}
-                                                        title="Baixar arquivo .txt"
-                                                    >
-                                                        <Download className="h-3.5 w-3.5" />
-                                                        <span>Baixar .txt</span>
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        {isAnalyzing && (
-                            <div className="flex justify-start animate-pulse">
-                                <div className="bg-slate-900/70 backdrop-blur-md border border-white/5 p-5 rounded-3xl rounded-tl-sm flex gap-3 items-center shadow-xl">
-                                    <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 bg-cyan-400 rounded-full animate-bounce" />
-                                    <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-                                    <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:0.4s]" />
-                                </div>
-                            </div>
+                
+                {/* 1-Line HUD Subtitle Bar (Clean & Immersive) */}
+                <div className="w-full flex justify-center mb-3">
+                    <div className="bg-slate-900/80 backdrop-blur-md border border-cyan-500/20 rounded-full px-5 py-2.5 text-xs text-cyan-200 shadow-xl flex items-center gap-2.5 max-w-xl truncate">
+                        {orbState === "speaking" ? (
+                            <>
+                                <Volume2 className="h-4 w-4 text-cyan-400 animate-pulse shrink-0" />
+                                <span className="truncate font-medium text-slate-200">
+                                    {messages[messages.length - 1]?.content || "Bella falando..."}
+                                </span>
+                            </>
+                        ) : orbState === "listening" ? (
+                            <>
+                                <Mic className="h-4 w-4 text-emerald-400 animate-pulse shrink-0" />
+                                <span className="text-emerald-300 font-semibold truncate">
+                                    {question || "Ouvindo você, Chefe..."}
+                                </span>
+                            </>
+                        ) : orbState === "thinking" ? (
+                            <>
+                                <Sparkles className="h-4 w-4 text-amber-400 animate-spin shrink-0" />
+                                <span className="text-amber-300 font-semibold truncate">
+                                    Bella processando...
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="h-4 w-4 text-cyan-400 shrink-0" />
+                                <span className="text-slate-400 truncate">
+                                    Modo voz ativo • Fale livremente com a Bella
+                                </span>
+                            </>
                         )}
                     </div>
                 </div>
-                
+
                 {/* Input Area */}
                 <div className="w-full bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-3 sm:p-4 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-3 sm:gap-4">
                     <div className="flex gap-2 sm:gap-3 items-center">
                         <Button
                             variant={isHandsFree ? "default" : "outline"}
                             size="icon"
-                            title="Modo Mãos Livres (Diga: Oi Jarvis)"
+                            title="Modo Mãos Livres (Diga: Oi Jarvis ou Bella)"
                             onClick={() => setIsHandsFree(!isHandsFree)}
                             className={`h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-full transition-all border-white/10 ${isHandsFree ? "bg-cyan-500 hover:bg-cyan-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)]" : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-cyan-400"}`}
                         >
@@ -1305,7 +1266,7 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                             ) : <Mic className="h-5 w-5 sm:h-7 sm:w-7" />}
                         </Button>
                         <Input 
-                            placeholder="Digite / para habilidades ou comande o Jarvis..."
+                            placeholder="Digite / para habilidades ou comande a Bella..."
                             className="h-12 sm:h-16 text-sm sm:text-lg border-none bg-transparent focus-visible:ring-0 text-white placeholder:text-slate-500 flex-1 min-w-0"
                             value={question}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
@@ -1320,8 +1281,79 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                         </Button>
                     </div>
                     
-                    {/* Sugestões Chips */}
-                    <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 px-1 pb-1">
+                    {/* Sugestões Chips + Gaveta de Copies */}
+                    <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 px-1 pb-1 items-center">
+                        {/* Drawer de Copies e Histórico */}
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="shrink-0 rounded-full bg-indigo-900/50 border-indigo-400/40 hover:bg-indigo-800/70 text-indigo-200 text-[10px] sm:text-xs h-8 sm:h-9 whitespace-nowrap backdrop-blur-sm transition-all font-semibold flex items-center gap-1.5 shadow-[0_0_10px_rgba(99,102,241,0.3)]"
+                                >
+                                    <History className="w-3.5 h-3.5 text-indigo-300 animate-pulse" />
+                                    <span>Copies & Histórico ({messages.length})</span>
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="right" className="w-full sm:max-w-md bg-slate-950/95 text-slate-100 border-l border-white/10 backdrop-blur-xl flex flex-col p-6 z-50">
+                                <SheetHeader className="pb-4 border-b border-white/10">
+                                    <SheetTitle className="text-white text-lg font-bold flex items-center gap-2">
+                                        <FileText className="h-5 w-5 text-cyan-400" />
+                                        Copies & Histórico da Bella
+                                    </SheetTitle>
+                                </SheetHeader>
+                                
+                                <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 py-4 pr-1">
+                                    {messages.map((msg) => (
+                                        <div key={msg.id} className={`p-4 rounded-2xl border text-sm leading-relaxed ${msg.role === "user" ? "bg-indigo-950/50 border-indigo-500/30 text-indigo-100 ml-6" : "bg-slate-900/90 border-cyan-500/30 text-slate-200 mr-2"}`}>
+                                            <div className="flex items-center justify-between mb-1.5 opacity-60 text-xs">
+                                                <span className="font-semibold text-cyan-300">{msg.role === "user" ? "Você (Chefe)" : "Bella IA"}</span>
+                                                <span>{format(msg.timestamp, "HH:mm")}</span>
+                                            </div>
+                                            <div className="whitespace-pre-wrap font-medium">{msg.content}</div>
+                                            
+                                            {msg.role === "jarvis" && (
+                                                <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t border-white/10">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-7 px-2.5 text-xs text-cyan-300 hover:bg-cyan-900/40 rounded-lg flex items-center gap-1"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(msg.content);
+                                                            toast({ title: "✅ Copy Copiada!", description: "Texto copiado para a área de transferência." });
+                                                        }}
+                                                    >
+                                                        <Copy className="h-3.5 w-3.5" />
+                                                        <span>Copiar</span>
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-7 px-2.5 text-xs text-cyan-300 hover:bg-cyan-900/40 rounded-lg flex items-center gap-1"
+                                                        onClick={() => {
+                                                            const element = document.createElement("a");
+                                                            const file = new Blob([msg.content], {type: 'text/plain;charset=utf-8'});
+                                                            element.href = URL.createObjectURL(file);
+                                                            element.download = `copy-bela-${format(msg.timestamp, "yyyyMMdd-HHmm")}.txt`;
+                                                            document.body.appendChild(element);
+                                                            element.click();
+                                                            document.body.removeChild(element);
+                                                            toast({ title: "📥 Download Concluído!", description: "Arquivo .txt gerado." });
+                                                        }}
+                                                    >
+                                                        <Download className="h-3.5 w-3.5" />
+                                                        <span>Baixar .txt</span>
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+
                         <Button 
                             variant="outline" 
                             size="sm" 
