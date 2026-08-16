@@ -130,7 +130,7 @@ export default function Jarvis() {
         {
             id: "1",
             role: "jarvis",
-            content: `Boa tarde, Chefe! Eu sou a Bella IA! 💖 A partir de agora nossa conversa é 100% contínua e sem precisar apertar o microfone: eu respondo na hora e temos total autonomia para conversar sobre qualquer assunto. Sobre o que gostaria de falar comigo hoje, Chefe?`,
+            content: `Oi Chefe! 🚀 Que alegria falar com você! Eu sou a Bella IA! Tô super animada, alegre e pronta pro nosso papo. Sobre o que você gostaria de conversar hoje, Chefe?`,
             timestamp: new Date()
         }
     ]);
@@ -294,27 +294,30 @@ export default function Jarvis() {
         const allVoices = window.speechSynthesis.getVoices();
         const ptVoices = allVoices.filter(v => v.lang.toLowerCase().startsWith('pt'));
         
-        let femaleVoice = ptVoices.find(v => 
-            (v.name.includes('Luciana') || v.name.includes('Francisca') || v.name.includes('Helena') || 
-             v.name.includes('Vitória') || v.name.includes('Camila') || v.name.includes('Fernanda') || 
-             v.name.includes('Maria') || v.name.includes('Google português do Brasil') || 
-             v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('feminina'))
+        // Prioriza vozes Naturais / Neurais / Google que possuem timbre jovem, brilhante e alegre
+        let bestVoice = ptVoices.find(v => 
+            (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online') || v.name.includes('Google')) &&
+            (v.name.includes('Francisca') || v.name.includes('Thalita') || v.name.includes('Yalda') || v.name.includes('Giovanna') || v.name.includes('Google') || v.name.includes('Luciana') || v.name.includes('Vitória') || v.name.includes('Camila') || v.name.toLowerCase().includes('female'))
         );
         
-        if (!femaleVoice) {
-            femaleVoice = ptVoices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br'));
+        if (!bestVoice) {
+            bestVoice = ptVoices.find(v => (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online') || v.name.includes('Google')));
         }
         
-        if (!femaleVoice && ptVoices.length > 0) {
-            femaleVoice = ptVoices[0];
+        if (!bestVoice) {
+            bestVoice = ptVoices.find(v => v.lang.toLowerCase().includes('pt-br') || v.lang.toLowerCase().includes('pt_br'));
+        }
+        
+        if (!bestVoice && ptVoices.length > 0) {
+            bestVoice = ptVoices[0];
         }
             
-        if (femaleVoice) {
-            msg.voice = femaleVoice;
+        if (bestVoice) {
+            msg.voice = bestVoice;
         }
 
-        msg.rate = 1.02; 
-        msg.pitch = 1.15; // Tom feminino natural e fluido
+        msg.rate = 1.08; // Ritmo mais vivo, alegre e natural
+        msg.pitch = 1.05; // Tom brilhante e alegre (sem distorção robótica)
         
         setOrbState("speaking");
         
@@ -391,7 +394,7 @@ export default function Jarvis() {
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     silenceTimerRef.current = setTimeout(() => {
                         try { rec.stop(); } catch (e) {}
-                    }, 700);
+                    }, 1000);
                 }
             };
 
