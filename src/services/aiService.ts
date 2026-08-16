@@ -22,23 +22,23 @@ async function callAI(prompt: string, maxTokens = 800, history?: Array<{role: st
       if (error) {
         console.error("aiService.callAI error:", error);
         lastError = error;
-        if (retries === 0) return { text: data?.text || "Não foi possível obter resposta da inteligência artificial no momento. Tente novamente.", error: lastError };
+        if (retries === 0) return { text: data?.text || "Oi Chefe! Deu uma oscilação na rede, mas estou aqui pronta para conversarmos.", error: lastError };
       } else if (data?.error) {
-        console.error("Jarvis returned error:", data.error);
+        console.error("Bella returned error:", data.error);
         lastError = data.error;
-        if (retries === 0) return { text: data.text || (typeof data.error === 'string' ? data.error : "Ocorreu uma falha no processamento do Jarvis."), error: lastError };
+        if (retries === 0) return { text: data.text || (typeof data.error === 'string' ? data.error : "Oi Chefe! Tive um pequeno imprevisto na rede, mas pode perguntar de novo!"), error: lastError };
       } else if (data?.text) {
         return { text: data.text, error: null };
       }
     } catch (e) {
       console.error("aiService.callAI exception:", e);
       lastError = e;
-      if (retries === 0) return { text: "Erro de conexão com o Jarvis. Por favor, tente novamente.", error: e };
+      if (retries === 0) return { text: "Oi Chefe! Deu uma breve falha de sinal, mas já estou de volta!", error: e };
     }
     retries--;
     await new Promise(res => setTimeout(res, 500));
   }
-  return { text: "Sem resposta do servidor de IA. Verifique as chaves de API.", error: lastError };
+  return { text: "Oi Chefe! Estou pronta para te ouvir, como posso te ajudar?", error: lastError };
 }
 
 export const aiService = {

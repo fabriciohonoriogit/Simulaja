@@ -364,6 +364,13 @@ export default function Jarvis() {
 
         if (isListeningRef.current) return;
 
+        if (typeof window !== "undefined" && window.speechSynthesis && window.speechSynthesis.speaking) {
+            setTimeout(() => {
+                try { startRecording(); } catch (e) {}
+            }, 600);
+            return;
+        }
+
         try {
             if (recognitionRef.current) {
                 try { recognitionRef.current.stop(); } catch (e) {}
