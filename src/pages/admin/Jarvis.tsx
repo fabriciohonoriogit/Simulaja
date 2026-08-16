@@ -401,6 +401,15 @@ export default function Jarvis() {
                 setQuestion(fullText);
 
                 if (fullText.length > 2) {
+                    const lowerText = fullText.toLowerCase().trim();
+                    const isWakeWordOnly = /^(oi bella|ei bella|fala bella|oi bela|ei bela|bella|bela|oi jarvis|ei jarvis|jarvis)$/i.test(lowerText);
+                    if (isWakeWordOnly && !isAnalyzing) {
+                        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                        try { rec.stop(); } catch (e) {}
+                        speak("Oi Chefe! Tô te ouvindo, pode falar!");
+                        return;
+                    }
+
                     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                     silenceTimerRef.current = setTimeout(() => {
                         try { rec.stop(); } catch (e) {}
@@ -630,6 +639,86 @@ export default function Jarvis() {
             if (recognitionRef.current) {
                 try { recognitionRef.current.stop(); } catch (e) {}
             }
+        };
+    }, []);
+
+    // Detecção de Palmas (Clap Detector) usando Web Audio API
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        let audioContext: AudioContext | null = null;
+        let analyser: AnalyserNode | null = null;
+        let microphone: MediaStreamAudioSourceNode | null = null;
+        let stream: MediaStream | null = null;
+        let animationFrameId: number | null = null;
+        let lastClapTime = 0;
+
+        const initClapDetector = async () => {
+            try {
+                const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+                if (!AudioCtx) return;
+
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new AudioCtx();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 512;
+                analyser.smoothingTimeConstant = 0.15;
+
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                const detectClap = () => {
+                    if (!analyser) return;
+
+                    analyser.getByteFrequencyData(dataArray);
+
+                    let totalEnergy = 0;
+                    let highFreqEnergy = 0;
+
+                    for (let i = 0; i < dataArray.length; i++) {
+                        totalEnergy += dataArray[i];
+                        if (i > dataArray.length * 0.4) {
+                            highFreqEnergy += dataArray[i];
+                        }
+                    }
+
+                    const avgEnergy = totalEnergy / dataArray.length;
+                    const avgHighEnergy = highFreqEnergy / (dataArray.length * 0.6);
+                    const now = Date.now();
+
+                    // Pico de palma/estalo: alta energia súbita (> 125) concentrada em agudos
+                    if (avgEnergy > 125 && avgHighEnergy > 105 && (now - lastClapTime > 1500)) {
+                        if (!window.speechSynthesis || !window.speechSynthesis.speaking) {
+                            lastClapTime = now;
+                            toast({
+                                title: "👏 Palmas Detectadas!",
+                                description: "Bella ativada por palmas. Pode falar, Chefe!",
+                            });
+                            
+                            setIsHandsFree(true);
+                            isHandsFreeRef.current = true;
+                            speak("Oi Chefe! Ouvi suas palmas! Como posso te ajudar agora?");
+                        }
+                    }
+
+                    animationFrameId = requestAnimationFrame(detectClap);
+                };
+
+                detectClap();
+            } catch (err) {
+                console.warn("[Clap Detector] Microfone não disponível para detecção de palmas:", err);
+            }
+        };
+
+        initClapDetector();
+
+        return () => {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (microphone) try { microphone.disconnect(); } catch (e) {}
+            if (audioContext && audioContext.state !== "closed") try { audioContext.close(); } catch (e) {}
+            if (stream) stream.getTracks().forEach(track => track.stop());
         };
     }, []);
 

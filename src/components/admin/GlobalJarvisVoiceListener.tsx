@@ -86,7 +86,7 @@ export function GlobalJarvisVoiceListener() {
 
           const textLower = fullTextRef.current.toLowerCase();
 
-          if (/(jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis)/i.test(textLower)) {
+          if (/(bella|bela|oi bella|ei bella|fala bella|oi bela|ei bela|jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis)/i.test(textLower)) {
             setActiveCall(true);
             if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
             silenceTimerRef.current = setTimeout(() => {
@@ -115,7 +115,7 @@ export function GlobalJarvisVoiceListener() {
           const finalQ = fullTextRef.current.trim();
           fullTextRef.current = "";
 
-          const isCalled = /(jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis)/i.test(finalQ);
+          const isCalled = /(bella|bela|oi bella|ei bella|fala bella|oi bela|ei bela|jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis)/i.test(finalQ);
 
           if (finalQ && isCalled) {
             toast({
