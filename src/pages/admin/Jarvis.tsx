@@ -450,15 +450,16 @@ export default function Jarvis() {
                 if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
+                finalTranscriptRef.current = ""; // Limpa a referência de transcrição imediatamente
                 
-                if (finalQ && finalQ.length > 1) {
+                if (finalQ && finalQ.length > 3) {
                     setQuestion("");
                     handleAnalyze(finalQ);
                 } else {
                     setOrbState("idle");
                     setQuestion("");
                     if (isHandsFreeRef.current) {
-                        setTimeout(() => { try { startRecording(); } catch (e) {} }, 1000);
+                        setTimeout(() => { try { startRecording(); } catch (e) {} }, 800);
                     }
                 }
             };
@@ -642,7 +643,7 @@ export default function Jarvis() {
         };
     }, []);
 
-    // Detecção de Palmas (Clap Detector) usando Web Audio API
+    // Detecção de Palmas (Double Clap Detector) usando Web Audio API
     useEffect(() => {
         if (typeof window === "undefined") return;
 
@@ -651,7 +652,8 @@ export default function Jarvis() {
         let microphone: MediaStreamAudioSourceNode | null = null;
         let stream: MediaStream | null = null;
         let animationFrameId: number | null = null;
-        let lastClapTime = 0;
+        let firstClapTime = 0;
+        let lastTriggerTime = 0;
 
         const initClapDetector = async () => {
             try {
@@ -662,7 +664,7 @@ export default function Jarvis() {
                 audioContext = new AudioCtx();
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 512;
-                analyser.smoothingTimeConstant = 0.15;
+                analyser.smoothingTimeConstant = 0.1;
 
                 microphone = audioContext.createMediaStreamSource(stream);
                 microphone.connect(analyser);
@@ -679,28 +681,44 @@ export default function Jarvis() {
 
                     for (let i = 0; i < dataArray.length; i++) {
                         totalEnergy += dataArray[i];
-                        if (i > dataArray.length * 0.4) {
+                        if (i > dataArray.length * 0.5) {
                             highFreqEnergy += dataArray[i];
                         }
                     }
 
                     const avgEnergy = totalEnergy / dataArray.length;
-                    const avgHighEnergy = highFreqEnergy / (dataArray.length * 0.6);
+                    const avgHighEnergy = highFreqEnergy / (dataArray.length * 0.5);
                     const now = Date.now();
 
-                    // Pico de palma/estalo: alta energia súbita (> 125) concentrada em agudos
-                    if (avgEnergy > 125 && avgHighEnergy > 105 && (now - lastClapTime > 1500)) {
-                        if (!window.speechSynthesis || !window.speechSynthesis.speaking) {
-                            lastClapTime = now;
-                            toast({
-                                title: "👏 Palmas Detectadas!",
-                                description: "Bella ativada por palmas. Pode falar, Chefe!",
-                            });
-                            
-                            setIsHandsFree(true);
-                            isHandsFreeRef.current = true;
-                            speak("Oi Chefe! Ouvi suas palmas! Como posso te ajudar agora?");
+                    // Impede acionamento enquanto a Bella fala ou enquanto o modelo analisa
+                    const isSpeakingOrThinking = (window.speechSynthesis && window.speechSynthesis.speaking) || isAnalyzing;
+
+                    // Pico de palma forte (> 165 de energia média e > 140 em agudos)
+                    if (!isSpeakingOrThinking && avgEnergy > 165 && avgHighEnergy > 140) {
+                        if (now - lastTriggerTime > 2000) {
+                            if (firstClapTime === 0) {
+                                firstClapTime = now;
+                            } else if (now - firstClapTime >= 120 && now - firstClapTime <= 700) {
+                                // Dupla palma (👏 👏) detectada em intervalo correto!
+                                lastTriggerTime = now;
+                                firstClapTime = 0;
+
+                                toast({
+                                    title: "👏 Dupla Palma Detectada!",
+                                    description: "Bella ativada por palmas. Pode falar, Chefe!",
+                                });
+
+                                setIsHandsFree(true);
+                                isHandsFreeRef.current = true;
+                                try { startRecording(); } catch (e) {}
+                            } else if (now - firstClapTime > 700) {
+                                firstClapTime = now;
+                            }
                         }
+                    }
+
+                    if (firstClapTime > 0 && now - firstClapTime > 700) {
+                        firstClapTime = 0;
                     }
 
                     animationFrameId = requestAnimationFrame(detectClap);
