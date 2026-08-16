@@ -14,10 +14,13 @@ const Footer = () => {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#B8860B] via-[#D4AF37] to-[#966F1E] flex items-center justify-center text-slate-950 font-bold">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <h3 className="text-lg font-black tracking-tight text-white">FABRÍCIO HONÓRIO</h3>
+              <div>
+                <h3 className="text-lg font-black tracking-tight text-white">FABRÍCIO HONÓRIO</h3>
+                <p className="text-[10px] text-amber-400 font-extrabold tracking-widest uppercase">GN CONSÓRCIO MAGALU PR/SC</p>
+              </div>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-              Consultoria estratégica especializada para você conquistar seu imóvel, veículo ou investimento sem pagar juros bancários.
+              Consultoria estratégica especializada GN CONSÓRCIO MAGALU PR/SC. Conquiste seu imóvel, veículo ou investimento sem juros bancários.
             </p>
           </div>
 
@@ -97,8 +100,8 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Fabrício Rodrigues Honório — <a href="https://www.oespecialistaconsorcio.com.br" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors font-bold">www.oespecialistaconsorcio.com.br</a></p>
-          <p className="font-medium">Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} GN CONSÓRCIO MAGALU PR/SC — Fabrício Rodrigues Honório — <a href="https://www.oespecialistaconsorcio.com.br" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors font-bold">www.oespecialistaconsorcio.com.br</a></p>
+          <p className="font-bold text-amber-400/90 tracking-wider">GN CONSÓRCIO MAGALU PR/SC</p>
         </div>
       </div>
     </footer>

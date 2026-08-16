@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Clock, ShieldCheck } from "lucide-react";
 import { BlueParticlesBackground } from "@/components/BlueParticlesBackground";
 
+import { MagaluGalleryCarousel } from "@/components/MagaluGalleryCarousel";
+
 const Index = () => {
   const { toast } = useToast();
   const [utmParams, setUtmParams] = useState({ origem: "", meio: "", campanha: "" });
@@ -95,6 +97,9 @@ const Index = () => {
 
       {/* 2ª SEÇÃO - Tipos de Consórcio (Clean Light) */}
       <SegmentCards />
+
+      {/* GALERIA EXCLUSIVA DE BANNERS - CONSÓRCIO MAGALU PR/SC */}
+      <MagaluGalleryCarousel />
 
       {/* 3ª SEÇÃO - SIMULADOR (Fundo Azul Tech com Partículas e Container Estendido) */}
       <div id="simulator" className="scroll-mt-20">
