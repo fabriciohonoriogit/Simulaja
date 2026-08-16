@@ -15,6 +15,7 @@ import {
   X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { MagaluGalleryCarousel } from "@/components/MagaluGalleryCarousel";
 
 const segments = [
   {
@@ -272,6 +273,11 @@ export default function LandingV2() {
                   </motion.div>
                 );
               })}
+            </div>
+
+            {/* Carrossel Magalu */}
+            <div className="mt-16">
+              <MagaluGalleryCarousel />
             </div>
           </motion.div>
         )}

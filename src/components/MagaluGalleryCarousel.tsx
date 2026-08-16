@@ -92,7 +92,7 @@ export const MagaluGalleryCarousel = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-b from-slate-950 via-[#070D19] to-slate-950 text-white relative overflow-hidden">
+    <section id="galeria" className="py-20 bg-gradient-to-b from-slate-950 via-[#070D19] to-slate-950 text-white relative overflow-hidden scroll-mt-20">
       {/* Luz de Fundo Encantadora */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-amber-500/10 via-blue-600/15 to-amber-400/10 blur-[130px] rounded-full pointer-events-none" />
 
