@@ -28,7 +28,10 @@ import {
     ChevronUp,
     ChevronDown,
     Camera,
-    RefreshCw
+    RefreshCw,
+    Copy,
+    Download,
+    Check
 } from "lucide-react";
 import { formatCurrency, isVendaRealizadaNoMes } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -1185,19 +1188,67 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
             {/* Chat Area - Floating */}
             <div className="z-10 flex-1 min-h-0 w-full max-w-5xl mx-auto flex flex-col justify-end p-4 md:p-8 relative">
                 {/* Messages Container (glassmorphism) */}
-                <div id="jarvis-main-container" className="hidden">
+                <div id="jarvis-main-container" className="w-full flex-1 overflow-y-auto no-scrollbar max-h-[50vh] sm:max-h-[55vh] my-4 pr-1 scroll-smooth">
                     <div className="space-y-6 pb-4">
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start animate-in slide-in-from-bottom-4 duration-500"}`}>
-                                <div className={`max-w-[85%] sm:max-w-[75%] flex gap-3 sm:gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                                <div className={`max-w-[85%] sm:max-w-[80%] flex gap-3 sm:gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
                                     <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center shrink-0 shadow-lg border border-white/10 ${msg.role === "user" ? "bg-indigo-600 text-white" : "bg-slate-900/80 text-cyan-400 backdrop-blur-md"}`}>
                                         {msg.role === "user" ? <User className="h-4 w-4 sm:h-5 sm:w-5" /> : <Bot className="h-4 w-4 sm:h-5 sm:w-5" />}
                                     </div>
-                                    <div className={`p-4 sm:p-5 rounded-3xl shadow-xl text-sm sm:text-base leading-relaxed backdrop-blur-md border border-white/5 ${msg.role === "user" ? "bg-indigo-600/90 text-white rounded-tr-sm" : "bg-slate-900/70 text-slate-200 rounded-tl-sm"}`}>
+                                    <div className={`p-4 sm:p-5 rounded-3xl shadow-xl text-sm sm:text-base leading-relaxed backdrop-blur-md border border-white/5 relative group ${msg.role === "user" ? "bg-indigo-600/90 text-white rounded-tr-sm" : "bg-slate-900/80 text-slate-200 rounded-tl-sm border-cyan-500/20"}`}>
                                         <div className="whitespace-pre-wrap font-medium">{msg.content}</div>
-                                        <p className={`text-[10px] sm:text-xs mt-3 opacity-50 ${msg.role === "user" ? "text-right text-indigo-200" : "text-cyan-200"}`}>
-                                            {format(msg.timestamp, "HH:mm")}
-                                        </p>
+                                        
+                                        {/* Action Bar for Copy & Download (Bela Responses) */}
+                                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10 gap-2">
+                                            <p className={`text-[10px] sm:text-xs opacity-50 ${msg.role === "user" ? "text-indigo-200" : "text-cyan-200"}`}>
+                                                {format(msg.timestamp, "HH:mm")}
+                                            </p>
+                                            {msg.role === "jarvis" && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-7 px-2 text-[11px] text-cyan-300 hover:bg-cyan-950/60 hover:text-cyan-100 rounded-lg flex items-center gap-1 transition-all"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(msg.content);
+                                                            toast({
+                                                                title: "✅ Copy Copiada!",
+                                                                description: "Texto copiado para a área de transferência com sucesso.",
+                                                            });
+                                                        }}
+                                                        title="Copiar texto da copy"
+                                                    >
+                                                        <Copy className="h-3.5 w-3.5" />
+                                                        <span>Copiar</span>
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-7 px-2 text-[11px] text-cyan-300 hover:bg-cyan-950/60 hover:text-cyan-100 rounded-lg flex items-center gap-1 transition-all"
+                                                        onClick={() => {
+                                                            const element = document.createElement("a");
+                                                            const file = new Blob([msg.content], {type: 'text/plain;charset=utf-8'});
+                                                            element.href = URL.createObjectURL(file);
+                                                            element.download = `copy-bela-${format(msg.timestamp, "yyyyMMdd-HHmm")}.txt`;
+                                                            document.body.appendChild(element);
+                                                            element.click();
+                                                            document.body.removeChild(element);
+                                                            toast({
+                                                                title: "📥 Download Concluído!",
+                                                                description: "Arquivo de copy salvo em formato .txt.",
+                                                            });
+                                                        }}
+                                                        title="Baixar arquivo .txt"
+                                                    >
+                                                        <Download className="h-3.5 w-3.5" />
+                                                        <span>Baixar .txt</span>
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
