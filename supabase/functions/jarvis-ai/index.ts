@@ -851,7 +851,7 @@ REGRAS DE ÁUDIO E VOZ:
           }
         }
 
-        return new Response(JSON.stringify({ text: "Oi Chefe! Tô super pronta pra te ouvir. O que você gostaria de saber ou fazer agora?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Indisponibilidade temporária na API de Inteligência Artificial. Tente novamente em instantes." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const candidate = data.candidates[0];

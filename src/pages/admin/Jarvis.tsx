@@ -139,7 +139,7 @@ export default function Jarvis() {
     ]);
     const [economiaDados, setEconomiaDados] = useState<BcbData | null>(null);
     const [isListening, setIsListening] = useState(false);
-    const [isHandsFree, setIsHandsFree] = useState(true);
+    const [isHandsFree, setIsHandsFree] = useState(false);
     const [orbState, setOrbState] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
     const isHandsFreeRef = useRef(false);
     const handsFreeRecognitionRef = useRef<any>(null);
@@ -331,11 +331,12 @@ export default function Jarvis() {
             }
             setOrbState("idle");
             finalTranscriptRef.current = "";
-            // Se o modo Mãos Livres (conversa contínua) estiver ativo, volta a ouvir automaticamente sem apertar botão
+            // Aguarda 1.8s antes de reabrir a escuta para permitir dissipação total do som das caixas no ambiente
             if (isHandsFreeRef.current) {
                 setTimeout(() => {
+                    finalTranscriptRef.current = "";
                     try { startRecording(); } catch (e) {}
-                }, 500);
+                }, 1800);
             }
         };
 
@@ -452,15 +453,22 @@ export default function Jarvis() {
                 const finalQ = finalTranscriptRef.current.trim();
                 finalTranscriptRef.current = ""; // Limpa a referência de transcrição imediatamente
                 
-                if (finalQ && finalQ.length > 3) {
+                const lowerQ = finalQ.toLowerCase();
+                const isEcho = 
+                    lowerQ.includes("super pronta") || 
+                    lowerQ.includes("gostaria de saber ou fazer") || 
+                    lowerQ.includes("oi chefe! tô") || 
+                    lowerQ.includes("boa tarde, chefe") || 
+                    lowerQ.includes("eu sou a bella ia") || 
+                    lowerQ.includes("conversa é 100% contínua") ||
+                    lowerQ.includes("indisponibilidade temporária");
+
+                if (finalQ && finalQ.length >= 8 && !isEcho && !isAnalyzing) {
                     setQuestion("");
                     handleAnalyze(finalQ);
                 } else {
                     setOrbState("idle");
                     setQuestion("");
-                    if (isHandsFreeRef.current) {
-                        setTimeout(() => { try { startRecording(); } catch (e) {} }, 800);
-                    }
                 }
             };
 
@@ -741,7 +749,26 @@ export default function Jarvis() {
     }, []);
 
     const handleAnalyze = async (query: string = question) => {
-        if (!query.trim()) return;
+        const trimmed = query.trim();
+        if (!trimmed) return;
+        
+        const lowerQ = trimmed.toLowerCase();
+        const isEcho = 
+            lowerQ.includes("super pronta") || 
+            lowerQ.includes("gostaria de saber ou fazer") || 
+            lowerQ.includes("oi chefe! tô") || 
+            lowerQ.includes("boa tarde, chefe") || 
+            lowerQ.includes("eu sou a bella ia") || 
+            lowerQ.includes("conversa é 100% contínua") ||
+            lowerQ.includes("indisponibilidade temporária");
+
+        if (isEcho) {
+            console.warn("[Jarvis Anti-Loop] Descartada tentativa de auto-análise de eco:", trimmed);
+            setQuestion("");
+            finalTranscriptRef.current = "";
+            setOrbState("idle");
+            return;
+        }
         
         // Unlock speech synthesis for iOS Safari (must be synchronous with user gesture)
         if (typeof window !== "undefined" && window.speechSynthesis) {
