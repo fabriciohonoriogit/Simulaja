@@ -451,24 +451,17 @@ export default function Jarvis() {
                 if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
-                finalTranscriptRef.current = ""; // Limpa a referência de transcrição imediatamente
-                
-                const lowerQ = finalQ.toLowerCase();
-                const isEcho = 
-                    lowerQ.includes("super pronta") || 
-                    lowerQ.includes("gostaria de saber ou fazer") || 
-                    lowerQ.includes("oi chefe! tô") || 
-                    lowerQ.includes("boa tarde, chefe") || 
-                    lowerQ.includes("eu sou a bella ia") || 
-                    lowerQ.includes("conversa é 100% contínua") ||
-                    lowerQ.includes("indisponibilidade temporária");
+                finalTranscriptRef.current = "";
 
-                if (finalQ && finalQ.length >= 8 && !isEcho && !isAnalyzing) {
+                if (finalQ && finalQ.length >= 2 && !isAnalyzing) {
                     setQuestion("");
                     handleAnalyze(finalQ);
                 } else {
                     setOrbState("idle");
                     setQuestion("");
+                    if (isHandsFreeRef.current) {
+                        setTimeout(() => { try { startRecording(); } catch (e) {} }, 500);
+                    }
                 }
             };
 
@@ -651,7 +644,7 @@ export default function Jarvis() {
         };
     }, []);
 
-    // Detecção de Palmas (Double Clap Detector) usando Web Audio API
+    // Detecção de Palmas (Clap Detector) usando Web Audio API
     useEffect(() => {
         if (typeof window === "undefined") return;
 
@@ -660,7 +653,6 @@ export default function Jarvis() {
         let microphone: MediaStreamAudioSourceNode | null = null;
         let stream: MediaStream | null = null;
         let animationFrameId: number | null = null;
-        let firstClapTime = 0;
         let lastTriggerTime = 0;
 
         const initClapDetector = async () => {
@@ -672,7 +664,7 @@ export default function Jarvis() {
                 audioContext = new AudioCtx();
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 512;
-                analyser.smoothingTimeConstant = 0.1;
+                analyser.smoothingTimeConstant = 0.15;
 
                 microphone = audioContext.createMediaStreamSource(stream);
                 microphone.connect(analyser);
@@ -689,44 +681,28 @@ export default function Jarvis() {
 
                     for (let i = 0; i < dataArray.length; i++) {
                         totalEnergy += dataArray[i];
-                        if (i > dataArray.length * 0.5) {
+                        if (i > dataArray.length * 0.4) {
                             highFreqEnergy += dataArray[i];
                         }
                     }
 
                     const avgEnergy = totalEnergy / dataArray.length;
-                    const avgHighEnergy = highFreqEnergy / (dataArray.length * 0.5);
+                    const avgHighEnergy = highFreqEnergy / (dataArray.length * 0.6);
                     const now = Date.now();
 
-                    // Impede acionamento enquanto a Bella fala ou enquanto o modelo analisa
                     const isSpeakingOrThinking = (window.speechSynthesis && window.speechSynthesis.speaking) || isAnalyzing;
 
-                    // Pico de palma forte (> 165 de energia média e > 140 em agudos)
-                    if (!isSpeakingOrThinking && avgEnergy > 165 && avgHighEnergy > 140) {
-                        if (now - lastTriggerTime > 2000) {
-                            if (firstClapTime === 0) {
-                                firstClapTime = now;
-                            } else if (now - firstClapTime >= 120 && now - firstClapTime <= 700) {
-                                // Dupla palma (👏 👏) detectada em intervalo correto!
-                                lastTriggerTime = now;
-                                firstClapTime = 0;
+                    // Palmas: energia média > 85 e alta frequência > 70
+                    if (!isSpeakingOrThinking && avgEnergy > 85 && avgHighEnergy > 70 && (now - lastTriggerTime > 1500)) {
+                        lastTriggerTime = now;
+                        toast({
+                            title: "👏 Palmas Detectadas!",
+                            description: "Bella ativada por palmas! Ouvindo o Chefe...",
+                        });
 
-                                toast({
-                                    title: "👏 Dupla Palma Detectada!",
-                                    description: "Bella ativada por palmas. Pode falar, Chefe!",
-                                });
-
-                                setIsHandsFree(true);
-                                isHandsFreeRef.current = true;
-                                try { startRecording(); } catch (e) {}
-                            } else if (now - firstClapTime > 700) {
-                                firstClapTime = now;
-                            }
-                        }
-                    }
-
-                    if (firstClapTime > 0 && now - firstClapTime > 700) {
-                        firstClapTime = 0;
+                        setIsHandsFree(true);
+                        isHandsFreeRef.current = true;
+                        try { startRecording(); } catch (e) {}
                     }
 
                     animationFrameId = requestAnimationFrame(detectClap);
@@ -746,24 +722,15 @@ export default function Jarvis() {
             if (audioContext && audioContext.state !== "closed") try { audioContext.close(); } catch (e) {}
             if (stream) stream.getTracks().forEach(track => track.stop());
         };
-    }, []);
+    }, [isAnalyzing]);
 
     const handleAnalyze = async (query: string = question) => {
         const trimmed = query.trim();
-        if (!trimmed) return;
-        
-        const lowerQ = trimmed.toLowerCase();
-        const isEcho = 
-            lowerQ.includes("super pronta") || 
-            lowerQ.includes("gostaria de saber ou fazer") || 
-            lowerQ.includes("oi chefe! tô") || 
-            lowerQ.includes("boa tarde, chefe") || 
-            lowerQ.includes("eu sou a bella ia") || 
-            lowerQ.includes("conversa é 100% contínua") ||
-            lowerQ.includes("indisponibilidade temporária");
+        if (!trimmed || isAnalyzing) return;
 
-        if (isEcho) {
-            console.warn("[Jarvis Anti-Loop] Descartada tentativa de auto-análise de eco:", trimmed);
+        const lastBotMsg = messages.filter(m => m.role === "jarvis").pop()?.content || "";
+        if (lastBotMsg && trimmed.length > 15 && lastBotMsg.includes(trimmed)) {
+            console.warn("[Jarvis Anti-Loop] Descartado eco exato:", trimmed);
             setQuestion("");
             finalTranscriptRef.current = "";
             setOrbState("idle");
