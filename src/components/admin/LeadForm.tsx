@@ -80,6 +80,7 @@ export interface LeadFormData {
   indicador_nome?: string;
   indicador_celular?: string;
   is_retroativo?: boolean;
+  is_venda_gestor?: boolean;
   filial_id?: string;
   // Campos de venda fechada
   grupo?: string;
