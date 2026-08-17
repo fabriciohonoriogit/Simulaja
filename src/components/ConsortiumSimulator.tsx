@@ -23,7 +23,7 @@ import { WhatsAppIcon } from './SocialIcons';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
-import { generateNotebookLMPdf } from "@/utils/generateNotebookLMPdf";
+
 import { useProfile } from "@/hooks/useProfile";
 import { useSimulador } from "@/hooks/useSimulador";
 import { useSimuladorStore } from "@/stores/simuladorStore";
@@ -1305,7 +1305,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                         let url = `/pre-cadastro`;
                         const params = new URLSearchParams();
                         if (orgId) params.append("org", orgId);
-                        if (credito) params.append("valor", String(credito));
+                        if (g?.credito) params.append("valor", String(g.credito));
                         if (categoria) params.append("segmento", categoria);
                         if (params.toString()) url += `?${params.toString()}`;
                         window.open(url, "_blank");
@@ -1445,8 +1445,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
         }} 
         onSaveSim={async (leadId: string) => {
           try {
-            const gItem = resultado || (listaGrupos && listaGrupos[idx]);
-            if (!gItem) return;
+          const gItem = resultado || (lista && lista[idx]);
+          if (!gItem) return;
             const { error } = await supabase.from("leads").update({
               valor_credito: gItem.credito,
               prazo_meses: gItem.prazo,
