@@ -39,7 +39,8 @@ export default function WhatsAppInbox() {
             const raw = payload.new as any;
             fetchLeads(true);
             if (raw.role === 'user') {
-              toast.info(`💬 Nova mensagem recebida no WhatsApp!`, {
+              toast({
+                title: `💬 Nova mensagem recebida no WhatsApp!`,
                 description: raw.content?.slice(0, 60)
               });
             }
