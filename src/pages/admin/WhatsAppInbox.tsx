@@ -1,7 +1,7 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,6 +19,7 @@ interface ChatLead extends Lead {
 
 export default function WhatsAppInbox() {
   const { profile } = useProfile();
+  const { toast } = useToast();
   const [leads, setLeads] = useState<ChatLead[]>([]);
   const [selectedLead, setSelectedLead] = useState<ChatLead | null>(null);
   const [searchTerm, setSearchTerm] = useState("");

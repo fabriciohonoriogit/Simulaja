@@ -46,6 +46,7 @@ export default function Settings() {
   const [evolutionStatus, setEvolutionStatus] = useState<string>("UNKNOWN");
   const [testingStatus, setTestingStatus] = useState(false);
   const [qrCodeImg, setQrCodeImg] = useState<string | null>(null);
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [webQrOpen, setWebQrOpen] = useState(false);
 
   useEffect(() => {
