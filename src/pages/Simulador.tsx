@@ -637,7 +637,7 @@ export default function Simulador() {
                 const params = new URLSearchParams();
                 if (createdLeadId) params.append("lead_id", createdLeadId);
                 if (orgId) params.append("org", orgId);
-                if (credito[0]) params.append("valor", String(credito[0]));
+                if (g?.credito) params.append("valor", String(g.credito));
                 if (categoria) params.append("segmento", categoria);
                 if (nome.trim()) params.append("nome", nome.trim());
                 if (wpp.trim()) params.append("celular", wpp.trim());
@@ -708,7 +708,7 @@ export default function Simulador() {
                     const params = new URLSearchParams();
                     if (createdLeadId) params.append("lead_id", createdLeadId);
                     if (orgId) params.append("org", orgId);
-                    if (credito[0]) params.append("valor", String(credito[0]));
+                    if (g?.credito) params.append("valor", String(g.credito));
                     if (categoria) params.append("segmento", categoria);
                     if (nome.trim()) params.append("nome", nome.trim());
                     if (wpp.trim()) params.append("celular", wpp.trim());
