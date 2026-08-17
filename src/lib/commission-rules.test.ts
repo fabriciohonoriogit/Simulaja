@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { calcularComissaoRecorrenteLead } from "./gamificationUtils";
-import { matchLeadToLoja, LojaConfig } from "./lojasService";
+import { matchLeadToLoja } from "./lojasService";
+import { LojaConfig } from "@/constants/lojas";
 
 const MOCK_LOJAS: LojaConfig[] = [
   {

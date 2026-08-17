@@ -841,18 +841,21 @@ export type Database = {
         Row: {
           created_at: string | null
           id: number
+          organizacao_id: string | null
           percentual: number
           segmento: string
         }
         Insert: {
           created_at?: string | null
           id?: never
+          organizacao_id?: string | null
           percentual?: number
           segmento: string
         }
         Update: {
           created_at?: string | null
           id?: never
+          organizacao_id?: string | null
           percentual?: number
           segmento?: string
         }

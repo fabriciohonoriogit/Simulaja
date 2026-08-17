@@ -25,7 +25,7 @@ export const socialMediaService = {
       // Registra a intenção de publicação no banco para o worker Playwright / Webhook processar
       const { data: profile } = await supabase.from("perfis").select("organizacao_id").single();
 
-      const { data, error } = await supabase.from("marketing_posts").insert({
+      const { data, error } = await (supabase as any).from("marketing_posts").insert({
         organizacao_id: profile?.organizacao_id,
         legenda: params.legenda,
         image_url: params.imageUrl || null,

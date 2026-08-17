@@ -68,12 +68,32 @@ interface Lead {
     nome: string | null;
     status: string | null;
     valor_credito: number;
+    cidade?: string | null;
     created_at: string | null;
     updated_at: string | null;
     status_updated_at: string | null;
     tipo_consorcio: string | null;
     dados_cadastro?: any;
 }
+
+const normalizeStatus = (raw: string | null | undefined): string | null => {
+    if (!raw) return null;
+    const clean = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const map: Record<string, string> = {
+        "novo lead": "novo_lead",
+        "novo": "novo_lead",
+        "contatado": "contatado",
+        "proposta enviada": "proposta_enviada",
+        "proposta": "proposta_enviada",
+        "em negociacao": "em_negociacao",
+        "negociacao": "em_negociacao",
+        "fechado": "fechado",
+        "venda fechada": "venda_fechada",
+        "venda": "venda_fechada",
+        "perdido": "perdido",
+    };
+    return map[clean] || clean.replace(/\s+/g, "_");
+};
 
 interface Inadimplente {
     id: string;
