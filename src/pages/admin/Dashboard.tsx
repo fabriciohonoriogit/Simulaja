@@ -35,6 +35,7 @@ interface Lead {
   status_updated_at: string | null;
   origem: string | null;
   valor_credito: number;
+  valor_estimado?: number | null;
   created_at: string | null;
   lead_score_valor: string | null;
   lead_temperatura: string | null;

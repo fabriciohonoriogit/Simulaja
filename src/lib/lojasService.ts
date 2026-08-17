@@ -30,6 +30,7 @@ export interface LojaPerformance {
   taxaConversaoGeral: number;
   taxaConversaoIndicacoes: number;
   taxaConversaoOutros: number;
+  taxaConversaoEspecialista?: number;
   percentualVolumeIndicacao: number;
   indicacoesLeadsList: any[]; // Lista detalhada de leads com indicação para auditoria
 }

@@ -271,8 +271,8 @@ export default function Metas() {
                 const leadsCount = currentMonthLeads.length;
                 const conversao = leadsCount > 0 ? (vendasCount / leadsCount) * 100 : 0;
                 
-                const historicalVendas = segmentVendas.length;
-                const historicalValor = segmentVendas.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
+                const historicalVendas = currentMonthVendas.length;
+                const historicalValor = currentMonthVendas.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
                 const ticketMedioRef = historicalVendas > 0 ? historicalValor / historicalVendas : (valorTotal / (vendasCount || 1)) || 100000;
                 
                 const previsao = leadsCount * (conversao / 100) * ticketMedioRef;
