@@ -5,6 +5,7 @@ import { NotebookPen, Plus, PhoneCall, Mail, MessageSquare, Gavel, Zap, RefreshC
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
+import { parseUTCDate } from "@/lib/formatters";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { atualizarStreak } from "@/lib/streakService";
 
@@ -264,8 +265,8 @@ export function HistoricoModal({
                                   {(() => {
                                     if (!h.created_at) return "—";
                                     try {
-                                      const date = parseISO(h.created_at);
-                                      return isValid(date) ? format(date, "dd/MM 'às' HH:mm", { locale: ptBR }) : "—";
+                                      const date = parseUTCDate(h.created_at);
+                                      return date && isValid(date) ? format(date, "dd/MM 'às' HH:mm", { locale: ptBR }) : "—";
                                     } catch (e) {
                                       return "—";
                                     }

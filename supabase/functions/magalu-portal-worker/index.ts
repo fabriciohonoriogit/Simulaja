@@ -14,11 +14,13 @@ serve(async (req) => {
     const body = await req.json();
     const { grupo, cota, tipoConsulta } = body;
 
-    // As credenciais de acesso ao Portal Magalu são obtidas diretamente das variáveis de ambiente isoladas do Supabase
-    const MAGALU_PORTAL_USER = Deno.env.get("MAGALU_PORTAL_USER") || "";
-    const MAGALU_PORTAL_PASS = Deno.env.get("MAGALU_PORTAL_PASS") || "";
+    // As credenciais de acesso ao Portal Magalu (Filial / Chapa / Senha)
+    const MAGALU_PORTAL_URL = Deno.env.get("MAGALU_PORTAL_URL") || "https://portal.consorciomagalu.com.br/portal-consorcio/login";
+    const MAGALU_PORTAL_FILIAL = Deno.env.get("MAGALU_PORTAL_FILIAL") || "10826";
+    const MAGALU_PORTAL_CHAPA = Deno.env.get("MAGALU_PORTAL_CHAPA") || "918260";
+    const MAGALU_PORTAL_PASS = Deno.env.get("MAGALU_PORTAL_PASS") || "Magalu5177%";
 
-    console.log(`[Magalu Playwright Worker] Autenticando com usuário '${MAGALU_PORTAL_USER}' e consultando Grupo ${grupo} Cota ${cota}`);
+    console.log(`[Magalu Playwright Worker] Autenticando em '${MAGALU_PORTAL_URL}' com Filial '${MAGALU_PORTAL_FILIAL}', Chapa '${MAGALU_PORTAL_CHAPA}' para Grupo ${grupo} Cota ${cota}`);
 
     // Execução Playwright / Automator (Sem expor credenciais ao modelo LLM)
     if (tipoConsulta === "segunda_via_boleto") {

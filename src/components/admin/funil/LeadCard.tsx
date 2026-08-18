@@ -3,7 +3,7 @@ import { Phone, MapPin, Calendar as CalendarIcon, TrendingUp, Trash2, Bell, Note
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays, isValid } from "date-fns";
 import { formatLeadValue } from "@/lib/utils";
-import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
+import { formatToUpper, formatToFourDigits, parseUTCDate } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { Lead, HistoricoContato, Membro } from "@/types/funil";
@@ -170,20 +170,21 @@ export function LeadCard({
   const vencHoje = isToday(lead.data_vencimento);
   const vencAtrasado = isPastDue(lead.data_vencimento);
 
-  const dataReferenciaDias = isFechado && lead.status_updated_at ? parseISO(lead.status_updated_at) : new Date();
-  const diasNoCrm = lead.created_at ? Math.max(0, differenceInDays(dataReferenciaDias, parseISO(lead.created_at))) : 0;
+  const dataReferenciaDias = isFechado && lead.status_updated_at ? (parseUTCDate(lead.status_updated_at) || new Date()) : new Date();
+  const diasNoCrm = lead.created_at ? Math.max(0, differenceInDays(dataReferenciaDias, parseUTCDate(lead.created_at) || new Date())) : 0;
 
   const timeInfoText = () => {
     if (statusNormalized === "novo_lead") {
+      const d = parseUTCDate(lead.created_at);
       return (
         <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter">
-          Entrada: {lead.created_at ? format(parseISO(lead.created_at), "dd/MM") : '--/--'}
+          Entrada: {d ? format(d, "dd/MM") : '--/--'}
         </span>
       );
     }
     if (statusNormalized === "fechado") {
       const displayDateStr = lead.status_updated_at || lead.created_at;
-      const displayDate = displayDateStr ? parseISO(displayDateStr) : null;
+      const displayDate = displayDateStr ? parseUTCDate(displayDateStr) : null;
       const dateText = displayDate && isValid(displayDate) ? format(displayDate, "dd/MM/yy") : "--/--";
       
       return (
@@ -297,11 +298,11 @@ export function LeadCard({
           <div className="flex items-center gap-1 text-[8px]">
             {statusNormalized === "novo_lead" ? (
               <span className="text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter">
-                Entrada: {lead.created_at ? format(parseISO(lead.created_at), "dd/MM") : "--/--"}
+                Entrada: {lead.created_at && parseUTCDate(lead.created_at) ? format(parseUTCDate(lead.created_at)!, "dd/MM") : "--/--"}
               </span>
             ) : (
               <span className="text-emerald-700 bg-emerald-100/50 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter border border-emerald-200">
-                🏆 Vendido: {lead.status_updated_at ? format(parseISO(lead.status_updated_at), "dd/MM/yy") : "--/--"}
+                🏆 Vendido: {lead.status_updated_at && parseUTCDate(lead.status_updated_at) ? format(parseUTCDate(lead.status_updated_at)!, "dd/MM/yy") : "--/--"}
               </span>
             )}
           </div>

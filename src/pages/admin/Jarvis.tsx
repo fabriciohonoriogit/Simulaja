@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ import { COLUMNS } from "@/components/admin/funil/constants";
 import { ESTATISTICAS_LANCES, GRUPOS, GRUPO_CARACTERISTICAS, obterEstatisticasGrupo } from "@/constants/simulador";
 import { aiService } from "@/services/aiService";
 import { sendWhatsAppMessage } from "@/services/evolutionApiService";
+import { magaluPortalWorker } from "@/services/magaluPortalWorker";
 import { Missao, calcularMissoes } from "@/lib/missoesService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 import { bcbService, BcbData } from "@/services/bcbService";
@@ -136,6 +138,7 @@ interface JarvisAnalysis {
 }
 
 export default function Jarvis() {
+    const navigate = useNavigate();
     const { patenteAtual } = useGamificationStore();
     const { toast } = useToast();
     const { profile } = useProfile();
@@ -1084,6 +1087,72 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
                     } else {
                         actionMessage = `\n*(Falha: Lead "${command.params?.nomeLead || ""}" não encontrado para agendamento)*`;
                     }
+                } else if (command.function === "abrirPagina") {
+                    const rota = command.params?.rota;
+                    const nomePagina = command.params?.nomePagina || rota;
+                    if (rota) {
+                        actionMessage = `\n*(Navegando para a página ${nomePagina}...)*`;
+                        setTimeout(() => {
+                            navigate(rota);
+                        }, 2200);
+                    }
+                } else if (command.function === "emitirBoletoMagalu") {
+                    let targetGrupo = command.params?.grupo || "";
+                    let targetCota = command.params?.cota || "";
+                    const nomeStr = (command.params?.nomeLead || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+                    // Se não foi passado grupo/cota direto, busca automaticamente na carteira de clientes pelo nome
+                    let leadAlvo: any = undefined;
+                    if (nomeStr) {
+                        // 1. Busca na carteira de clientes
+                        const { data: carteiraMatch } = await supabase
+                            .from("carteira")
+                            .select("*")
+                            .ilike("nome", `%${nomeStr}%`)
+                            .limit(1)
+                            .maybeSingle();
+
+                        if (carteiraMatch) {
+                            leadAlvo = carteiraMatch;
+                            targetGrupo = carteiraMatch.grupo || targetGrupo;
+                            targetCota = carteiraMatch.cota || targetCota;
+                        } else {
+                            // 2. Busca na lista de leads do funil
+                            leadAlvo = leads.find(l => {
+                                const lName = ((l.nome || l.dados_cadastro?.nome || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                                return lName.includes(nomeStr) || nomeStr.includes(lName);
+                            });
+                            if (leadAlvo) {
+                                targetGrupo = leadAlvo.dados_cadastro?.grupo || leadAlvo.grupo || targetGrupo;
+                                targetCota = leadAlvo.dados_cadastro?.cota || leadAlvo.cota || targetCota;
+                            }
+                        }
+                    }
+
+                    if (!targetGrupo || !targetCota) {
+                        actionMessage = `\n*(Aviso: Não foi possível localizar Grupo e Cota para "${command.params?.nomeLead || "o cliente"}". Verifique se a cota está cadastrada na carteira de clientes.)*`;
+                    } else {
+                        const boletoRes = await magaluPortalWorker.consultarPortalMagalu({
+                            grupo: targetGrupo,
+                            cota: targetCota,
+                            tipoConsulta: "segunda_via_boleto"
+                        });
+
+                        if (boletoRes.success) {
+                            let extraEnvio = "";
+                            const clientName = leadAlvo?.nome || command.params?.nomeLead || "Cliente";
+                            const phone = leadAlvo?.celular || leadAlvo?.dados_cadastro?.telefone || leadAlvo?.dados_cadastro?.celular || (leadAlvo as any)?.whatsapp;
+
+                            if (phone) {
+                                const msg = `Olá ${clientName}! Segue a 2ª via do seu boleto Consórcio Magalu (Grupo ${targetGrupo} / Cota ${targetCota}):\n\nLinha Digitável: ${boletoRes.linhaDigitavel || "Consultar PDF"}\n\nLink PDF: ${boletoRes.pdfUrl}`;
+                                await sendWhatsAppMessage({ number: phone, text: msg });
+                                extraEnvio = ` e enviado para ${clientName} (${phone})`;
+                            }
+                            actionMessage = `\n*(Ação Executada: 2ª via do boleto Magalu emitida com sucesso para ${clientName} - Grupo ${targetGrupo}/Cota ${targetCota}${extraEnvio})*`;
+                        } else {
+                            actionMessage = `\n*(Falha ao consultar Portal Magalu: ${boletoRes.error || "Erro de conexão"})*`;
+                        }
+                    }
                 }
             } catch (e) {
                 console.error("Erro ao fazer parse do comando JSON", e);
@@ -1092,6 +1161,16 @@ Se você puder ver a imagem da câmera, comente algo humano e rápido sobre o us
             responseContent = responseContent.replace(/```json\n([\s\S]*?)\n```/, "").trim();
         } else {
             const lowerQuery = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            // Navegação autônoma por intenção verbal
+            if (lowerQuery.includes("inadimplent")) setTimeout(() => navigate("/admin/inadimplentes"), 2200);
+            else if (lowerQuery.includes("funil") || lowerQuery.includes("kanban")) setTimeout(() => navigate("/admin/funil"), 2200);
+            else if (lowerQuery.includes("meta")) setTimeout(() => navigate("/admin/metas"), 2200);
+            else if (lowerQuery.includes("carteira")) setTimeout(() => navigate("/admin/carteira"), 2200);
+            else if (lowerQuery.includes("agendamento") || lowerQuery.includes("agenda")) setTimeout(() => navigate("/admin/agendamentos"), 2200);
+            else if (lowerQuery.includes("comiss")) setTimeout(() => navigate("/admin/comissoes"), 2200);
+            else if (lowerQuery.includes("simulador")) setTimeout(() => navigate("/admin/simulador"), 2200);
+            else if (lowerQuery.includes("lead")) setTimeout(() => navigate("/admin/leads"), 2200);
             const moveKeywords = ["mova", "mover", "transfira", "transferir", "passa", "passar", "coloque", "colocar", "mude", "mudar", "altere", "alterar"];
             const isMoveIntent = moveKeywords.some(k => lowerQuery.includes(k));
 

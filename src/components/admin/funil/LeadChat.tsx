@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { RefreshCw, Send, Bot, User, MessageSquare, ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
 import { format, parseISO, isValid, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseUTCDate } from "@/lib/formatters";
 import { Lead } from "@/types/funil";
 import { toast } from "sonner";
 import { sendWhatsAppMessage, getWhatsAppMode, getWhatsAppWebUrl, formatWhatsAppNumber } from "@/services/evolutionApiService";
@@ -237,8 +238,8 @@ export function LeadChat({ lead }: { lead: Lead }) {
                       {(() => {
                         if (!msg.created_at) return "";
                         try {
-                          const date = parseISO(msg.created_at);
-                          if (!isValid(date)) return "";
+                          const date = parseUTCDate(msg.created_at);
+                          if (!date || !isValid(date)) return "";
                           if (isToday(date)) {
                             return `Hoje, ${format(date, "HH:mm")}`;
                           }

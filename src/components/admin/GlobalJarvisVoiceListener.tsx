@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { aiService } from "@/services/aiService";
 import { Sparkles, MicOff } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export function GlobalJarvisVoiceListener() {
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeCall, setActiveCall] = useState(false);
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -130,9 +131,30 @@ export function GlobalJarvisVoiceListener() {
 
               if (answerText) {
                 toast({
-                  title: "🤖 Jarvis Respondeu",
+                  title: "🤖 Bella Respondeu",
                   description: answerText.length > 150 ? `${answerText.slice(0, 150)}...` : answerText,
                 });
+
+                // Verifica se há comando de navegação JSON ou intenção verbal
+                const jsonMatch = answerText.match(/```json\n([\s\S]*?)\n```/);
+                if (jsonMatch) {
+                  try {
+                    const cmd = JSON.parse(jsonMatch[1]);
+                    if (cmd.function === "abrirPagina" && cmd.params?.rota) {
+                      setTimeout(() => navigate(cmd.params.rota), 1800);
+                    }
+                  } catch (e) {}
+                }
+
+                const lowerQ = finalQ.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (lowerQ.includes("inadimplent")) setTimeout(() => navigate("/admin/inadimplentes"), 1800);
+                else if (lowerQ.includes("funil") || lowerQ.includes("kanban")) setTimeout(() => navigate("/admin/funil"), 1800);
+                else if (lowerQ.includes("meta")) setTimeout(() => navigate("/admin/metas"), 1800);
+                else if (lowerQ.includes("carteira")) setTimeout(() => navigate("/admin/carteira"), 1800);
+                else if (lowerQ.includes("agendamento") || lowerQ.includes("agenda")) setTimeout(() => navigate("/admin/agendamentos"), 1800);
+                else if (lowerQ.includes("comiss")) setTimeout(() => navigate("/admin/comissoes"), 1800);
+                else if (lowerQ.includes("simulador")) setTimeout(() => navigate("/admin/simulador"), 1800);
+                else if (lowerQ.includes("lead")) setTimeout(() => navigate("/admin/leads"), 1800);
               }
               isSpeakingRef.current = false;
               setActiveCall(false);
