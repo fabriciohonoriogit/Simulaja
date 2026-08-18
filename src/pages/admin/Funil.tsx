@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function Funil() {
   const funilState = useFunil();
-  const [selectedCategory, setSelectedCategory] = React.useState<'quente' | 'morno' | 'frio' | 'todos'>('quente');
+  const [selectedCategory, setSelectedCategory] = React.useState<'quente' | 'morno' | 'frio' | 'todos'>('todos');
   const [searchTerm, setSearchTerm] = React.useState("");
   const [quickFilter, setQuickFilter] = React.useState<'todos' | 'atrasados' | 'sem_tratativa' | 'hoje'>('todos');
 
@@ -26,10 +26,10 @@ export default function Funil() {
     );
   }
 
-  const leadsQuentes = funilState.leads.filter((l) => l.lead_temperatura === 'quente' && l.status !== 'fechado');
+  const leadsQuentes = funilState.leads.filter((l) => (l.lead_temperatura === 'quente' || !l.lead_temperatura) && l.status !== 'fechado');
   const leadsMornos = funilState.leads.filter((l) => l.lead_temperatura === 'morno' && l.status !== 'fechado');
   const leadsFrios = funilState.leads.filter((l) => l.lead_temperatura === 'frio' && l.status !== 'fechado');
-  const emAndamento = funilState.leads.filter((l) => !['fechado', 'perdido', 'morto'].includes(l.status || ''));
+  const emAndamento = funilState.leads.filter((l) => !['fechado', 'perdido'].includes(l.status || ''));
 
   const displayLeads = selectedCategory === 'quente' ? leadsQuentes : 
                        selectedCategory === 'morno' ? leadsMornos : 

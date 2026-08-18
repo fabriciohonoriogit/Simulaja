@@ -149,16 +149,18 @@ export function useFunil() {
 
   // ── Função reutilizável de fetch de leads ───────────────────────────────
   const fetchLeads = useCallback(async () => {
-    if (!profile?.organizacao_id) {
+    let query = supabase.from("leads").select("*");
+    if (profile?.organizacao_id) {
+      query = query.eq("organizacao_id", profile.organizacao_id);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao buscar leads do funil:", error);
       setLoading(false);
       return;
     }
-
-    const { data } = await supabase
-      .from("leads")
-      .select("*")
-      .eq("organizacao_id", profile.organizacao_id)
-      .order("created_at", { ascending: false });
 
     const uniqueRaw = ((data as unknown as Lead[]) || []).filter(
       (v: Lead, i: number, a: Lead[]) => a.findIndex((t: Lead) => t.id === v.id) === i
@@ -171,93 +173,6 @@ export function useFunil() {
     }));
     setLeads(fetchedLeads);
     setLoading(false);
-
-    const now = new Date();
-    const leadsToUpdate: any[] = [];
-    const localUpdatedLeads: Lead[] = [...fetchedLeads];
-    let stateChanged = false;
-
-    fetchedLeads.forEach((lead: Lead) => {
-      const finalStatuses = ["fechado", "perdido", "morto"];
-      if (finalStatuses.includes(lead.status || "")) return;
-
-      const lastInteraction = new Date(lead.last_interaction_at || lead.created_at || now.toISOString());
-      const stageStart = new Date(lead.status_updated_at || lead.created_at || now.toISOString());
-      
-      const hoursDiff = (now.getTime() - lastInteraction.getTime()) / (1000 * 60 * 60);
-      const stageDays = (now.getTime() - stageStart.getTime()) / (1000 * 60 * 60 * 24);
-      
-      let newTemp = lead.lead_temperatura || "quente";
-      let newStatus = lead.status;
-
-      // Regra de Automovimentação: > 35 dias parado na mesma etapa -> Morto
-      if (stageDays > 35) {
-        newStatus = "morto";
-        newTemp = "morto";
-      } else {
-        if (hoursDiff > 24 * 7) newTemp = "morto";
-        else if (hoursDiff > 24 * 3) newTemp = "frio";
-        else if (hoursDiff > 24) newTemp = "morno";
-      }
-
-      let score = 0;
-      const reasons: string[] = [];
-
-      if (lead.lead_score_valor === "premium") { score += 40; reasons.push("Crédito Premium"); }
-      else if (lead.lead_score_valor === "alto") { score += 30; reasons.push("Alto Potencial"); }
-      else if (lead.lead_score_valor === "medio") { score += 20; reasons.push("Médio Potencial"); }
-      else { score += 10; reasons.push("Baixo Potencial"); }
-
-      if (newTemp === "quente") { score += 40; reasons.push("Lead Ativo"); }
-      else if (newTemp === "morno") { score += 20; reasons.push("Aguardando"); }
-      else if (newTemp === "frio") { score += 5; }
-
-      if (["simulacao_enviada", "proposta", "negociacao"].includes(newStatus || "")) { score += 20; reasons.push("Fase Avançada"); }
-      else if (newStatus === "qualificacao") { score += 15; reasons.push("Em Qualificação"); }
-      else if (newStatus === "primeiro_contato" || newStatus === "contato") { score += 10; }
-      else { score += 5; }
-
-      const newScore = score;
-      const newReason = reasons.join(" + ");
-
-      if (newTemp !== lead.lead_temperatura || newStatus !== lead.status || newScore !== lead.propensity_score) {
-        leadsToUpdate.push({
-          id: lead.id,
-          organizacao_id: profile.organizacao_id,
-          lead_temperatura: newTemp,
-          status: newStatus,
-          status_updated_at: newStatus !== lead.status ? now.toISOString() : lead.status_updated_at,
-          propensity_score: newScore,
-          propensity_reason: newReason,
-        });
-
-        const idx = localUpdatedLeads.findIndex((l) => l.id === lead.id);
-        if (idx !== -1) {
-          localUpdatedLeads[idx] = {
-            ...localUpdatedLeads[idx],
-            lead_temperatura: newTemp,
-            status: newStatus,
-            status_updated_at: newStatus !== lead.status ? now.toISOString() : lead.status_updated_at,
-            propensity_score: newScore,
-            propensity_reason: newReason,
-          };
-          stateChanged = true;
-        }
-      }
-    });
-
-    if (stateChanged) {
-      setLeads(localUpdatedLeads);
-    }
-
-    if (leadsToUpdate.length > 0) {
-      const { error } = await supabase
-        .from("leads")
-        .upsert(leadsToUpdate, { onConflict: "id" });
-      if (error) {
-        console.error("Erro ao atualizar leads em lote:", error);
-      }
-    }
   }, [profile?.organizacao_id]);
 
   // refetch público para uso em outras páginas (ex: Leads.tsx)
