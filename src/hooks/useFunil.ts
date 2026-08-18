@@ -708,7 +708,7 @@ export function useFunil() {
     editingLead,
     setEditingLead,
     savingLead,
-    handleSaveLead: async (formData: Partial<Lead> & { comissao_regra?: string; comissao_tipo?: string; is_retroativo?: boolean }) => {
+    handleSaveLead: useCallback(async (formData: Partial<Lead> & { comissao_regra?: string; comissao_tipo?: string; is_retroativo?: boolean }) => {
       if (!editingLead) return;
       setSavingLead(true);
       try {
@@ -826,7 +826,7 @@ export function useFunil() {
           }
         }
 
-        setLeads(prev => prev.map(l => l.id === editingLead.id ? { ...l, ...formData, dados_cadastro } : l));
+        setLeads((prev) => prev.map((l) => (l.id === editingLead.id ? { ...l, ...formData, dados_cadastro } : l)));
         setEditingLead(null);
         toast.success("Lead atualizado!");
       } catch (e) {
@@ -834,24 +834,24 @@ export function useFunil() {
       } finally {
         setSavingLead(false);
       }
-    },
+    }, [editingLead, profile]),
     viewingFichaLead,
     setViewingFichaLead,
     profile,
     handleToggleAI: async (leadId: string, currentStatus: boolean) => {
       const novoStatus = !currentStatus;
       const { error } = await supabase
-        .from('leads')
+        .from("leads")
         .update({ atendimento_ia: novoStatus } as any)
-        .eq('id', leadId);
+        .eq("id", leadId);
 
       if (error) {
         toast.error("Erro ao alterar status da IA");
         return;
       }
-      
-      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, atendimento_ia: novoStatus } : l));
+
+      setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, atendimento_ia: novoStatus } : l)));
       toast.success(novoStatus ? "IA Ativada para este lead" : "IA Desativada para este lead");
-    },
+    }
   };
 }
