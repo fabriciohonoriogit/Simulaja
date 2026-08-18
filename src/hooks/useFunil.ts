@@ -203,6 +203,8 @@ export function useFunil() {
     return () => {
       supabase.removeChannel(channel);
     };
+  }, [fetchLeads]);
+
   useEffect(() => {
     if (leads.length === 0 || !profile?.organizacao_id) return;
     const leadIds = leads.map((l) => l.id);
