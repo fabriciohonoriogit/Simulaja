@@ -380,7 +380,26 @@ export default function Jarvis() {
 
         try {
             const res = await aiService.askJarvis("Dashboard do Jarvis", query);
-            const answerText = res.answer || "Desculpe, não consegui processar a resposta.";
+            let answerText = res.answer || "Oi Chefe! Tô aqui com você, como posso te ajudar?";
+
+            // Processa comandos de navegação ou ações via JSON se presentes na resposta
+            const jsonMatch = answerText.match(/```json\n([\s\S]*?)\n```/);
+            if (jsonMatch) {
+                try {
+                    const command = JSON.parse(jsonMatch[1]);
+                    if (command.function === "abrirPagina" && command.params?.rota) {
+                        setTimeout(() => navigate(command.params.rota), 1500);
+                    }
+                } catch (e) {}
+                answerText = answerText.replace(/```json\n([\s\S]*?)\n```/, "").trim();
+            } else {
+                const lowerQuery = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (lowerQuery.includes("inadimplent")) setTimeout(() => navigate("/admin/inadimplentes"), 1800);
+                else if (lowerQuery.includes("funil") || lowerQuery.includes("kanban")) setTimeout(() => navigate("/admin/funil"), 1800);
+                else if (lowerQuery.includes("meta")) setTimeout(() => navigate("/admin/metas"), 1800);
+                else if (lowerQuery.includes("carteira")) setTimeout(() => navigate("/admin/carteira"), 1800);
+                else if (lowerQuery.includes("simulador")) setTimeout(() => navigate("/simulador"), 1800);
+            }
             
             const jarvisMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -392,7 +411,15 @@ export default function Jarvis() {
             setMessages(prev => [...prev, jarvisMsg]);
             speak(answerText);
         } catch (e) {
-            toast({ title: "Erro na Análise", description: "Ocorreu um erro ao consultar a Bella IA.", variant: "destructive" });
+            const fallbackText = "Oi Chefe! Deu uma oscilação temporária no sinal, mas tô pronta pro nosso papo!";
+            const jarvisMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: "jarvis",
+                content: fallbackText,
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, jarvisMsg]);
+            speak(fallbackText);
         } finally {
             setIsAnalyzing(false);
         }

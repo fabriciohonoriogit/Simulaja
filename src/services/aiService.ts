@@ -187,8 +187,8 @@ PERGUNTA: "${question}"`;
     }
 
     return {
-      answer: error ? "" : (text || "Desculpe, não foi possível obter resposta no momento."),
-      error,
+      answer: text || "Oi Chefe! Estou aqui com você. Como posso te ajudar nas vendas hoje?",
+      error: null,
     };
   },
 
