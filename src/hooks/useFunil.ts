@@ -185,74 +185,17 @@ export function useFunil() {
 
   // Subscription realtime — qualquer alteração em leads reflete no Funil/Carteira/Dashboard
   useEffect(() => {
-    if (!profile?.organizacao_id) return;
-
     const channel = supabase
-      .channel(`funil-leads-realtime-${profile.organizacao_id}`)
+      .channel('funil-leads-realtime-global')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'leads', filter: `organizacao_id=eq.${profile.organizacao_id}` },
+        { event: '*', schema: 'public', table: 'leads' },
         (payload) => {
           if (payload.eventType === 'DELETE') {
-            // Remove lead excluído da lista sem precisar re-fetch
             setLeads((prev) => prev.filter((l) => l.id !== (payload.old as Lead).id));
-          } else if (payload.eventType === 'INSERT') {
-            // IMPORTANTE: payload.new do Realtime NÃO inclui colunas JSONB (dados_cadastro)
-            // Por isso fazemos um fetch completo do lead recém-inserido
-            const newLeadId = (payload.new as Lead).id;
-            supabase.from("leads").select("*").eq("id", newLeadId).maybeSingle()
-              .then(({ data: fullLead }) => {
-                if (!fullLead) return;
-                setLeads((prev) => {
-                  const exists = prev.find((l) => l.id === fullLead.id);
-                  if (exists) return prev;
-                  return [{ ...fullLead, nome: fullLead.nome || 'Lead Sem Nome', status: normalizeStatus(fullLead.status) }, ...prev];
-                });
-              });
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedId = (payload.new as Lead).id;
-
-            // Check if local state already has the matching values to prevent redundant SELECT calls
-            setLeads((prev) => {
-              const existingLead = prev.find((l) => l.id === updatedId);
-              if (existingLead) {
-                const matches =
-                  existingLead.lead_temperatura === payload.new.lead_temperatura &&
-                  existingLead.status === payload.new.status &&
-                  existingLead.propensity_score === payload.new.propensity_score &&
-                  existingLead.last_interaction_at === payload.new.last_interaction_at &&
-                  existingLead.nome === payload.new.nome &&
-                  existingLead.email === payload.new.email &&
-                  existingLead.celular === payload.new.celular &&
-                  existingLead.cidade === payload.new.cidade &&
-                  existingLead.valor_credito === payload.new.valor_credito &&
-                  existingLead.prazo_meses === payload.new.prazo_meses &&
-                  existingLead.administradora === payload.new.administradora &&
-                  existingLead.grupo === payload.new.grupo &&
-                  existingLead.cota === payload.new.cota;
-
-                if (matches) {
-                  return prev; // Skip DB fetch if already updated locally
-                }
-              }
-
-              // Otherwise fetch the complete lead to ensure updated JSONB or foreign modifications
-              supabase.from("leads").select("*").eq("id", updatedId).maybeSingle()
-                .then(({ data: fullLead }) => {
-                  if (!fullLead) return;
-                  setLeads((current) =>
-                    current.map((l) =>
-                      l.id === fullLead.id
-                        ? { ...l, ...fullLead, nome: fullLead.nome || 'Lead Sem Nome', status: normalizeStatus(fullLead.status) }
-                        : l
-                    )
-                  );
-                });
-
-              return prev;
-            });
+          } else {
+            fetchLeads();
           }
-
         }
       )
       .subscribe();
@@ -260,8 +203,6 @@ export function useFunil() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile?.organizacao_id]);
-
   useEffect(() => {
     if (leads.length === 0 || !profile?.organizacao_id) return;
     const leadIds = leads.map((l) => l.id);
