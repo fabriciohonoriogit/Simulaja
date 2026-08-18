@@ -127,7 +127,7 @@ export default function Jarvis() {
         {
             id: "1",
             role: "jarvis",
-            content: `Oi Chefe! 🚀 Que alegria falar com você! Eu sou a Bella IA! Tô super animada, alegre e pronta pro nosso papo. Sobre o que você gostaria de conversar hoje, Chefe?`,
+            content: `Oi Chefe! Que alegria falar com você! Eu sou a Bella IA! Tô super animada e pronta pro nosso papo. Como posso te ajudar nas vendas hoje, Chefe?`,
             timestamp: new Date()
         }
     ]);
@@ -207,81 +207,11 @@ export default function Jarvis() {
     };
 
     const speak = (text: string) => {
-        if (typeof window === "undefined" || !window.speechSynthesis) return;
-        
-        const cleanText = text
-            .replace(/```json[\s\S]*?```/g, '')
-            .replace(/```[\s\S]*?```/g, '')
-            .replace(/\{[\s\S]*?\}/g, '')
-            .replace(/[*_#`~{}]/g, '')
-            .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, '')
-            .trim();
-
-        if (!cleanText) return;
-
-        window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance(cleanText);
-        msg.lang = "pt-BR";
-        
-        const allVoices = window.speechSynthesis.getVoices();
-        const ptVoices = allVoices.filter(v => v.lang.toLowerCase().startsWith('pt'));
-
-        // Prioridade estrita para vozes FEMININAS (Francisca, Thalita, Yalda, Giovanna, Luciana, Vitória, Camila, Marcia, Maria, Leticia, Heloisa)
-        const femaleNames = ["francisca", "thalita", "yalda", "giovanna", "luciana", "vitória", "vitoria", "camila", "marcia", "maria", "leticia", "heloisa", "zira", "female", "feminina"];
-        const maleNames = ["daniel", "ricardo", "helder", "antonio", "thiago", "guilherme", "felipe", "humberto", "julio", "male", "masculina"];
-
-        let bestVoice = ptVoices.find(v => 
-            femaleNames.some(name => v.name.toLowerCase().includes(name))
+        speakBellaText(
+            text,
+            () => setOrbState("speaking"),
+            () => setOrbState("idle")
         );
-
-        if (!bestVoice) {
-            bestVoice = ptVoices.find(v => 
-                (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online') || v.name.includes('Google')) &&
-                !maleNames.some(m => v.name.toLowerCase().includes(m))
-            );
-        }
-
-        if (!bestVoice) {
-            bestVoice = ptVoices.find(v => !maleNames.some(m => v.name.toLowerCase().includes(m)));
-        }
-
-        if (!bestVoice && ptVoices.length > 0) {
-            bestVoice = ptVoices[0];
-        }
-
-        if (bestVoice) {
-            msg.voice = bestVoice;
-        }
-
-        msg.rate = 1.08;
-        msg.pitch = 1.20; // Pitch feminino radiante e alegre
-        
-        setOrbState("speaking");
-        
-        const finishSpeaking = () => {
-            if (speakingTimeoutRef.current) {
-                clearTimeout(speakingTimeoutRef.current);
-                speakingTimeoutRef.current = null;
-            }
-            setOrbState("idle");
-            if (isHandsFreeRef.current) {
-                setTimeout(() => {
-                    try { startRecording(); } catch (e) {}
-                }, 1800);
-            }
-        };
-
-        msg.onend = finishSpeaking;
-        msg.onerror = finishSpeaking;
-        
-        if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
-        speakingTimeoutRef.current = setTimeout(finishSpeaking, Math.max(3000, cleanText.length * 80));
-
-        try {
-            window.speechSynthesis.speak(msg);
-        } catch (e) {
-            finishSpeaking();
-        }
     };
 
     const recognitionRef = useRef<any>(null);
@@ -343,15 +273,19 @@ export default function Jarvis() {
                 const finalQ = finalTranscriptRef.current.trim();
                 finalTranscriptRef.current = "";
 
-                if (finalQ && finalQ.length >= 2 && !isAnalyzing) {
+                if (finalQ && finalQ.length >= 4 && !isAnalyzing) {
+                    const lowerText = finalQ.toLowerCase();
+                    const isWakeWordOnly = /^(oi bella|ei bella|fala bella|oi bela|ei bela|bella|bela|oi jarvis|ei jarvis|jarvis)$/i.test(lowerText);
+                    if (isWakeWordOnly) {
+                        setQuestion("");
+                        speakBellaText("Pode falar, Chefe! Tô te ouvindo!", () => setOrbState("speaking"), () => setOrbState("idle"));
+                        return;
+                    }
                     setQuestion("");
                     handleAnalyze(finalQ);
                 } else {
                     setOrbState("idle");
                     setQuestion("");
-                    if (isHandsFreeRef.current) {
-                        setTimeout(() => { try { startRecording(); } catch (e) {} }, 500);
-                    }
                 }
             };
 

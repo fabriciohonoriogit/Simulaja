@@ -47,7 +47,6 @@ export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
     "zira",
     "female",
     "feminina",
-    "portuguese (brazil)",
   ];
 
   const maleKeywords = [
@@ -78,7 +77,6 @@ export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
     );
   }
 
-  // 3. Fallback para a primeira voz PT disponível
   return selected || ptVoices[0] || null;
 }
 
@@ -90,15 +88,23 @@ export function speakBellaText(
 ) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
 
+  // Remove Emojis (incluindo o robô 🚀, ✨, 🏆, etc.), códigos JSON, markdown e palavras de erro
   const cleanText = text
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F300}-\u{1F5FF}]/gu, "")
+    .replace(/🚀|✨|🏆|💡|📊|🤖|✴|●|🟢|⚠️|[\u2000-\u3300]/g, "")
     .replace(/```json[\s\S]*?```/g, "")
     .replace(/```[\s\S]*?```/g, "")
     .replace(/\{[\s\S]*?\}/g, "")
     .replace(/[*_#`~{}]/g, "")
+    .replace(/foguete/gi, "") // Remove a palavra falada "foguete" que o leitor de tela do Chrome lê do emoji 🚀
     .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, "")
+    .replace(/\s+/g, " ")
     .trim();
 
-  if (!cleanText) return;
+  if (!cleanText || cleanText.length < 2) {
+    if (onEnd) onEnd();
+    return;
+  }
 
   window.speechSynthesis.cancel();
   const msg = new SpeechSynthesisUtterance(cleanText);
@@ -109,8 +115,9 @@ export function speakBellaText(
     msg.voice = voice;
   }
 
-  msg.rate = 1.08;
-  msg.pitch = 1.25; // Pitch elevado para garantir tom feminino alegre
+  // Ritmo rápido, dinâmico e tom feminino vibrante
+  msg.rate = 1.18;
+  msg.pitch = 1.30;
 
   msg.onstart = () => {
     if (onStart) onStart();
