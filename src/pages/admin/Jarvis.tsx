@@ -382,7 +382,7 @@ export default function Jarvis() {
                 const { data: inadData } = await supabase.from("inadimplentes").select("*");
                 if (inadData) setInadimplentes(inadData);
 
-                const bcb = await bcbService.getEconomicData();
+                const bcb = await bcbService.getEconomicIndicators();
                 setEconomiaDados(bcb);
             } catch (e) {
                 console.error("Erro ao carregar dados do Jarvis:", e);
@@ -481,7 +481,7 @@ export default function Jarvis() {
                 {/* Status Pills */}
                 <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
                     <Badge variant="outline" className="border-cyan-500/30 text-cyan-300 bg-cyan-500/10 text-[10px] font-mono py-1">
-                        SELIC: {economiaDados?.selic || "10.50%"}
+                        SELIC: {economiaDados?.selic?.valor || "10.50%"}
                     </Badge>
                     <Badge variant="outline" className="border-emerald-500/30 text-emerald-300 bg-emerald-500/10 text-[10px] font-mono py-1">
                         LEADS NO FUNIL: {leads.length}

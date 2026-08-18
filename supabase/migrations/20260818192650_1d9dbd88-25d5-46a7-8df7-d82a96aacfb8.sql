@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "convites_select_token" ON public.convites;
