@@ -215,4 +215,45 @@ ${leadsContext}`;
       return { analysis: [], error: e };
     }
   },
+
+  async scanEngineProactively(activeModules: string[]) {
+    try {
+      const { data: leads } = await supabase
+        .from("leads")
+        .select("id, nome, status, valor_credito, created_at")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const prompt = `Você é o Motor Ocioso Autônomo da Bella IA no Simulajá.
+Os seguintes módulos de varredura estão ativos no momento: ${activeModules.join(", ")}.
+Aqui estão alguns dados recentes do CRM: ${JSON.stringify(leads || [])}.
+
+Gere de 2 a 4 insights estratégicos e acionáveis para o vendedor de consórcios.
+Responda ESTRITAMENTE em formato JSON (Array de objetos) sem explicações ou markdown adicionais:
+[
+  {
+    "id": "1",
+    "type": "pipeline",
+    "title": "Título Curto e Impactante",
+    "description": "Descrição detalhada do insight com recomendação acionável.",
+    "actionText": "Texto do Botão",
+    "actionRoute": "/admin/funil"
+  }
+]`;
+
+      const { text, error } = await callAI(prompt, 1000);
+      if (error || !text) return { insights: [] };
+      const clean = text.replace(/```json|```/g, "").trim();
+      const insights = JSON.parse(clean).map((item: any, idx: number) => ({
+        ...item,
+        id: item.id || String(idx + 1),
+        timestamp: new Date(),
+      }));
+
+      return { insights };
+    } catch (e) {
+      console.error("Error in scanEngineProactively:", e);
+      return { insights: [] };
+    }
+  },
 };
