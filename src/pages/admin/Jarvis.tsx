@@ -206,6 +206,26 @@ export default function Jarvis() {
         }
     };
 
+    const speakBellaText = (text: string, onStart?: () => void, onEnd?: () => void) => {
+        try {
+            if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+                onEnd?.();
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = "pt-BR";
+            utterance.rate = 1.05;
+            utterance.pitch = 1.1;
+            utterance.onstart = () => onStart?.();
+            utterance.onend = () => onEnd?.();
+            utterance.onerror = () => onEnd?.();
+            window.speechSynthesis.speak(utterance);
+        } catch {
+            onEnd?.();
+        }
+    };
+
     const speak = (text: string) => {
         speakBellaText(
             text,
