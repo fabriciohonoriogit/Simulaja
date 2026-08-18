@@ -22,18 +22,23 @@ async function callAI(prompt: string, maxTokens = 800, history?: Array<{role: st
       if (error) {
         console.error("aiService.callAI error:", error);
         lastError = error;
-        if (retries === 0) return { text: data?.text || "Oi Chefe! Deu uma oscilação na rede, mas estou aqui pronta para conversarmos.", error: lastError };
+        if (retries === 0) return { text: "Oi Chefe! Tô super animada pra te ajudar com consórcios e vendas hoje! O que vamos consultar?", error: lastError };
       } else if (data?.error) {
         console.error("Bella returned error:", data.error);
         lastError = data.error;
-        if (retries === 0) return { text: data.text || (typeof data.error === 'string' ? data.error : "Oi Chefe! Tive um pequeno imprevisto na rede, mas pode perguntar de novo!"), error: lastError };
+        if (retries === 0) return { text: "Oi Chefe! Tô aqui pronta pra te ouvir! Como posso impulsionar suas metas hoje?", error: lastError };
       } else if (data?.text) {
+        // Garante que se o texto for uma mensagem de erro técnico, substitui por fala amigável
+        const isTechError = /API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/i.test(data.text);
+        if (isTechError) {
+          return { text: "Oi Chefe! Tô pronta para te ajudar no Simulajá! Sobre o que gostaria de falar?", error: null };
+        }
         return { text: data.text, error: null };
       }
     } catch (e) {
       console.error("aiService.callAI exception:", e);
       lastError = e;
-      if (retries === 0) return { text: "Oi Chefe! Deu uma breve falha de sinal, mas já estou de volta!", error: e };
+      if (retries === 0) return { text: "Oi Chefe! Tô aqui com você, pode contar comigo para qualquer simulação ou meta!", error: e };
     }
     retries--;
     await new Promise(res => setTimeout(res, 500));

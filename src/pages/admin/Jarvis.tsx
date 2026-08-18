@@ -214,6 +214,7 @@ export default function Jarvis() {
             .replace(/```[\s\S]*?```/g, '')
             .replace(/\{[\s\S]*?\}/g, '')
             .replace(/[*_#`~{}]/g, '')
+            .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, '')
             .trim();
 
         if (!cleanText) return;
@@ -224,12 +225,36 @@ export default function Jarvis() {
         
         const allVoices = window.speechSynthesis.getVoices();
         const ptVoices = allVoices.filter(v => v.lang.toLowerCase().startsWith('pt'));
-        let bestVoice = ptVoices.find(v => v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Google'));
-        if (!bestVoice && ptVoices.length > 0) bestVoice = ptVoices[0];
-        if (bestVoice) msg.voice = bestVoice;
+
+        // Prioridade estrita para vozes FEMININAS (Francisca, Thalita, Yalda, Giovanna, Luciana, Vitória, Camila, Marcia, Maria, Leticia, Heloisa)
+        const femaleNames = ["francisca", "thalita", "yalda", "giovanna", "luciana", "vitória", "vitoria", "camila", "marcia", "maria", "leticia", "heloisa", "zira", "female", "feminina"];
+        const maleNames = ["daniel", "ricardo", "helder", "antonio", "thiago", "guilherme", "felipe", "humberto", "julio", "male", "masculina"];
+
+        let bestVoice = ptVoices.find(v => 
+            femaleNames.some(name => v.name.toLowerCase().includes(name))
+        );
+
+        if (!bestVoice) {
+            bestVoice = ptVoices.find(v => 
+                (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online') || v.name.includes('Google')) &&
+                !maleNames.some(m => v.name.toLowerCase().includes(m))
+            );
+        }
+
+        if (!bestVoice) {
+            bestVoice = ptVoices.find(v => !maleNames.some(m => v.name.toLowerCase().includes(m)));
+        }
+
+        if (!bestVoice && ptVoices.length > 0) {
+            bestVoice = ptVoices[0];
+        }
+
+        if (bestVoice) {
+            msg.voice = bestVoice;
+        }
 
         msg.rate = 1.08;
-        msg.pitch = 1.05;
+        msg.pitch = 1.20; // Pitch feminino radiante e alegre
         
         setOrbState("speaking");
         
