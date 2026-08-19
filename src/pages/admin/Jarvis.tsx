@@ -128,7 +128,7 @@ export default function Jarvis() {
         {
             id: "1",
             role: "jarvis",
-            content: `Oi Chefe! Que alegria falar com você! Eu sou a Bella IA! Tô super animada e pronta pro nosso papo. Como posso te ajudar nas vendas hoje, Chefe?`,
+            content: `Olá Fabrício! Bella pronta. Pipeline de vendas, carteira e métricas de consórcio mapeadas no CRM. O que vamos analisar ou acelerar hoje?`,
             timestamp: new Date()
         }
     ]);
