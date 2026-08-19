@@ -16,11 +16,11 @@ const Footer = () => {
               </div>
               <div>
                 <h3 className="text-lg font-black tracking-tight text-white">FABRÍCIO HONÓRIO</h3>
-                <p className="text-[10px] text-amber-400 font-extrabold tracking-widest uppercase">GN CONSÓRCIO MAGALU PR/SC</p>
+                <p className="text-[10px] text-amber-400 font-extrabold tracking-widest uppercase">O ESPECIALISTA EM CONSÓRCIO</p>
               </div>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-              Consultoria estratégica especializada GN CONSÓRCIO MAGALU PR/SC. Conquiste seu imóvel, veículo ou investimento sem juros bancários.
+              Consultoria estratégica especializada em planejamento financeiro e consórcios. Conquiste seu imóvel, veículo ou investimento sem juros bancários.
             </p>
           </div>
 
@@ -100,8 +100,8 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} GN CONSÓRCIO MAGALU PR/SC — Fabrício Rodrigues Honório — <a href="https://www.oespecialistaconsorcio.com.br" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors font-bold">www.oespecialistaconsorcio.com.br</a></p>
-          <p className="font-bold text-amber-400/90 tracking-wider">GN CONSÓRCIO MAGALU PR/SC</p>
+          <p>© {new Date().getFullYear()} O Especialista em Consórcio — Fabrício Rodrigues Honório — <a href="https://www.oespecialistaconsorcio.com.br" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors font-bold">www.oespecialistaconsorcio.com.br</a></p>
+          <p className="font-bold text-amber-400/90 tracking-wider">PROSPERA PLANEJAMENTO & CONSULTORIA</p>
         </div>
       </div>
     </footer>

@@ -42,8 +42,8 @@ export function BellaVoiceModeSelector({
   ];
 
   const themes: { id: OrbTheme; label: string; colorClass: string }[] = [
-    { id: "flame", label: "Flame (Gold)", colorClass: "bg-amber-500" },
     { id: "cobalt", label: "Cobalt (Blue)", colorClass: "bg-cyan-500" },
+    { id: "flame", label: "Flame (Gold)", colorClass: "bg-amber-500" },
     { id: "emerald", label: "Emerald (Green)", colorClass: "bg-emerald-500" },
   ];
 

@@ -102,7 +102,7 @@ export const MagaluGalleryCarousel = () => {
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-amber-500/10">
             <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span>GN CONSÓRCIO MAGALU PR/SC</span>
+            <span>O ESPECIALISTA EM CONSÓRCIO</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
@@ -110,17 +110,17 @@ export const MagaluGalleryCarousel = () => {
           </h2>
 
           <p className="text-slate-300 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto">
-            Confira as opções especiais de crédito do Consórcio Magalu com parcelas reduzidas e planejamento sem juros bancários.
+            Confira as melhores opções e condições especiais de crédito com parcelas reduzidas e planejamento sem juros bancários.
           </p>
 
           <div className="pt-1 flex items-center justify-center gap-6 text-xs text-slate-300 font-bold">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Garantia LuizaCred & Magalu
+              Segurança & Regulamentação Bacen
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-amber-400" />
-              Atendimento Regional PR/SC
+              Atendimento em Todo o Brasil
             </span>
           </div>
         </div>

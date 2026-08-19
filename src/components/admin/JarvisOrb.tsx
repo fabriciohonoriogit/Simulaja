@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
-export type OrbTheme = "flame" | "cobalt" | "emerald";
+export type OrbTheme = "cobalt" | "flame" | "emerald";
 export type OrbState = "idle" | "listening" | "thinking" | "speaking";
 
 interface JarvisOrbProps {
@@ -24,49 +24,49 @@ function isWebGLAvailable(): boolean {
 }
 
 const themeColors: Record<OrbTheme, Record<OrbState, string>> = {
-  flame: {
-    idle: "#f59e0b",      // Amber/Gold
-    listening: "#f97316", // Orange
-    thinking: "#ef4444",  // Flame Red
-    speaking: "#fbbf24",  // Bright Yellow Gold
-  },
   cobalt: {
-    idle: "#38bdf8",      // Cyan/Sky
+    idle: "#4ca8e8",      // Classic Blue
     listening: "#2dd4bf", // Teal
-    thinking: "#a855f7", // Purple
-    speaking: "#3b82f6", // Electric Blue
+    thinking: "#6ec4ff",  // Electric Cyan / Violet
+    speaking: "#5ab8f0",  // Pulsing Bright Blue
+  },
+  flame: {
+    idle: "#f59e0b",
+    listening: "#f97316",
+    thinking: "#ef4444",
+    speaking: "#fbbf24",
   },
   emerald: {
-    idle: "#10b981",      // Emerald Green
-    listening: "#34d399", // Mint
-    thinking: "#84cc16", // Lime
-    speaking: "#06b6d4", // Cyan Green
+    idle: "#10b981",
+    listening: "#34d399",
+    thinking: "#84cc16",
+    speaking: "#06b6d4",
   },
 };
 
 const stateStyles: Record<OrbState, { from: string; to: string; shadow: string; duration: string }> = {
   idle: {
-    from: "from-amber-500",
-    to: "to-orange-600",
-    shadow: "shadow-amber-500/40",
+    from: "from-[#4ca8e8]",
+    to: "to-[#1a5f9e]",
+    shadow: "shadow-[#4ca8e8]/40",
     duration: "duration-[3000ms]",
   },
   listening: {
-    from: "from-amber-400",
-    to: "to-red-500",
-    shadow: "shadow-orange-500/60",
+    from: "from-[#4ca8e8]",
+    to: "to-[#2dd4bf]",
+    shadow: "shadow-[#4ca8e8]/60",
     duration: "duration-[1500ms]",
   },
   thinking: {
-    from: "from-orange-500",
-    to: "to-purple-600",
-    shadow: "shadow-red-500/70",
+    from: "from-[#6ec4ff]",
+    to: "to-[#a855f7]",
+    shadow: "shadow-[#6ec4ff]/70",
     duration: "duration-[800ms]",
   },
   speaking: {
-    from: "from-yellow-400",
-    to: "to-amber-600",
-    shadow: "shadow-yellow-400/60",
+    from: "from-[#5ab8f0]",
+    to: "to-[#3b82f6]",
+    shadow: "shadow-[#5ab8f0]/60",
     duration: "duration-[1200ms]",
   },
 };
@@ -87,8 +87,8 @@ function FallbackOrb({ state = "idle" }: { state?: OrbState }) {
         className={`relative w-[55%] max-w-[200px] aspect-square rounded-full bg-gradient-to-br ${style.from} ${style.to} shadow-2xl ${style.shadow} animate-pulse ${style.duration}`}
       >
         <div className="absolute top-[15%] left-[20%] w-[30%] h-[20%] rounded-full bg-white/30 blur-md" />
-        <div className="absolute -inset-[15%] rounded-full border border-amber-500/30 animate-spin" style={{ animationDuration: "8s" }} />
-        <div className="absolute -inset-[25%] rounded-full border border-orange-500/20 animate-spin" style={{ animationDuration: "12s", animationDirection: "reverse" }} />
+        <div className="absolute -inset-[15%] rounded-full border border-white/10 animate-spin" style={{ animationDuration: "8s" }} />
+        <div className="absolute -inset-[25%] rounded-full border border-white/5 animate-spin" style={{ animationDuration: "12s", animationDirection: "reverse" }} />
       </div>
 
       {[...Array(6)].map((_, i) => (
@@ -109,7 +109,7 @@ function FallbackOrb({ state = "idle" }: { state?: OrbState }) {
 
 export function JarvisOrb({
   state = "idle",
-  theme = "flame",
+  theme = "cobalt",
   statusText = "NEURAL LINK ACTIVE",
   subStatusText,
   showOverlay = true,
@@ -123,8 +123,6 @@ export function JarvisOrb({
   const pointsRef = useRef<THREE.Points | null>(null);
   const linesRef = useRef<THREE.LineSegments | null>(null);
   const electronsRef = useRef<THREE.Points | null>(null);
-  const outerRingRef = useRef<THREE.Mesh | null>(null);
-  const innerRingRef = useRef<THREE.Mesh | null>(null);
   const targetStateRef = useRef<OrbState>(state);
   const targetThemeRef = useRef<OrbTheme>(theme);
 
@@ -136,7 +134,7 @@ export function JarvisOrb({
   const currentSpeed = useRef(0.5);
   const currentScale = useRef(1.0);
 
-  const particleCount = 2400;
+  const particleCount = 2000;
 
   useEffect(() => {
     targetStateRef.current = state;
@@ -160,7 +158,7 @@ export function JarvisOrb({
       sceneRef.current = scene;
 
       const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-      camera.position.z = 4.2;
+      camera.position.z = 4;
       cameraRef.current = camera;
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -209,9 +207,9 @@ export function JarvisOrb({
 
       const pointsMaterial = new THREE.PointsMaterial({
         color: new THREE.Color(themeColors[theme][state]),
-        size: 0.032,
+        size: 0.03,
         transparent: true,
-        opacity: 0.75,
+        opacity: 0.65,
         blending: THREE.AdditiveBlending,
       });
 
@@ -224,7 +222,7 @@ export function JarvisOrb({
       const linesMaterial = new THREE.LineBasicMaterial({
         color: new THREE.Color(themeColors[theme][state]),
         transparent: true,
-        opacity: 0.15,
+        opacity: 0.12,
         blending: THREE.AdditiveBlending,
       });
       const lines = new THREE.LineSegments(linesGeometry, linesMaterial);
@@ -232,13 +230,13 @@ export function JarvisOrb({
       linesRef.current = lines;
 
       // Electrons / Energy sparks
-      const electronCount = 5;
+      const electronCount = 3;
       const ePositions = new Float32Array(electronCount * 3);
       const eGeometry = new THREE.BufferGeometry();
       eGeometry.setAttribute("position", new THREE.BufferAttribute(ePositions, 3));
       const eMaterial = new THREE.PointsMaterial({
         color: 0xffffff,
-        size: 0.09,
+        size: 0.08,
         transparent: true,
         opacity: 0.95,
         blending: THREE.AdditiveBlending,
@@ -246,33 +244,6 @@ export function JarvisOrb({
       const electrons = new THREE.Points(eGeometry, eMaterial);
       scene.add(electrons);
       electronsRef.current = electrons;
-
-      // Gyroscopic Outer Rings
-      const ringGeo1 = new THREE.TorusGeometry(1.8, 0.008, 16, 100);
-      const ringMat1 = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(themeColors[theme][state]),
-        transparent: true,
-        opacity: 0.25,
-        wireframe: true,
-        blending: THREE.AdditiveBlending,
-      });
-      const outerRing = new THREE.Mesh(ringGeo1, ringMat1);
-      outerRing.rotation.x = Math.PI / 3;
-      scene.add(outerRing);
-      outerRingRef.current = outerRing;
-
-      const ringGeo2 = new THREE.TorusGeometry(2.1, 0.005, 16, 100);
-      const ringMat2 = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(themeColors[theme][state]),
-        transparent: true,
-        opacity: 0.15,
-        wireframe: true,
-        blending: THREE.AdditiveBlending,
-      });
-      const innerRing = new THREE.Mesh(ringGeo2, ringMat2);
-      innerRing.rotation.y = Math.PI / 4;
-      scene.add(innerRing);
-      innerRingRef.current = innerRing;
 
       const handleResize = () => {
         if (!container || !camera || !renderer) return;
@@ -288,7 +259,7 @@ export function JarvisOrb({
 
         const st = targetStateRef.current;
         const th = targetThemeRef.current;
-        const colorHex = themeColors[th]?.[st] || themeColors.flame.idle;
+        const colorHex = themeColors[th]?.[st] || themeColors.cobalt.idle;
 
         let targetRadius = 1.5;
         let targetSpeed = 0.5;
@@ -296,17 +267,17 @@ export function JarvisOrb({
 
         if (st === "idle") {
           targetRadius = 1.5;
-          targetSpeed = 0.6;
+          targetSpeed = 0.5;
         } else if (st === "listening") {
-          targetRadius = 1.25;
-          targetSpeed = 1.2;
+          targetRadius = 1.2;
+          targetSpeed = 1.0;
         } else if (st === "thinking") {
           targetRadius = 1.0;
           targetSpeed = 2.5;
         } else if (st === "speaking") {
-          targetRadius = 1.35;
-          targetSpeed = 1.6;
-          targetScale = 1.0 + Math.sin(timeRef.current * 9) * 0.09;
+          targetRadius = 1.3;
+          targetSpeed = 1.5;
+          targetScale = 1.0 + Math.sin(timeRef.current * 8) * 0.08;
         }
 
         currentRadius.current += (targetRadius - currentRadius.current) * 0.05;
@@ -314,12 +285,10 @@ export function JarvisOrb({
         currentScale.current += (targetScale - currentScale.current) * 0.1;
 
         const targetCol = new THREE.Color(colorHex);
-        currentColor.current.lerp(targetCol, 0.06);
+        currentColor.current.lerp(targetCol, 0.05);
 
         pointsMaterial.color.copy(currentColor.current);
         linesMaterial.color.copy(currentColor.current);
-        ringMat1.color.copy(currentColor.current);
-        ringMat2.color.copy(currentColor.current);
 
         points.rotation.y += 0.005 * currentSpeed.current;
         points.rotation.x += 0.002 * currentSpeed.current;
@@ -329,15 +298,6 @@ export function JarvisOrb({
         lines.scale.copy(points.scale);
         electrons.rotation.copy(points.rotation);
         electrons.scale.copy(points.scale);
-
-        if (outerRing) {
-          outerRing.rotation.z += 0.004 * currentSpeed.current;
-          outerRing.rotation.x += 0.002 * currentSpeed.current;
-        }
-        if (innerRing) {
-          innerRing.rotation.y -= 0.006 * currentSpeed.current;
-          innerRing.rotation.z -= 0.003 * currentSpeed.current;
-        }
 
         const posAttr = geometry.getAttribute("position");
         const baseAttr = geometry.getAttribute("basePosition");
@@ -362,15 +322,15 @@ export function JarvisOrb({
         posAttr.needsUpdate = true;
 
         if (st === "thinking" || st === "listening" || timeRef.current % 0.1 < 0.02) {
-          let maxConnectDistance = 0.32;
-          if (st === "thinking") maxConnectDistance = 0.48;
-          if (st === "idle") maxConnectDistance = 0.22;
+          let maxConnectDistance = 0.3;
+          if (st === "thinking") maxConnectDistance = 0.45;
+          if (st === "idle") maxConnectDistance = 0.2;
 
           const lineIndices = [];
           let eIndex = 0;
           const electronArr = eGeometry.getAttribute("position").array as Float32Array;
 
-          const pCount = st === "thinking" ? 400 : 220;
+          const pCount = st === "thinking" ? 400 : 200;
 
           for (let i = 0; i < pCount; i++) {
             for (let j = i + 1; j < pCount; j++) {
@@ -382,7 +342,7 @@ export function JarvisOrb({
               if (distSq < maxConnectDistance * maxConnectDistance) {
                 lineIndices.push(i, j);
 
-                if ((st === "thinking" || st === "speaking") && eIndex < electronCount && Math.random() > 0.985) {
+                if ((st === "thinking" || st === "speaking") && eIndex < electronCount && Math.random() > 0.99) {
                   const lerpFactor = (Math.sin(timeRef.current * 15) + 1) / 2;
                   electronArr[eIndex * 3] = positionsArray[i * 3] + dx * lerpFactor;
                   electronArr[eIndex * 3 + 1] = positionsArray[i * 3 + 1] + dy * lerpFactor;
@@ -414,10 +374,6 @@ export function JarvisOrb({
           linesMaterial.dispose();
           eGeometry.dispose();
           eMaterial.dispose();
-          ringGeo1.dispose();
-          ringMat1.dispose();
-          ringGeo2.dispose();
-          ringMat2.dispose();
           renderer.dispose();
           if (container.contains(renderer.domElement)) {
             container.removeChild(renderer.domElement);
@@ -460,7 +416,7 @@ export function JarvisOrb({
           </div>
 
           {subStatusText && (
-            <span className="text-[12px] text-slate-300 font-medium tracking-wide bg-slate-950/80 px-3 py-0.5 rounded-md border border-slate-800 backdrop-blur-md shadow-md animate-pulse">
+            <span className="text-[12px] text-cyan-200 font-medium tracking-wide bg-slate-950/80 px-3 py-0.5 rounded-md border border-cyan-900/50 backdrop-blur-md shadow-md animate-pulse">
               {subStatusText}
             </span>
           )}

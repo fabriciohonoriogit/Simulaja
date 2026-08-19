@@ -135,7 +135,7 @@ export default function Jarvis() {
     const [isListening, setIsListening] = useState(false);
     const [isHandsFree, setIsHandsFree] = useState(false);
     const [orbState, setOrbState] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
-    const [orbTheme, setOrbTheme] = useState<OrbTheme>("flame");
+    const [orbTheme, setOrbTheme] = useState<OrbTheme>("cobalt");
     const [voiceMode, setVoiceMode] = useState<VoiceOperationMode>("passive");
     const [showMultimodalScanner, setShowMultimodalScanner] = useState(false);
     const isHandsFreeRef = useRef(false);
@@ -471,7 +471,7 @@ export default function Jarvis() {
                     <div className="relative w-full min-h-[360px] sm:min-h-[420px] rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950 border border-slate-800 shadow-2xl flex flex-col items-center justify-center p-4 overflow-hidden group">
                         {/* Camera PIP overlay */}
                         <div className="absolute top-4 right-4 z-30 flex flex-col items-end gap-2">
-                            <div className="relative group bg-slate-950/80 backdrop-blur-md border border-amber-500/40 rounded-xl p-2 shadow-lg">
+                            <div className="relative group bg-slate-950/80 backdrop-blur-md border border-cyan-500/40 rounded-xl p-2 shadow-lg">
                                 <div className="w-32 h-20 sm:w-44 sm:h-28 relative overflow-hidden rounded-lg bg-black flex items-center justify-center">
                                     <video
                                         ref={videoRef}
@@ -483,19 +483,19 @@ export default function Jarvis() {
                                     <canvas ref={canvasRef} className="hidden" />
 
                                     {cameraActive && (
-                                        <div className="absolute inset-0 pointer-events-none border border-amber-400/30 rounded-lg overflow-hidden">
-                                            <div className="w-full h-0.5 bg-amber-400 shadow-[0_0_8px_#f59e0b] animate-bounce opacity-80" />
+                                        <div className="absolute inset-0 pointer-events-none border border-cyan-400/30 rounded-lg overflow-hidden">
+                                            <div className="w-full h-0.5 bg-cyan-400 shadow-[0_0_8px_#38bdf8] animate-bounce opacity-80" />
                                         </div>
                                     )}
 
                                     {!cameraActive && !isCalibrating && (
                                         <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-2 text-center">
-                                            <Camera className="h-5 w-5 text-amber-400 mb-1 animate-pulse" />
+                                            <Camera className="h-5 w-5 text-cyan-400 mb-1 animate-pulse" />
                                             <Button
                                                 type="button"
                                                 size="sm"
                                                 onClick={() => initCamera(cameraFacing)}
-                                                className="h-5 text-[9px] px-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-full"
+                                                className="h-5 text-[9px] px-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-full"
                                             >
                                                 Visão 360°
                                             </Button>
