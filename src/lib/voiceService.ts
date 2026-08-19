@@ -1,4 +1,4 @@
-// Helper para carregar e selecionar vozes femininas de alta qualidade no Web Speech API
+// Helper para carregar e selecionar vozes femininas de alta qualidade e entusiasmadas no Web Speech API
 
 let availableVoices: SpeechSynthesisVoice[] = [];
 
@@ -29,24 +29,26 @@ export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
 
   if (ptVoices.length === 0) return null;
 
-  // Nomes de vozes femininas conhecidas em navegadores (Chrome, Edge, Safari, Firefox, Windows, Mac, Android)
-  const femaleKeywords = [
-    "francisca",
-    "thalita",
-    "yalda",
+  // Nomes de vozes femininas prioritárias em navegadores e sistemas operacionais (Windows, Edge, Chrome, Mac, iOS, Android)
+  const priorityFemaleVoices = [
+    "francisca", // Microsoft Francisca Online (Natural) - PT-BR
+    "thalita",   // Microsoft Thalita Online (Natural) - PT-BR
     "giovanna",
     "luciana",
     "vitória",
     "vitoria",
     "camila",
-    "marcia",
-    "maria",
     "leticia",
+    "letícia",
     "heloisa",
     "heloísa",
-    "zira",
+    "maria",
+    "yalda",
+    "fernanda",
+    "google português do brasil",
+    "brazil female",
     "female",
-    "feminina",
+    "zira",
   ];
 
   const maleKeywords = [
@@ -61,23 +63,26 @@ export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
     "humberto",
     "julio",
     "júlio",
+    "david",
+    "george",
     "male",
-    "masculina",
+    "masculino",
   ];
 
-  // 1. Procura uma voz explicitamente feminina em Português
-  let selected = ptVoices.find((v) =>
-    femaleKeywords.some((name) => v.name.toLowerCase().includes(name))
-  );
-
-  // 2. Se não achou por nome feminino, pega qualquer voz em PT que NÃO seja explicitamente masculina
-  if (!selected) {
-    selected = ptVoices.find(
-      (v) => !maleKeywords.some((m) => v.name.toLowerCase().includes(m))
-    );
+  // 1. Procura primeiro pelas vozes femininas prioritárias em português
+  for (const keyword of priorityFemaleVoices) {
+    const found = ptVoices.find((v) => v.name.toLowerCase().includes(keyword));
+    if (found) return found;
   }
 
-  return selected || ptVoices[0] || null;
+  // 2. Se não achou na lista prioritária, seleciona qualquer voz em PT que NÃO seja masculina
+  const nonMale = ptVoices.find(
+    (v) => !maleKeywords.some((m) => v.name.toLowerCase().includes(m))
+  );
+  if (nonMale) return nonMale;
+
+  // 3. Fallback: primeira voz em português
+  return ptVoices[0] || null;
 }
 
 export function speakBellaText(
@@ -86,9 +91,12 @@ export function speakBellaText(
   onEnd?: () => void,
   customVoice?: SpeechSynthesisVoice | null
 ) {
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    if (onEnd) onEnd();
+    return;
+  }
 
-  // Remove Emojis (incluindo o robô 🚀, ✨, 🏆, etc.), códigos JSON, markdown e palavras de erro
+  // Limpa Emojis, caracteres especiais e palavras que leitores de tela pronunciam
   const cleanText = text
     .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F300}-\u{1F5FF}]/gu, "")
     .replace(/🚀|✨|🏆|💡|📊|🤖|✴|●|🟢|⚠️|[\u2000-\u3300]/g, "")
@@ -96,7 +104,7 @@ export function speakBellaText(
     .replace(/```[\s\S]*?```/g, "")
     .replace(/\{[\s\S]*?\}/g, "")
     .replace(/[*_#`~{}]/g, "")
-    .replace(/foguete/gi, "") // Remove a palavra falada "foguete" que o leitor de tela do Chrome lê do emoji 🚀
+    .replace(/foguete|emoji/gi, "")
     .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -115,9 +123,9 @@ export function speakBellaText(
     msg.voice = voice;
   }
 
-  // Ritmo rápido, dinâmico e tom feminino vibrante
-  msg.rate = 1.18;
-  msg.pitch = 1.30;
+  // Configuração de voz feminina vibrante, alegre e dinâmica
+  msg.rate = 1.15;  // Ritmo alegre e fluído
+  msg.pitch = 1.30; // Tom feminino elevado e entusiasmado
 
   msg.onstart = () => {
     if (onStart) onStart();

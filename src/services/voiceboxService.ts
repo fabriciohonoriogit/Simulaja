@@ -166,15 +166,15 @@ Dessa forma, você conquista seu objetivo com total planejamento e sem pagar jur
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "pt-BR";
-        utterance.rate = 0.95; // Ritmo mais calmo e natural
-        utterance.pitch = 0.92; // Tom grave e humano
+        utterance.rate = 1.15; // Ritmo alegre e fluído
+        utterance.pitch = 1.30; // Tom feminino elevado e vibrante
 
         const voices = window.speechSynthesis.getVoices();
         const brVoice = voices.find(
           (v) =>
             v.lang.includes("pt-BR") &&
-            (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Luciana") || v.name.includes("Daniel"))
-        ) || voices.find((v) => v.lang.includes("pt"));
+            (v.name.includes("Francisca") || v.name.includes("Thalita") || v.name.includes("Maria") || v.name.includes("Luciana") || v.name.includes("Giovanna") || v.name.includes("Google") || v.name.includes("Natural"))
+        ) || voices.find((v) => v.lang.includes("pt") && !v.name.includes("Daniel") && !v.name.includes("Ricardo"));
 
         if (brVoice) utterance.voice = brVoice;
         window.speechSynthesis.speak(utterance);
