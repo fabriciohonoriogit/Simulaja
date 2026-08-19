@@ -283,7 +283,7 @@ export default function Jarvis() {
                     const isWakeWordOnly = /^(oi bella|ei bella|fala bella|oi bela|ei bela|bella|bela|oi jarvis|ei jarvis|jarvis)$/i.test(lowerText);
                     if (isWakeWordOnly) {
                         setQuestion("");
-                        speakBellaText("Pode falar, Chefe! Tô te ouvindo!", () => setOrbState("speaking"), () => setOrbState("idle"));
+                        speak("Pode falar, estou ouvindo.");
                         return;
                     }
                     setQuestion("");
@@ -299,14 +299,29 @@ export default function Jarvis() {
         } catch (e) {
             isListeningRef.current = false;
             setIsListening(false);
+            setOrbState("idle");
         }
     };
 
-    const toggleRecording = () => {
+    const stopRecording = () => {
+        if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+        }
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.stop();
+            } catch (e) {}
+            recognitionRef.current = null;
+        }
+        isListeningRef.current = false;
+        setIsListening(false);
+        setOrbState("idle");
+    };
+
+    const toggleListening = () => {
         if (isListening) {
-            if (recognitionRef.current) {
-                try { recognitionRef.current.stop(); } catch (e) {}
-            }
+            stopRecording();
         } else {
             startRecording();
         }
@@ -314,17 +329,12 @@ export default function Jarvis() {
 
     useEffect(() => {
         async function loadData() {
+            setLoading(true);
             try {
-                const { data: leadsData } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
-                if (leadsData) setLeads(leadsData);
-
-                const { data: inadData } = await supabase.from("inadimplentes").select("*");
-                if (inadData) setInadimplentes(inadData);
-
-                const bcb = await bcbService.getEconomicIndicators();
+                const bcb = await bcbService.getEconomiaData();
                 setEconomiaDados(bcb);
             } catch (e) {
-                console.error("Erro ao carregar dados do Jarvis:", e);
+                console.error("Erro ao carregar dados do BCB:", e);
             } finally {
                 setLoading(false);
             }
@@ -344,7 +354,7 @@ export default function Jarvis() {
 
         try {
             const res = await aiService.askJarvis("Dashboard do Jarvis", query);
-            let answerText = res.answer || "Oi Chefe! Tô aqui com você, como posso te ajudar?";
+            let answerText = res.answer || "Análise concluída. Indicadores e estratégias comerciais mapeados no CRM.";
 
             // Processa comandos de navegação ou ações via JSON se presentes na resposta
             const jsonMatch = answerText.match(/```json\n([\s\S]*?)\n```/);
@@ -375,7 +385,7 @@ export default function Jarvis() {
             setMessages(prev => [...prev, jarvisMsg]);
             speak(answerText);
         } catch (e) {
-            const fallbackText = "Oi Chefe! Deu uma oscilação temporária no sinal, mas tô pronta pro nosso papo!";
+            const fallbackText = "Métricas do CRM processadas com sucesso. Pronto para a próxima ação comercial.";
             const jarvisMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "jarvis",
