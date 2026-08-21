@@ -112,15 +112,23 @@ export default function Carteira() {
 
   useEffect(() => {
     fetchClientes();
-  }, []);
+  }, [profile?.organizacao_id]);
 
   const fetchClientes = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from("carteira").select("*").order("nome");
+      let query = supabase.from("carteira").select("*");
+      if (profile?.organizacao_id) {
+        query = query.eq("organizacao_id", profile.organizacao_id);
+      }
+      const { data, error } = await query.order("nome");
       if (error) throw error;
       
-      const { data: globalHistory } = await supabase.from("cotas_contempladas").select("*").order("created_at", { ascending: false }).limit(20);
+      let historyQuery = supabase.from("cotas_contempladas").select("*");
+      if (profile?.organizacao_id) {
+        historyQuery = historyQuery.eq("organizacao_id", profile.organizacao_id);
+      }
+      const { data: globalHistory } = await historyQuery.order("created_at", { ascending: false }).limit(20);
       if (globalHistory) setTodasCotasContempladas(globalHistory);
       
       // Lógica de Deduplicação Silenciosa - Baseada em Nome + Grupo + Cota
@@ -156,11 +164,13 @@ export default function Carteira() {
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
 
+        let leadQuery = supabase.from("leads").select("id, status_updated_at").in("id", leadIds);
+        if (profile?.organizacao_id) {
+          leadQuery = leadQuery.eq("organizacao_id", profile.organizacao_id);
+        }
+
         const [{ data: leadDates }, { data: lanceInteractions }] = await Promise.all([
-          supabase
-            .from("leads")
-            .select("id, status_updated_at")
-            .in("id", leadIds),
+          leadQuery,
           supabase
             .from("historico_contatos")
             .select("lead_id")
@@ -242,10 +252,11 @@ export default function Carteira() {
       }
 
       // PARTE 3: Cruzamento em tempo real com tabela de inadimplentes ativos
-      const { data: activeInadimplentes } = await supabase
-        .from("inadimplentes")
-        .select("grupo, cota")
-        .neq("status", "regularizado");
+      let inadQuery = supabase.from("inadimplentes").select("grupo, cota").neq("status", "regularizado");
+      if (profile?.organizacao_id) {
+        inadQuery = inadQuery.eq("organizacao_id", profile.organizacao_id);
+      }
+      const { data: activeInadimplentes } = await inadQuery;
 
       const activeInadimplenteKeys = new Set(
         (activeInadimplentes || []).map(i => `${formatToFourDigits(i.grupo)}-${formatToFourDigits(i.cota)}`)
@@ -423,10 +434,11 @@ export default function Carteira() {
   const handleSyncData = async () => {
     setLoading(true);
     try {
-      const { data: carteiraItems, error: cErr } = await supabase
-        .from("carteira")
-        .select("id, lead_id, data_adesao")
-        .not("lead_id", "is", null);
+      let cQuery = supabase.from("carteira").select("id, lead_id, data_adesao").not("lead_id", "is", null);
+      if (profile?.organizacao_id) {
+        cQuery = cQuery.eq("organizacao_id", profile.organizacao_id);
+      }
+      const { data: carteiraItems, error: cErr } = await cQuery;
 
       if (cErr) throw cErr;
 
@@ -462,8 +474,14 @@ export default function Carteira() {
       }
 
       // NOVO: Sincronização por Nome para itens sem lead_id ou com dados suspeitos
-      const { data: allCarteira } = await supabase.from("carteira").select("*");
-      const { data: allLeadsVendidos } = await supabase.from("leads").select("*").in("status", ["fechado", "venda_fechada"]);
+      let allCarteiraQuery = supabase.from("carteira").select("*");
+      let allLeadsQuery = supabase.from("leads").select("*").in("status", ["fechado", "venda_fechada"]);
+      if (profile?.organizacao_id) {
+        allCarteiraQuery = allCarteiraQuery.eq("organizacao_id", profile.organizacao_id);
+        allLeadsQuery = allLeadsQuery.eq("organizacao_id", profile.organizacao_id);
+      }
+      const { data: allCarteira } = await allCarteiraQuery;
+      const { data: allLeadsVendidos } = await allLeadsQuery;
 
       if (allCarteira && allLeadsVendidos) {
         for (const c of allCarteira) {
@@ -503,14 +521,17 @@ export default function Carteira() {
       toast({ title: `Sincronização concluída: ${syncCount} registros ajustados.` });
 
       // PARTE 2: Recuperar leads vendidos que não estão na carteira
-      const { data: vendidos } = await supabase
-        .from("leads")
-        .select("*")
-        .in("status", ["fechado", "venda_fechada"]);
+      let vendidosQuery = supabase.from("leads").select("*").in("status", ["fechado", "venda_fechada"]);
+      let currentCarteiraQuery = supabase.from("carteira").select("lead_id");
+      if (profile?.organizacao_id) {
+        vendidosQuery = vendidosQuery.eq("organizacao_id", profile.organizacao_id);
+        currentCarteiraQuery = currentCarteiraQuery.eq("organizacao_id", profile.organizacao_id);
+      }
+      const { data: vendidos } = await vendidosQuery;
+      const { data: currentCarteira } = await currentCarteiraQuery;
 
       if (vendidos && vendidos.length > 0) {
         // Pegar todos os lead_ids que JÁ estão na carteira após a primeira parte
-        const { data: currentCarteira } = await supabase.from("carteira").select("lead_id");
         const existingIds = new Set((currentCarteira || []).map(i => i.lead_id));
         
         let restoredCount = 0;
