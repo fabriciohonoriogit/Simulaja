@@ -29,6 +29,8 @@ export const useAuth = (): UseAuthReturn => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchProfile = async (userId: string, userEmail?: string) => {
       try {
         const { data: profileData } = await supabase
@@ -37,50 +39,69 @@ export const useAuth = (): UseAuthReturn => {
           .eq("id", userId)
           .maybeSingle();
 
-        if (profileData) {
-          setProfile(profileData as Profile);
-          setRole(profileData.tipo_acesso ?? "vendedor");
-        } else {
-          const fallback: Profile = {
-            id: userId,
-            nome_completo: userEmail?.split("@")[0] || "Usuário",
-            tipo_acesso: "vendedor",
-            organizacao_id: null,
-          };
-          setProfile(fallback);
-          setRole("vendedor");
+        if (mounted) {
+          if (profileData) {
+            setProfile(profileData as Profile);
+            setRole(profileData.tipo_acesso ?? "vendedor");
+          } else {
+            const fallback: Profile = {
+              id: userId,
+              nome_completo: userEmail?.split("@")[0] || "Usuário",
+              tipo_acesso: "vendedor",
+              organizacao_id: null,
+            };
+            setProfile(fallback);
+            setRole("vendedor");
+          }
         }
       } catch (e) {
         console.error("Erro ao buscar perfil:", e);
-        setRole("vendedor");
+        if (mounted) setRole("vendedor");
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        if (!mounted) return;
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchProfile(session.user.id, session.user.email);
+          fetchProfile(session.user.id, session.user.email).finally(() => {
+            if (mounted) setLoading(false);
+          });
         } else {
           setProfile(null);
           setRole(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id, session.user.email).finally(() => setLoading(false));
+        fetchProfile(session.user.id, session.user.email).finally(() => {
+          if (mounted) setLoading(false);
+        });
       } else {
         setLoading(false);
       }
+    }).catch(() => {
+      if (mounted) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Timeout de segurança para evitar que o mobile fique preso em loading
+    const timer = setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 3000);
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {

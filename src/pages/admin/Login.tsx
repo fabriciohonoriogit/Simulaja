@@ -54,12 +54,28 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      setError(error.message || "E-mail ou senha inválidos.");
-    } else {
-      navigate("/admin");
+
+    try {
+      // Timeout de segurança de 10s para redes móveis
+      const timeoutPromise = new Promise<{ error: any }>((_, reject) =>
+        setTimeout(() => reject(new Error("Tempo limite de resposta excedido. Tente novamente.")), 10000)
+      );
+
+      const res = await Promise.race([
+        signIn(email.trim(), password),
+        timeoutPromise
+      ]);
+
+      if (res.error) {
+        setError(res.error.message || "E-mail ou senha inválidos.");
+        setLoading(false);
+      } else {
+        window.location.href = "/admin";
+      }
+    } catch (err: any) {
+      console.error("Login catch error:", err);
+      setError(err.message || "Erro ao conectar. Verifique sua conexão.");
+      setLoading(false);
     }
   };
 
