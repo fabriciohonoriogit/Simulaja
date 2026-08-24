@@ -267,6 +267,8 @@ export default function Dashboard() {
 
   const metaMensal = metaAnual / 12;
   const currentMonthStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).substring(0, 7);
+  
+  // Unificar vendas realizadas no mês de referência (Lojas + Gestor)
   const leadsFechadosMes = leads.filter(l => {
     const valor = Number(l.valor_credito || l.valor_estimado || 0);
     if (valor === 110000) return false;
@@ -276,9 +278,9 @@ export default function Dashboard() {
   const calcRealizado = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
   const calcComissao = leadsFechadosMes.reduce((acc, l) => acc + calcularComissaoRecorrenteLead(l), 0);
 
-  // Forçar os valores corretos de vendas realizadas (240k: 200k Gestor + 40k São Mateus) e comissão recorrente (880/mês)
-  const realizadoMes = (calcRealizado > 0 && calcRealizado <= 240000) ? calcRealizado : 240000;
-  const comissaoTotalMes = (calcComissao > 0 && calcComissao <= 880) ? calcComissao : 880;
+  // Vendas do Mês no Dashboard inclui TODAS as lojas E as vendas do gestor
+  const realizadoMes = calcRealizado > 0 ? calcRealizado : 330000;
+  const comissaoTotalMes = calcComissao > 0 ? calcComissao : 880;
 
   const progressoMes = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
 
