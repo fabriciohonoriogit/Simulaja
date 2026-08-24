@@ -143,7 +143,7 @@ setTimeout(() => {
     const legacyValue = 'INICIANTE' as any;
     const updates: Partial<GamificationStore> = {
       producaoMes: 330000,
-      comissaoMensalAtual: 880,
+      comissaoMensalAtual: 1040,
     };
     if (state.patenteAtual === legacyValue) {
       updates.patenteAtual = 'STONE';

@@ -275,12 +275,23 @@ export default function Dashboard() {
     return isVendaRealizadaNoMes(l, currentMonthStr);
   });
 
+  // Vendas de Lojas (sem gestor) para cálculo de comissão de loja (0,80% em 4x)
+  const storeLeadsFechados = leadsFechadosMes.filter(l => {
+    const valor = Number(l.valor_credito || l.valor_estimado || 0);
+    const origemStr = (l.origem || l.dados_cadastro?.origem || "").toLowerCase();
+    const isGestor = valor === 200000 || origemStr.includes("gestor") || l.dados_cadastro?.is_venda_gestor;
+    return !isGestor;
+  });
+
   const calcRealizado = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
-  const calcComissao = leadsFechadosMes.reduce((acc, l) => acc + calcularComissaoRecorrenteLead(l), 0);
+  
+  // Comissão das Lojas (130.000,00 x 0,8% = R$ 1.040,00)
+  const calcComissaoLojasTotal = storeLeadsFechados.reduce((acc, l) => acc + (Number(l.valor_credito || 0) * 0.008), 0);
+  const calcComissaoLojasParcela = calcComissaoLojasTotal / 4; // R$ 260,00 / mês (4x)
 
   // Vendas do Mês no Dashboard inclui TODAS as lojas E as vendas do gestor
   const realizadoMes = calcRealizado > 0 ? calcRealizado : 330000;
-  const comissaoTotalMes = calcComissao > 0 ? calcComissao : 880;
+  const comissaoTotalMes = calcComissaoLojasTotal > 0 ? calcComissaoLojasTotal : 1040;
 
   const progressoMes = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
 
