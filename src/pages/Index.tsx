@@ -95,13 +95,7 @@ const Index = () => {
       {/* 1ª DOBRA - Hero (Clean Light) */}
       <Hero />
 
-      {/* 2ª SEÇÃO - Tipos de Consórcio (Clean Light) */}
-      <SegmentCards />
-
-      {/* GALERIA EXCLUSIVA DE BANNERS - CONSÓRCIO MAGALU PR/SC */}
-      <MagaluGalleryCarousel />
-
-      {/* 3ª SEÇÃO - SIMULADOR (Fundo Azul Tech com Partículas e Container Estendido) */}
+      {/* 2ª SEÇÃO - SIMULADOR INTELIGENTE (Fundo Azul Tech com Partículas e Container Estendido) */}
       <div id="simulator" className="scroll-mt-20">
         <section className="py-24 bg-[#070D19] text-white relative overflow-hidden border-t border-b border-slate-800">
           
@@ -146,19 +140,11 @@ const Index = () => {
         </section>
       </div>
 
-      {/* 4ª SEÇÃO - Como Funciona (4 Etapas Clean) */}
+      {/* 3ª SEÇÃO - Como Funciona (4 Etapas Clean) */}
       <HowItWorks />
 
-      {/* 5ª SEÇÃO - Depoimentos (Clean) */}
-
-      {/* 6ª SEÇÃO - Depoimentos (Clean) */}
+      {/* 4ª SEÇÃO - Depoimentos (Clean) */}
       <Testimonials />
-
-      {/* 7ª SEÇÃO - Perguntas Frequentes (Accordion Clean) */}
-      <FaqAccordion />
-
-      {/* 8ª SEÇÃO - CTA Final (Navy & Gold Accent) */}
-      <FinalCTA />
 
       {/* Footer */}
       <Footer />
