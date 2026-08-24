@@ -149,9 +149,14 @@ export function useFunil() {
 
   // ── Função reutilizável de fetch de leads ───────────────────────────────
   const fetchLeads = useCallback(async () => {
+    if (!profile?.organizacao_id) {
+      setLoading(false);
+      return;
+    }
     const { data, error } = await supabase
       .from("leads")
       .select("*")
+      .eq("organizacao_id", profile.organizacao_id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -171,7 +176,7 @@ export function useFunil() {
     }));
     setLeads(fetchedLeads);
     setLoading(false);
-  }, []);
+  }, [profile?.organizacao_id]);
 
   // refetch público para uso em outras páginas (ex: Leads.tsx)
   const refetch = useCallback(async () => {
