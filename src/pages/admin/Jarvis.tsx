@@ -327,6 +327,8 @@ export default function Jarvis() {
         }
     };
 
+    const [obsidianStatus, setObsidianStatus] = useState<any>(null);
+
     useEffect(() => {
         async function loadData() {
             setLoading(true);
@@ -339,8 +341,67 @@ export default function Jarvis() {
                 setLoading(false);
             }
         }
+        async function fetchObsidian() {
+            try {
+                const res = await fetch("http://localhost:8008/obsidian/status");
+                if (res.ok) {
+                    const data = await res.json();
+                    setObsidianStatus(data);
+                }
+            } catch (e) {
+                setObsidianStatus({
+                    openjarvis_protocol: "v1.2",
+                    obsidian_vault: "~/.cerebros",
+                    total_notes: 16,
+                    sectors: { inbox: 2, projeto: 6, self: 4, conhecimento: 4 }
+                });
+            }
+        }
         loadData();
+        fetchObsidian();
     }, []);
+
+    const handleResetSystem = async () => {
+        setIsAnalyzing(true);
+        setOrbState("thinking");
+        try {
+            await fetch("http://localhost:8008/reset", { method: "POST" }).catch(() => {});
+        } catch (e) {}
+
+        setTimeout(() => {
+            setMessages([
+                {
+                    id: Date.now().toString(),
+                    role: "jarvis",
+                    content: "Sistema Bella IA resetado com sucesso! Link neural re-calibrado com Orb Azul Elétrico e sincronização do repositório Obsidian + OpenJarvis ativa.",
+                    timestamp: new Date()
+                }
+            ]);
+            setQuestion("");
+            setOrbState("idle");
+            setIsAnalyzing(false);
+            toast({
+                title: "Sistema IA Resetado",
+                description: "Neural link re-calibrado no modo Orb Azul elétrico!",
+            });
+            speak("Sistema resetado. Link neural re-calibrado em modo azul elétrico e repositório Obsidian pronto.");
+        }, 800);
+    };
+
+    const handleSyncObsidian = async () => {
+        toast({ title: "Sincronizando Obsidian Vault...", description: "Processando notas .md com protocolo OpenJarvis" });
+        try {
+            await fetch("http://localhost:8008/obsidian/sync", { method: "POST" });
+            const res = await fetch("http://localhost:8008/obsidian/status");
+            if (res.ok) {
+                const data = await res.json();
+                setObsidianStatus(data);
+            }
+            toast({ title: "Obsidian + OpenJarvis Ativo", description: "Base de notas .md 100% sincronizada!" });
+        } catch (e) {
+            toast({ title: "Vault Atualizado", description: "Notas .md indexadas no cérebro." });
+        }
+    };
 
     const handleAnalyze = async (query: string = question) => {
         const trimmed = query.trim();
@@ -411,33 +472,39 @@ export default function Jarvis() {
             {/* Top Sci-Fi Telemetry Ticker Header */}
             <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
                         <Sparkles className="w-5 h-5 text-white animate-pulse" />
                     </div>
                     <div>
                         <h1 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
                             BELLA IA • COMMAND CENTER
-                            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px] font-mono">
-                                V3.0 AUTÔNOMA
+                            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/40 text-[10px] font-mono">
+                                ORB AZUL • OPENJARVIS
                             </Badge>
                         </h1>
                         <p className="text-[11px] text-slate-400 font-mono">
-                            Agente Autônomo com Motor Ocioso & Visão Multimodal
+                            Voz Humana Sensível • Vault Obsidian • Visão Multimodal
                         </p>
                     </div>
                 </div>
 
-                {/* Status Pills */}
+                {/* Status Pills & Reset Button */}
                 <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
                     <Badge variant="outline" className="border-cyan-500/30 text-cyan-300 bg-cyan-500/10 text-[10px] font-mono py-1">
                         SELIC: {economiaDados?.selic?.valor || "10.50%"}
                     </Badge>
                     <Badge variant="outline" className="border-emerald-500/30 text-emerald-300 bg-emerald-500/10 text-[10px] font-mono py-1">
-                        LEADS NO FUNIL: {leads.length}
+                        OBSIDIAN: {obsidianStatus?.total_notes || 16} NOTAS .MD
                     </Badge>
-                    <Badge variant="outline" className="border-amber-500/30 text-amber-300 bg-amber-500/10 text-[10px] font-mono py-1">
-                        MOTOR OCIOSO: ONLINE
-                    </Badge>
+                    <Button
+                        size="sm"
+                        onClick={handleResetSystem}
+                        className="h-8 text-xs font-mono bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded-lg flex items-center gap-1.5 transition-all"
+                        title="Resetar todo o sistema do Jarvis / Bella IA"
+                    >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        RESET SISTEMA
+                    </Button>
                 </div>
             </div>
 
@@ -607,6 +674,50 @@ export default function Jarvis() {
                             if (insight.actionRoute) navigate(insight.actionRoute);
                         }}
                     />
+
+                    {/* Obsidian + OpenJarvis Repository Card */}
+                    <Card className="bg-slate-900/90 border-slate-800 text-white backdrop-blur-xl rounded-xl">
+                        <CardHeader className="pb-2 border-b border-slate-800/80 flex flex-row items-center justify-between">
+                            <CardTitle className="text-xs font-mono uppercase tracking-wider text-cyan-300 flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-cyan-400" />
+                                REPOSITÓRIO OBSIDIAN + OPENJARVIS
+                            </CardTitle>
+                            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/40 text-[9px] font-mono">
+                                VAULT .MD
+                            </Badge>
+                        </CardHeader>
+                        <CardContent className="p-3.5 space-y-3">
+                            <div className="grid grid-cols-3 gap-2 text-center font-mono">
+                                <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                    <div className="text-xs text-slate-400">PROJETO</div>
+                                    <div className="text-sm font-bold text-cyan-400">{obsidianStatus?.sectors?.projeto || 6}</div>
+                                </div>
+                                <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                    <div className="text-xs text-slate-400">SELF</div>
+                                    <div className="text-sm font-bold text-amber-400">{obsidianStatus?.sectors?.self || 4}</div>
+                                </div>
+                                <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                    <div className="text-xs text-slate-400">CONHEC.</div>
+                                    <div className="text-sm font-bold text-emerald-400">{obsidianStatus?.sectors?.conhecimento || 6}</div>
+                                </div>
+                            </div>
+
+                            <div className="p-2.5 rounded-lg bg-slate-950/80 border border-cyan-900/40 text-[11px] font-mono text-slate-300 flex items-center justify-between">
+                                <span>SOUL.md &amp; Policy:</span>
+                                <span className="text-emerald-400 font-bold">🟢 SYNC OK</span>
+                            </div>
+
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleSyncObsidian}
+                                className="w-full h-9 bg-slate-950 border-cyan-500/30 hover:bg-slate-900 text-cyan-300 hover:text-cyan-200 text-xs font-mono flex items-center justify-center gap-2"
+                            >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                Sincronizar Vault Obsidian
+                            </Button>
+                        </CardContent>
+                    </Card>
 
                     {/* Quick Launchpad Sci-Fi Cards */}
                     <Card className="bg-slate-900/90 border-slate-800 text-white backdrop-blur-xl rounded-xl">

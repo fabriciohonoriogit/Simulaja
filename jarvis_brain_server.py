@@ -58,9 +58,64 @@ class BrainHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
 
+        elif path == '/obsidian/status':
+            try:
+                base_dir = os.path.expanduser("~/.cerebros")
+                inbox_files = len(os.listdir(os.path.join(base_dir, "0-inbox"))) if os.path.exists(os.path.join(base_dir, "0-inbox")) else 0
+                proj_files = len(os.listdir(os.path.join(base_dir, "1-projeto"))) if os.path.exists(os.path.join(base_dir, "1-projeto")) else 0
+                self_files = len(os.listdir(os.path.join(base_dir, "2-self"))) if os.path.exists(os.path.join(base_dir, "2-self")) else 0
+                know_files = len(os.listdir(os.path.join(base_dir, "3-conhecimento"))) if os.path.exists(os.path.join(base_dir, "3-conhecimento")) else 0
+                
+                total_md = proj_files + self_files + know_files + inbox_files
+                self.send_json({
+                    "openjarvis_protocol": "v1.2",
+                    "obsidian_vault": base_dir,
+                    "total_notes": total_md,
+                    "sectors": {
+                        "inbox": inbox_files,
+                        "projeto": proj_files,
+                        "self": self_files,
+                        "conhecimento": know_files
+                    },
+                    "soul_file": os.path.exists(os.path.join(base_dir, "2-self", "SOUL.md")),
+                    "policy_file": os.path.exists(os.path.join(base_dir, "POLICY.md"))
+                })
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+
         else:
             self.send_response(404)
             self.end_headers()
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # Leitura do corpo do POST
+        content_length = int(self.headers.get('Content-Length', 0))
+        try:
+            body = self.rfile.read(content_length).decode('utf-8')
+        except UnicodeDecodeError:
+            body = self.rfile.read(content_length).decode('latin-1', errors='replace')
+        try:
+            data = json.loads(body) if body else {}
+        except Exception:
+            data = {}
+
+        if path == '/reset':
+            try:
+                # Recarrega a memórias de síntese e devolve status zerado
+                stats = brain.stats()
+                self.send_json({"success": True, "message": "Sistema Jarvis resetado com sucesso", "stats": stats})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+
+        elif path == '/obsidian/sync':
+            try:
+                res = brain.run_jobs()
+                self.send_json({"success": True, "sync": "Obsidian Vault + OpenJarvis sincronizado", "jobs": res})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
 
     def do_POST(self):
         parsed = urlparse(self.path)

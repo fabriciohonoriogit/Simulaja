@@ -1,4 +1,4 @@
-// Helper para carregar e selecionar vozes femininas de alta qualidade e entusiasmadas no Web Speech API
+// Helper para carregar e selecionar vozes humanas com sensibilidade e alta naturalidade no Web Speech API
 
 let availableVoices: SpeechSynthesisVoice[] = [];
 
@@ -29,9 +29,9 @@ export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
 
   if (ptVoices.length === 0) return null;
 
-  // Nomes de vozes femininas prioritárias em navegadores e sistemas operacionais (Windows, Edge, Chrome, Mac, iOS, Android)
+  // Nomes de vozes femininas neurais prioritárias com alta sensibilidade e dicção humana natural
   const priorityFemaleVoices = [
-    "francisca", // Microsoft Francisca Online (Natural) - PT-BR
+    "francisca", // Microsoft Francisca Online (Natural) - PT-BR (Altíssima qualidade e empatia)
     "thalita",   // Microsoft Thalita Online (Natural) - PT-BR
     "giovanna",
     "luciana",
@@ -69,7 +69,7 @@ export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
     "masculino",
   ];
 
-  // 1. Procura primeiro pelas vozes femininas prioritárias em português
+  // 1. Procura pelas vozes neurais prioritárias em português
   for (const keyword of priorityFemaleVoices) {
     const found = ptVoices.find((v) => v.name.toLowerCase().includes(keyword));
     if (found) return found;
@@ -96,7 +96,7 @@ export function speakBellaText(
     return;
   }
 
-  // Limpa Emojis, caracteres especiais e palavras que leitores de tela pronunciam
+  // Limpa Emojis, caracteres técnicos, blocos JSON, URLs e formatações markdown
   const cleanText = text
     .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F300}-\u{1F5FF}]/gu, "")
     .replace(/🚀|✨|🏆|💡|📊|🤖|✴|●|🟢|⚠️|[\u2000-\u3300]/g, "")
@@ -106,6 +106,7 @@ export function speakBellaText(
     .replace(/[*_#`~{}]/g, "")
     .replace(/foguete|emoji/gi, "")
     .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, "")
+    .replace(/https?:\/\/\S+/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -115,33 +116,61 @@ export function speakBellaText(
   }
 
   window.speechSynthesis.cancel();
-  const msg = new SpeechSynthesisUtterance(cleanText);
-  msg.lang = "pt-BR";
+
+  // Divide o texto em frases para permitir entonação suave, sensível e pausas humanas naturais
+  const sentences = cleanText
+    .split(/(?<=[.!?])\s+/)
+    .filter((s) => s.trim().length > 0);
+
+  if (sentences.length === 0) {
+    if (onEnd) onEnd();
+    return;
+  }
 
   const voice = customVoice || getBestFemaleVoice();
-  if (voice) {
-    msg.voice = voice;
-  }
+  let currentIndex = 0;
 
-  // Configuração de voz feminina vibrante, alegre e dinâmica
-  msg.rate = 1.15;  // Ritmo alegre e fluído
-  msg.pitch = 1.30; // Tom feminino elevado e entusiasmado
+  const speakNextSentence = () => {
+    if (currentIndex >= sentences.length) {
+      if (onEnd) onEnd();
+      return;
+    }
 
-  msg.onstart = () => {
-    if (onStart) onStart();
+    const sentence = sentences[currentIndex];
+    const msg = new SpeechSynthesisUtterance(sentence);
+    msg.lang = "pt-BR";
+
+    if (voice) {
+      msg.voice = voice;
+    }
+
+    // Configuração de tom humano quente, natural e sensível (prosódia orgânica)
+    // Ritmo próximo ao da fala humana empática (1.02) e tom de voz aveludado (1.12)
+    msg.rate = 1.02;
+    msg.pitch = 1.12;
+
+    if (currentIndex === 0 && onStart) {
+      msg.onstart = () => onStart();
+    }
+
+    msg.onend = () => {
+      currentIndex++;
+      // Adiciona uma micro-pausa sensível entre frases (120ms) para respiro natural
+      setTimeout(speakNextSentence, 120);
+    };
+
+    msg.onerror = () => {
+      currentIndex++;
+      speakNextSentence();
+    };
+
+    try {
+      window.speechSynthesis.speak(msg);
+    } catch (e) {
+      if (onEnd) onEnd();
+    }
   };
 
-  msg.onend = () => {
-    if (onEnd) onEnd();
-  };
-
-  msg.onerror = () => {
-    if (onEnd) onEnd();
-  };
-
-  try {
-    window.speechSynthesis.speak(msg);
-  } catch (e) {
-    if (onEnd) onEnd();
-  }
+  speakNextSentence();
 }
+

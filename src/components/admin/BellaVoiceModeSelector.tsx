@@ -76,28 +76,12 @@ export function BellaVoiceModeSelector({
         })}
       </div>
 
-      {/* Selector de Temas do Orb (Sci-Fi Aesthetics) */}
+      {/* Indicador do Orb Azul Clássico Assinatura */}
       <div className="flex items-center gap-2 border-t sm:border-t-0 sm:border-l border-slate-800 pt-2 sm:pt-0 sm:pl-3 w-full sm:w-auto justify-end">
-        <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1">
-          <Palette className="w-3 h-3 text-amber-400" />
-          TEMA:
-        </span>
-        <div className="flex items-center gap-1.5">
-          {themes.map((t) => (
-            <button
-              key={t.id}
-              title={t.label}
-              onClick={() => onThemeChange(t.id)}
-              className={`w-5 h-5 rounded-full transition-all flex items-center justify-center border ${
-                currentTheme === t.id
-                  ? "scale-110 border-white ring-2 ring-amber-500/50 shadow-md"
-                  : "border-slate-700 opacity-60 hover:opacity-100"
-              }`}
-            >
-              <span className={`w-3 h-3 rounded-full ${t.colorClass}`} />
-            </button>
-          ))}
-        </div>
+        <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/40 text-cyan-300 text-[11px] font-mono py-1 flex items-center gap-1.5 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping shadow-[0_0_8px_#38bdf8]" />
+          ORB AZUL NEURAL
+        </Badge>
       </div>
     </div>
   );
