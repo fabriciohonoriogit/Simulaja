@@ -326,6 +326,7 @@ export default function Jarvis() {
             startRecording();
         }
     };
+    const toggleRecording = toggleListening;
 
     const [obsidianStatus, setObsidianStatus] = useState<any>(null);
 
@@ -624,7 +625,7 @@ export default function Jarvis() {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                onClick={toggleRecording}
+                                onClick={toggleListening}
                                 title={isListening ? "Parar Escuta" : "Falar com a Bella"}
                                 className={`h-12 w-12 shrink-0 rounded-xl transition-all ${
                                     isListening
