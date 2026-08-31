@@ -27,6 +27,7 @@ import { useGamificationStore } from "@/stores/gamificationStore";
 import { calcularComissaoRecorrenteLead } from "@/lib/gamificationUtils";
 import { WeatherWidget } from "@/components/admin/WeatherWidget";
 import { LojasDashboardSection } from "@/components/admin/lojas/LojasDashboardSection";
+import { calculateLojasPerformance, getLojasConfig, matchLeadToLoja } from "@/lib/lojasService";
 
 interface Lead {
   id: string;
@@ -268,26 +269,32 @@ export default function Dashboard() {
   const metaMensal = metaAnual / 12;
   const currentMonthStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).substring(0, 7);
   
-  // Unificar vendas realizadas no mês de referência (5 Lojas = 440.000 + Gestor = 200.000 -> Total = 640.000)
+  // Unificar vendas realizadas no mês de referência
   const leadsFechadosMes = leads.filter(l => {
     return isVendaRealizadaNoMes(l, currentMonthStr);
   });
 
-  const calcRealizado = leadsFechadosMes.reduce((acc, l) => {
-    const val = parseBRLValue(l.valor_credito || l.valor_venda || l.valor_estimado || l.dados_cadastro?.valor_credito || 0);
-    // Filtrar falsos positivos legados acima de 200 mil no somatório global
-    if (val > 200000) return acc;
-    return acc + val;
-  }, 0);
   const calcComissao = leadsFechadosMes.reduce((acc, l) => acc + calcularComissaoRecorrenteLead(l), 0);
 
-  // Vendas do Mês no Dashboard = Lojas (440.000,00) + Gestor (200.000,00) = R$ 640.000,00 (STATUS: GOLD OURO)
-  const realizadoMes = 640000;
-  const comissaoTotalMes = calcComissao > 0 ? calcComissao : 1060;
+  // Calcular performance dinâmica interligada das 5 lojas Magalu
+  const lojasConfig = getLojasConfig(profile?.organizacao_id);
+  const lojasPerf = calculateLojasPerformance(leads, lojasConfig, "mes");
+
+  // Vendas do Gestor (leads de venda gestor ou não atribuídos diretamente às 5 filiais)
+  const gestorSales = leadsFechadosMes.filter(l => matchLeadToLoja(l, lojasConfig) === null);
+  const gestorSalesVolume = gestorSales.reduce((acc, l) => {
+    return acc + parseBRLValue(l.valor_credito || l.valor_venda || l.valor_estimado || l.dados_cadastro?.valor_credito || 0);
+  }, 0);
+
+  // Vendas do Mês Interligadas: Somatório das 5 Lojas Magalu + Vendas do Gestor
+  const realizadoMes = lojasPerf.realizadoGlobalMensal + gestorSalesVolume;
+  const comissaoTotalMes = calcComissao > 0 
+    ? calcComissao 
+    : comissoes.reduce((acc, c) => acc + Number(c.comissao_total || 0), 0);
 
   const progressoMes = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
 
-  // Atualizar Gamificação
+  // Atualizar Gamificação com dados 100% integrados em tempo real
   useEffect(() => {
     if (!loading) {
       setProducaoMes(realizadoMes);

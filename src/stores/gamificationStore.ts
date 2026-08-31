@@ -141,17 +141,16 @@ setTimeout(() => {
   try {
     const state = useGamificationStore.getState();
     const legacyValue = 'INICIANTE' as any;
-    const updates: Partial<GamificationStore> = {
-      producaoMes: 330000,
-      comissaoMensalAtual: 1060,
-    };
+    const updates: Partial<GamificationStore> = {};
     if (state.patenteAtual === legacyValue) {
       updates.patenteAtual = 'STONE';
     }
     if (state.previousPatente === legacyValue) {
       updates.previousPatente = null;
     }
-    useGamificationStore.setState(updates);
+    if (Object.keys(updates).length > 0) {
+      useGamificationStore.setState(updates);
+    }
   } catch (e) {
     console.error("Migration error:", e);
   }
