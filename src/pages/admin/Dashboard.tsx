@@ -274,8 +274,6 @@ export default function Dashboard() {
     return isVendaRealizadaNoMes(l, currentMonthStr);
   });
 
-  const calcComissao = leadsFechadosMes.reduce((acc, l) => acc + calcularComissaoRecorrenteLead(l), 0);
-
   // Calcular performance dinâmica interligada das 5 lojas Magalu
   const lojasConfig = getLojasConfig(profile?.organizacao_id);
   const lojasPerf = calculateLojasPerformance(leads, lojasConfig, "mes");
@@ -288,6 +286,15 @@ export default function Dashboard() {
 
   // Vendas do Mês Interligadas: Somatório das 5 Lojas Magalu + Vendas do Gestor
   const realizadoMes = lojasPerf.realizadoGlobalMensal + gestorSalesVolume;
+
+  // 1. Comissão Recorrente Lojas Magalu: (Volume Lojas * 0.80%) / 4 parcelas = R$ 880,00 para R$ 440.000,00
+  const comissaoLojas = (lojasPerf.realizadoGlobalMensal * 0.008) / 4;
+
+  // 2. Comissão Recorrente Vendas do Gestor: (Volume Gestor * 4.00%) / 10 parcelas = R$ 800,00 para R$ 200.000,00
+  const comissaoGestor = (gestorSalesVolume * 0.04) / 10;
+
+  // Comissão Recorrente Mensal Consolidada (ex: 880,00 + 800,00 = R$ 1.680,00/mês)
+  const calcComissao = comissaoLojas + comissaoGestor;
   const comissaoTotalMes = calcComissao > 0 
     ? calcComissao 
     : comissoes.reduce((acc, c) => acc + Number(c.comissao_total || 0), 0);

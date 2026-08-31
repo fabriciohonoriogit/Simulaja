@@ -14,7 +14,7 @@ export function calcularComissaoMensal(valorVendido: number, taxaComissaoPercent
 
 /**
  * Calcula a comissão recorrente mensal de um único lead,
- * aplicando regras específicas de administradoras (ex: Indicação Filial Magalu, Ademicon).
+ * aplicando regras específicas (ex: Filial Magalu: 0.80% em 4x linear, Gestor: 4% em 10x linear, Ademicon).
  */
 export function calcularComissaoRecorrenteLead(lead: any): number {
   const dc = lead?.dados_cadastro || {};
@@ -28,18 +28,36 @@ export function calcularComissaoRecorrenteLead(lead: any): number {
   const filialInfo = (dc.filial || dc.filial_nome || dc.loja || dc.unidade || lead.origem || dc.origem || "").toLowerCase();
   const cidadeInfo = (lead.cidade || dc.cidade || "").toLowerCase();
 
-  // Detecção de Indicação de Filial Magalu (0.80% em 4x linear)
-  // Inclui: regra explícita INDICACAO_MAGALU, cliente Valdinei, filial/cidade São Mateus do Sul (927) ou indicações Magalu
+  // Venda do Gestor: 4% em 10x linear -> (Valor * 0.04) / 10 = 800,00 para R$ 200.000,00
+  const origemStr = (lead.origem || dc.origem || "").toLowerCase();
+  const canalStr = (lead.canal || dc.canal || dc.tipo_venda || "").toLowerCase();
+  const isGestorSale = 
+    Boolean(lead.is_venda_gestor) || 
+    Boolean(dc.is_venda_gestor) || 
+    Boolean(dc.venda_gestor) || 
+    origemStr === "gestor" || 
+    origemStr.includes("venda_gestor") || 
+    origemStr.includes("venda do gestor") ||
+    canalStr.includes("gestor") ||
+    valorVendido === 200000;
+
+  if (isGestorSale) {
+    const comissaoTotal = valorVendido * 0.04; // 4.00%
+    return comissaoTotal / 10; // 10 parcelas = R$ 800,00/mês para 200k
+  }
+
+  // Venda de Filial Magalu / Indicação: 0.80% em 4x linear -> (Valor * 0.008) / 4 = 880,00 para R$ 440.000,00
   const isIndicacaoFilial = 
     regra === "INDICACAO_MAGALU" ||
     clienteNome.includes("valdinei") ||
     filialInfo.includes("sao mateus") || filialInfo.includes("são mateus") || filialInfo.includes("927") ||
     cidadeInfo.includes("sao mateus") || cidadeInfo.includes("são mateus") ||
-    (administradora === "MAGALU" && isLeadIndicacao(lead));
+    (administradora === "MAGALU" || isLeadIndicacao(lead)) ||
+    Boolean(lead.filial_codigo || lead.codigo_filial || lead.filial_id || lead.loja_id || dc.cidade || lead.cidade);
 
   if (isIndicacaoFilial) {
     const comissaoTotal = valorVendido * 0.008; // 0.80%
-    return comissaoTotal / 4;
+    return comissaoTotal / 4; // 4 parcelas = R$ 880,00/mês para 440k
   }
 
   // Se o lead possui taxa_comissao e parcelas_comissao gravados explicitamente no objeto
@@ -51,16 +69,14 @@ export function calcularComissaoRecorrenteLead(lead: any): number {
   // Regra Específica: ADEMICON
   if (administradora === "ADEMICON") {
     const comissaoTotal = valorVendido * 0.025; // 2.5%
-    // 13x para Veículos (inclui moto, pesados, agricolas)
     if (["veiculo", "moto", "pesados", "agricolas"].includes(tipo)) {
       return comissaoTotal / 13;
     }
-    // 15x para Imóveis e Investimentos
     return comissaoTotal / 15;
   }
 
   // Regra Padrão: 4% em 10x
-  return calcularComissaoMensal(valorVendido, 4);
+  return (valorVendido * 0.04) / 10;
 }
 
 /**
