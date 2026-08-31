@@ -37,6 +37,14 @@ export function parseBRLValue(v: unknown): number {
   return isNaN(n) ? 0 : n;
 }
 
+/** Extrai e converte o valor numérico do crédito/venda do lead de forma segura */
+export function getLeadValue(lead: any): number {
+  if (!lead) return 0;
+  const dc = lead.dados_cadastro || {};
+  const raw = lead.valor_credito ?? lead.valor_venda ?? lead.valor_estimado ?? dc.valor_credito ?? dc.valor_venda ?? dc.valor_estimado ?? 0;
+  return parseBRLValue(raw);
+}
+
 /**
  * Verifica se um lead representa uma venda realizada no mês de referência.
  * Exclui vendas retroativas, rascunhos, shadow e verifica a data real de fechamento.
@@ -45,12 +53,10 @@ export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolea
   if (!lead) return false;
   
   const dc = lead.dados_cadastro || {};
-  const valor = Number(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
-
   const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
   const isClosed = [
     "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-    "contrato_assinado", "comissao paga", "comissao_paga"
+    "contrato_assinado", "comissao paga", "comissao_paga", "ganho", "venda"
   ].includes(s) || Boolean(lead.data_adesao || dc.data_venda || dc.data_fechamento);
 
   if (!isClosed) return false;
@@ -58,19 +64,14 @@ export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolea
   const isShadow = lead.origem === "carteira_shadow";
   if (isShadow) return false;
 
-  // 1. Data explícita de venda ou cadastro
-  const explicitSaleDate = dc.data_venda || 
-                           dc.data_fechamento || 
-                           dc.data_adesao || 
-                           lead.data_adesao ||
-                           lead.status_updated_at ||
-                           lead.created_at;
-
-  if (explicitSaleDate) {
-    const saleMonth = String(explicitSaleDate).substring(0, 7);
+  // Se houver data explícita de venda cadastrada (data_venda ou data_fechamento), valida a data
+  if (dc.data_venda || dc.data_fechamento) {
+    const explicitDate = dc.data_venda || dc.data_fechamento;
+    const saleMonth = String(explicitDate).substring(0, 7);
     return saleMonth === targetMonthStr || !targetMonthStr;
   }
 
+  // Leads com status de venda fechada no CRM são considerados vendas ativas no mês
   return true;
 }
 

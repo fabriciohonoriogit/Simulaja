@@ -6,7 +6,7 @@ import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTria
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/SocialIcons";
-import { formatCurrency, formatLeadValue, isVendaRealizadaNoMes } from "@/lib/utils";
+import { formatCurrency, formatLeadValue, isVendaRealizadaNoMes, parseBRLValue } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import DashboardCalendar from "@/components/admin/DashboardCalendar";
 import { format, parseISO } from "date-fns";
@@ -273,7 +273,7 @@ export default function Dashboard() {
     return isVendaRealizadaNoMes(l, currentMonthStr);
   });
 
-  const calcRealizado = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
+  const calcRealizado = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.valor_estimado || l.dados_cadastro?.valor_credito || 0), 0);
   const calcComissao = leadsFechadosMes.reduce((acc, l) => acc + calcularComissaoRecorrenteLead(l), 0);
 
   // Vendas do Mês no Dashboard inclui TODAS as lojas E as vendas do gestor (330.000,00)

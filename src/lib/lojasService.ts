@@ -156,7 +156,7 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
   const dc = lead.dados_cadastro || {};
   
   // Vendas do Gestor (ex: 200 mil ou com a flag de gestor) não entram como meta da loja
-  const valorCredito = Number(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
+  const valorCredito = parseBRLValue(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
   const origemStr = normalizeStr(lead.origem || dc.origem || "");
   const canalStr = normalizeStr(lead.canal || dc.canal || dc.tipo_venda || "");
   
@@ -174,7 +174,40 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     return null; // Pertence ao gestor, não entra para a meta da loja
   }
 
-  // 1. Verificação por código/ID de filial no topo do lead ou no dados_cadastro (prioridade máxima)
+  const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
+  const indicadorInfoStr = normalizeStr(
+    lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
+    dc.indicador_nome || dc.indicador || dc.indicacao || dc.indicado_por || dc.quem_indicou || ""
+  );
+
+  // 0. Overrides de Clientes Específicos (Prioridade Máxima):
+  // Angelo / 110k (Canoinhas - 646) | Lucas Matias / Karine (Canoinhas - 646) | Valdinei (São Mateus - 927)
+  if (
+    leadName.includes("angelo") || 
+    leadName.includes("anjo") ||
+    indicadorInfoStr.includes("angelo") ||
+    valorCredito === 110000
+  ) {
+    const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
+    if (canoinhasLoja) return canoinhasLoja;
+  }
+
+  if (leadName.includes("valdinei")) {
+    const saoMateusLoja = lojas.find(l => l.codigo === "927" || normalizeStr(l.cidade).includes("sao mateus"));
+    if (saoMateusLoja) return saoMateusLoja;
+  }
+
+  if (
+    leadName.includes("lucas matias") || 
+    leadName.includes("lucas mathias") || 
+    indicadorInfoStr.includes("karine") || 
+    indicadorInfoStr.includes("carine")
+  ) {
+    const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
+    if (canoinhasLoja) return canoinhasLoja;
+  }
+
+  // 1. Verificação por código/ID de filial no topo do lead ou no dados_cadastro
   const codDirect = String(
     lead.filial_codigo || lead.codigo_filial || lead.filial_id || lead.loja_id || lead.unidade_id ||
     dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || ""
@@ -188,30 +221,6 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
       codDirect.endsWith(l.codigo)
     );
     if (matched) return matched;
-  }
-
-  // Se for o cliente Valdinei, associa diretamente à Filial São Mateus do Sul (927)
-  const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
-  const indicadorInfoStr = normalizeStr(
-    lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
-    dc.indicador_nome || dc.indicador || dc.indicacao || dc.indicado_por || dc.quem_indicou || ""
-  );
-
-  if (leadName.includes("valdinei")) {
-    const saoMateusLoja = lojas.find(l => l.codigo === "927" || normalizeStr(l.cidade).includes("sao mateus"));
-    if (saoMateusLoja) return saoMateusLoja;
-  }
-
-  // Se for o cliente Lucas Matias, Angelo ou indicação Karine, associa diretamente à Filial Canoinhas (646)
-  if (
-    leadName.includes("lucas matias") || 
-    leadName.includes("lucas mathias") || 
-    leadName.includes("angelo") || 
-    indicadorInfoStr.includes("karine") || 
-    indicadorInfoStr.includes("carine")
-  ) {
-    const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
-    if (canoinhasLoja) return canoinhasLoja;
   }
 
   // 2. Verificação por nome/código de filial explícito
@@ -536,8 +545,8 @@ export function calculateLojasPerformance(
       return isClosed && !isShadow && isVendaRealizadaNoMes(l, currentMonthStr);
     });
 
-    const realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
-    const realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
+    const realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    const realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
 
     const realizadoUsado = realizadoPeriodo;
     const leadsFechadosUsados = leadsFechadosPeriodo;

@@ -1,5 +1,6 @@
 import { Patente, PATENTES_CONFIG } from '../types/gamification';
 import { isLeadIndicacao } from './lojasService';
+import { parseBRLValue } from './utils';
 
 /**
  * Calcula a comissão recorrente mensal baseada na fórmula fornecida
@@ -16,10 +17,10 @@ export function calcularComissaoMensal(valorVendido: number, taxaComissaoPercent
  * aplicando regras específicas de administradoras (ex: Indicação Filial Magalu, Ademicon).
  */
 export function calcularComissaoRecorrenteLead(lead: any): number {
-  const valorVendido = Number(lead.valor_credito || lead.valor_estimado || 0);
+  const dc = lead?.dados_cadastro || {};
+  const valorVendido = parseBRLValue(lead?.valor_credito || lead?.valor_venda || lead?.valor_estimado || dc.valor_credito || dc.valor_venda || 0);
   if (!valorVendido) return 0;
 
-  const dc = lead.dados_cadastro || {};
   const administradora = (lead.administradora || dc.administradora || "").toUpperCase();
   const tipo = (lead.tipo_consorcio || dc.tipo_consorcio || "").toLowerCase();
   const regra = (lead.comissao_regra || lead.regra_comissao || dc.comissao_regra || dc.regra_comissao || "").toUpperCase();
