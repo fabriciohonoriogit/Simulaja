@@ -202,10 +202,11 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     if (saoMateusLoja) return saoMateusLoja;
   }
 
-  // Se for o cliente Lucas Matias ou indicação Karine, associa diretamente à Filial Canoinhas (646)
+  // Se for o cliente Lucas Matias, Angelo ou indicação Karine, associa diretamente à Filial Canoinhas (646)
   if (
     leadName.includes("lucas matias") || 
     leadName.includes("lucas mathias") || 
+    leadName.includes("angelo") || 
     indicadorInfoStr.includes("karine") || 
     indicadorInfoStr.includes("carine")
   ) {

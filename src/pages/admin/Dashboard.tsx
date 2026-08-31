@@ -270,8 +270,6 @@ export default function Dashboard() {
   
   // Unificar vendas realizadas no mês de referência (Lojas + Gestor)
   const leadsFechadosMes = leads.filter(l => {
-    const valor = Number(l.valor_credito || l.valor_estimado || 0);
-    if (valor === 110000) return false;
     return isVendaRealizadaNoMes(l, currentMonthStr);
   });
 
