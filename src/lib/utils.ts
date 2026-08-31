@@ -47,9 +47,9 @@ export function isClosedStatus(status: string | null | undefined, lead?: any): b
   const closedTerms = [
     "fechado", "fechada", "venda fechada", "venda_fechada", "contrato assinado", 
     "contrato_assinado", "comissao paga", "comissao_paga", "ganho", "venda realizada", 
-    "venda", "vendas", "concluido", "concluida", "finalizado", "finalizada", "contrato"
+    "venda_realizada", "venda concluida", "venda_concluida", "finalizado", "finalizada"
   ];
-  return closedTerms.some(term => s === term || s.includes(term));
+  return closedTerms.includes(s);
 }
 
 /** Extrai e converte o valor numérico do crédito/venda do lead de forma segura */
