@@ -174,6 +174,22 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     return null; // Pertence ao gestor, não entra para a meta da loja
   }
 
+  // 1. VERIFICAÇÃO POR CÓDIGO/ID DE FILIAL DIRETO (Prioridade Máxima)
+  const codDirect = String(
+    lead.filial_codigo || lead.codigo_filial || lead.filial_id || lead.loja_id || lead.unidade_id ||
+    dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || ""
+  ).trim();
+
+  if (codDirect && codDirect !== "none") {
+    const matched = lojas.find(l => 
+      l.codigo === codDirect || 
+      l.id === codDirect || 
+      l.id === `filial-${codDirect}` ||
+      codDirect.endsWith(l.codigo)
+    );
+    if (matched) return matched;
+  }
+
   const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
   const indicadorInfoStr = normalizeStr(
     lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
@@ -184,11 +200,12 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     dc.vendedor || dc.vendedora || dc.responsavel || dc.responsavel_nome || dc.consultor || dc.consultora || dc.user || dc.usuario || ""
   );
   const filialText = normalizeStr(
-    lead.filial_nome || lead.filial || lead.loja || lead.unidade || lead.cidade ||
-    dc.filial_nome || dc.filial || dc.loja || dc.unidade || dc.cidade || ""
+    lead.filial_nome || lead.filial || lead.loja || lead.unidade ||
+    dc.filial_nome || dc.filial || dc.loja || dc.unidade || ""
   );
 
-  // 0. Overrides de Clientes / Vendedoras / Indicações Específicas de Canoinhas (Prioridade 0 - Filial 646):
+  // 2. OVERRIDES DE CLIENTES / VENDEDORAS / INDICAÇÕES ESPECÍFICAS
+  // Canoinhas (646) - Karine / Carine / Angelo / Lucas Matias
   const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
   if (canoinhasLoja) {
     if (
@@ -205,61 +222,39 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
       vendedorStr.includes("carine") ||
       vendedorStr.includes("canoinhas") ||
       filialText.includes("canoinhas") ||
-      filialText.includes("646") ||
-      valorCredito === 110000
+      filialText.includes("646")
     ) {
       return canoinhasLoja;
     }
   }
 
-  // São Mateus (927) - Valdinei
+  // São Mateus do Sul (927) - Valdinei
   if (leadName.includes("valdinei")) {
     const saoMateusLoja = lojas.find(l => l.codigo === "927" || normalizeStr(l.cidade).includes("sao mateus"));
     if (saoMateusLoja) return saoMateusLoja;
   }
 
-  // 1. Verificação por código/ID de filial no topo do lead ou no dados_cadastro
-  const codDirect = String(
-    lead.filial_codigo || lead.codigo_filial || lead.filial_id || lead.loja_id || lead.unidade_id ||
-    dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || ""
-  ).trim();
-
-  if (codDirect && codDirect !== "none") {
-    const matched = lojas.find(l => 
-      l.codigo === codDirect || 
-      l.id === codDirect || 
-      l.id === `filial-${codDirect}` ||
-      codDirect.endsWith(l.codigo)
-    );
-    if (matched) return matched;
-  }
-
-  // 2. Verificação por nome/código de filial explícito
-  const filialStr = normalizeStr(
-    lead.filial_nome || lead.filial || lead.loja || lead.unidade ||
-    dc.filial_nome || dc.filial || dc.loja || dc.unidade || ""
-  ).trim();
-
-  if (filialStr && filialStr !== "none") {
+  // 3. VERIFICAÇÃO POR NOME DE LOJA / UNIDADE EXPLÍCITO
+  if (filialText && filialText !== "none") {
     for (const loja of lojas) {
       const code = loja.codigo;
       const city = normalizeStr(loja.cidade).trim();
       
       if (
-        filialStr === city || 
-        filialStr === loja.id || 
-        filialStr.includes(`filial ${code}`) || 
-        filialStr.includes(`filial-${code}`) ||
-        filialStr.includes(`${code}`) ||
-        filialStr.includes(city)
+        filialText === city || 
+        filialText === loja.id || 
+        filialText.includes(`filial ${code}`) || 
+        filialText.includes(`filial-${code}`) ||
+        filialText.includes(`filial${code}`) ||
+        filialText.includes(city)
       ) {
         return loja;
       }
     }
   }
 
-  // 3. Verificação por NOME DE CIDADE DO CLIENTE (Match Estrito)
-  // EVITAR MATCH FALSO: 'Paraná', 'PR', 'Estado do Paraná' NÃO é a cidade Paranaguá!
+  // 4. VERIFICAÇÃO ESTRITA POR CIDADE DO CLIENTE
+  // EVITAR MATCH FALSO: 'Paraná' ou 'PR' NÃO deve dar match em 'Paranaguá'!
   const cityStr = normalizeStr(lead.cidade || dc.cidade || "").trim();
 
   if (cityStr && cityStr !== "none") {
@@ -275,12 +270,11 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
           return loja;
         }
 
-        // Match onde cityStr contém a cidade (ex: "Canoinhas - SC" contém "canoinhas")
-        if (cityStr.includes(city)) {
+        // Match onde cityStr (cidade do lead) contém o nome da cidade da loja (ex: "Canoinhas - SC" contém "canoinhas")
+        // IMPORTANTE: NUNCA fazer city.includes(cityStr), pois "paranagua".includes("parana") retornava true!
+        if (cityStr.length >= city.length && cityStr.includes(city)) {
           return loja;
         }
-
-        // IMPORTANTE: NÃO fazer city.includes(cityStr), pois "paranagua".includes("parana") dá true!
       }
     }
   }
@@ -341,8 +335,7 @@ export function isLeadIndicacao(lead: any): boolean {
     leadNameStr.includes("lucas") || 
     leadNameStr.includes("matias") || 
     leadNameStr.includes("mathias") ||
-    leadNameStr.includes("angelo") ||
-    valorCredito === 110000
+    leadNameStr.includes("angelo")
   ) {
     return true;
   }
