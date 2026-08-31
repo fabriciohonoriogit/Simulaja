@@ -1,5 +1,5 @@
 import { LojaConfig, INITIAL_LOJAS, STORAGE_KEY_LOJAS, COORDENADOR_REGIONAL } from "@/constants/lojas";
-import { isVendaRealizadaNoMes, formatCurrency } from "./utils";
+import { isVendaRealizadaNoMes, formatCurrency, parseBRLValue, isClosedStatus } from "./utils";
 
 export type TimeFrame = "dia" | "semana" | "quinzena" | "mes" | "personalizado";
 
@@ -179,32 +179,43 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
     dc.indicador_nome || dc.indicador || dc.indicacao || dc.indicado_por || dc.quem_indicou || ""
   );
+  const vendedorStr = normalizeStr(
+    lead.vendedor || lead.vendedora || lead.responsavel || lead.responsavel_nome || lead.consultor || lead.consultora || lead.user || lead.usuario ||
+    dc.vendedor || dc.vendedora || dc.responsavel || dc.responsavel_nome || dc.consultor || dc.consultora || dc.user || dc.usuario || ""
+  );
+  const filialText = normalizeStr(
+    lead.filial_nome || lead.filial || lead.loja || lead.unidade || lead.cidade ||
+    dc.filial_nome || dc.filial || dc.loja || dc.unidade || dc.cidade || ""
+  );
 
-  // 0. Overrides de Clientes Específicos (Prioridade Máxima):
-  // Angelo / 110k (Canoinhas - 646) | Lucas Matias / Karine (Canoinhas - 646) | Valdinei (São Mateus - 927)
-  if (
-    leadName.includes("angelo") || 
-    leadName.includes("anjo") ||
-    indicadorInfoStr.includes("angelo") ||
-    valorCredito === 110000
-  ) {
-    const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
-    if (canoinhasLoja) return canoinhasLoja;
+  // 0. Overrides de Clientes / Vendedoras / Indicações Específicas de Canoinhas (Prioridade 0 - Filial 646):
+  const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
+  if (canoinhasLoja) {
+    if (
+      leadName.includes("angelo") || 
+      leadName.includes("anjo") ||
+      leadName.includes("karine") || 
+      leadName.includes("carine") ||
+      leadName.includes("lucas matias") ||
+      leadName.includes("lucas mathias") ||
+      indicadorInfoStr.includes("karine") || 
+      indicadorInfoStr.includes("carine") ||
+      indicadorInfoStr.includes("angelo") ||
+      vendedorStr.includes("karine") ||
+      vendedorStr.includes("carine") ||
+      vendedorStr.includes("canoinhas") ||
+      filialText.includes("canoinhas") ||
+      filialText.includes("646") ||
+      valorCredito === 110000
+    ) {
+      return canoinhasLoja;
+    }
   }
 
+  // São Mateus (927) - Valdinei
   if (leadName.includes("valdinei")) {
     const saoMateusLoja = lojas.find(l => l.codigo === "927" || normalizeStr(l.cidade).includes("sao mateus"));
     if (saoMateusLoja) return saoMateusLoja;
-  }
-
-  if (
-    leadName.includes("lucas matias") || 
-    leadName.includes("lucas mathias") || 
-    indicadorInfoStr.includes("karine") || 
-    indicadorInfoStr.includes("carine")
-  ) {
-    const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
-    if (canoinhasLoja) return canoinhasLoja;
   }
 
   // 1. Verificação por código/ID de filial no topo do lead ou no dados_cadastro
@@ -307,19 +318,31 @@ export function isLeadIndicacao(lead: any): boolean {
     return false;
   }
 
-  // Se for Karine, Canoinhas ou Lucas Matias, é indicação confirmada de Canoinhas
+  // Se for Karine, Carine, Angelo, Canoinhas ou Lucas Matias, é indicação confirmada
   const leadNameStr = (lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "").toLowerCase();
   const indStr = (
     lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
     dc.indicador_nome || dc.indicador || dc.indicacao || dc.indicado_por || dc.quem_indicou || ""
   ).toLowerCase();
+  const vendedorStr = (
+    lead.vendedor || lead.vendedora || lead.responsavel || lead.responsavel_nome || lead.consultor || lead.consultora ||
+    dc.vendedor || dc.vendedora || dc.responsavel || dc.responsavel_nome || dc.consultor || dc.consultora || ""
+  ).toLowerCase();
+
+  const valorCredito = parseBRLValue(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
 
   if (
     indStr.includes("karine") || 
     indStr.includes("carine") || 
+    vendedorStr.includes("karine") ||
+    vendedorStr.includes("carine") ||
+    leadNameStr.includes("karine") ||
+    leadNameStr.includes("carine") ||
     leadNameStr.includes("lucas") || 
     leadNameStr.includes("matias") || 
-    leadNameStr.includes("mathias")
+    leadNameStr.includes("mathias") ||
+    leadNameStr.includes("angelo") ||
+    valorCredito === 110000
   ) {
     return true;
   }
@@ -408,13 +431,7 @@ export function isLeadCreatedInTimeFrame(lead: any, timeFrame: TimeFrame, custom
  */
 export function isLeadInTimeFrame(lead: any, timeFrame: TimeFrame, customRange?: CustomDateRange): boolean {
   if (!lead) return false;
-  const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
-  const isClosed = [
-    "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-    "contrato_assinado", "comissao paga", "comissao_paga"
-  ].includes(s) || Boolean(lead.data_adesao || lead.dados_cadastro?.data_venda || lead.dados_cadastro?.data_fechamento);
-
-  if (!isClosed) return false;
+  if (!isClosedStatus(lead.status, lead)) return false;
 
   const isShadow = lead.origem === "carteira_shadow";
   if (isShadow) return false;
@@ -526,21 +543,13 @@ export function calculateLojasPerformance(
 
     // LEADS COM VENDA FECHADA NO FUNIL
     const leadsFechadosPeriodo = storeLeads.filter(l => {
-      const status = (l.status || "").toLowerCase().replace("_", " ").trim();
-      const isClosed = [
-        "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-        "contrato_assinado", "comissao paga", "comissao_paga"
-      ].includes(status) || Boolean(l.data_adesao || l.dados_cadastro?.data_venda || l.dados_cadastro?.data_fechamento);
+      const isClosed = isClosedStatus(l.status, l);
       const isShadow = (l as any).origem === "carteira_shadow";
       return isClosed && !isShadow && isLeadInTimeFrame(l, timeFrame, customRange);
     });
 
     const leadsFechadosMes = storeLeads.filter(l => {
-      const status = (l.status || "").toLowerCase().replace("_", " ").trim();
-      const isClosed = [
-        "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-        "contrato_assinado", "comissao paga", "comissao_paga"
-      ].includes(status) || Boolean(l.data_adesao || l.dados_cadastro?.data_venda || l.dados_cadastro?.data_fechamento);
+      const isClosed = isClosedStatus(l.status, l);
       const isShadow = (l as any).origem === "carteira_shadow";
       return isClosed && !isShadow && isVendaRealizadaNoMes(l, currentMonthStr);
     });
@@ -584,7 +593,7 @@ export function calculateLojasPerformance(
     // Vendas oriundas de INDICAÇÃO que foram fechadas no período
     const closedIndicacoesLeads = leadsFechadosUsados.filter(isLeadIndicacao);
     const closedIndicacoesCount = closedIndicacoesLeads.length;
-    const realizadoIndicacoes = closedIndicacoesLeads.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
+    const realizadoIndicacoes = closedIndicacoesLeads.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
 
     const totalLeadsPeriodo = storeLeadsNoPeriodo.length;
     const taxaConversaoGeral = totalLeadsPeriodo > 0 ? (closedLeadsCount / totalLeadsPeriodo) * 100 : 0;

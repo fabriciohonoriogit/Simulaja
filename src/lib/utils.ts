@@ -37,6 +37,21 @@ export function parseBRLValue(v: unknown): number {
   return isNaN(n) ? 0 : n;
 }
 
+/** Verifica se um status ou lead possui estado de venda fechada/ganha */
+export function isClosedStatus(status: string | null | undefined, lead?: any): boolean {
+  if (lead?.dados_cadastro?.data_venda || lead?.dados_cadastro?.data_fechamento || lead?.data_adesao) {
+    return true;
+  }
+  if (!status) return false;
+  const s = String(status).toLowerCase().replace(/_/g, " ").replace(/-/g, " ").trim();
+  const closedTerms = [
+    "fechado", "fechada", "venda fechada", "venda_fechada", "contrato assinado", 
+    "contrato_assinado", "comissao paga", "comissao_paga", "ganho", "venda realizada", 
+    "venda", "vendas", "concluido", "concluida", "finalizado", "finalizada", "contrato"
+  ];
+  return closedTerms.some(term => s === term || s.includes(term));
+}
+
 /** Extrai e converte o valor numérico do crédito/venda do lead de forma segura */
 export function getLeadValue(lead: any): number {
   if (!lead) return 0;
@@ -53,13 +68,7 @@ export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolea
   if (!lead) return false;
   
   const dc = lead.dados_cadastro || {};
-  const s = (lead.status || "").toLowerCase().replace("_", " ").trim();
-  const isClosed = [
-    "fechado", "venda fechada", "venda_fechada", "contrato assinado", 
-    "contrato_assinado", "comissao paga", "comissao_paga", "ganho", "venda"
-  ].includes(s) || Boolean(lead.data_adesao || dc.data_venda || dc.data_fechamento);
-
-  if (!isClosed) return false;
+  if (!isClosedStatus(lead.status, lead)) return false;
 
   const isShadow = lead.origem === "carteira_shadow";
   if (isShadow) return false;
