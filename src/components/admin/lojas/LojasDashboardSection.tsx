@@ -98,23 +98,10 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
 
   const customRange = useMemo(() => ({ startDate, endDate }), [startDate, endDate]);
 
-  // Unificar leads do funil e itens da carteira de vendas
+  // Leads do funil para apuração de performance das 5 lojas
   const combinedLeads = useMemo(() => {
-    const all = [...(leads || [])];
-    if (Array.isArray(carteira) && carteira.length > 0) {
-      carteira.forEach(c => {
-        if (!all.some(l => l.id === c.id || (l.id && c.lead_id && l.id === c.lead_id))) {
-          all.push({
-            ...c,
-            status: c.status || "fechado",
-            valor_credito: c.valor_credito || c.valor_venda || 0,
-            origem: c.origem || "indicacao"
-          });
-        }
-      });
-    }
-    return all;
-  }, [leads, carteira]);
+    return Array.isArray(leads) ? leads : [];
+  }, [leads]);
 
   // Calcular performance das 5 lojas incluindo métricas de indicação e conversão estrita
   const {
