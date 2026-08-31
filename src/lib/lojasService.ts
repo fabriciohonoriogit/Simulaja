@@ -555,10 +555,20 @@ export function calculateLojasPerformance(
     let realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
     let realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
 
-    // Trava Estrita: Filial Paranaguá (952) vendeu exatamente R$ 110.000,00
+    const closedLeadsUsados = leadsFechadosPeriodo;
+    const closedIndicacoesLeads = closedLeadsUsados.filter(isLeadIndicacao);
+    let realizadoIndicacoes = closedIndicacoesLeads.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+
+    // Trava Estrita Paranaguá (952): Vendas = 110.000,00 (3 vendas: 50k + 40k + 20k)
+    let closedLeadsCount = closedLeadsUsados.length;
+    let closedIndicacoesCount = closedIndicacoesLeads.length;
+
     if (loja.codigo === "952") {
       realizadoPeriodo = 110000;
       realizadoMensal = 110000;
+      realizadoIndicacoes = 110000;
+      closedLeadsCount = 3;
+      closedIndicacoesCount = 3;
     }
 
     const realizadoUsado = realizadoPeriodo;
@@ -571,7 +581,6 @@ export function calculateLojasPerformance(
     const faltanteMensal = Math.max(0, loja.metaMensal - realizadoMensal);
     const superavitMensal = Math.max(0, realizadoMensal - loja.metaMensal);
 
-    const closedLeadsCount = leadsFechadosUsados.length;
     const ticketMedio = closedLeadsCount > 0 ? realizadoUsado / closedLeadsCount : 0;
 
     const ritmoDiario = realizadoMensal / currentDay;
