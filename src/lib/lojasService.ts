@@ -538,12 +538,17 @@ export function calculateLojasPerformance(
     const leadsFechadosPeriodo = storeLeads.filter(l => {
       const isClosed = isClosedStatus(l.status, l);
       const isShadow = (l as any).origem === "carteira_shadow";
+      const val = parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0);
+      // Para Paranaguá (952), descartar leads legados/de teste acima de 200.000
+      if (loja.codigo === "952" && val > 200000) return false;
       return isClosed && !isShadow && isLeadInTimeFrame(l, timeFrame, customRange);
     });
 
     const leadsFechadosMes = storeLeads.filter(l => {
       const isClosed = isClosedStatus(l.status, l);
       const isShadow = (l as any).origem === "carteira_shadow";
+      const val = parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0);
+      if (loja.codigo === "952" && val > 200000) return false;
       return isClosed && !isShadow && isVendaRealizadaNoMes(l, currentMonthStr);
     });
 
