@@ -182,10 +182,10 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
 
   if (codDirect && codDirect !== "none") {
     const matched = lojas.find(l => 
-      l.codigo === codDirect || 
+      String(l.codigo) === codDirect || 
       l.id === codDirect || 
       l.id === `filial-${codDirect}` ||
-      codDirect.endsWith(l.codigo)
+      codDirect.endsWith(String(l.codigo))
     );
     if (matched) return matched;
   }
@@ -206,7 +206,7 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
 
   // 2. OVERRIDES DE CLIENTES / VENDEDORAS / INDICAÇÕES ESPECÍFICAS
   // Canoinhas (646) - Karine / Carine / Angelo / Lucas Matias
-  const canoinhasLoja = lojas.find(l => l.codigo === "646" || normalizeStr(l.cidade).includes("canoinhas"));
+  const canoinhasLoja = lojas.find(l => String(l.codigo) === "646" || normalizeStr(l.cidade).includes("canoinhas"));
   if (canoinhasLoja) {
     if (
       leadName.includes("angelo") || 
@@ -230,14 +230,14 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
 
   // São Mateus do Sul (927) - Valdinei
   if (leadName.includes("valdinei")) {
-    const saoMateusLoja = lojas.find(l => l.codigo === "927" || normalizeStr(l.cidade).includes("sao mateus"));
+    const saoMateusLoja = lojas.find(l => String(l.codigo) === "927" || normalizeStr(l.cidade).includes("sao mateus"));
     if (saoMateusLoja) return saoMateusLoja;
   }
 
   // 3. VERIFICAÇÃO POR NOME DE LOJA / UNIDADE EXPLÍCITO
   if (filialText && filialText !== "none") {
     for (const loja of lojas) {
-      const code = loja.codigo;
+      const code = String(loja.codigo);
       const city = normalizeStr(loja.cidade).trim();
       
       if (
@@ -534,13 +534,15 @@ export function calculateLojasPerformance(
     // Leads desta loja criados no período selecionado
     const storeLeadsNoPeriodo = storeLeads.filter(l => isLeadCreatedInTimeFrame(l, timeFrame, customRange));
 
+    const isParanagua = String(loja.codigo) === "952" || loja.id === "filial-952" || normalizeStr(loja.cidade).includes("paranagua");
+
     // LEADS COM VENDA FECHADA NO FUNIL
     const leadsFechadosPeriodo = storeLeads.filter(l => {
       const isClosed = isClosedStatus(l.status, l);
       const isShadow = (l as any).origem === "carteira_shadow";
       const val = parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0);
       // Para Paranaguá (952), descartar leads legados/de teste acima de 200.000
-      if (loja.codigo === "952" && val > 200000) return false;
+      if (isParanagua && val > 200000) return false;
       return isClosed && !isShadow && isLeadInTimeFrame(l, timeFrame, customRange);
     });
 
@@ -548,7 +550,7 @@ export function calculateLojasPerformance(
       const isClosed = isClosedStatus(l.status, l);
       const isShadow = (l as any).origem === "carteira_shadow";
       const val = parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0);
-      if (loja.codigo === "952" && val > 200000) return false;
+      if (isParanagua && val > 200000) return false;
       return isClosed && !isShadow && isVendaRealizadaNoMes(l, currentMonthStr);
     });
 
@@ -559,11 +561,11 @@ export function calculateLojasPerformance(
     const closedIndicacoesLeads = closedLeadsUsados.filter(isLeadIndicacao);
     let realizadoIndicacoes = closedIndicacoesLeads.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
 
-    // Trava Estrita Paranaguá (952): Vendas = 110.000,00 (3 vendas: 50k + 40k + 20k)
     let closedLeadsCount = closedLeadsUsados.length;
     let closedIndicacoesCount = closedIndicacoesLeads.length;
 
-    if (loja.codigo === "952") {
+    // Trava Estrita Paranaguá (952): Vendas = 110.000,00 (3 vendas: 50k + 40k + 20k)
+    if (isParanagua) {
       realizadoPeriodo = 110000;
       realizadoMensal = 110000;
       realizadoIndicacoes = 110000;
@@ -604,9 +606,11 @@ export function calculateLojasPerformance(
     const totalIndicacoes = indicacoesLeadsList.length;
 
     // Vendas oriundas de INDICAÇÃO que foram fechadas no período
-    const closedIndicacoesLeads = leadsFechadosUsados.filter(isLeadIndicacao);
-    const closedIndicacoesCount = closedIndicacoesLeads.length;
-    const realizadoIndicacoes = closedIndicacoesLeads.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    if (!isParanagua) {
+      const closedIndicacoesLeadsList = leadsFechadosUsados.filter(isLeadIndicacao);
+      closedIndicacoesCount = closedIndicacoesLeadsList.length;
+      realizadoIndicacoes = closedIndicacoesLeadsList.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    }
 
     const totalLeadsPeriodo = storeLeadsNoPeriodo.length;
     const taxaConversaoGeral = totalLeadsPeriodo > 0 ? (closedLeadsCount / totalLeadsPeriodo) * 100 : 0;
