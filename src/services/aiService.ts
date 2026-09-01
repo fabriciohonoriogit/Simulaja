@@ -95,11 +95,16 @@ ${simContext}
 async function generateSmartLocalResponse(prompt: string): Promise<string> {
   const lower = prompt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  // Busca por valor de crédito citado no prompt para simulação direta
+  // Extração de valor de crédito citado no prompt para simulação direta
   const numbersInPrompt = prompt.match(/\d+[\d\.,]*/g);
   if (numbersInPrompt && (lower.includes("credito") || lower.includes("simula") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear") || lower.includes("gold") || lower.includes("mil"))) {
     const rawVal = parseFloat(numbersInPrompt[0].replace(/\./g, "").replace(",", "."));
     const creditTarget = rawVal < 1000 ? rawVal * 1000 : rawVal;
+
+    // Detectar segmento
+    const isVeiculo = lower.includes("carro") || lower.includes("veiculo") || lower.includes("auto") || lower.includes("moto") || lower.includes("caminhao") || lower.includes("pesados");
+    const isServico = lower.includes("servico") || lower.includes("eletro");
+    const segmento = isVeiculo ? "Veículos (IPCA)" : isServico ? "Serviços/Eletro (IPCA)" : "Imóveis (INCC)";
 
     // Encontrar grupo mais próximo
     const closest = GRUPOS.reduce((prev, curr) => {
@@ -108,19 +113,38 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
 
     if (closest) {
       const credFmt = closest.credito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const p50Fmt = closest.r50 ? closest.r50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "N/A";
-      const p100Fmt = closest.r100 ? closest.r100.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "N/A";
+      const taxaSeguro = closest.seguro ?? 0.000252;
+      const valSeguro = closest.credito * (taxaSeguro > 1 ? taxaSeguro / 100 : taxaSeguro);
+
+      const r50Base = closest.r50 || 0;
+      const r100Base = closest.r100 || (r50Base * 2);
+
+      const p50ComSeguro = (r50Base + valSeguro).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const p50SemSeguro = r50Base.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const p100ComSeguro = (r100Base + valSeguro).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const p100SemSeguro = r100Base.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const seguroFmt = valSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+      const wantsSemSeguro = lower.includes("sem seguro");
+      const wantsComSeguro = lower.includes("com seguro");
 
       if (lower.includes("50/50") || lower.includes("cinquenta")) {
-        return `Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo} meses): Parcela 50/50: ${p50Fmt}/mês.`;
+        if (wantsSemSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 SEM SEGURO: ${p50SemSeguro}/mês.`;
+        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 COM SEGURO: ${p50ComSeguro}/mês (Seguro ${seguroFmt}).`;
+        return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): 50/50 Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
       }
+
       if (lower.includes("linear") || lower.includes("100%")) {
-        return `Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo} meses): Parcela Linear (100%): ${p100Fmt}/mês.`;
+        if (wantsSemSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela Linear SEM SEGURO: ${p100SemSeguro}/mês.`;
+        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela Linear COM SEGURO: ${p100ComSeguro}/mês (Seguro ${seguroFmt}).`;
+        return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Linear Com Seguro: ${p100ComSeguro}/mês | Sem Seguro: ${p100SemSeguro}/mês.`;
       }
+
       if (lower.includes("gold")) {
-        return `Crédito ${credFmt} (Plano Gold - Grupo ${closest.grupo}): Parcela Reduzida Gold: ${p50Fmt}/mês.`;
+        return `[Segmento: ${segmento}] Crédito ${credFmt} (Plano Gold - Grupo ${closest.grupo}): Parcela Gold Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
       }
-      return `Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50: ${p50Fmt}/mês | Parcela Linear: ${p100Fmt}/mês.`;
+
+      return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): 50/50 Com Seguro: ${p50ComSeguro}/mês (Sem Seguro: ${p50SemSeguro}/mês) | Linear Com Seguro: ${p100ComSeguro}/mês (Sem Seguro: ${p100SemSeguro}/mês).`;
     }
   }
 
@@ -179,7 +203,7 @@ export const aiService = {
   async generateSalesScript(lead: LeadContext) {
     const prompt = `Você é especialista sênior em consórcios da Prospera Planejamento.
 O lead ${lead.nome} de ${lead.cidade} simulou consórcio de ${lead.tipo_consorcio} no valor de R$ ${lead.valor_credito.toLocaleString("pt-BR")}.
-Crie uma abordagem de WhatsApp altamente consultiva usando o método SRV (Sonho, Realidade e Velocidade de Contemplação).`;
+Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Realidade e Velocidade de Contemplação).`;
     const { text, error } = await callAI(prompt, 500);
     return {
       script: text || `Olá, ${lead.nome}! Analisei sua simulação de consórcio de ${lead.tipo_consorcio} no valor de R$ ${lead.valor_credito.toLocaleString("pt-BR")}. Temos grupos com excelentes médias de contemplação e opção de lance embutido. Qual o seu prazo ideal para a conquista?`,
@@ -204,9 +228,10 @@ Crie uma abordagem de WhatsApp altamente consultiva usando o método SRV (Sonho,
 
     const prompt = `Você é a Bella, Diretora Estratégica da Elite Consórcios / Simulaja.
 DIRETRIZ DE RESPOSTA ESTRITA SOLICITADA PELO USUÁRIO:
+- Identifique e especifique o SEGMENTO (Imóveis - INCC, Veículos - IPCA, Serviços/Eletro - IPCA).
+- Identifique e discrimine os valores COM SEGURO (taxa de seguro de vida 0,0252% inclusa) e SEM SEGURO.
 - Responda DIRETA, OBJETIVA E CONCISAMENTE com APENAS OS VALORES E NÚMEROS SOLICITADOS (seja Plano 50/50, Linear, Gold ou Vendas).
-- NUNCA inclua saudações longas, introduções ou explicações genéricas.
-- Forneça estritamente o valor do Crédito, o Grupo, o Prazo e o valor exato da Parcela do Simulador Interno ou os indicadores oficiais.
+- Forneça o Segmento, Crédito, Grupo, Prazo e os valores exatos das Parcelas COM SEGURO e SEM SEGURO do Simulador Interno.
 
 ${authContext}
 
