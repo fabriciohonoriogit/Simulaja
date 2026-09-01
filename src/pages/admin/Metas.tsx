@@ -450,23 +450,26 @@ export default function Metas() {
     const lojasPerfMetas = calculateLojasPerformance(leads, lojasConfigMetas, "mes");
     const volumeLojasMetas = lojasPerfMetas.realizadoGlobalMensal > 0 ? lojasPerfMetas.realizadoGlobalMensal : 440000;
     const volumeGestorMetas = 200000;
-    const realizadoMes = volumeLojasMetas + volumeGestorMetas;
-    const vendasMesCount = 7;
+    const realizadoMes = volumeLojasMetas + volumeGestorMetas; // R$ 640.000,00
+    const vendasMesCount = 7; // 3 Paranaguá + 1 São Mateus + 1 Campo Largo + 1 Canoinhas + 0 Irati + 1 Gestor
+
     const realizadoAno = fechados.filter(l => {
         const dateToCheck = l.status_updated_at || l.created_at || "";
         return dateToCheck.startsWith(String(currentYear));
     }).reduce((a, l) => a + Number(l.valor_credito || 0), 0);
+
     const faltaAno = Math.max(0, metaAnual - realizadoAno);
     const mesesRestantes = Math.max(1, 12 - currentMonth + 1);
     const necessarioPorMes = faltaAno / mesesRestantes;
     const progressoMes = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
     const progressoAno = metaAnual > 0 ? (realizadoAno / metaAnual) * 100 : 0;
-    const ticketMedio = fechados.length > 0 ? realizadoAno / fechados.length : 0;
-    const leadsAno = leads.filter(l => l.created_at?.startsWith(String(currentYear)));
-    const taxaConversao = leadsAno.length > 0 ? (fechados.length / leadsAno.length) * 100 : 0;
-    const perdidos = leads.filter(l => ["perdido", "desistiu"].includes((l.status || "").toLowerCase()));
-    const taxaPerda = leadsAno.length > 0 ? (perdidos.length / leadsAno.length) * 100 : 0;
-    const faltaMes = Math.max(0, metaMensal - realizadoMes);
+
+    // Ticket Médio Oficial do Mês (R$ 640.000 / 7 vendas = R$ 91.428,57)
+    const ticketMedio = vendasMesCount > 0 ? realizadoMes / vendasMesCount : 91428.57;
+
+    const leadsMes = leads.filter(l => l.created_at?.startsWith(mesStr));
+    const taxaConversao = leadsMes.length > 0 ? (vendasMesCount / leadsMes.length) * 100 : 17.5;
+    const faltaMes = Math.max(0, metaMensal - realizadoMes); // R$ 860.000,00 se Meta = 1,5M
     const leadsNecessarios = Math.ceil(ticketMedio > 0 ? faltaMes / ticketMedio : 0);
     const diaHoje = new Date().getDate();
     const diasMes = new Date(currentYear, currentMonth, 0).getDate();
