@@ -181,17 +181,17 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     lower.includes("paranagua") ||
     lower.includes("gestor")
   ) {
-    return `Realizado Mês: R$ 640.000,00 (Filiais: R$ 440.000,00 + Gestor: R$ 200.000,00 | 7 vendas). Comissão Recorrente: R$ 1.680,00/mês (Filiais: R$ 880,00 + Gestor: R$ 800,00). Status: Patente GOLD (OURO).`;
+    return `Resultados do Mês: Metas zeradas a partir do dia 01 para novo ciclo de superação. Acompanhe os novos fechamentos em tempo real no Dashboard e Painel de Metas.`;
   }
 
   // 2. FUNIL DE VENDAS & CRM
   if (lower.includes("funil") || lower.includes("pipeline") || lower.includes("lead")) {
-    return `Funil do Mês: 7 vendas realizadas (R$ 640.000,00). Foco no segmento de alto ticket para a meta de R$ 1,5M.`;
+    return `Funil do Mês: Ciclo zerado no dia 01 para novas metas. Cadastre e converta novas oportunidades no pipeline.`;
   }
 
   // 3. INADIMPLÊNCIA & CARTEIRA
   if (lower.includes("inadimplent") || lower.includes("atraso") || lower.includes("carteira") || lower.includes("assembleia")) {
-    return `Carteira: Comissão Recorrente: R$ 1.680,00/mês garantida. Manter acompanhamento pré-assembleia.`;
+    return `Carteira: Manter acompanhamento dos consorciados e cobranças pré-assembleia.`;
   }
 
   // 4. LANCES & SIMULAÇÕES DO SIMULADOR INTERNO
@@ -204,7 +204,7 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     return `Consórcio vs Financiamento: Economia de 60% a 70% no Custo Efetivo Total em relação ao financiamento tradicional.`;
   }
 
-  return `Valores Oficiais: Realizado Mês R$ 640.000,00 | Comissão R$ 1.680,00/mês | Patente GOLD (OURO).`;
+  return `Período Mensal Reiniciado no Dia 01 | Acompanhe seu progresso em tempo real no sistema.`;
 }
 
 export const aiService = {

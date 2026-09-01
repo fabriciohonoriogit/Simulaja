@@ -543,54 +543,15 @@ export function calculateLojasPerformance(
     const isCanoinhas = codeStr === "646" || loja.id === "filial-646" || cidadeNorm.includes("canoinhas");
     const isIrati = codeStr === "929" || loja.id === "filial-929" || cidadeNorm.includes("irati");
 
-    // Trava Estrita de Vendas Oficiais das Filiais Magalu (Total = R$ 440.000,00)
-    let realizadoPeriodo = 0;
-    let realizadoMensal = 0;
-    let realizadoIndicacoes = 0;
-    let closedLeadsCount = 0;
-    let closedIndicacoesCount = 0;
-
-    if (isParanagua) {
-      realizadoPeriodo = 110000;
-      realizadoMensal = 110000;
-      realizadoIndicacoes = 110000;
-      closedLeadsCount = 3;
-      closedIndicacoesCount = 3;
-    } else if (isSaoMateus) {
-      realizadoPeriodo = 40000;
-      realizadoMensal = 40000;
-      realizadoIndicacoes = 40000;
-      closedLeadsCount = 1;
-      closedIndicacoesCount = 1;
-    } else if (isCampoLargo) {
-      realizadoPeriodo = 180000;
-      realizadoMensal = 180000;
-      realizadoIndicacoes = 180000;
-      closedLeadsCount = 1;
-      closedIndicacoesCount = 1;
-    } else if (isCanoinhas) {
-      realizadoPeriodo = 110000;
-      realizadoMensal = 110000;
-      realizadoIndicacoes = 110000;
-      closedLeadsCount = 1;
-      closedIndicacoesCount = 1;
-    } else if (isIrati) {
-      realizadoPeriodo = 0;
-      realizadoMensal = 0;
-      realizadoIndicacoes = 0;
-      closedLeadsCount = 0;
-      closedIndicacoesCount = 0;
-    } else {
-      // Outras unidades dinâmicas
-      const leadsFechadosPeriodo = storeLeads.filter(l => isClosedStatus(l.status, l) && !((l as any).origem === "carteira_shadow") && isLeadInTimeFrame(l, timeFrame, customRange));
-      const leadsFechadosMes = storeLeads.filter(l => isClosedStatus(l.status, l) && !((l as any).origem === "carteira_shadow") && isVendaRealizadaNoMes(l, currentMonthStr));
-      realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
-      realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
-      closedLeadsCount = leadsFechadosPeriodo.length;
-      const closedIndicacoes = leadsFechadosPeriodo.filter(isLeadIndicacao);
-      closedIndicacoesCount = closedIndicacoes.length;
-      realizadoIndicacoes = closedIndicacoes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
-    }
+    // Cálculo 100% dinâmico do desempenho da loja com base nos leads do mês/período
+    const leadsFechadosPeriodo = storeLeads.filter(l => isClosedStatus(l.status, l) && !((l as any).origem === "carteira_shadow") && isLeadInTimeFrame(l, timeFrame, customRange));
+    const leadsFechadosMes = storeLeads.filter(l => isClosedStatus(l.status, l) && !((l as any).origem === "carteira_shadow") && isVendaRealizadaNoMes(l, currentMonthStr));
+    const realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    const realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    const closedLeadsCount = leadsFechadosPeriodo.length;
+    const closedIndicacoes = leadsFechadosPeriodo.filter(isLeadIndicacao);
+    const closedIndicacoesCount = closedIndicacoes.length;
+    const realizadoIndicacoes = closedIndicacoes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
 
     const realizadoUsado = realizadoPeriodo;
     const leadsFechadosUsados = storeLeads.filter(l => isClosedStatus(l.status, l));

@@ -219,10 +219,8 @@ export const calcularMissoes = async (
 
   if (isVendedor) {
     vendas = vendas.filter((l: any) => l.responsavel_id === userId);
-    realizadoMes = (vendas || []).reduce((acc: number, l: any) => acc + (Number(l.valor_credito) || 0), 0);
-  } else {
-    realizadoMes = 640000;
   }
+  realizadoMes = (vendas || []).reduce((acc: number, l: any) => acc + (Number(l.valor_credito) || 0), 0);
 
   // ── Missão 6: Inadimplência ──────────────────────────────────────────
   const { count: inadCount } = await (supabase as any)

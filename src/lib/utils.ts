@@ -74,13 +74,19 @@ export function isVendaRealizadaNoMes(lead: any, targetMonthStr: string): boolea
   if (isShadow) return false;
 
   // Se houver data explícita de venda cadastrada (data_venda ou data_fechamento), valida a data
-  if (dc.data_venda || dc.data_fechamento) {
-    const explicitDate = dc.data_venda || dc.data_fechamento;
+  const explicitDate = dc.data_venda || dc.data_fechamento || lead.data_venda || lead.data_fechamento;
+  if (explicitDate) {
     const saleMonth = String(explicitDate).substring(0, 7);
-    return saleMonth === targetMonthStr || !targetMonthStr;
+    return !targetMonthStr || saleMonth === targetMonthStr;
   }
 
-  // Leads com status de venda fechada no CRM são considerados vendas ativas no mês
-  return true;
+  // Se não houver data explícita de venda, valida pela data de alteração do status / atualização / criação
+  const fallbackDate = lead.status_updated_at || lead.updated_at || lead.created_at;
+  if (fallbackDate) {
+    const saleMonth = String(fallbackDate).substring(0, 7);
+    return !targetMonthStr || saleMonth === targetMonthStr;
+  }
+
+  return false;
 }
 

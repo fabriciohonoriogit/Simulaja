@@ -274,24 +274,25 @@ export default function Dashboard() {
     return isVendaRealizadaNoMes(l, currentMonthStr);
   });
 
-  // Performance estrita das 5 Lojas Magalu (Total = R$ 440.000,00)
+  // Performance real das 5 Lojas Magalu
   const lojasConfig = getLojasConfig(profile?.organizacao_id);
   const lojasPerf = calculateLojasPerformance(leads, lojasConfig, "mes");
-  const volumeLojas = lojasPerf.realizadoGlobalMensal > 0 ? lojasPerf.realizadoGlobalMensal : 440000;
+  const volumeLojas = lojasPerf.realizadoGlobalMensal;
 
-  // Vendas do Gestor Estritamente R$ 200.000,00
-  const gestorSalesVolume = 200000;
+  // Vendas do Gestor/Usuário logado no mês atual
+  const gestorLeadsMes = leadsFechadosMes.filter(l => l.responsavel_id === profile?.id);
+  const gestorSalesVolume = gestorLeadsMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
 
-  // Vendas do Mês Oficiais = Lojas (440.000,00) + Gestor (200.000,00) = R$ 640.000,00
+  // Vendas do Mês Consolidadas (Lojas + Gestor)
   const realizadoMes = volumeLojas + gestorSalesVolume;
 
-  // 1. Comissão Recorrente Lojas Magalu: (440.000 * 0.80%) / 4 parcelas = R$ 880,00/mês
+  // Comissão Recorrente Lojas Magalu
   const comissaoLojas = (volumeLojas * 0.008) / 4;
 
-  // 2. Comissão Recorrente Vendas do Gestor: (200.000 * 4.00%) / 10 parcelas = R$ 800,00/mês
+  // Comissão Recorrente Vendas do Gestor
   const comissaoGestor = (gestorSalesVolume * 0.04) / 10;
 
-  // Comissão Recorrente Mensal Consolidada = 880,00 + 800,00 = R$ 1.680,00/mês
+  // Comissão Recorrente Mensal Consolidada
   const comissaoTotalMes = comissaoLojas + comissaoGestor;
 
   const progressoMes = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
@@ -320,17 +321,9 @@ export default function Dashboard() {
     return { ...stage, count, percentage };
   });
 
-  // Cálculo de Ranking de Consultores - Estritamente Alinhado (Gestor + Lojas = R$ 640.000,00)
+  // Cálculo de Ranking de Consultores no Mês
   const rankingRaw = leads
-    .filter(l => {
-      const s = (l.status || "").toLowerCase().replace("_", " ");
-      const isClosed = s === "fechado" || s === "venda fechada";
-      const isShadow = (l as any).origem === "carteira_shadow";
-      const isRetroativo = l.dados_cadastro?.is_retroativo === true;
-      const dateToCheck = l.status_updated_at || l.created_at || "";
-      const isInMonth = dateToCheck.startsWith(currentMonthStr);
-      return isClosed && isInMonth && l.responsavel_id && !isShadow;
-    })
+    .filter(l => isVendaRealizadaNoMes(l, currentMonthStr) && l.responsavel_id)
     .reduce((acc: Record<string, { vendas: number, comissao: number }>, lead) => {
       const rid = lead.responsavel_id!;
       if (!acc[rid]) acc[rid] = { vendas: 0, comissao: 0 };
