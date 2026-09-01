@@ -104,7 +104,7 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     // Detectar segmento
     const isVeiculo = lower.includes("carro") || lower.includes("veiculo") || lower.includes("auto") || lower.includes("moto") || lower.includes("caminhao") || lower.includes("pesados");
     const isServico = lower.includes("servico") || lower.includes("eletro");
-    const segmento = isVeiculo ? "Veículos (IPCA)" : isServico ? "Serviços/Eletro (IPCA)" : "Imóveis (INCC)";
+    const segmento = isVeiculo ? "Veículos" : isServico ? "Serviços/Eletro" : "Imóveis";
 
     // Encontrar grupo mais próximo
     const closest = GRUPOS.reduce((prev, curr) => {
@@ -228,7 +228,7 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
 
     const prompt = `Você é a Bella, Diretora Estratégica da Elite Consórcios / Simulaja.
 DIRETRIZ DE RESPOSTA ESTRITA SOLICITADA PELO USUÁRIO:
-- Identifique e especifique o SEGMENTO (Imóveis - INCC, Veículos - IPCA, Serviços/Eletro - IPCA).
+- Identifique e especifique o SEGMENTO (Imóveis, Veículos, Serviços/Eletro). NUNCA mencione índices como INCC ou IPCA nas simulações, pois eles não alteram a parcela atual do cálculo.
 - Identifique e discrimine os valores COM SEGURO (taxa de seguro de vida 0,0252% inclusa) e SEM SEGURO.
 - Responda DIRETA, OBJETIVA E CONCISAMENTE com APENAS OS VALORES E NÚMEROS SOLICITADOS (seja Plano 50/50, Linear, Gold ou Vendas).
 - Forneça o Segmento, Crédito, Grupo, Prazo e os valores exatos das Parcelas COM SEGURO e SEM SEGURO do Simulador Interno.
