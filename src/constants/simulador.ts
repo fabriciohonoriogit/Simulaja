@@ -516,7 +516,7 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
     grupo: "5996",
     reajuste: "IPCA",
     primeiraAssembleia: "21/12/2024",
-    proximaAssembleia: "25/07/2026",
+    proximaAssembleia: "23/09/2026",
     caracteristicas: "Grupo Veículo Pesado Linear, 75/25 e 50/50. ***** DEVIDO A RESOLUÇÃO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. Créditos de 180 a 300 mil. Lance embutido de até 30%.",
     ordemContemplacao: "Sorteio, Lance Livre, Fixo de 30% a partir da 5ª ass, onde inicia alternação entre os lances, conforme saldo do grupo.",
     opcaoDiluir: "Opção de quitação de 02 parcelas subsequentes e diluição total do lance.",
@@ -759,14 +759,15 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "2x 5295", credito: 180000, prazo: 95, r50: 1512.58, r100: 2232.95, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true }
   ],
   pesados: [
-    // Grupo 5996 (Agosto/26)
-    { grupo: "5996", credito: 180000, prazo: 130, r50: 966.47, r100: 1644.47, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5996", credito: 190000, prazo: 130, r50: 1020.16, r100: 1735.83, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5996", credito: 200000, prazo: 130, r50: 1073.85, r100: 1827.19, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "5996", credito: 220000, prazo: 130, r50: 1181.23, r100: 2009.91, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5996", credito: 250000, prazo: 130, r50: 1342.31, r100: 2283.99, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5996", credito: 280000, prazo: 130, r50: 1503.39, r100: 2558.07, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5996", credito: 300000, prazo: 130, r50: 1610.77, r100: 2740.79, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true },
+    // Grupo 5996 (Setembro/26)
+    // Grupo 5996 - 50/50 Negociado (Setembro/26)
+    { grupo: "5996", credito: 180000, prazo: 129, r50: 973.55, r100: 1671.22, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5996", credito: 190000, prazo: 129, r50: 1027.63, r100: 1764.07, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5996", credito: 200000, prazo: 129, r50: 1081.72, r100: 1856.91, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5996", credito: 220000, prazo: 129, r50: 1189.89, r100: 2042.60, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5996", credito: 250000, prazo: 129, r50: 1352.15, r100: 2321.14, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5996", credito: 280000, prazo: 129, r50: 1514.41, r100: 2599.68, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5996", credito: 300000, prazo: 129, r50: 1622.50, r100: 2785.29, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "5997", credito: 350000, prazo: 111, r50: 2182.58, r100: 3727.78, txLinear: 14, frLinear: 1, tx5050: 15, fr5050: 1, seguro: 0.029, isPromo: true },
     { grupo: "5999", credito: 400000, prazo: 58, r50: 8031.83, r100: 8031.83, txLinear: 14, frLinear: 1, seguro: 0.0252, isPromo: true }
   ],

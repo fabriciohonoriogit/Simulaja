@@ -305,8 +305,6 @@ export default function Indicacoes() {
   };
 
   const handleShareWhatsApp = () => {
-    if (!resultado) return;
-
     const dataStr = new Date().toLocaleDateString('pt-BR');
     const segmentLabel = CATEGORIAS.find(c => c.id === categoria)?.label || categoria;
     
@@ -316,7 +314,7 @@ export default function Indicacoes() {
     else if (categoria === "servicos") emojiBem = "🎓";
     else if (categoria === "eletro") emojiBem = "💻";
 
-    const tipoParcelaStr = isLinear ? 'Linear' : 'Reduzida 50%';
+    const tipoParcelaStr = isLinear ? 'Linear' : 'Reduzida (50%)';
     const prazo = isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
     const grupo = isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
     const consultor = pNome || 'O Especialista Consórcio';
@@ -324,13 +322,19 @@ export default function Indicacoes() {
     const msg = [
       `📅 ${dataStr}`,
       ``,
-      `👤 Cliente: ${nomeCliente || 'Não informado'}`,
+      `👤 Cliente: ${nomeCliente.trim() || 'Não informado'}`,
       `📋 SIMULAÇÃO DE CONSÓRCIO`,
       `─────────────────────────`,
       `${emojiBem} Bem: ${segmentLabel} | Grupo ${grupo}`,
       `💰 Carta de Crédito: ${fmt(g.credito)}`,
       `⏱️ Prazo: ${prazo} meses`,
       `📉 Tipo de Parcela: ${tipoParcelaStr}`,
+      ``,
+      `🚀 LANCE`,
+      `─────────────────────────`,
+      `💵 Dinheiro: ${lanceDinheiroPct}% (${fmt(lDinheiroRS)})`,
+      `🔄 Embutido: ${lanceEmbutidoPct}% (${fmt(lEmbutidoRS)})`,
+      `🎯 Total do Lance: ${lanceTotalPct.toFixed(1)}% → ${fmt(lanceTotalRS)}`,
       ``,
       `📊 VALOR PARCELA`,
       `─────────────────────────`,
@@ -342,9 +346,14 @@ export default function Indicacoes() {
       ``,
       `─────────────────────────`,
       `👨‍💼 Simulação indicada por ${consultor}`
-    ].join('n');
+    ].join('\n');
 
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    const cleanWpp = wppCliente.replace(/\D/g, "");
+    if (cleanWpp.length >= 10) {
+      window.open(`https://wa.me/55${cleanWpp}?text=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
   };
 
   const wppLockMsg = historico.map((h, i) => `${i + 1}. ${fmt(h.credito)} — ${fmt(h.r50)} / ${h.prazo}m (${h.nomeCliente})`).join("n");
@@ -628,6 +637,27 @@ export default function Indicacoes() {
                 <p className="text-[0.55rem] font-bold tracking-wider uppercase text-slate-300 mb-0.5">Fundo Reserva</p>
                 <p className="text-xs font-bold font-mono text-white">{fr}%</p>
               </div>
+            </div>
+
+            {/* Ações Rápidas de Compartilhamento */}
+            <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/15">
+              <Button
+                type="button"
+                onClick={handleShareWhatsApp}
+                className="bg-gradient-to-r from-[#25D366] to-[#1ebd59] hover:from-[#1ebd59] hover:to-[#17a84e] text-white font-extrabold h-10 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5"
+              >
+                <WhatsAppIcon className="w-4 h-4 mr-1.5 shrink-0" />
+                Enviar WhatsApp
+              </Button>
+              <Button
+                type="button"
+                onClick={handleExportPDF}
+                variant="outline"
+                className="border-white/30 text-white font-bold h-10 text-[11px] bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl transition-all"
+              >
+                <FileText className="w-4 h-4 mr-1.5 text-slate-300 shrink-0" />
+                Baixar PDF
+              </Button>
             </div>
           </div>
 
