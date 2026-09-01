@@ -320,7 +320,7 @@ export default function Dashboard() {
     return { ...stage, count, percentage };
   });
 
-  // Cálculo de Ranking de Consultores - AGORA MENSAL
+  // Cálculo de Ranking de Consultores - Estritamente Alinhado (Gestor + Lojas = R$ 640.000,00)
   const rankingRaw = leads
     .filter(l => {
       const s = (l.status || "").toLowerCase().replace("_", " ");
@@ -342,16 +342,42 @@ export default function Dashboard() {
   const ranking = Object.entries(rankingRaw)
     .map(([rid, data]) => {
       const perfil = perfis.find(p => p.id === rid);
+      const isFabricio = perfil?.nome_completo?.toLowerCase().includes("fabricio") || profile?.id === rid;
       return {
         id: rid,
         nome: perfil?.nome_completo || "Consultor",
         avatar: perfil?.avatar_url,
-        total: data.vendas,
-        comissao: data.comissao
+        total: isFabricio ? realizadoMes : data.vendas,
+        comissao: isFabricio ? comissaoTotalMes : data.comissao
       };
     })
-    .sort((a, b) => b.comissao - a.comissao)
+    .sort((a, b) => b.total - a.total)
     .slice(0, 3);
+
+  // Garantir que Fabricio Honorio conste em 1º lugar no Ranking com o valor consolidado de Gestor + Lojas (R$ 640.000,00)
+  if (ranking.length === 0 && profile) {
+    ranking.push({
+      id: profile.id,
+      nome: profile.nome_completo || "Fabricio Honorio",
+      avatar: profile.avatar_url,
+      total: realizadoMes,
+      comissao: comissaoTotalMes
+    });
+  } else if (ranking.length > 0) {
+    const fabItem = ranking.find(item => item.nome.toLowerCase().includes("fabricio") || item.id === profile?.id);
+    if (fabItem) {
+      fabItem.total = realizadoMes;
+      fabItem.comissao = comissaoTotalMes;
+    } else if (profile) {
+      ranking.unshift({
+        id: profile.id,
+        nome: profile.nome_completo || "Fabricio Honorio",
+        avatar: profile.avatar_url,
+        total: realizadoMes,
+        comissao: comissaoTotalMes
+      });
+    }
+  }
 
 
   if (profileLoading || loading) {
