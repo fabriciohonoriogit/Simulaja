@@ -106,23 +106,31 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     const isServico = lower.includes("servico") || lower.includes("eletro");
     const segmento = isVeiculo ? "Veículos" : isServico ? "Serviços/Eletro" : "Imóveis";
 
-    // Encontrar grupo mais próximo
-    const closest = GRUPOS.reduce((prev, curr) => {
+    // Selecionar lista de grupos por segmento (imovel / veiculo)
+    const listKey = isVeiculo ? "veiculo" : "imovel";
+    const groupList: any[] = (GRUPOS as any)[listKey] || (GRUPOS as any).imovel || [];
+
+    // Encontrar grupo com o crédito mais próximo
+    const closest = groupList.reduce((prev: any, curr: any) => {
       return Math.abs(curr.credito - creditTarget) < Math.abs(prev.credito - creditTarget) ? curr : prev;
-    }, GRUPOS[0]);
+    }, groupList[0]);
 
     if (closest) {
       const credFmt = closest.credito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
       const taxaSeguro = closest.seguro ?? 0.000252;
       const valSeguro = closest.credito * (taxaSeguro > 1 ? taxaSeguro / 100 : taxaSeguro);
 
-      const r50Base = closest.r50 || 0;
-      const r100Base = closest.r100 || (r50Base * 2);
+      // r50 e r100 no simulador interno já são o valor exato da parcela COM SEGURO
+      const r50ComSeguro = closest.r50 || 0;
+      const r100ComSeguro = closest.r100 || (r50ComSeguro * 2);
 
-      const p50ComSeguro = (r50Base + valSeguro).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const p50SemSeguro = r50Base.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const p100ComSeguro = (r100Base + valSeguro).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const p100SemSeguro = r100Base.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const r50SemSeguro = Math.max(0, r50ComSeguro - valSeguro);
+      const r100SemSeguro = Math.max(0, r100ComSeguro - valSeguro);
+
+      const p50ComSeguro = r50ComSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const p50SemSeguro = r50SemSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const p100ComSeguro = r100ComSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const p100SemSeguro = r100SemSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
       const seguroFmt = valSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
       const wantsSemSeguro = lower.includes("sem seguro");
@@ -130,13 +138,13 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
 
       if (lower.includes("50/50") || lower.includes("cinquenta")) {
         if (wantsSemSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 SEM SEGURO: ${p50SemSeguro}/mês.`;
-        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 COM SEGURO: ${p50ComSeguro}/mês (Seguro ${seguroFmt}).`;
+        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 COM SEGURO: ${p50ComSeguro}/mês.`;
         return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): 50/50 Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
       }
 
       if (lower.includes("linear") || lower.includes("100%")) {
         if (wantsSemSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela Linear SEM SEGURO: ${p100SemSeguro}/mês.`;
-        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela Linear COM SEGURO: ${p100ComSeguro}/mês (Seguro ${seguroFmt}).`;
+        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela Linear COM SEGURO: ${p100ComSeguro}/mês.`;
         return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Linear Com Seguro: ${p100ComSeguro}/mês | Sem Seguro: ${p100SemSeguro}/mês.`;
       }
 
