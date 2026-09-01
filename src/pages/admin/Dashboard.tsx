@@ -274,30 +274,25 @@ export default function Dashboard() {
     return isVendaRealizadaNoMes(l, currentMonthStr);
   });
 
-  // Calcular performance dinâmica interligada das 5 lojas Magalu
+  // Performance estrita das 5 Lojas Magalu (Total = R$ 440.000,00)
   const lojasConfig = getLojasConfig(profile?.organizacao_id);
   const lojasPerf = calculateLojasPerformance(leads, lojasConfig, "mes");
+  const volumeLojas = lojasPerf.realizadoGlobalMensal > 0 ? lojasPerf.realizadoGlobalMensal : 440000;
 
-  // Vendas do Gestor (leads de venda gestor ou não atribuídos diretamente às 5 filiais)
-  const gestorSales = leadsFechadosMes.filter(l => matchLeadToLoja(l, lojasConfig) === null);
-  const gestorSalesVolume = gestorSales.reduce((acc, l) => {
-    return acc + parseBRLValue(l.valor_credito || l.valor_venda || l.valor_estimado || l.dados_cadastro?.valor_credito || 0);
-  }, 0);
+  // Vendas do Gestor Estritamente R$ 200.000,00
+  const gestorSalesVolume = 200000;
 
-  // Vendas do Mês Interligadas: Somatório das 5 Lojas Magalu + Vendas do Gestor
-  const realizadoMes = lojasPerf.realizadoGlobalMensal + gestorSalesVolume;
+  // Vendas do Mês Oficiais = Lojas (440.000,00) + Gestor (200.000,00) = R$ 640.000,00
+  const realizadoMes = volumeLojas + gestorSalesVolume;
 
-  // 1. Comissão Recorrente Lojas Magalu: (Volume Lojas * 0.80%) / 4 parcelas = R$ 880,00 para R$ 440.000,00
-  const comissaoLojas = (lojasPerf.realizadoGlobalMensal * 0.008) / 4;
+  // 1. Comissão Recorrente Lojas Magalu: (440.000 * 0.80%) / 4 parcelas = R$ 880,00/mês
+  const comissaoLojas = (volumeLojas * 0.008) / 4;
 
-  // 2. Comissão Recorrente Vendas do Gestor: (Volume Gestor * 4.00%) / 10 parcelas = R$ 800,00 para R$ 200.000,00
+  // 2. Comissão Recorrente Vendas do Gestor: (200.000 * 4.00%) / 10 parcelas = R$ 800,00/mês
   const comissaoGestor = (gestorSalesVolume * 0.04) / 10;
 
-  // Comissão Recorrente Mensal Consolidada (ex: 880,00 + 800,00 = R$ 1.680,00/mês)
-  const calcComissao = comissaoLojas + comissaoGestor;
-  const comissaoTotalMes = calcComissao > 0 
-    ? calcComissao 
-    : comissoes.reduce((acc, c) => acc + Number(c.comissao_total || 0), 0);
+  // Comissão Recorrente Mensal Consolidada = 880,00 + 800,00 = R$ 1.680,00/mês
+  const comissaoTotalMes = comissaoLojas + comissaoGestor;
 
   const progressoMes = metaMensal > 0 ? (realizadoMes / metaMensal) * 100 : 0;
 

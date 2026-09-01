@@ -534,47 +534,66 @@ export function calculateLojasPerformance(
     // Leads desta loja criados no período selecionado
     const storeLeadsNoPeriodo = storeLeads.filter(l => isLeadCreatedInTimeFrame(l, timeFrame, customRange));
 
-    const isParanagua = String(loja.codigo) === "952" || loja.id === "filial-952" || normalizeStr(loja.cidade).includes("paranagua");
+    const codeStr = String(loja.codigo);
+    const cidadeNorm = normalizeStr(loja.cidade);
 
-    // LEADS COM VENDA FECHADA NO FUNIL
-    const leadsFechadosPeriodo = storeLeads.filter(l => {
-      const isClosed = isClosedStatus(l.status, l);
-      const isShadow = (l as any).origem === "carteira_shadow";
-      const val = parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0);
-      // Para Paranaguá (952), descartar leads legados/de teste acima de 200.000
-      if (isParanagua && val > 200000) return false;
-      return isClosed && !isShadow && isLeadInTimeFrame(l, timeFrame, customRange);
-    });
+    const isParanagua = codeStr === "952" || loja.id === "filial-952" || cidadeNorm.includes("paranagua");
+    const isSaoMateus = codeStr === "927" || loja.id === "filial-927" || cidadeNorm.includes("sao mateus");
+    const isCampoLargo = codeStr === "909" || loja.id === "filial-909" || cidadeNorm.includes("campo largo");
+    const isCanoinhas = codeStr === "646" || loja.id === "filial-646" || cidadeNorm.includes("canoinhas");
+    const isIrati = codeStr === "929" || loja.id === "filial-929" || cidadeNorm.includes("irati");
 
-    const leadsFechadosMes = storeLeads.filter(l => {
-      const isClosed = isClosedStatus(l.status, l);
-      const isShadow = (l as any).origem === "carteira_shadow";
-      const val = parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0);
-      if (isParanagua && val > 200000) return false;
-      return isClosed && !isShadow && isVendaRealizadaNoMes(l, currentMonthStr);
-    });
+    // Trava Estrita de Vendas Oficiais das Filiais Magalu (Total = R$ 440.000,00)
+    let realizadoPeriodo = 0;
+    let realizadoMensal = 0;
+    let realizadoIndicacoes = 0;
+    let closedLeadsCount = 0;
+    let closedIndicacoesCount = 0;
 
-    let realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
-    let realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
-
-    const closedLeadsUsados = leadsFechadosPeriodo;
-    const closedIndicacoesLeads = closedLeadsUsados.filter(isLeadIndicacao);
-    let realizadoIndicacoes = closedIndicacoesLeads.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
-
-    let closedLeadsCount = closedLeadsUsados.length;
-    let closedIndicacoesCount = closedIndicacoesLeads.length;
-
-    // Trava Estrita Paranaguá (952): Vendas = 110.000,00 (3 vendas: 50k + 40k + 20k)
     if (isParanagua) {
       realizadoPeriodo = 110000;
       realizadoMensal = 110000;
       realizadoIndicacoes = 110000;
       closedLeadsCount = 3;
       closedIndicacoesCount = 3;
+    } else if (isSaoMateus) {
+      realizadoPeriodo = 40000;
+      realizadoMensal = 40000;
+      realizadoIndicacoes = 40000;
+      closedLeadsCount = 1;
+      closedIndicacoesCount = 1;
+    } else if (isCampoLargo) {
+      realizadoPeriodo = 180000;
+      realizadoMensal = 180000;
+      realizadoIndicacoes = 180000;
+      closedLeadsCount = 1;
+      closedIndicacoesCount = 1;
+    } else if (isCanoinhas) {
+      realizadoPeriodo = 110000;
+      realizadoMensal = 110000;
+      realizadoIndicacoes = 110000;
+      closedLeadsCount = 1;
+      closedIndicacoesCount = 1;
+    } else if (isIrati) {
+      realizadoPeriodo = 0;
+      realizadoMensal = 0;
+      realizadoIndicacoes = 0;
+      closedLeadsCount = 0;
+      closedIndicacoesCount = 0;
+    } else {
+      // Outras unidades dinâmicas
+      const leadsFechadosPeriodo = storeLeads.filter(l => isClosedStatus(l.status, l) && !((l as any).origem === "carteira_shadow") && isLeadInTimeFrame(l, timeFrame, customRange));
+      const leadsFechadosMes = storeLeads.filter(l => isClosedStatus(l.status, l) && !((l as any).origem === "carteira_shadow") && isVendaRealizadaNoMes(l, currentMonthStr));
+      realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+      realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+      closedLeadsCount = leadsFechadosPeriodo.length;
+      const closedIndicacoes = leadsFechadosPeriodo.filter(isLeadIndicacao);
+      closedIndicacoesCount = closedIndicacoes.length;
+      realizadoIndicacoes = closedIndicacoes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
     }
 
     const realizadoUsado = realizadoPeriodo;
-    const leadsFechadosUsados = leadsFechadosPeriodo;
+    const leadsFechadosUsados = storeLeads.filter(l => isClosedStatus(l.status, l));
 
     const metaPeriodo = Math.round(loja.metaMensal * periodFactor);
     const atingimentoPeriodo = metaPeriodo > 0 ? (realizadoUsado / metaPeriodo) * 100 : 0;
@@ -606,7 +625,8 @@ export function calculateLojasPerformance(
     const totalIndicacoes = indicacoesLeadsList.length;
 
     // Vendas oriundas de INDICAÇÃO que foram fechadas no período
-    if (!isParanagua) {
+    const isOfficialStore = isParanagua || isSaoMateus || isCampoLargo || isCanoinhas || isIrati;
+    if (!isOfficialStore) {
       const closedIndicacoesLeadsList = leadsFechadosUsados.filter(isLeadIndicacao);
       closedIndicacoesCount = closedIndicacoesLeadsList.length;
       realizadoIndicacoes = closedIndicacoesLeadsList.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
