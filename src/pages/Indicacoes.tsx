@@ -132,12 +132,17 @@ export default function Indicacoes() {
       ? rawLista.filter(g => g.isPlanoGold)
       : rawLista.filter(g => !g.isPlanoGold);
 
+    // Ordenar por menor parcela (r50) antes de filtrar por crédito único
+    filtered = [...filtered].sort((a, b) => a.r50 - b.r50);
+
     const seen = new Set<number>();
-    return filtered.filter(g => {
+    filtered = filtered.filter(g => {
       if (seen.has(g.credito)) return false;
       seen.add(g.credito);
       return true;
     });
+
+    return filtered.sort((a, b) => a.credito - b.credito);
   }, [categoria, filterPlanoGold]);
   const _g = lista[idx] || lista[0];
 

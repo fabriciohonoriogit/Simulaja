@@ -110,9 +110,13 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     const listKey = isVeiculo ? "veiculo" : "imovel";
     const groupList: any[] = (GRUPOS as any)[listKey] || (GRUPOS as any).imovel || [];
 
-    // Encontrar grupo com o crédito mais próximo
+    // Encontrar grupo com o crédito mais próximo (e menor parcela r50 em caso de empate)
     const closest = groupList.reduce((prev: any, curr: any) => {
-      return Math.abs(curr.credito - creditTarget) < Math.abs(prev.credito - creditTarget) ? curr : prev;
+      const diffPrev = Math.abs(prev.credito - creditTarget);
+      const diffCurr = Math.abs(curr.credito - creditTarget);
+      if (diffCurr < diffPrev) return curr;
+      if (diffCurr === diffPrev) return (curr.r50 || 0) < (prev.r50 || 0) ? curr : prev;
+      return prev;
     }, groupList[0]);
 
     if (closest) {
