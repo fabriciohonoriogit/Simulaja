@@ -95,11 +95,40 @@ ${simContext}
 async function generateSmartLocalResponse(prompt: string): Promise<string> {
   const lower = prompt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+  // Busca por valor de crédito citado no prompt para simulação direta
+  const numbersInPrompt = prompt.match(/\d+[\d\.,]*/g);
+  if (numbersInPrompt && (lower.includes("credito") || lower.includes("simula") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear") || lower.includes("gold") || lower.includes("mil"))) {
+    const rawVal = parseFloat(numbersInPrompt[0].replace(/\./g, "").replace(",", "."));
+    const creditTarget = rawVal < 1000 ? rawVal * 1000 : rawVal;
+
+    // Encontrar grupo mais próximo
+    const closest = GRUPOS.reduce((prev, curr) => {
+      return Math.abs(curr.credito - creditTarget) < Math.abs(prev.credito - creditTarget) ? curr : prev;
+    }, GRUPOS[0]);
+
+    if (closest) {
+      const credFmt = closest.credito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const p50Fmt = closest.r50 ? closest.r50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "N/A";
+      const p100Fmt = closest.r100 ? closest.r100.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "N/A";
+
+      if (lower.includes("50/50") || lower.includes("cinquenta")) {
+        return `Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo} meses): Parcela 50/50: ${p50Fmt}/mês.`;
+      }
+      if (lower.includes("linear") || lower.includes("100%")) {
+        return `Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo} meses): Parcela Linear (100%): ${p100Fmt}/mês.`;
+      }
+      if (lower.includes("gold")) {
+        return `Crédito ${credFmt} (Plano Gold - Grupo ${closest.grupo}): Parcela Reduzida Gold: ${p50Fmt}/mês.`;
+      }
+      return `Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50: ${p50Fmt}/mês | Parcela Linear: ${p100Fmt}/mês.`;
+    }
+  }
+
   // Busca grupo específico citado pelo usuário no simulador interno
   const matchGroupKey = Object.keys(GRUPO_CARACTERISTICAS).find(k => lower.includes(k));
   if (matchGroupKey) {
     const info = GRUPO_CARACTERISTICAS[matchGroupKey];
-    return `Consulta ao Simulador Interno (Grupo ${info.grupo}): Reajuste pelo ${info.reajuste}. ${info.caracteristicas} Ordem de contemplação: ${info.ordemContemplacao}. Regra de reajuste: ${info.regraReajuste}.`;
+    return `Grupo ${info.grupo} (${info.reajuste}): ${info.caracteristicas} Ordem contemplação: ${info.ordemContemplacao}.`;
   }
 
   // 1. VENDAS, METAS, PERFORMANCE, RESUMO E PRODUÇÃO
@@ -120,30 +149,30 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     lower.includes("paranagua") ||
     lower.includes("gestor")
   ) {
-    return `Análise de Performance Comercial: O resultado realizado oficial do mês é de R$ 640.000,00 (R$ 440.000,00 das 5 Filiais Magalu + R$ 200.000,00 do Gestor), totalizando 7 vendas com ticket médio de R$ 91.428,57. A comissão recorrente mensal consolidada é de R$ 1.680,00/mês (R$ 880,00 das filiais + R$ 800,00 do gestor). No Ranking Elite, o status é GOLD (OURO) com 42,7% da meta de R$ 1,5M atingidos (faltam R$ 860.000,00 para a patente CROMO). Desempenho por loja: Campo Largo R$ 180k, Paranaguá R$ 110k, Canoinhas R$ 110k, São Mateus do Sul R$ 40k e Irati R$ 0.`;
+    return `Realizado Mês: R$ 640.000,00 (Filiais: R$ 440.000,00 + Gestor: R$ 200.000,00 | 7 vendas). Comissão Recorrente: R$ 1.680,00/mês (Filiais: R$ 880,00 + Gestor: R$ 800,00). Status: Patente GOLD (OURO).`;
   }
 
   // 2. FUNIL DE VENDAS & CRM
   if (lower.includes("funil") || lower.includes("pipeline") || lower.includes("lead")) {
-    return `Mapeamento do Funil: Temos 7 vendas realizadas no mês que somam R$ 640.000,00. As oportunidades em tratativa no funil estão qualificadas. Recomendo focar o follow-up nos leads de alto ticket para atingir a meta de R$ 1,5M.`;
+    return `Funil do Mês: 7 vendas realizadas (R$ 640.000,00). Foco no segmento de alto ticket para a meta de R$ 1,5M.`;
   }
 
   // 3. INADIMPLÊNCIA & CARTEIRA
   if (lower.includes("inadimplent") || lower.includes("atraso") || lower.includes("carteira") || lower.includes("assembleia")) {
-    return `Análise de Carteira: Acompanhamento de adimplência e comissões alinhado. A comissão recorrente garantida no mês é de R$ 1.680,00/mês. Recomendo manter contato preventivo antes das assembleias para assegurar a retenção e indicar novos clientes.`;
+    return `Carteira: Comissão Recorrente: R$ 1.680,00/mês garantida. Manter acompanhamento pré-assembleia.`;
   }
 
   // 4. LANCES & SIMULAÇÕES DO SIMULADOR INTERNO
   if (lower.includes("grupo") || lower.includes("lance") || lower.includes("simula") || lower.includes("imovel") || lower.includes("carro") || lower.includes("veiculo")) {
-    return `Simulador Interno Magalu: Temos grupos registrados para imóveis (ex: Grupos 6043, 6042, 6027, 6021, 6022) com lance embutido de 25%, reajuste pelo INCC e opções de planos 50/50 e Linear. Para veículos (ex: Grupos 5297, 5295, 5294), opções de 40k a 170k com reajuste IPCA. Todos os grupos e parcelas exatas estão cadastrados na tabela do simulador interno.`;
+    return `Simulador Magalu: Imóveis (Grupos 6043, 6042, 6027, 6021, 6022): Lance embutido de 25%, reajuste INCC, planos 50/50 e Linear. Veículos (Grupos 5297, 5295, 5294): Créditos 40k a 170k, reajuste IPCA.`;
   }
 
   // 5. TAXA SELIC & COMPARATIVO DE FINANCIAMENTO
   if (lower.includes("selic") || lower.includes("financiamento") || lower.includes("juro") || lower.includes("banco")) {
-    return `Matemática Financeira: Com a Selic elevada, o consórcio sem juros bancários gera uma economia média de 60% a 70% no Custo Efetivo Total em comparação ao financiamento tradicional, sendo a melhor solução de investimento patrimonial.`;
+    return `Consórcio vs Financiamento: Economia de 60% a 70% no Custo Efetivo Total em relação ao financiamento tradicional.`;
   }
 
-  return `Diretoria Estratégica Bella IA. Todos os indicadores comerciais estão atualizados: Vendas do mês em R$ 640.000,00, Comissão Recorrente em R$ 1.680,00/mês e Patente GOLD (OURO). Qual indicador ou estratégia comercial deseja analisar?`;
+  return `Valores Oficiais: Realizado Mês R$ 640.000,00 | Comissão R$ 1.680,00/mês | Patente GOLD (OURO).`;
 }
 
 export const aiService = {
@@ -173,8 +202,11 @@ Crie uma abordagem de WhatsApp altamente consultiva usando o método SRV (Sonho,
 
     const authContext = getSystemAuthoritativeContext();
 
-    const prompt = `Você é a Bella, Diretora Estratégica e Especialista Sênior em Consórcios do Simulaja / Elite Consórcios.
-IMPORTANTE: Responda ao usuário utilizando ESTRITAMENTE e OBRIGATORIAMENTE os dados oficiais do sistema listados abaixo. NUNCA invente, alucine ou presuma valores de vendas, comissões ou lojas que divirjam destes dados oficiais:
+    const prompt = `Você é a Bella, Diretora Estratégica da Elite Consórcios / Simulaja.
+DIRETRIZ DE RESPOSTA ESTRITA SOLICITADA PELO USUÁRIO:
+- Responda DIRETA, OBJETIVA E CONCISAMENTE com APENAS OS VALORES E NÚMEROS SOLICITADOS (seja Plano 50/50, Linear, Gold ou Vendas).
+- NUNCA inclua saudações longas, introduções ou explicações genéricas.
+- Forneça estritamente o valor do Crédito, o Grupo, o Prazo e o valor exato da Parcela do Simulador Interno ou os indicadores oficiais.
 
 ${authContext}
 
