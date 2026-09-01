@@ -186,7 +186,7 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
     grupo: "5295",
     reajuste: "IPCA",
     primeiraAssembleia: "25/04/2026",
-    proximaAssembleia: "25/07/2026",
+    proximaAssembleia: "23/09/2026",
     caracteristicas: "PL_AL - AUTO LINEAR, 50/50 E 75/25 - CRÉD 90 A 140 MIL. ***** DEVIDO A RESOLUÇÃO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
     ordemContemplacao: "Sorteio, Lance Livre, Fixo 25% (a partir da 3ª ass. conforme saldo) e Segundo Fixo 45% (a partir da 6ª ass), onde inicia repetição entre os lances enquanto houver saldo.",
     opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
@@ -751,12 +751,12 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "5297", credito: 80000, prazo: 99, r50: 581.57, r100: 960.76, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
 
     // Grupo Carro 5295
-    { grupo: "5295", credito: 90000, prazo: 96, r50: 673.86, r100: 1104.21, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5295", credito: 100000, prazo: 96, r50: 748.74, r100: 1226.90, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5295", credito: 120000, prazo: 96, r50: 898.49, r100: 1472.28, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5295", credito: 130000, prazo: 96, r50: 973.36, r100: 1594.97, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5295", credito: 140000, prazo: 96, r50: 1048.23, r100: 1717.66, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "2x 5295", credito: 180000, prazo: 96, r50: 1347.72, r100: 2208.42, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true }
+    { grupo: "5295", credito: 90000, prazo: 95, r50: 680.66, r100: 1116.47, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 100000, prazo: 95, r50: 756.29, r100: 1240.53, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 120000, prazo: 95, r50: 907.54, r100: 1488.63, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 130000, prazo: 95, r50: 983.17, r100: 1612.68, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "5295", credito: 140000, prazo: 95, r50: 1058.80, r100: 1736.74, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "2x 5295", credito: 180000, prazo: 95, r50: 1512.58, r100: 2232.95, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true }
   ],
   pesados: [
     // Grupo 5996 (Agosto/26)
