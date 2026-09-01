@@ -3,7 +3,7 @@
  * Conecta com a Edge Function `jarvis-ai` e possui motor de inteligência local analítico em tempo real
  */
 import { supabase } from "@/integrations/supabase/client";
-import { GRUPOS } from "@/constants/simulador";
+import { GRUPOS, GRUPO_CARACTERISTICAS } from "@/constants/simulador";
 
 export interface LeadContext {
   nome: string;
@@ -46,7 +46,30 @@ async function callAI(
   return { text: await generateSmartLocalResponse(prompt), error: null };
 }
 
+export function getSimulatorAuthoritativeContext(): string {
+  const groupsSummary = Object.entries(GRUPO_CARACTERISTICAS).map(([gId, info]) => {
+    return `• GRUPO ${gId} (${info.reajuste}): ${info.caracteristicas} | Ordem Contemplação: ${info.ordemContemplacao}`;
+  }).join("\n");
+
+  const sampleRates = GRUPOS.slice(0, 15).map(g => {
+    const credStr = (g.credito || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const r50Str = g.r50 ? g.r50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "N/A";
+    return `• Grupo ${g.grupo} | Crédito: ${credStr} | Prazo: ${g.prazo}m | Parcela 50/50: ${r50Str} | Tx Linear: ${g.txLinear || g.tx || 'N/A'}%`;
+  }).join("\n");
+
+  return `
+--- TABELAS E REGRAS DO SIMULADOR INTERNO (ALIMENTADAS NO SISTEMA) ---
+GRUPOS REGISTRADOS E CARACTERÍSTICAS TÉCNICAS:
+${groupsSummary}
+
+EXEMPLOS DE TABELAS DE VALORES E PARCELAS:
+${sampleRates}
+----------------------------------------------------------------------
+`;
+}
+
 export function getSystemAuthoritativeContext(): string {
+  const simContext = getSimulatorAuthoritativeContext();
   return `
 --- DADOS OFICIAIS E AUTORITÁRIOS DO SISTEMA SIMULAJA / ELITE CONSÓRCIOS ---
 • Vendas Oficiais do Mês (Realizado): R$ 640.000,00 (Total = 440.000,00 Filiais Magalu + 200.000,00 Gestor)
@@ -64,12 +87,20 @@ export function getSystemAuthoritativeContext(): string {
   - R$ 800,00/mês das vendas do gestor ((200.000 * 4,00%) / 10 parcelas)
 • Status / Ranking Elite: Patente GOLD (OURO) (Vendas entre 500k e 1,5M)
 • Próximo Nível (CROMO): Meta de R$ 1.500.000,00 (42,7% atingido, Faltam R$ 860.000,00 em Vendas)
---------------------------------------------------------------------------
+
+${simContext}
 `;
 }
 
 async function generateSmartLocalResponse(prompt: string): Promise<string> {
   const lower = prompt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // Busca grupo específico citado pelo usuário no simulador interno
+  const matchGroupKey = Object.keys(GRUPO_CARACTERISTICAS).find(k => lower.includes(k));
+  if (matchGroupKey) {
+    const info = GRUPO_CARACTERISTICAS[matchGroupKey];
+    return `Consulta ao Simulador Interno (Grupo ${info.grupo}): Reajuste pelo ${info.reajuste}. ${info.caracteristicas} Ordem de contemplação: ${info.ordemContemplacao}. Regra de reajuste: ${info.regraReajuste}.`;
+  }
 
   // 1. VENDAS, METAS, PERFORMANCE, RESUMO E PRODUÇÃO
   if (
@@ -102,9 +133,9 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     return `Análise de Carteira: Acompanhamento de adimplência e comissões alinhado. A comissão recorrente garantida no mês é de R$ 1.680,00/mês. Recomendo manter contato preventivo antes das assembleias para assegurar a retenção e indicar novos clientes.`;
   }
 
-  // 4. LANCES & SIMULAÇÕES
+  // 4. LANCES & SIMULAÇÕES DO SIMULADOR INTERNO
   if (lower.includes("grupo") || lower.includes("lance") || lower.includes("simula") || lower.includes("imovel") || lower.includes("carro") || lower.includes("veiculo")) {
-    return `Estratégia de Contemplação: No segmento imobiliário e veicular Magalu, os grupos trabalham com lances embutidos de até 30% do crédito. A principal alavanca comercial é utilizar o lance embutido para acelerar a contemplação com baixo desembolso inicial.`;
+    return `Simulador Interno Magalu: Temos grupos registrados para imóveis (ex: Grupos 6043, 6042, 6027, 6021, 6022) com lance embutido de 25%, reajuste pelo INCC e opções de planos 50/50 e Linear. Para veículos (ex: Grupos 5297, 5295, 5294), opções de 40k a 170k com reajuste IPCA. Todos os grupos e parcelas exatas estão cadastrados na tabela do simulador interno.`;
   }
 
   // 5. TAXA SELIC & COMPARATIVO DE FINANCIAMENTO
