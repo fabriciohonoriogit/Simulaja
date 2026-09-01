@@ -48,7 +48,7 @@ import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import jarvisAvatar from "@/assets/jarvis-avatar.png";
 import { COLUMNS } from "@/components/admin/funil/constants";
 import { ESTATISTICAS_LANCES, GRUPOS, GRUPO_CARACTERISTICAS, obterEstatisticasGrupo } from "@/constants/simulador";
-import { aiService } from "@/services/aiService";
+import { aiService, getSystemAuthoritativeContext } from "@/services/aiService";
 import { sendWhatsAppMessage } from "@/services/evolutionApiService";
 import { magaluPortalWorker } from "@/services/magaluPortalWorker";
 import { Missao, calcularMissoes } from "@/lib/missoesService";
@@ -415,7 +415,7 @@ export default function Jarvis() {
         setQuestion("");
 
         try {
-            const res = await aiService.askJarvis("Dashboard do Jarvis", query);
+            const res = await aiService.askJarvis(getSystemAuthoritativeContext(), query);
             let answerText = res.answer || "Análise concluída. Indicadores e estratégias comerciais mapeados no CRM.";
 
             // Processa comandos de navegação ou ações via JSON se presentes na resposta

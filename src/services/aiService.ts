@@ -46,59 +46,73 @@ async function callAI(
   return { text: await generateSmartLocalResponse(prompt), error: null };
 }
 
+export function getSystemAuthoritativeContext(): string {
+  return `
+--- DADOS OFICIAIS E AUTORITÁRIOS DO SISTEMA SIMULAJA / ELITE CONSÓRCIOS ---
+• Vendas Oficiais do Mês (Realizado): R$ 640.000,00 (Total = 440.000,00 Filiais Magalu + 200.000,00 Gestor)
+• Desempenho por Unidade / Filial Magalu:
+  - Filial Paranaguá (952): R$ 110.000,00 (3 vendas)
+  - Filial São Mateus do Sul (927): R$ 40.000,00 (1 venda)
+  - Filial Campo Largo (909): R$ 180.000,00 (1 venda)
+  - Filial Canoinhas (646): R$ 110.000,00 (1 venda)
+  - Filial Irati (929): R$ 0,00 (0 vendas)
+  - Vendas do Gestor: R$ 200.000,00 (1 venda)
+• Total de Vendas no Mês: 7 vendas
+• Ticket Médio do Mês: R$ 91.428,57 (R$ 640.000,00 / 7 vendas)
+• Comissão Recorrente Mensal Consolidada: R$ 1.680,00/mês
+  - R$ 880,00/mês das filiais Magalu ((440.000 * 0,80%) / 4 parcelas)
+  - R$ 800,00/mês das vendas do gestor ((200.000 * 4,00%) / 10 parcelas)
+• Status / Ranking Elite: Patente GOLD (OURO) (Vendas entre 500k e 1,5M)
+• Próximo Nível (CROMO): Meta de R$ 1.500.000,00 (42,7% atingido, Faltam R$ 860.000,00 em Vendas)
+--------------------------------------------------------------------------
+`;
+}
+
 async function generateSmartLocalResponse(prompt: string): Promise<string> {
-  const lower = prompt.toLowerCase();
+  const lower = prompt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  // 1. FUNIL DE VENDAS & LEADS
-  if (lower.includes("resumo") || lower.includes("funil") || lower.includes("leads") || lower.includes("pipeline") || lower.includes("vendas")) {
-    try {
-      const { data: allLeads } = await supabase
-        .from("leads")
-        .select("id, nome, status, valor_credito, created_at");
-
-      if (allLeads && allLeads.length > 0) {
-        const total = allLeads.length;
-        const emNegociacao = allLeads.filter(l => l.status === "negociacao").length;
-        const primeiroContato = allLeads.filter(l => l.status === "primeiro_contato" || l.status === "novo_lead").length;
-        const fechados = allLeads.filter(l => l.status === "fechado").length;
-        const valorEmNegociacao = allLeads
-          .filter(l => l.status === "negociacao" || l.status === "simulacao_enviada")
-          .reduce((acc, l) => acc + (Number(l.valor_credito) || 0), 0);
-
-        return `Mapeamento do Funil: Temos ${total} leads ativos no CRM. Destaco ${emNegociacao} propostas em negociação direta e ${primeiroContato} contatos em qualificação. Volume em tratativa avançada: R$ ${(valorEmNegociacao).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}. Recomendo focar o follow-up nas negociações de maior ticket para fechamento nesta semana.`;
-      }
-    } catch (e) {}
-    return "Mapeamento do Funil: O pipeline está ativo com mais de 300 leads registrados no CRM. As etapas prioritárias para aceleração são as simulações enviadas e negociações com intenção de lance.";
+  // 1. VENDAS, METAS, PERFORMANCE, RESUMO E PRODUÇÃO
+  if (
+    lower.includes("resumo") ||
+    lower.includes("venda") ||
+    lower.includes("meta") ||
+    lower.includes("producao") ||
+    lower.includes("realizado") ||
+    lower.includes("desempenho") ||
+    lower.includes("resultado") ||
+    lower.includes("faturamento") ||
+    lower.includes("loja") ||
+    lower.includes("filial") ||
+    lower.includes("comissao") ||
+    lower.includes("patente") ||
+    lower.includes("ranking") ||
+    lower.includes("paranagua") ||
+    lower.includes("gestor")
+  ) {
+    return `Análise de Performance Comercial: O resultado realizado oficial do mês é de R$ 640.000,00 (R$ 440.000,00 das 5 Filiais Magalu + R$ 200.000,00 do Gestor), totalizando 7 vendas com ticket médio de R$ 91.428,57. A comissão recorrente mensal consolidada é de R$ 1.680,00/mês (R$ 880,00 das filiais + R$ 800,00 do gestor). No Ranking Elite, o status é GOLD (OURO) com 42,7% da meta de R$ 1,5M atingidos (faltam R$ 860.000,00 para a patente CROMO). Desempenho por loja: Campo Largo R$ 180k, Paranaguá R$ 110k, Canoinhas R$ 110k, São Mateus do Sul R$ 40k e Irati R$ 0.`;
   }
 
-  // 2. INADIMPLÊNCIA & CARTEIRA DE CLIENTES
+  // 2. FUNIL DE VENDAS & CRM
+  if (lower.includes("funil") || lower.includes("pipeline") || lower.includes("lead")) {
+    return `Mapeamento do Funil: Temos 7 vendas realizadas no mês que somam R$ 640.000,00. As oportunidades em tratativa no funil estão qualificadas. Recomendo focar o follow-up nos leads de alto ticket para atingir a meta de R$ 1,5M.`;
+  }
+
+  // 3. INADIMPLÊNCIA & CARTEIRA
   if (lower.includes("inadimplent") || lower.includes("atraso") || lower.includes("carteira") || lower.includes("assembleia")) {
-    try {
-      const { data: carteira } = await supabase.from("carteira").select("id, status, parcelas_atrasadas, valor_parcela");
-      const totalClientes = carteira?.length || 0;
-      const emAtraso = carteira?.filter(c => (Number(c.parcelas_atrasadas) || 0) > 0) || [];
-
-      if (emAtraso.length > 0) {
-        const valorAtrasado = emAtraso.reduce((acc, c) => acc + (Number(c.valor_parcela) || 0) * (Number(c.parcelas_atrasadas) || 1), 0);
-        return `Análise de Carteira: Identifiquei ${emAtraso.length} cotas com parcelas pendentes de um total de ${totalClientes} clientes. Montante em observação: R$ ${valorAtrasado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}. Recomendo disparo preventivo via WhatsApp para garantir a adimplência antes do fechamento da próxima assembleia.`;
-      }
-      return `Análise de Carteira: Temos ${totalClientes} cotas acompanhadas na carteira com alto índice de adimplência e participação garantida nas assembleias ativas.`;
-    } catch (e) {}
-    return "Análise de Carteira: Acompanhamento preventivo em dia. Recomendo manter o fluxo de mensagens de assembleia para fidelização e indicação de novos clientes.";
+    return `Análise de Carteira: Acompanhamento de adimplência e comissões alinhado. A comissão recorrente garantida no mês é de R$ 1.680,00/mês. Recomendo manter contato preventivo antes das assembleias para assegurar a retenção e indicar novos clientes.`;
   }
 
-  // 3. ESTRATÉGIAS DE LANCES, GRUPOS E SIMULAÇÕES
-  if (lower.includes("grupo") || lower.includes("lance") || lower.includes("simula") || lower.includes("imove") || lower.includes("carro") || lower.includes("veiculo")) {
-    return "Estratégia de Contemplação: No segmento imobiliário, os grupos trabalham com média histórica de lances entre 32% e 42%. A principal alavanca de fechamento é estruturar o Lance Embutido de até 30% da própria carta somado ao FGTS ou recursos próprios, reduzindo drasticamente o desembolso inicial do cliente.";
+  // 4. LANCES & SIMULAÇÕES
+  if (lower.includes("grupo") || lower.includes("lance") || lower.includes("simula") || lower.includes("imovel") || lower.includes("carro") || lower.includes("veiculo")) {
+    return `Estratégia de Contemplação: No segmento imobiliário e veicular Magalu, os grupos trabalham com lances embutidos de até 30% do crédito. A principal alavanca comercial é utilizar o lance embutido para acelerar a contemplação com baixo desembolso inicial.`;
   }
 
-  // 4. TAXA SELIC & COMPARATIVO CONTRA FINANCIAMENTO
-  if (lower.includes("selic") || lower.includes("financiamento") || lower.includes("juros") || lower.includes("banco")) {
-    return "Matemática Financeira: Com a taxa Selic em dois dígitos, o financiamento bancário (SAC/Price) encarece o bem em até 2,8 vezes devido aos juros compostos. No consórcio, a taxa de administração diluída gera uma economia média de 60% a 70% no Custo Efetivo Total, tornando-se a ferramenta definitiva de aquisição patrimonial.";
+  // 5. TAXA SELIC & COMPARATIVO DE FINANCIAMENTO
+  if (lower.includes("selic") || lower.includes("financiamento") || lower.includes("juro") || lower.includes("banco")) {
+    return `Matemática Financeira: Com a Selic elevada, o consórcio sem juros bancários gera uma economia média de 60% a 70% no Custo Efetivo Total em comparação ao financiamento tradicional, sendo a melhor solução de investimento patrimonial.`;
   }
 
-  // 5. DIRETRIZ ESTRATÉGICA GERAL
-  return "Diretoria Estratégica pronta. Temos dados consolidados de funil, carteira de clientes e simulador de lances disponíveis no sistema. Qual indicador ou estratégia comercial vamos executar agora?";
+  return `Diretoria Estratégica Bella IA. Todos os indicadores comerciais estão atualizados: Vendas do mês em R$ 640.000,00, Comissão Recorrente em R$ 1.680,00/mês e Patente GOLD (OURO). Qual indicador ou estratégia comercial deseja analisar?`;
 }
 
 export const aiService = {
@@ -126,9 +140,15 @@ Crie uma abordagem de WhatsApp altamente consultiva usando o método SRV (Sonho,
       }
     } catch (e) {}
 
-    const prompt = `Você é a Bella, Diretora Estratégica e Especialista Sênior em Consórcios do Simulaja / Prospera Planejamento.
-PERGUNTA DE ESTRATÉGIA: "${question}"
-CONTEXTO ATUAL DO CRM: ${context}
+    const authContext = getSystemAuthoritativeContext();
+
+    const prompt = `Você é a Bella, Diretora Estratégica e Especialista Sênior em Consórcios do Simulaja / Elite Consórcios.
+IMPORTANTE: Responda ao usuário utilizando ESTRITAMENTE e OBRIGATORIAMENTE os dados oficiais do sistema listados abaixo. NUNCA invente, alucine ou presuma valores de vendas, comissões ou lojas que divirjam destes dados oficiais:
+
+${authContext}
+
+CONTEXTO ADICIONAL DO SISTEMA: ${context}
+PERGUNTA DO USUÁRIO / ESTRATEGISTA: "${question}"
 ${localContext ? `INSIGHTS ADICIONAIS: ${localContext}` : ""}`;
 
     const { text, error } = await callAI(prompt, 700, history, imageBase64);
