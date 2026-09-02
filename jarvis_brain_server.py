@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import subprocess
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -104,7 +105,6 @@ class BrainHandler(BaseHTTPRequestHandler):
 
         if path == '/reset':
             try:
-                # Recarrega a memórias de síntese e devolve status zerado
                 stats = brain.stats()
                 self.send_json({"success": True, "message": "Sistema Jarvis resetado com sucesso", "stats": stats})
             except Exception as e:
@@ -117,22 +117,7 @@ class BrainHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
 
-    def do_POST(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
-
-        # Leitura do corpo do POST
-        content_length = int(self.headers.get('Content-Length', 0))
-        try:
-            body = self.rfile.read(content_length).decode('utf-8')
-        except UnicodeDecodeError:
-            body = self.rfile.read(content_length).decode('latin-1', errors='replace')
-        try:
-            data = json.loads(body) if body else {}
-        except Exception:
-            data = {}
-
-        if path == '/observe':
+        elif path == '/observe':
             who = data.get('who', 'vendedor')
             user_msg = data.get('user_msg', '')
             ai_reply = data.get('ai_reply', '')
@@ -177,6 +162,54 @@ class BrainHandler(BaseHTTPRequestHandler):
             try:
                 res = brain.run_jobs()
                 self.send_json({"success": True, "jobs": res})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+
+        elif path == '/hermes/chat':
+            prompt = data.get('prompt', '')
+            who = data.get('who', 'vendedor')
+            model = data.get('model', 'gemini-3.6-flash')
+            if not prompt:
+                self.send_json({"error": "prompt é obrigatório"}, 400)
+                return
+
+            try:
+                context = brain.build_context(prompt, who)
+                full_prompt = f"Contexto de Memória CRM/3cerebros:\n{context}\n\nComando do Usuário:\n{prompt}"
+
+                hermes_dir = os.path.join(os.path.dirname(__file__), "hermes-agent")
+                cmd = [
+                    "uv", "run", "python", "cli.py",
+                    "--provider", "google-ai-studio",
+                    "--model", model,
+                    "--oneshot",
+                    "-q", full_prompt
+                ]
+
+                process = subprocess.run(
+                    cmd,
+                    cwd=hermes_dir,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace'
+                )
+
+                output = process.stdout.strip()
+                if not output and process.stderr:
+                    output = process.stderr.strip()
+
+                try:
+                    brain.observe(who, prompt, output)
+                except Exception:
+                    pass
+
+                self.send_json({
+                    "success": True,
+                    "response": output,
+                    "model": model,
+                    "context_used": bool(context)
+                })
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
 

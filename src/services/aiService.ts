@@ -224,6 +224,27 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
   },
 
   async askJarvis(context: string, question: string, history?: Array<{ role: string; text: string }>, imageBase64?: string) {
+    // 1. Tenta comunicar com o Hermes Agent via Jarvis Brain Server na porta 8008
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch("http://localhost:8008/hermes/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: question, who: "vendedor" }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.response) {
+          return { answer: data.response, error: null };
+        }
+      }
+    } catch (e) {
+      // Fallback para servidor local / contexto legados se o Hermes Server não responder a tempo
+    }
+
     let localContext = "";
     try {
       const controller = new AbortController();
