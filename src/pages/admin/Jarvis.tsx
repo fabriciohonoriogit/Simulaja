@@ -140,6 +140,7 @@ export default function Jarvis() {
     const [voiceMode, setVoiceMode] = useState<VoiceOperationMode>("passive");
     const [showMultimodalScanner, setShowMultimodalScanner] = useState(false);
     const isHandsFreeRef = useRef(false);
+    const isAnalyzingRef = useRef(false);
     const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -424,17 +425,18 @@ export default function Jarvis() {
 
     const handleAnalyze = async (query: string = question) => {
         const trimmed = query.trim();
-        if (!trimmed || isAnalyzing) return;
+        if (!trimmed || isAnalyzingRef.current) return;
 
+        isAnalyzingRef.current = true;
         setIsAnalyzing(true);
         setOrbState("thinking");
-        const userMsg: Message = { id: Date.now().toString(), role: "user", content: query, timestamp: new Date() };
+        const userMsg: Message = { id: Date.now().toString(), role: "user", content: trimmed, timestamp: new Date() };
         setMessages(prev => [...prev, userMsg]);
         setQuestion("");
 
         try {
             const currentUserName = profile?.nome || "Fabrício";
-            const res = await aiService.askJarvis(getSystemAuthoritativeContext(), query, undefined, undefined, currentUserName);
+            const res = await aiService.askJarvis(getSystemAuthoritativeContext(), trimmed, undefined, undefined, currentUserName);
             let answerText = (res && typeof res.answer === "string" && res.answer.trim()) 
                 ? res.answer.trim() 
                 : `Oi ${currentUserName.split(" ")[0]}, como posso lhe ajudar?`;
@@ -450,7 +452,7 @@ export default function Jarvis() {
                 } catch (e) {}
                 answerText = answerText.replace(/```json\n([\s\S]*?)\n```/, "").trim();
             } else {
-                const lowerQuery = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const lowerQuery = trimmed.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 if (lowerQuery.includes("inadimplent")) setTimeout(() => navigate("/admin/inadimplentes"), 1800);
                 else if (lowerQuery.includes("funil") || lowerQuery.includes("kanban")) setTimeout(() => navigate("/admin/funil"), 1800);
                 else if (lowerQuery.includes("meta")) setTimeout(() => navigate("/admin/metas"), 1800);
@@ -471,7 +473,7 @@ export default function Jarvis() {
             console.error("[Jarvis Execution Error]", e);
             let fallbackAnswer = "Estou pronta para te apoiar com as simulações do CRM. Informe o crédito ou CPF do consorciado para continuar.";
             try {
-                fallbackAnswer = await generateSmartLocalResponse(query);
+                fallbackAnswer = await generateSmartLocalResponse(trimmed);
             } catch (err) {}
             
             const jarvisMsg: Message = {
@@ -483,6 +485,7 @@ export default function Jarvis() {
             setMessages(prev => [...prev, jarvisMsg]);
             speak(fallbackAnswer);
         } finally {
+            isAnalyzingRef.current = false;
             setIsAnalyzing(false);
         }
     };
@@ -662,21 +665,34 @@ export default function Jarvis() {
                                 {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                             </Button>
 
-                            <Input
-                                placeholder="Digite sua pergunta ou comande a Bella..."
-                                value={question}
-                                onChange={(e) => setQuestion(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                                className="h-12 bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 text-sm focus-visible:ring-amber-500/50"
-                            />
-
-                            <Button
-                                onClick={() => handleAnalyze()}
-                                disabled={isAnalyzing || !question.trim()}
-                                className="h-12 px-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/20"
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    handleAnalyze();
+                                }}
+                                className="flex-1 flex gap-2"
                             >
-                                <Send className="w-5 h-5" />
-                            </Button>
+                                <Input
+                                    placeholder="Digite sua pergunta ou comande a Bella..."
+                                    value={question}
+                                    onChange={(e) => setQuestion(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            handleAnalyze();
+                                        }
+                                    }}
+                                    className="h-12 bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 text-sm focus-visible:ring-amber-500/50"
+                                />
+
+                                <Button
+                                    type="submit"
+                                    disabled={isAnalyzing || !question.trim()}
+                                    className="h-12 px-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/20"
+                                >
+                                    <Send className="w-5 h-5" />
+                                </Button>
+                            </form>
                         </div>
 
                         {/* Recent Interaction Transcript Bubble */}
