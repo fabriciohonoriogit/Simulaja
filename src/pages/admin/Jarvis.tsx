@@ -447,7 +447,8 @@ export default function Jarvis() {
             setMessages(prev => [...prev, jarvisMsg]);
             speak(answerText);
         } catch (e) {
-            const dynamicFallback = `Entendi sua dúvida sobre "${query.trim()}". Como seu parceiro comercial, estou pronto para te dar o suporte necessário no funil ou simulações. Como prefere avançar?`;
+            const shortQuery = query.trim().length > 60 ? query.trim().substring(0, 60) + "..." : query.trim();
+            const dynamicFallback = `Estou à sua disposição para te ajudar com "${shortQuery}". Como seu parceiro comercial no CRM, posso simular valores de consórcio, analisar o funil ou consultar métricas. O que você gostaria de verificar agora?`;
             const jarvisMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "jarvis",

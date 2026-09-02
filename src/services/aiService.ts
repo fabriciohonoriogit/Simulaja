@@ -213,8 +213,15 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
   }
 
   // Resposta dinâmica construída com base no termo buscado
-  const cleanPrompt = prompt.trim();
-  return `Entendi sua solicitação sobre "${cleanPrompt}". Estou analisando os dados do CRM e as regras de consórcio para te dar o melhor direcionamento. Como prefere avançar com isso agora?`;
+  let userQuery = prompt.trim();
+  const qMatch = prompt.match(/PERGUNTA DO USUÁRIO \/ ESTRATEGISTA:\s*"([^"]+)"/i);
+  if (qMatch && qMatch[1]) {
+    userQuery = qMatch[1].trim();
+  } else if (userQuery.length > 80) {
+    userQuery = userQuery.substring(0, 80) + "...";
+  }
+
+  return `Estou à sua disposição para te ajudar com "${userQuery}". Você pode me pedir para simular parcelas (ex: 200 mil imóveis 50/50), analisar métricas do funil, verificar carteira de inadimplentes ou tirar dúvidas sobre o Consórcio Magalu. O que você gostaria de verificar agora?`;
 }
 
 export const aiService = {
