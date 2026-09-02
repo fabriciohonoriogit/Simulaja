@@ -166,6 +166,10 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     const info = GRUPO_CARACTERISTICAS[matchGroupKey];
     return `Grupo ${info.grupo} (${info.reajuste}): ${info.caracteristicas} Ordem contemplação: ${info.ordemContemplacao}.`;
   }
+  // Saudações e apresentações
+  if (lower.includes("ola") || lower.includes("oi") || lower.includes("bom dia") || lower.includes("boa tarde") || lower.includes("boa noite") || lower.includes("quem e voce")) {
+    return "Olá! Sou a Bella, sua parceira estratégica no SimulaJá CRM. Estou pronta para analisar seu funil, realizar simulações de consórcio ou te ajudar a alavancar suas vendas hoje. Por onde quer começar?";
+  }
 
   // 1. VENDAS, METAS, PERFORMANCE, RESUMO E PRODUÇÃO
   if (
@@ -185,33 +189,33 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     lower.includes("paranagua") ||
     lower.includes("gestor")
   ) {
-    return `Analisando seu desempenho comercial: estamos focados em acelerar o fechamento das propostas ativas. Acesse os painéis de Metas e Dashboard para ver a evolução detalhada em tempo real. Como posso te apoiar para fechar a próxima venda hoje?`;
+    return `Analisando seu desempenho comercial: o foco atual está em acelerar o fechamento das propostas ativas no pipeline. Consulte o painel de Metas para ver a evolução em tempo real. Qual negociacao em aberto você gostaria de revisar agora?`;
   }
 
   // 2. FUNIL DE VENDAS & CRM
   if (lower.includes("funil") || lower.includes("pipeline") || lower.includes("lead")) {
-    return `Sobre o seu funil de vendas: identificamos oportunidades com grande potencial em negociação. Qual lead ou proposta você gostaria de analisar agora para avançarmos?`;
+    return `Sobre o seu funil de vendas: temos diversas oportunidades em fases decisivas de negociação. Gostaria de analisar os leads estagnados ou focar no fechamento dos contratos desta semana?`;
   }
 
   // 3. INADIMPLÊNCIA & CARTEIRA
   if (lower.includes("inadimplent") || lower.includes("atraso") || lower.includes("carteira") || lower.includes("assembleia")) {
-    return `Na sua carteira de consorciados, vale a pena fazermos o acompanhamento preventivo antes da próxima assembleia. Posso te ajudar a consultar a situação de algum cliente em específico?`;
+    return `Na gestão da sua carteira, recomendo acompanhar de perto os clientes antes da data limite da próxima assembleia. Posso te ajudar a localizar algum consorciado específico?`;
   }
 
   // 4. LANCES & SIMULAÇÕES DO SIMULADOR INTERNO
   if (lower.includes("grupo") || lower.includes("lance") || lower.includes("simula") || lower.includes("imovel") || lower.includes("carro") || lower.includes("veiculo")) {
-    return `No Consórcio Magalu, temos excelentes opções para Imóveis e Veículos com planos 50/50 e Linear, aceitando até 30% de lance embutido. Qual valor de crédito ou grupo você gostaria de simular agora?`;
+    return `No Consórcio Magalu, dispomos de grupos competitivos para Imóveis e Veículos com planos 50/50 e Linear, aceitando até 30% de lance embutido. Me informe o valor de crédito desejado para eu te mandar a simulação exata!`;
   }
 
   // 5. TAXA SELIC & COMPARATIVO DE FINANCIAMENTO
   if (lower.includes("selic") || lower.includes("financiamento") || lower.includes("juro") || lower.includes("banco")) {
-    return `Comparando com o financiamento bancário, o consórcio garante uma economia de 60% a 70% no Custo Efetivo Total, pois não há juros compostos. É o argumento perfeito para apresentar ao cliente indeciso!`;
+    return `Em comparação com o financiamento tradicional, o consórcio oferece de 60% a 70% de economia no Custo Efetivo Total por não cobrar juros compostos. É uma excelente alavanca de vendas para fechar negócios!`;
   }
 
-  return `Estou à sua disposição para analisar o CRM, simular valores de consórcio ou apoiar na negociação com seus clientes. O que você gostaria de verificar agora?`;
+  // Resposta dinâmica construída com base no termo buscado
+  const cleanPrompt = prompt.trim();
+  return `Entendi sua solicitação sobre "${cleanPrompt}". Estou analisando os dados do CRM e as regras de consórcio para te dar o melhor direcionamento. Como prefere avançar com isso agora?`;
 }
-
-export const aiService = {
   async generateSalesScript(lead: LeadContext) {
     const prompt = `Você é especialista sênior em consórcios da Prospera Planejamento.
 O lead ${lead.nome} de ${lead.cidade} simulou consórcio de ${lead.tipo_consorcio} no valor de R$ ${lead.valor_credito.toLocaleString("pt-BR")}.
