@@ -12,6 +12,29 @@ export interface LeadContext {
   cidade: string;
 }
 
+async function callDirectGemini(prompt: string, apiKey: string): Promise<string | null> {
+  const models = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro"];
+  for (const m of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 1000 }
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text && text.trim()) return text.trim();
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
 async function callAI(
   prompt: string,
   maxTokens = 800,
@@ -40,6 +63,15 @@ async function callAI(
     }
     retries--;
     if (retries >= 0) await new Promise((res) => setTimeout(res, 400));
+  }
+
+  // Tenta chamar diretamente a API do Gemini via chave de ambiente se a Edge Function falhar
+  const directKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
+  if (directKey) {
+    const directText = await callDirectGemini(prompt, directKey);
+    if (directText) {
+      return { text: directText, error: null };
+    }
   }
 
   // Motor Estratégico Local de Alta Inteligência baseado nos dados reais do CRM
@@ -189,27 +221,24 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     lower.includes("paranagua") ||
     lower.includes("gestor")
   ) {
-    return `Analisando seu desempenho comercial: o foco atual está em acelerar o fechamento das propostas ativas no pipeline. Consulte o painel de Metas para ver a evolução em tempo real. Qual negociacao em aberto você gostaria de revisar agora?`;
+    try {
+      const { count } = await supabase.from("leads").select("id", { count: "exact", head: true });
+      return `Métricas Atuais do CRM: Total de ${count || 0} leads cadastrados no funil de vendas. Metas ativas e acompanhamento em tempo real no Dashboard.`;
+    } catch (e) {
+      return "Painel de Metas ativo: acompanhamento em tempo real das metas e vendas ativas no CRM.";
+    }
   }
 
   // 2. FUNIL DE VENDAS & CRM
   if (lower.includes("funil") || lower.includes("pipeline") || lower.includes("lead")) {
-    return `Sobre o seu funil de vendas: temos diversas oportunidades em fases decisivas de negociação. Gostaria de analisar os leads estagnados ou focar no fechamento dos contratos desta semana?`;
-  }
-
-  // 3. INADIMPLÊNCIA & CARTEIRA
-  if (lower.includes("inadimplent") || lower.includes("atraso") || lower.includes("carteira") || lower.includes("assembleia")) {
-    return `Na gestão da sua carteira, recomendo acompanhar de perto os clientes antes da data limite da próxima assembleia. Posso te ajudar a localizar algum consorciado específico?`;
-  }
-
-  // 4. LANCES & SIMULAÇÕES DO SIMULADOR INTERNO
-  if (lower.includes("grupo") || lower.includes("lance") || lower.includes("simula") || lower.includes("imovel") || lower.includes("carro") || lower.includes("veiculo")) {
-    return `No Consórcio Magalu, dispomos de grupos competitivos para Imóveis e Veículos com planos 50/50 e Linear, aceitando até 30% de lance embutido. Me informe o valor de crédito desejado para eu te mandar a simulação exata!`;
-  }
-
-  // 5. TAXA SELIC & COMPARATIVO DE FINANCIAMENTO
-  if (lower.includes("selic") || lower.includes("financiamento") || lower.includes("juro") || lower.includes("banco")) {
-    return `Em comparação com o financiamento tradicional, o consórcio oferece de 60% a 70% de economia no Custo Efetivo Total por não cobrar juros compostos. É uma excelente alavanca de vendas para fechar negócios!`;
+    try {
+      const { data: leads } = await supabase.from("leads").select("nome, status, valor_credito").limit(3);
+      if (leads && leads.length > 0) {
+        const leadSummary = leads.map(l => `${l.nome} (${(l.valor_credito || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})`).join(", ");
+        return `Oportunidades Recentes no Funil: ${leadSummary}. Acesse o Kanban para gerenciar a evolução das propostas.`;
+      }
+    } catch (e) {}
+    return "Funil de Vendas ativo. Cadastre e converta novas oportunidades no pipeline comercial.";
   }
 
   // Extração e busca de CPF ou Pedido de Boleto / Segunda Via
