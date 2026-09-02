@@ -134,18 +134,18 @@ async function generateSmartLocalResponse(fullInput: string): Promise<string> {
 
   const lower = userQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  // 1. Saudações e apresentações humanas e calorosas
+  // 1. Saudações simples e diretas
   if (lower === "boa tarde" || lower.includes("boa tarde")) {
-    return "Boa tarde! Que ótimo falar com você. Sou a Bella, sua parceira comercial no SimulaJá CRM. Como posso te apoiar hoje nas suas vendas e estratégias?";
+    return "Oi Fabrício, boa tarde! Como posso lhe ajudar?";
   }
   if (lower === "bom dia" || lower.includes("bom dia")) {
-    return "Bom dia! Um excelente dia de negócios. Sou a Bella IA, como posso te apoiar com simulações ou dados do CRM hoje?";
+    return "Oi Fabrício, bom dia! Como posso lhe ajudar?";
   }
   if (lower === "boa noite" || lower.includes("boa noite")) {
-    return "Boa noite! Sou a Bella IA, sua parceira de negócios. Em que posso te ajudar agora?";
+    return "Oi Fabrício, boa noite! Como posso lhe ajudar?";
   }
-  if (lower === "oi" || lower === "ola" || lower.includes("ola") || lower.includes("quem e voce")) {
-    return "Olá! Que ótimo falar com você. Sou a Bella IA, assistente comercial do SimulaJá CRM. Como posso te apoiar agora?";
+  if (lower === "oi" || lower === "ola" || lower.includes("ola") || lower.includes("oi bella") || lower.includes("oi jarvis")) {
+    return "Oi Fabrício, como posso lhe ajudar?";
   }
 
   // Extração de valor de crédito citado no prompt do usuário para simulação direta
