@@ -168,7 +168,7 @@ class BrainHandler(BaseHTTPRequestHandler):
         elif path == '/hermes/chat':
             prompt = data.get('prompt', '')
             who = data.get('who', 'vendedor')
-            model = data.get('model', 'gemini-3.6-flash')
+            model = data.get('model', 'gemini-2.5-flash')
             if not prompt:
                 self.send_json({"error": "prompt é obrigatório"}, 400)
                 return

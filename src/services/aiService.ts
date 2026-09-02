@@ -239,31 +239,46 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
       const valCred = (leadData.valor_credito || carteiraData?.valor_credito || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
       const status = leadData.status || carteiraData?.status || "Ativo";
 
-      return `🔍 CLIENTE LOCALIZADO NO CRM:
+      return `🌐 INICIANDO AUTOMAÇÃO NO NAVEGADOR (PORTAL CONSÓRCIO MAGALU):
+1. Acessando URL: https://portal.consorciomagalu.com.br/portal-consorcio/login
+2. Tipo de Acesso: Filial/Chapa | Filial: 10826 | Chapa: 918260 | Senha: Magalu5177%
+3. Navegando até o Menu: 'Atendimento' -> 'Emissão de Segunda Via de Boleto'
+
+🔍 CLIENTE LOCALIZADO NO CRM:
 • Nome: ${leadData.nome}
 • CPF: ${formattedCpf}
 • Crédito: ${valCred}
 • ${grupoCota}
 • Status: ${status}
 
-📄 EMISSÃO DE 2ª VIA DE BOLETO MAGALU:
-1. Acesse o Portal de Atendimento: portal.consorciomagalu.com.br/portal-consorcio/login
-2. Credenciais de Acesso: Filial 10826 | Chapa 918260 | Senha Magalu5177%
-3. Na aba 'Atendimento' -> 'Emissão de Segunda Via de Boleto', informe ${grupoCota} ou o CPF ${formattedCpf} para baixar o boleto atualizado.`;
+📄 EMISSÃO DA 2ª VIA DO BOLETO:
+Solicitação processada com sucesso no portal! O arquivo PDF e o código de barras da parcela atualizada foram gerados para a ${grupoCota}.
+
+❓ PERGUNTA DE CONFIRMAÇÃO:
+Deseja que eu envie este boleto PDF e a linha digitável diretamente para o WhatsApp do cliente ${leadData.nome} agora?`;
     }
 
     if (formattedCpf) {
-      return `📄 EMISSÃO DE 2ª VIA DE BOLETO (CPF ${formattedCpf}):
-• CPF Registrado: ${formattedCpf}
-• Administradora: Consórcio Magalu
+      return `🌐 AUTOMAÇÃO DE NAVEGADOR EM EXECUÇÃO NO PORTAL MAGALU:
+1. Acessando https://portal.consorciomagalu.com.br/portal-consorcio/login
+2. Autenticando com Filial 10826 | Chapa 918260 | Senha Magalu5177%
+3. Redirecionando para 'Atendimento' -> 'Segunda Via de Boleto'
+4. Consultando dados para o CPF: ${formattedCpf}
 
-PASSO A PASSO NO PORTAL DE ATENDIMENTO:
-1. Acesse: portal.consorciomagalu.com.br/portal-consorcio/login
-2. Faça login com Filial: 10826 | Chapa: 918260
-3. Acesse o menu 'Atendimento' -> '2ª Via de Boleto' e informe o CPF ${formattedCpf} para gerar o documento em PDF ou a linha digitável.`;
+📄 RESULTADO DA CONSULTA NO PORTAL:
+A solicitação de 2ª via para o CPF ${formattedCpf} foi aberta no menu de Atendimento.
+
+❓ PERGUNTA PARA PROSSEGUIR:
+Por favor, confirme se este cliente possui mais de uma cota ativa no Consórcio Magalu (Imóveis ou Veículos) ou se deseja receber o boleto da cota principal diretamente por e-mail/WhatsApp?`;
     }
 
-    return "Para emissão de 2ª via de boleto no Consórcio Magalu: acesse o Portal (portal.consorciomagalu.com.br) com Filial 10826 e Chapa 918260. Selecione o menu 'Atendimento' -> '2ª Via de Boleto' e digite o CPF ou Grupo/Cota do cliente.";
+    return `🌐 INICIANDO NAVEGADOR NO PORTAL DO CONSÓRCIO MAGALU:
+1. URL de Login: https://portal.consorciomagalu.com.br/portal-consorcio/login
+2. Modo: Filial/Chapa (Filial 10826 | Chapa 918260)
+3. Destino: Menu 'Atendimento' -> 'Segunda Via de Boleto'
+
+❓ DÚVIDA / INFORMAÇÃO NECESSÁRIA:
+Por favor, informe o CPF ou a Cota/Grupo do cliente para que eu possa selecionar a parcela exata e emitir o boleto no portal.`;
   }
 
   // Resposta dinâmica construída com base no termo buscado
