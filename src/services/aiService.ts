@@ -185,30 +185,30 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     lower.includes("paranagua") ||
     lower.includes("gestor")
   ) {
-    return `Resultados do Mês: Metas zeradas a partir do dia 01 para novo ciclo de superação. Acompanhe os novos fechamentos em tempo real no Dashboard e Painel de Metas.`;
+    return `Analisando seu desempenho comercial: estamos focados em acelerar o fechamento das propostas ativas. Acesse os painéis de Metas e Dashboard para ver a evolução detalhada em tempo real. Como posso te apoiar para fechar a próxima venda hoje?`;
   }
 
   // 2. FUNIL DE VENDAS & CRM
   if (lower.includes("funil") || lower.includes("pipeline") || lower.includes("lead")) {
-    return `Funil do Mês: Ciclo zerado no dia 01 para novas metas. Cadastre e converta novas oportunidades no pipeline.`;
+    return `Sobre o seu funil de vendas: identificamos oportunidades com grande potencial em negociação. Qual lead ou proposta você gostaria de analisar agora para avançarmos?`;
   }
 
   // 3. INADIMPLÊNCIA & CARTEIRA
   if (lower.includes("inadimplent") || lower.includes("atraso") || lower.includes("carteira") || lower.includes("assembleia")) {
-    return `Carteira: Manter acompanhamento dos consorciados e cobranças pré-assembleia.`;
+    return `Na sua carteira de consorciados, vale a pena fazermos o acompanhamento preventivo antes da próxima assembleia. Posso te ajudar a consultar a situação de algum cliente em específico?`;
   }
 
   // 4. LANCES & SIMULAÇÕES DO SIMULADOR INTERNO
   if (lower.includes("grupo") || lower.includes("lance") || lower.includes("simula") || lower.includes("imovel") || lower.includes("carro") || lower.includes("veiculo")) {
-    return `Simulador Magalu: Imóveis (Grupos 6043, 6042, 6027, 6021, 6022): Lance embutido de 25%, reajuste INCC, planos 50/50 e Linear. Veículos (Grupos 5297, 5295, 5294): Créditos 40k a 170k, reajuste IPCA.`;
+    return `No Consórcio Magalu, temos excelentes opções para Imóveis e Veículos com planos 50/50 e Linear, aceitando até 30% de lance embutido. Qual valor de crédito ou grupo você gostaria de simular agora?`;
   }
 
   // 5. TAXA SELIC & COMPARATIVO DE FINANCIAMENTO
   if (lower.includes("selic") || lower.includes("financiamento") || lower.includes("juro") || lower.includes("banco")) {
-    return `Consórcio vs Financiamento: Economia de 60% a 70% no Custo Efetivo Total em relação ao financiamento tradicional.`;
+    return `Comparando com o financiamento bancário, o consórcio garante uma economia de 60% a 70% no Custo Efetivo Total, pois não há juros compostos. É o argumento perfeito para apresentar ao cliente indeciso!`;
   }
 
-  return `Período Mensal Reiniciado no Dia 01 | Acompanhe seu progresso em tempo real no sistema.`;
+  return `Estou à sua disposição para analisar o CRM, simular valores de consórcio ou apoiar na negociação com seus clientes. O que você gostaria de verificar agora?`;
 }
 
 export const aiService = {
