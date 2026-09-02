@@ -216,6 +216,8 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
   const cleanPrompt = prompt.trim();
   return `Entendi sua solicitação sobre "${cleanPrompt}". Estou analisando os dados do CRM e as regras de consórcio para te dar o melhor direcionamento. Como prefere avançar com isso agora?`;
 }
+
+export const aiService = {
   async generateSalesScript(lead: LeadContext) {
     const prompt = `Você é especialista sênior em consórcios da Prospera Planejamento.
 O lead ${lead.nome} de ${lead.cidade} simulou consórcio de ${lead.tipo_consorcio} no valor de R$ ${lead.valor_credito.toLocaleString("pt-BR")}.
