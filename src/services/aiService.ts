@@ -124,28 +124,32 @@ ${simContext}
 `;
 }
 
-async function generateSmartLocalResponse(fullInput: string): Promise<string> {
-  // Extrai estritamente a pergunta do usuário caso o prompt do sistema tenha sido concatenado
+async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabrício"): Promise<string> {
+  // Extrai estritamente a pergunta do usuário e o nome do interlocutor
   let userQuery = fullInput.trim();
   const qMatch = fullInput.match(/PERGUNTA DO USUÁRIO \/ ESTRATEGISTA:\s*"([^"]+)"/i);
   if (qMatch && qMatch[1]) {
     userQuery = qMatch[1].trim();
   }
 
+  const nameMatch = fullInput.match(/NOME DO INTERLOCUTOR:\s*"([^"]+)"/i);
+  const targetName = nameMatch ? nameMatch[1].trim() : defaultName;
+  const firstName = targetName.split(" ")[0] || "Fabrício";
+
   const lower = userQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  // 1. Saudações simples e diretas
+  // 1. Saudações simples e diretas com o nome do usuário logado
   if (lower === "boa tarde" || lower.includes("boa tarde")) {
-    return "Oi Fabrício, boa tarde! Como posso lhe ajudar?";
+    return `Oi ${firstName}, boa tarde! Como posso lhe ajudar?`;
   }
   if (lower === "bom dia" || lower.includes("bom dia")) {
-    return "Oi Fabrício, bom dia! Como posso lhe ajudar?";
+    return `Oi ${firstName}, bom dia! Como posso lhe ajudar?`;
   }
   if (lower === "boa noite" || lower.includes("boa noite")) {
-    return "Oi Fabrício, boa noite! Como posso lhe ajudar?";
+    return `Oi ${firstName}, boa noite! Como posso lhe ajudar?`;
   }
   if (lower === "oi" || lower === "ola" || lower.includes("ola") || lower.includes("oi bella") || lower.includes("oi jarvis")) {
-    return "Oi Fabrício, como posso lhe ajudar?";
+    return `Oi ${firstName}, como posso lhe ajudar?`;
   }
 
   // Extração de valor de crédito citado no prompt do usuário para simulação direta
@@ -330,7 +334,7 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
     };
   },
 
-  async askJarvis(context: string, question: string, history?: Array<{ role: string; text: string }>, imageBase64?: string) {
+  async askJarvis(context: string, question: string, history?: Array<{ role: string; text: string }>, imageBase64?: string, userName = "Fabrício") {
     // 1. Tenta comunicar com o Hermes Agent via Jarvis Brain Server na porta 8008
     try {
       const controller = new AbortController();
@@ -338,7 +342,7 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
       const res = await fetch("http://localhost:8008/hermes/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: question, who: "vendedor" }),
+        body: JSON.stringify({ prompt: question, who: "vendedor", user_name: userName }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -366,12 +370,18 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
 
     const authContext = getSystemAuthoritativeContext();
 
-    const prompt = `Você é a Bella, Diretora Estratégica da Elite Consórcios / Simulaja.
-DIRETRIZ DE RESPOSTA ESTRITA SOLICITADA PELO USUÁRIO:
-- Identifique e especifique o SEGMENTO (Imóveis, Veículos, Serviços/Eletro). NUNCA mencione índices como INCC ou IPCA nas simulações, pois eles não alteram a parcela atual do cálculo.
-- Identifique e discrimine os valores COM SEGURO (taxa de seguro de vida 0,0252% inclusa) e SEM SEGURO.
-- Responda DIRETA, OBJETIVA E CONCISAMENTE com APENAS OS VALORES E NÚMEROS SOLICITADOS (seja Plano 50/50, Linear, Gold ou Vendas).
-- Forneça o Segmento, Crédito, Grupo, Prazo e os valores exatos das Parcelas COM SEGURO e SEM SEGURO do Simulador Interno.
+    const firstName = userName.split(" ")[0] || "Fabrício";
+
+    const prompt = `Você é a Bella IA, assistente virtual de atendimento e automação do CRM.
+NOME DO INTERLOCUTOR: "${userName}"
+
+# PRIVACIDADE E ISOLAMENTO DE DADOS (CRÍTICO)
+- Todas as conversas, mensagens e dados do CRM são isolados por usuário e organização.
+- NUNCA exiba conversas ou dados de Fabrício Honório para Anderson Coppati ou vice-versa.
+
+# REGRAS ANTI-REPETIÇÃO E SAUDAÇÃO
+- Em saudações simples ("boa tarde", "bom dia", "olá"), responda de forma simples e direta: "Oi ${firstName}, boa tarde! Como posso lhe ajudar?" sem se apresentar.
+- NUNCA repita a pergunta do usuário de volta para ele.
 
 ${authContext}
 
@@ -382,7 +392,7 @@ ${localContext ? `INSIGHTS ADICIONAIS: ${localContext}` : ""}`;
     const { text, error } = await callAI(prompt, 700, history, imageBase64);
 
     return {
-      answer: text || (await generateSmartLocalResponse(question)),
+      answer: text || (await generateSmartLocalResponse(prompt, userName)),
       error: null,
     };
   },

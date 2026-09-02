@@ -415,10 +415,11 @@ export default function Jarvis() {
         setQuestion("");
 
         try {
-            const res = await aiService.askJarvis(getSystemAuthoritativeContext(), query);
+            const currentUserName = profile?.nome || "Fabrício";
+            const res = await aiService.askJarvis(getSystemAuthoritativeContext(), query, undefined, undefined, currentUserName);
             let answerText = (res && typeof res.answer === "string" && res.answer.trim()) 
                 ? res.answer.trim() 
-                : "Estou à disposição para te apoiar com as estratégias do CRM e simulações de consórcio. Por onde prefere começar?";
+                : `Oi ${currentUserName.split(" ")[0]}, como posso lhe ajudar?`;
 
             // Processa comandos de navegação ou ações via JSON se presentes na resposta
             const jsonMatch = answerText.match(/```json\n([\s\S]*?)\n```/);
