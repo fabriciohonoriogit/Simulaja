@@ -212,6 +212,8 @@ export default function Jarvis() {
     }, []);
 
     const speak = (text: string) => {
+        // Interrompe imediatamente o microfone antes da síntese de voz para EVITAR LOOP DE ECO
+        stopRecording();
         playBellaVoice(
             text,
             () => setOrbState("speaking"),
@@ -225,6 +227,10 @@ export default function Jarvis() {
     const isListeningRef = useRef<boolean>(false);
 
     const startRecording = () => {
+        // NUNCA grava se o sintetizador de voz do navegador estiver falando
+        if (typeof window !== "undefined" && window.speechSynthesis && window.speechSynthesis.speaking) {
+            return;
+        }
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecognition) return;
         if (isListeningRef.current) return;
@@ -241,6 +247,11 @@ export default function Jarvis() {
             finalTranscriptRef.current = "";
 
             rec.onresult = (event: any) => {
+                // Se a IA estiver falando, descarte o microfone para evitar eco e repetição
+                if (typeof window !== "undefined" && window.speechSynthesis && window.speechSynthesis.speaking) {
+                    finalTranscriptRef.current = "";
+                    return;
+                }
                 let interim = "";
                 let finalText = "";
                 for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -277,6 +288,13 @@ export default function Jarvis() {
                 setIsListening(false);
                 const finalQ = finalTranscriptRef.current.trim();
                 finalTranscriptRef.current = "";
+
+                // Se o navegador estiver sintetizando voz, aborte a execução para evitar re-enviar a própria voz da IA
+                if (typeof window !== "undefined" && window.speechSynthesis && window.speechSynthesis.speaking) {
+                    setOrbState("idle");
+                    setQuestion("");
+                    return;
+                }
 
                 if (finalQ && finalQ.length >= 4 && !isAnalyzing) {
                     const lowerText = finalQ.toLowerCase();

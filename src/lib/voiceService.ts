@@ -171,6 +171,10 @@ export function speakBellaText(
     }
   };
 
+  try {
+    window.speechSynthesis.cancel();
+  } catch (e) {}
+
   speakNextSentence();
 }
 
