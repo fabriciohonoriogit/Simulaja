@@ -319,7 +319,7 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
 Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
   }
 
-  return `Solicitação recebida. Você pode solicitar simulação de consórcio (ex: 200 mil imóveis 50/50), emissão de 2ª via de boleto por CPF, consulta ao painel de Metas ou carteira de inadimplentes.`;
+  return `Oi ${firstName}, como posso lhe ajudar?`;
 }
 
 export const aiService = {

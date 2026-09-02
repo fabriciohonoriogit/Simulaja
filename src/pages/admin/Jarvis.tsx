@@ -128,7 +128,7 @@ export default function Jarvis() {
         {
             id: "1",
             role: "jarvis",
-            content: `Olá Fabrício! Bella pronta. Pipeline de vendas, carteira e métricas de consórcio mapeadas no CRM. O que vamos analisar ou acelerar hoje?`,
+            content: `Oi Fabrício! Como posso lhe ajudar hoje?`,
             timestamp: new Date()
         }
     ]);
@@ -471,9 +471,11 @@ export default function Jarvis() {
             speak(answerText);
         } catch (e) {
             console.error("[Jarvis Execution Error]", e);
-            let fallbackAnswer = "Estou pronta para te apoiar com as simulações do CRM. Informe o crédito ou CPF do consorciado para continuar.";
+            const currentUserName = profile?.nome || "Fabrício";
+            const firstName = currentUserName.split(" ")[0];
+            let fallbackAnswer = `Oi ${firstName}, como posso lhe ajudar?`;
             try {
-                fallbackAnswer = await generateSmartLocalResponse(trimmed);
+                fallbackAnswer = await generateSmartLocalResponse(trimmed, currentUserName);
             } catch (err) {}
             
             const jarvisMsg: Message = {
@@ -702,7 +704,7 @@ export default function Jarvis() {
                                 <span>{messages.length > 0 ? format(messages[messages.length - 1].timestamp, "HH:mm") : ""}</span>
                             </div>
                             <p className="text-slate-200 leading-relaxed font-medium">
-                                {messages[messages.length - 1]?.content || "Bella pronta para te ouvir!"}
+                                {messages[messages.length - 1]?.content || "Como posso lhe ajudar?"}
                             </p>
                         </div>
                     </div>
