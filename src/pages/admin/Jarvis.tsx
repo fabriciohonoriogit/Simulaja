@@ -449,15 +449,20 @@ export default function Jarvis() {
             setMessages(prev => [...prev, jarvisMsg]);
             speak(answerText);
         } catch (e) {
-            const dynamicFallback = "Analisei sua solicitação e estou pronta para te apoiar com simulações de consórcio ou dados do seu funil. Qual o próximo passo?";
+            console.error("[Jarvis Execution Error]", e);
+            let fallbackAnswer = "Estou pronta para te apoiar com as simulações do CRM. Informe o crédito ou CPF do consorciado para continuar.";
+            try {
+                fallbackAnswer = await generateSmartLocalResponse(query);
+            } catch (err) {}
+            
             const jarvisMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "jarvis",
-                content: dynamicFallback,
+                content: fallbackAnswer,
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, jarvisMsg]);
-            speak(dynamicFallback);
+            speak(fallbackAnswer);
         } finally {
             setIsAnalyzing(false);
         }

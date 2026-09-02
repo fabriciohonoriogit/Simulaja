@@ -299,14 +299,7 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
 Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
   }
 
-  // Resposta dinâmica construída com base no termo buscado
-  let userQuery = prompt.trim();
-  const qMatch = prompt.match(/PERGUNTA DO USUÁRIO \/ ESTRATEGISTA:\s*"([^"]+)"/i);
-  if (qMatch && qMatch[1]) {
-    userQuery = qMatch[1].trim();
-  }
-
-  return `Com base na sua consulta sobre "${userQuery.length > 50 ? userQuery.substring(0, 50) + "..." : userQuery}": o SimulaJá CRM está pronto para te apoiar. Você pode solicitar simulações de crédito (ex: 200 mil imóveis 50/50), emissão de 2ª via de boletos com CPF, consulta ao painel de Metas ou análise de inadimplentes. Como posso te direcionar?`;
+  return `Solicitação recebida. Você pode solicitar simulação de consórcio (ex: 200 mil imóveis 50/50), emissão de 2ª via de boleto por CPF, consulta ao painel de Metas ou carteira de inadimplentes.`;
 }
 
 export const aiService = {
