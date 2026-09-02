@@ -212,6 +212,60 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     return `Em comparação com o financiamento tradicional, o consórcio oferece de 60% a 70% de economia no Custo Efetivo Total por não cobrar juros compostos. É uma excelente alavanca de vendas para fechar negócios!`;
   }
 
+  // Extração e busca de CPF ou Pedido de Boleto / Segunda Via
+  const cpfMatch = prompt.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/) || prompt.match(/\b\d{11}\b/);
+  const isBoletoReq = lower.includes("boleto") || lower.includes("segunda via") || lower.includes("2 via") || lower.includes("extrato") || lower.includes("cota") || lower.includes("portal");
+
+  if (cpfMatch || isBoletoReq) {
+    const rawCpf = cpfMatch ? cpfMatch[0].replace(/\D/g, "") : "";
+    const formattedCpf = rawCpf ? rawCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "";
+
+    let leadData: any = null;
+    let carteiraData: any = null;
+
+    if (rawCpf) {
+      try {
+        const { data: lead } = await supabase.from("leads").select("*").or(`cpf.eq.${rawCpf},cpf.eq.${formattedCpf}`).maybeSingle();
+        if (lead) {
+          leadData = lead;
+          const { data: cart } = await supabase.from("carteira_consorcios").select("*").eq("lead_id", lead.id).maybeSingle();
+          if (cart) carteiraData = cart;
+        }
+      } catch (e) {}
+    }
+
+    if (leadData) {
+      const grupoCota = carteiraData ? `Grupo ${carteiraData.grupo} / Cota ${carteiraData.cota}` : "Cota em processamento";
+      const valCred = (leadData.valor_credito || carteiraData?.valor_credito || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const status = leadData.status || carteiraData?.status || "Ativo";
+
+      return `🔍 CLIENTE LOCALIZADO NO CRM:
+• Nome: ${leadData.nome}
+• CPF: ${formattedCpf}
+• Crédito: ${valCred}
+• ${grupoCota}
+• Status: ${status}
+
+📄 EMISSÃO DE 2ª VIA DE BOLETO MAGALU:
+1. Acesse o Portal de Atendimento: portal.consorciomagalu.com.br/portal-consorcio/login
+2. Credenciais de Acesso: Filial 10826 | Chapa 918260 | Senha Magalu5177%
+3. Na aba 'Atendimento' -> 'Emissão de Segunda Via de Boleto', informe ${grupoCota} ou o CPF ${formattedCpf} para baixar o boleto atualizado.`;
+    }
+
+    if (formattedCpf) {
+      return `📄 EMISSÃO DE 2ª VIA DE BOLETO (CPF ${formattedCpf}):
+• CPF Registrado: ${formattedCpf}
+• Administradora: Consórcio Magalu
+
+PASSO A PASSO NO PORTAL DE ATENDIMENTO:
+1. Acesse: portal.consorciomagalu.com.br/portal-consorcio/login
+2. Faça login com Filial: 10826 | Chapa: 918260
+3. Acesse o menu 'Atendimento' -> '2ª Via de Boleto' e informe o CPF ${formattedCpf} para gerar o documento em PDF ou a linha digitável.`;
+    }
+
+    return "Para emissão de 2ª via de boleto no Consórcio Magalu: acesse o Portal (portal.consorciomagalu.com.br) com Filial 10826 e Chapa 918260. Selecione o menu 'Atendimento' -> '2ª Via de Boleto' e digite o CPF ou Grupo/Cota do cliente.";
+  }
+
   // Resposta dinâmica construída com base no termo buscado
   let userQuery = prompt.trim();
   const qMatch = prompt.match(/PERGUNTA DO USUÁRIO \/ ESTRATEGISTA:\s*"([^"]+)"/i);
@@ -219,13 +273,7 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
     userQuery = qMatch[1].trim();
   }
 
-  const lowerQ = userQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  if (lowerQ.includes("boleto") || lowerQ.includes("magalu") || lowerQ.includes("extrato") || lowerQ.includes("portal") || lowerQ.includes("segunda via")) {
-    return "Para consultar boletos, 2ª via ou extrato de cotas do Consórcio Magalu, acesse o Portal de Atendimento (portal.consorciomagalu.com.br) com sua Filial 10826 e Chapa 918260. Selecione o menu 'Atendimento' e informe o grupo/cota do consorciado.";
-  }
-
-  return `Com base na sua consulta sobre "${userQuery.length > 50 ? userQuery.substring(0, 50) + "..." : userQuery}": no momento o SimulaJá CRM está operando com foco em alavancagem comercial. Você pode realizar simulações de crédito (ex: 200 mil imóveis 50/50), consultar a carteira de inadimplentes, ver o painel de Metas ou analisar oportunidades no funil. Como posso te direcionar?`;
+  return `Com base na sua consulta sobre "${userQuery.length > 50 ? userQuery.substring(0, 50) + "..." : userQuery}": o SimulaJá CRM está pronto para te apoiar. Você pode solicitar simulações de crédito (ex: 200 mil imóveis 50/50), emissão de 2ª via de boletos com CPF, consulta ao painel de Metas ou análise de inadimplentes. Como posso te direcionar?`;
 }
 
 export const aiService = {
