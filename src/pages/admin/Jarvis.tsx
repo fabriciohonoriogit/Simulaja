@@ -416,7 +416,7 @@ export default function Jarvis() {
 
         try {
             const res = await aiService.askJarvis(getSystemAuthoritativeContext(), query);
-            let answerText = res.answer || "Estou à sua disposição para analisar o CRM, consultar simulações ou acompanhar suas metas. Como posso te apoiar agora?";
+            let answerText = res.answer;
 
             // Processa comandos de navegação ou ações via JSON se presentes na resposta
             const jsonMatch = answerText.match(/```json\n([\s\S]*?)\n```/);
@@ -447,15 +447,15 @@ export default function Jarvis() {
             setMessages(prev => [...prev, jarvisMsg]);
             speak(answerText);
         } catch (e) {
-            const fallbackText = "Estou consultando as informações do CRM e à sua disposição. Qual simulação ou dado de vendas você gostaria de analisar agora?";
+            const dynamicFallback = `Entendi sua dúvida sobre "${query.trim()}". Como seu parceiro comercial, estou pronto para te dar o suporte necessário no funil ou simulações. Como prefere avançar?`;
             const jarvisMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "jarvis",
-                content: fallbackText,
+                content: dynamicFallback,
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, jarvisMsg]);
-            speak(fallbackText);
+            speak(dynamicFallback);
         } finally {
             setIsAnalyzing(false);
         }
