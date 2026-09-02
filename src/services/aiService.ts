@@ -124,11 +124,32 @@ ${simContext}
 `;
 }
 
-async function generateSmartLocalResponse(prompt: string): Promise<string> {
-  const lower = prompt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+async function generateSmartLocalResponse(fullInput: string): Promise<string> {
+  // Extrai estritamente a pergunta do usuário caso o prompt do sistema tenha sido concatenado
+  let userQuery = fullInput.trim();
+  const qMatch = fullInput.match(/PERGUNTA DO USUÁRIO \/ ESTRATEGISTA:\s*"([^"]+)"/i);
+  if (qMatch && qMatch[1]) {
+    userQuery = qMatch[1].trim();
+  }
 
-  // Extração de valor de crédito citado no prompt para simulação direta
-  const numbersInPrompt = prompt.match(/\d+[\d\.,]*/g);
+  const lower = userQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // 1. Saudações e apresentações humanas e calorosas
+  if (lower === "boa tarde" || lower.includes("boa tarde")) {
+    return "Boa tarde! Que ótimo falar com você. Sou a Bella, sua parceira comercial no SimulaJá CRM. Como posso te apoiar hoje nas suas vendas e estratégias?";
+  }
+  if (lower === "bom dia" || lower.includes("bom dia")) {
+    return "Bom dia! Um excelente dia de negócios. Sou a Bella IA, como posso te apoiar com simulações ou dados do CRM hoje?";
+  }
+  if (lower === "boa noite" || lower.includes("boa noite")) {
+    return "Boa noite! Sou a Bella IA, sua parceira de negócios. Em que posso te ajudar agora?";
+  }
+  if (lower === "oi" || lower === "ola" || lower.includes("ola") || lower.includes("quem e voce")) {
+    return "Olá! Que ótimo falar com você. Sou a Bella IA, assistente comercial do SimulaJá CRM. Como posso te apoiar agora?";
+  }
+
+  // Extração de valor de crédito citado no prompt do usuário para simulação direta
+  const numbersInPrompt = userQuery.match(/\d+[\d\.,]*/g);
   if (numbersInPrompt && (lower.includes("credito") || lower.includes("simula") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear") || lower.includes("gold") || lower.includes("mil"))) {
     const rawVal = parseFloat(numbersInPrompt[0].replace(/\./g, "").replace(",", "."));
     const creditTarget = rawVal < 1000 ? rawVal * 1000 : rawVal;
@@ -196,11 +217,6 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
   const matchGroupKey = Object.keys(GRUPO_CARACTERISTICAS).find(k => lower.includes(k));
   if (matchGroupKey) {
     const info = GRUPO_CARACTERISTICAS[matchGroupKey];
-    return `Grupo ${info.grupo} (${info.reajuste}): ${info.caracteristicas} Ordem contemplação: ${info.ordemContemplacao}.`;
-  }
-  // Saudações e apresentações
-  if (lower.includes("ola") || lower.includes("oi") || lower.includes("bom dia") || lower.includes("boa tarde") || lower.includes("boa noite") || lower.includes("quem e voce")) {
-    return "Olá! Sou a Bella, sua parceira estratégica no SimulaJá CRM. Estou pronta para analisar seu funil, realizar simulações de consórcio ou te ajudar a alavancar suas vendas hoje. Por onde quer começar?";
   }
 
   // 1. VENDAS, METAS, PERFORMANCE, RESUMO E PRODUÇÃO
