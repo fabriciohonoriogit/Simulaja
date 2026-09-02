@@ -416,7 +416,9 @@ export default function Jarvis() {
 
         try {
             const res = await aiService.askJarvis(getSystemAuthoritativeContext(), query);
-            let answerText = res.answer;
+            let answerText = (res && typeof res.answer === "string" && res.answer.trim()) 
+                ? res.answer.trim() 
+                : "Estou à disposição para te apoiar com as estratégias do CRM e simulações de consórcio. Por onde prefere começar?";
 
             // Processa comandos de navegação ou ações via JSON se presentes na resposta
             const jsonMatch = answerText.match(/```json\n([\s\S]*?)\n```/);
@@ -447,8 +449,7 @@ export default function Jarvis() {
             setMessages(prev => [...prev, jarvisMsg]);
             speak(answerText);
         } catch (e) {
-            const shortQuery = query.trim().length > 60 ? query.trim().substring(0, 60) + "..." : query.trim();
-            const dynamicFallback = `Estou à sua disposição para te ajudar com "${shortQuery}". Como seu parceiro comercial no CRM, posso simular valores de consórcio, analisar o funil ou consultar métricas. O que você gostaria de verificar agora?`;
+            const dynamicFallback = "Analisei sua solicitação e estou pronta para te apoiar com simulações de consórcio ou dados do seu funil. Qual o próximo passo?";
             const jarvisMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "jarvis",

@@ -217,11 +217,15 @@ async function generateSmartLocalResponse(prompt: string): Promise<string> {
   const qMatch = prompt.match(/PERGUNTA DO USUÁRIO \/ ESTRATEGISTA:\s*"([^"]+)"/i);
   if (qMatch && qMatch[1]) {
     userQuery = qMatch[1].trim();
-  } else if (userQuery.length > 80) {
-    userQuery = userQuery.substring(0, 80) + "...";
   }
 
-  return `Estou à sua disposição para te ajudar com "${userQuery}". Você pode me pedir para simular parcelas (ex: 200 mil imóveis 50/50), analisar métricas do funil, verificar carteira de inadimplentes ou tirar dúvidas sobre o Consórcio Magalu. O que você gostaria de verificar agora?`;
+  const lowerQ = userQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  if (lowerQ.includes("boleto") || lowerQ.includes("magalu") || lowerQ.includes("extrato") || lowerQ.includes("portal") || lowerQ.includes("segunda via")) {
+    return "Para consultar boletos, 2ª via ou extrato de cotas do Consórcio Magalu, acesse o Portal de Atendimento (portal.consorciomagalu.com.br) com sua Filial 10826 e Chapa 918260. Selecione o menu 'Atendimento' e informe o grupo/cota do consorciado.";
+  }
+
+  return `Com base na sua consulta sobre "${userQuery.length > 50 ? userQuery.substring(0, 50) + "..." : userQuery}": no momento o SimulaJá CRM está operando com foco em alavancagem comercial. Você pode realizar simulações de crédito (ex: 200 mil imóveis 50/50), consultar a carteira de inadimplentes, ver o painel de Metas ou analisar oportunidades no funil. Como posso te direcionar?`;
 }
 
 export const aiService = {
