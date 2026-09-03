@@ -91,6 +91,7 @@ export default function Comissoes() {
   const [grupo, setGrupo] = useState("");
   const [cota, setCota] = useState("");
   const [valorVendaStr, setValorVendaStr] = useState("");
+  const [comissaoTotalOverrideStr, setComissaoTotalOverrideStr] = useState("");
   const [regra, setRegra] = useState("DEMAIS");
   const [tipoComissionamento, setTipoComissionamento] = useState("REDUZIDA");
   const [pagamentosRetroativosStr, setPagamentosRetroativosStr] = useState("");
@@ -141,7 +142,14 @@ export default function Comissoes() {
         setNomeCliente(lead.nome);
         setGrupo(lead.grupo || "");
         setCota(lead.cota || "");
-        setValorVendaStr(formatCurrencyInput((Number(lead.valor_credito) * 100).toString()));
+        const vCred = Number(lead.valor_credito) || 0;
+        setValorVendaStr(formatCurrencyInput((vCred * 100).toString()));
+        
+        let initialTaxa = 4;
+        if (lead.administradora === "ADEMICON") initialTaxa = 2.5;
+        const initialTotal = (vCred * initialTaxa) / 100;
+        setComissaoTotalOverrideStr(formatCurrencyInput((initialTotal * 100).toString()));
+
         if (lead.status_updated_at) {
           setDataVenda(lead.status_updated_at.split("T")[0]);
         }
@@ -335,7 +343,10 @@ export default function Comissoes() {
       parcelas_comissao = finalTipoComissionamento.includes("VEICULO") ? 13 : 15;
     }
 
-    const comissao_total = (valorVenda * taxa_comissao) / 100;
+    const customComissaoTotal = comissaoTotalOverrideStr ? Number(comissaoTotalOverrideStr.replace(/\D/g, "")) / 100 : 0;
+    const defaultComissaoTotal = (valorVenda * taxa_comissao) / 100;
+    const comissao_total = customComissaoTotal > 0 ? customComissaoTotal : defaultComissaoTotal;
+
     const payload = {
       organizacao_id: profile.organizacao_id,
       usuario_id: profile.id,
@@ -395,6 +406,7 @@ export default function Comissoes() {
     setGrupo("");
     setCota("");
     setValorVendaStr("");
+    setComissaoTotalOverrideStr("");
     setRegra("DEMAIS");
     setTipoComissionamento("REDUZIDA");
     setPagamentosRetroativosStr("");
@@ -421,6 +433,7 @@ export default function Comissoes() {
     setGrupo(c.grupo || "");
     setCota(c.cota || "");
     setValorVendaStr(formatCurrencyInput((Number(c.valor_venda) * 100).toString()));
+    setComissaoTotalOverrideStr(formatCurrencyInput((Number(c.comissao_total || 0) * 100).toString()));
     setRegra(c.regra_comissao);
     setTipoComissionamento(tipoComiss);
     setPagamentosRetroativosStr(formatCurrencyInput((Number(c.pagamentos_retroativos) * 100).toString()));
@@ -1135,10 +1148,48 @@ export default function Comissoes() {
                 <label className="text-xs font-bold uppercase text-slate-500">Parcela Atual</label>
                 <Input 
                   type="number"
+                  min={1}
                   value={parcelaAtual} 
-                  onChange={e => setParcelaAtual(Number(e.target.value))} 
+                  onChange={e => setParcelaAtual(Math.max(1, Number(e.target.value)))} 
                 />
               </div>
+            </div>
+
+            {/* Valor Total da Comissão (EDITÁVEL) */}
+            <div className="space-y-1.5 bg-emerald-50/60 p-3 rounded-xl border border-emerald-200">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-black uppercase text-emerald-800 flex items-center gap-1">
+                  <Coins className="h-3.5 w-3.5 text-emerald-600" /> Valor Total da Comissão (Editável)
+                </label>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 text-[10px] text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/50 p-1 font-bold"
+                  onClick={() => {
+                    const vVenda = Number(valorVendaStr.replace(/\D/g, "")) / 100 || 0;
+                    let tCom = 4;
+                    if (regra === "GOLDEN") tCom = 5;
+                    if (regra === "SILVER") tCom = 3;
+                    if (regra === "RETROATIVO") tCom = 3.5;
+                    if (regra === "ADEMICON") tCom = 2.5;
+                    if (regra === "INDICACAO_MAGALU") tCom = 0.8;
+                    const calc = (vVenda * tCom) / 100;
+                    setComissaoTotalOverrideStr(formatCurrencyInput((calc * 100).toString()));
+                  }}
+                >
+                  Recalcular Padrão
+                </Button>
+              </div>
+              <Input 
+                value={comissaoTotalOverrideStr} 
+                onChange={e => setComissaoTotalOverrideStr(formatCurrencyInput(e.target.value))} 
+                placeholder="R$ 0,00" 
+                className="bg-white border-emerald-300 font-black text-emerald-800 text-base"
+              />
+              <p className="text-[10px] text-slate-500 font-medium">
+                Altere este valor caso o cliente já tenha pago parcelas, precise de ajuste ou tenha recebido valor customizado.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
