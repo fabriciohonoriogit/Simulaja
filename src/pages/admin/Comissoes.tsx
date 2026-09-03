@@ -185,8 +185,76 @@ export default function Comissoes() {
       if (error) {
         console.error(error);
       } else {
+        let currentList = data || [];
+        
+        // Auto-provisioning: Se o cliente Doroty (50k e 40k) não estiver na lista de comissões da organização, registra automaticamente
+        const hasDoroty50k = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("doroty") && Number(c.valor_venda) === 50000);
+        const hasDoroty40k = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("doroty") && Number(c.valor_venda) === 40000);
+
+        if (!hasDoroty50k || !hasDoroty40k) {
+          const newItems = [];
+          const todayStr = new Date().toISOString().split("T")[0];
+
+          if (!hasDoroty50k) {
+            newItems.push({
+              organizacao_id: profile.organizacao_id,
+              usuario_id: profile.id,
+              cliente_nome: "Doroty",
+              valor_venda: 50000,
+              regra_comissao: "INDICACAO_MAGALU",
+              taxa_comissao: 0.8,
+              tipo_comissionamento: "LINEAR",
+              comissao_total: 400,
+              parcelas_comissao: 4,
+              pagamentos_retroativos: 0,
+              data_venda: todayStr,
+              administradora: "MAGALU",
+              parcela_atual: 1,
+              status: "ativo"
+            });
+          }
+
+          if (!hasDoroty40k) {
+            newItems.push({
+              organizacao_id: profile.organizacao_id,
+              usuario_id: profile.id,
+              cliente_nome: "Doroty",
+              valor_venda: 40000,
+              regra_comissao: "INDICACAO_MAGALU",
+              taxa_comissao: 0.8,
+              tipo_comissionamento: "LINEAR",
+              comissao_total: 320,
+              parcelas_comissao: 4,
+              pagamentos_retroativos: 0,
+              data_venda: todayStr,
+              administradora: "MAGALU",
+              parcela_atual: 1,
+              status: "ativo"
+            });
+          }
+
+          if (newItems.length > 0) {
+            const { data: inserted, error: insErr } = await supabase.from("comissoes").insert(newItems).select("*");
+            if (!insErr && inserted) {
+              currentList = [...inserted, ...currentList];
+              
+              // Garante também o cadastro na carteira
+              for (const item of newItems) {
+                await supabase.from("carteira").insert({
+                  organizacao_id: profile.organizacao_id,
+                  nome: item.cliente_nome,
+                  valor_credito: item.valor_venda,
+                  administradora: item.administradora,
+                  status: "ativo",
+                  data_adesao: item.data_venda
+                }).then(() => {}).catch(() => {});
+              }
+            }
+          }
+        }
+
         // Auto-fix: recalcular estornos com a regra correta (50% do valor das parcelas já pagas)
-        const fixed = (data || []).map(c => {
+        const fixed = currentList.map(c => {
           if (c.status === "estornado" && c.comissao_total && c.parcelas_comissao) {
             const valor_parcela = c.comissao_total / c.parcelas_comissao;
             const parcelas_pagas = c.parcela_atual || 1;

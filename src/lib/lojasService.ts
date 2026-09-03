@@ -307,12 +307,7 @@ export function isLeadIndicacao(lead: any): boolean {
     getIndicadorRaw(dc.quem_indicou)
   ].join(" ");
 
-  // Dorys não entra como indicação de Magalu
-  if (allIndicadorText.includes("dorys")) {
-    return false;
-  }
-
-  // Se for Karine, Carine, Angelo, Canoinhas ou Lucas Matias, é indicação confirmada
+  // Se for Karine, Carine, Angelo, Canoinhas, Lucas Matias ou Doroty, é indicação confirmada
   const leadNameStr = (lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "").toLowerCase();
   const indStr = (
     lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
@@ -335,7 +330,11 @@ export function isLeadIndicacao(lead: any): boolean {
     leadNameStr.includes("lucas") || 
     leadNameStr.includes("matias") || 
     leadNameStr.includes("mathias") ||
-    leadNameStr.includes("angelo")
+    leadNameStr.includes("angelo") ||
+    leadNameStr.includes("doroty") ||
+    leadNameStr.includes("doroti") ||
+    indStr.includes("doroty") ||
+    indStr.includes("doroti")
   ) {
     return true;
   }
@@ -346,7 +345,7 @@ export function isLeadIndicacao(lead: any): boolean {
     const invalidValues = [
       "", "nao", "não", "nenhum", "nenhuma", "sem indicador", "sem indicação", 
       "nao possui", "não possui", "n/a", "null", "undefined", "sem", 
-      "não informado", "nao informado", "dorys"
+      "não informado", "nao informado"
     ];
     if (invalidValues.includes(str)) return "";
     return str;

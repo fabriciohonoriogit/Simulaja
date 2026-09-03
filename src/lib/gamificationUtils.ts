@@ -50,6 +50,8 @@ export function calcularComissaoRecorrenteLead(lead: any): number {
   const isIndicacaoFilial = 
     regra === "INDICACAO_MAGALU" ||
     clienteNome.includes("valdinei") ||
+    clienteNome.includes("doroty") ||
+    clienteNome.includes("doroti") ||
     filialInfo.includes("sao mateus") || filialInfo.includes("são mateus") || filialInfo.includes("927") ||
     cidadeInfo.includes("sao mateus") || cidadeInfo.includes("são mateus") ||
     (administradora === "MAGALU" || isLeadIndicacao(lead)) ||

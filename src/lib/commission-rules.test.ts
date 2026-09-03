@@ -68,6 +68,31 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
       // Comissão recorrente total no Dashboard = 800 + 80 = R$ 880,00/mês
       expect(comissao200k + comissaoValdinei).toBe(880);
     });
+
+    it("deve calcular a comissão para os 2 contratos da cliente Doroty (50k e 40k)", () => {
+      const leadDoroty50k = {
+        nome: "Doroty",
+        valor_credito: 50000,
+        administradora: "MAGALU"
+      };
+
+      const leadDoroty40k = {
+        nome: "Doroty",
+        valor_credito: 40000,
+        administradora: "MAGALU"
+      };
+
+      // 50.000 * 0.80% = 400 / 4 parcelas = 100 recorrente
+      const comissao50k = calcularComissaoRecorrenteLead(leadDoroty50k);
+      expect(comissao50k).toBe(100);
+
+      // 40.000 * 0.80% = 320 / 4 parcelas = 80 recorrente
+      const comissao40k = calcularComissaoRecorrenteLead(leadDoroty40k);
+      expect(comissao40k).toBe(80);
+
+      // Total Doroty = 100 + 80 = R$ 180,00/mês
+      expect(comissao50k + comissao40k).toBe(180);
+    });
   });
 
   describe("Atribuição de Vendas de Gestor vs Loja", () => {
