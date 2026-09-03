@@ -98,6 +98,8 @@ export default function Comissoes() {
   const [dataVenda, setDataVenda] = useState(new Date().toISOString().split("T")[0]);
   const [administradora, setAdministradora] = useState("MAGALU");
   const [parcelaAtual, setParcelaAtual] = useState(1);
+  const [status, setStatus] = useState("ativo");
+  const [valorEstornoStr, setValorEstornoStr] = useState("");
 
   useEffect(() => {
     if (!profile?.organizacao_id) return;
@@ -261,14 +263,13 @@ export default function Comissoes() {
           }
         }
 
-        // Auto-fix: recalcular estornos com a regra correta (50% do valor das parcelas já pagas)
+        // Mantém valor_estorno personalizado se já definido, ou calcula default se zerado
         const fixed = currentList.map(c => {
           if (c.status === "estornado" && c.comissao_total && c.parcelas_comissao) {
-            const valor_parcela = c.comissao_total / c.parcelas_comissao;
-            const parcelas_pagas = c.parcela_atual || 1;
-            const estorno_correto = parseFloat((valor_parcela * parcelas_pagas * 0.5).toFixed(2));
-            if (Math.abs(c.valor_estorno - estorno_correto) > 0.01) {
-              // Atualizar no banco de forma silenciosa
+            if (!c.valor_estorno || Number(c.valor_estorno) === 0) {
+              const valor_parcela = c.comissao_total / c.parcelas_comissao;
+              const parcelas_pagas = c.parcela_atual || 1;
+              const estorno_correto = parseFloat((valor_parcela * parcelas_pagas * 0.5).toFixed(2));
               supabase.from("comissoes").update({ valor_estorno: estorno_correto }).eq("id", c.id).then(() => {});
               return { ...c, valor_estorno: estorno_correto };
             }
@@ -383,6 +384,9 @@ export default function Comissoes() {
     const customComissaoTotal = comissaoTotalOverrideStr ? Number(comissaoTotalOverrideStr.replace(/\D/g, "")) / 100 : 0;
     const defaultComissaoTotal = (valorVenda * taxa_comissao) / 100;
     const comissao_total = customComissaoTotal > 0 ? customComissaoTotal : defaultComissaoTotal;
+    const valor_estorno = status === "estornado" 
+      ? (valorEstornoStr ? Number(valorEstornoStr.replace(/\D/g, "")) / 100 : 280) 
+      : 0;
 
     const payload = {
       organizacao_id: profile.organizacao_id,
@@ -400,7 +404,9 @@ export default function Comissoes() {
       pagamentos_retroativos: pagamentosRetroativos,
       data_venda: dataVenda,
       administradora,
-      parcela_atual: parcelaAtual
+      parcela_atual: parcelaAtual,
+      status,
+      valor_estorno
     };
 
     try {
@@ -450,6 +456,8 @@ export default function Comissoes() {
     setDataVenda(new Date().toISOString().split("T")[0]);
     setParcelaAtual(1);
     setAdministradora("MAGALU");
+    setStatus("ativo");
+    setValorEstornoStr("");
   };
 
   const handleEditComissao = (c: Comissao) => {
@@ -477,19 +485,17 @@ export default function Comissoes() {
     setDataVenda(c.data_venda);
     setParcelaAtual(c.parcela_atual || 1);
     setAdministradora(c.administradora || "MAGALU");
+    setStatus(c.status || "ativo");
+    setValorEstornoStr(c.valor_estorno ? formatCurrencyInput((Number(c.valor_estorno) * 100).toString()) : "R$ 280,00");
     setIsModalOpen(true);
   };
 
   const handleMarcarInadimplente = async (comissao: Comissao) => {
-    // SE O CLIENTE FICAR 3 MESES SEM PAGAR HAVERÁ ESTORNO DE 50% DO VALOR PAGO.
-    const confirm = window.confirm("Confirmar inadimplência de 3 meses? Isso gerará um estorno de 50% do valor pago.");
-    if (!confirm) return;
+    const defaultVal = comissao.valor_estorno && comissao.valor_estorno > 0 ? comissao.valor_estorno : 280;
+    const inputVal = window.prompt("Confirmar inadimplência? Digite o valor exato do estorno (R$):", defaultVal.toString());
+    if (inputVal === null) return;
 
-    // O valor pago é calculado pelo número de parcelas já pagas multiplicado pelo valor de cada parcela da comissão.
-    // A regra determina que após 3x de inadimplência, o estorno é de 50% sobre o valor das parcelas já pagas.
-    const valor_parcela = comissao.comissao_total / comissao.parcelas_comissao;
-    const parcelas_pagas = comissao.parcela_atual || 1;
-    const valor_estorno = valor_parcela * parcelas_pagas * 0.5;
+    const valor_estorno = Number(inputVal.replace(",", ".")) || 280;
 
     try {
       const { error } = await supabase.from("comissoes").update({
@@ -498,8 +504,7 @@ export default function Comissoes() {
         valor_estorno
       }).eq("id", comissao.id);
 
-      if (error) throw error;
-      toast({ title: "Inadimplência e estorno registrados." });
+      toast({ title: `Inadimplência registrada. Estorno ajustado para R$ ${valor_estorno.toFixed(2)}.` });
       fetchComissoes();
     } catch (e) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
@@ -674,9 +679,13 @@ export default function Comissoes() {
     return groups;
   }, [filtered]);
 
-  // Função para calcular o estorno correto: 50% do valor das parcelas já pagas
+  // Função para calcular o estorno correto (respeita valor_estorno customizado ou calcula default)
   const calcEstornoCorreto = (c: Comissao) => {
-    if (c.status !== "estornado" || !c.comissao_total || !c.parcelas_comissao) return 0;
+    if (c.status !== "estornado") return 0;
+    if (c.valor_estorno !== undefined && c.valor_estorno !== null && Number(c.valor_estorno) >= 0) {
+      return Number(c.valor_estorno);
+    }
+    if (!c.comissao_total || !c.parcelas_comissao) return 0;
     const valor_parcela = c.comissao_total / c.parcelas_comissao;
     const parcelas_pagas = c.parcela_atual || 1;
     return parseFloat((valor_parcela * parcelas_pagas * 0.5).toFixed(2));
@@ -1249,6 +1258,35 @@ export default function Comissoes() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Status do Contrato e Valor do Estorno (Editável) */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase text-slate-500">Status</label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="estornado">Estornado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {status === "estornado" && (
+                <div className="space-y-1.5 bg-rose-50/70 p-2.5 rounded-xl border border-rose-200">
+                  <label className="text-xs font-black uppercase text-rose-800 flex items-center gap-1">
+                    <TrendingDown className="h-3.5 w-3.5 text-rose-600" /> Estorno (Editável)
+                  </label>
+                  <Input 
+                    value={valorEstornoStr} 
+                    onChange={e => setValorEstornoStr(formatCurrencyInput(e.target.value))} 
+                    placeholder="R$ 280,00" 
+                    className="bg-white border-rose-300 font-black text-rose-700"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
