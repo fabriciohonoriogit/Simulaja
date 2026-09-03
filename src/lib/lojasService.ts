@@ -686,7 +686,12 @@ export function getTimeFrameLabel(timeFrame: TimeFrame, customRange?: CustomDate
     case "dia": return "DO DIA (Hoje)";
     case "semana": return "DA SEMANA (7 dias)";
     case "quinzena": return "DA QUINZENA (15 dias)";
-    case "mes": return "DO MÊS (Agosto/2026)";
+    case "mes": {
+      const monthName = new Date().toLocaleString("pt-BR", { month: "long" });
+      const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+      const year = new Date().getFullYear();
+      return `DO MÊS (${capitalizedMonth}/${year})`;
+    }
     case "personalizado": {
       const formatDate = (dStr?: string) => {
         if (!dStr) return "";
