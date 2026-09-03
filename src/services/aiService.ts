@@ -319,6 +319,14 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
 Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
   }
 
+    if (lower.length <= 15 || lower.startsWith("oi") || lower.startsWith("ola") || lower.startsWith("bom dia") || lower.startsWith("boa tarde") || lower.startsWith("boa noite")) {
+      return `Oi ${firstName}, como posso lhe ajudar?`;
+    }
+
+    const safeSnippet = typeof userQuery === "string" ? userQuery.slice(0, 50) : "";
+    return `Entendi sua pergunta sobre "${safeSnippet}...". Estou operando com o motor local do CRM. Posso te ajudar com cotações de consórcio (ex: "simular 200 mil imóveis"), consulta de boleto/CPF, metas de vendas, inadimplência e dados do funil do CRM!`;
+  }
+
   return `Oi ${firstName}, como posso lhe ajudar?`;
 }
 
@@ -335,11 +343,11 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
   },
 
   async askJarvis(context: string, question: string, history?: Array<{ role: string; text: string }>, imageBase64?: string, userName = "Fabrício") {
-    // 1. Tenta comunicar com o Hermes Agent via Jarvis Brain Server na porta 8008
+    // 1. Tenta comunicar com o Hermes Agent via Jarvis Brain Server na porta 8008 (usando 127.0.0.1 para evitar problemas de IPv6/localhost no Windows)
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch("http://localhost:8008/hermes/chat", {
+      const res = await fetch("http://127.0.0.1:8008/hermes/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: question, who: "vendedor", user_name: userName }),
@@ -360,7 +368,7 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 400);
-      const res = await fetch(`http://localhost:8008/context?query=${encodeURIComponent(question)}&who=vendedor`, { signal: controller.signal });
+      const res = await fetch(`http://127.0.0.1:8008/context?query=${encodeURIComponent(question)}&who=vendedor`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();

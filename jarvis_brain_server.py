@@ -69,6 +69,7 @@ class BrainHandler(BaseHTTPRequestHandler):
                 
                 total_md = proj_files + self_files + know_files + inbox_files
                 self.send_json({
+                    "status": "ok",
                     "openjarvis_protocol": "v1.2",
                     "obsidian_vault": base_dir,
                     "total_notes": total_md,
@@ -82,7 +83,7 @@ class BrainHandler(BaseHTTPRequestHandler):
                     "policy_file": os.path.exists(os.path.join(base_dir, "POLICY.md"))
                 })
             except Exception as e:
-                self.send_json({"error": str(e)}, 500)
+                self.send_json({"status": "error", "error": str(e)}, 500)
 
         else:
             self.send_response(404)
@@ -254,8 +255,8 @@ if __name__ == '__main__':
         sector="conhecimento", category="rules"
     )
 
-    server = HTTPServer(('localhost', PORT), BrainHandler)
-    print(f"[+] Servidor 3cerebros ativo na porta {PORT}...")
+    server = HTTPServer(('0.0.0.0', PORT), BrainHandler)
+    print(f"[+] Servidor 3cerebros ativo na porta {PORT} (0.0.0.0:{PORT})...")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

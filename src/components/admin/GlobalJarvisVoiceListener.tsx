@@ -127,9 +127,10 @@ export function GlobalJarvisVoiceListener() {
             try {
               isSpeakingRef.current = true;
               const res = await aiService.askJarvis("Comando de Voz do Usuário", finalQ);
-              const answerText = res.answer || (res as any).script || (res as any).text;
+              const answerRaw = res ? (res.answer || (res as any).script || (res as any).text) : "";
+              const answerText = typeof answerRaw === "string" ? answerRaw : String(answerRaw || "");
 
-              if (answerText) {
+              if (answerText.trim()) {
                 toast({
                   title: "🤖 Bella Respondeu",
                   description: answerText.length > 150 ? `${answerText.slice(0, 150)}...` : answerText,

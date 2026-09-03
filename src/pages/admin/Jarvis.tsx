@@ -363,7 +363,7 @@ export default function Jarvis() {
         }
         async function fetchObsidian() {
             try {
-                const res = await fetch("http://localhost:8008/obsidian/status");
+                const res = await fetch("http://127.0.0.1:8008/obsidian/status");
                 if (res.ok) {
                     const data = await res.json();
                     setObsidianStatus(data);
@@ -385,7 +385,7 @@ export default function Jarvis() {
         setIsAnalyzing(true);
         setOrbState("thinking");
         try {
-            await fetch("http://localhost:8008/reset", { method: "POST" }).catch(() => {});
+            await fetch("http://127.0.0.1:8008/reset", { method: "POST" }).catch(() => {});
         } catch (e) {}
 
         setTimeout(() => {
@@ -411,8 +411,8 @@ export default function Jarvis() {
     const handleSyncObsidian = async () => {
         toast({ title: "Sincronizando Obsidian Vault...", description: "Processando notas .md com protocolo OpenJarvis" });
         try {
-            await fetch("http://localhost:8008/obsidian/sync", { method: "POST" });
-            const res = await fetch("http://localhost:8008/obsidian/status");
+            await fetch("http://127.0.0.1:8008/obsidian/sync", { method: "POST" });
+            const res = await fetch("http://127.0.0.1:8008/obsidian/status");
             if (res.ok) {
                 const data = await res.json();
                 setObsidianStatus(data);
@@ -437,9 +437,18 @@ export default function Jarvis() {
         try {
             const currentUserName = profile?.nome || "Fabrício";
             const res = await aiService.askJarvis(getSystemAuthoritativeContext(), trimmed, undefined, undefined, currentUserName);
+            
             let answerText = (res && typeof res.answer === "string" && res.answer.trim()) 
                 ? res.answer.trim() 
-                : `Oi ${currentUserName.split(" ")[0]}, como posso lhe ajudar?`;
+                : "";
+
+            if (!answerText) {
+                if (res && res.error) {
+                    answerText = typeof res.error === "string" ? res.error : "Não consegui conectar com a Bella, tente novamente.";
+                } else {
+                    answerText = "Não consegui conectar com a Bella, tente novamente.";
+                }
+            }
 
             // Processa comandos de navegação ou ações via JSON se presentes na resposta
             const jsonMatch = answerText.match(/```json\n([\s\S]*?)\n```/);
@@ -471,12 +480,7 @@ export default function Jarvis() {
             speak(answerText);
         } catch (e) {
             console.error("[Jarvis Execution Error]", e);
-            const currentUserName = profile?.nome || "Fabrício";
-            const firstName = currentUserName.split(" ")[0];
-            let fallbackAnswer = `Oi ${firstName}, como posso lhe ajudar?`;
-            try {
-                fallbackAnswer = await generateSmartLocalResponse(trimmed, currentUserName);
-            } catch (err) {}
+            const fallbackAnswer = "Não consegui conectar com a Bella, tente novamente.";
             
             const jarvisMsg: Message = {
                 id: (Date.now() + 1).toString(),
