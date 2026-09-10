@@ -327,9 +327,6 @@ Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
     return `Entendi sua pergunta sobre "${safeSnippet}...". Estou operando com o motor local do CRM. Posso te ajudar com cotações de consórcio (ex: "simular 200 mil imóveis"), consulta de boleto/CPF, metas de vendas, inadimplência e dados do funil do CRM!`;
   }
 
-  return `Oi ${firstName}, como posso lhe ajudar?`;
-}
-
 export const aiService = {
   async generateSalesScript(lead: LeadContext) {
     const prompt = `Você é especialista sênior em consórcios da Prospera Planejamento.

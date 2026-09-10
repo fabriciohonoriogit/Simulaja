@@ -549,8 +549,8 @@ export function calculateLojasPerformance(
     const realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
     const closedLeadsCount = leadsFechadosPeriodo.length;
     const closedIndicacoes = leadsFechadosPeriodo.filter(isLeadIndicacao);
-    const closedIndicacoesCount = closedIndicacoes.length;
-    const realizadoIndicacoes = closedIndicacoes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    let closedIndicacoesCount = closedIndicacoes.length;
+    let realizadoIndicacoes = closedIndicacoes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
 
     const realizadoUsado = realizadoPeriodo;
     const leadsFechadosUsados = storeLeads.filter(l => isClosedStatus(l.status, l));
