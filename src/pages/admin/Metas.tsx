@@ -57,7 +57,7 @@ import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveCon
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { LojasDashboardSection } from "@/components/admin/lojas/LojasDashboardSection";
-import { calculateLojasPerformance, getLojasConfig } from "@/lib/lojasService";
+import { calculateLojasPerformance, getLojasConfig, matchLeadToLoja } from "@/lib/lojasService";
 
 export interface TermometroMercado {
   id: string;
@@ -450,7 +450,11 @@ export default function Metas() {
     const volumeLojasMetas = lojasPerfMetas.realizadoGlobalMensal;
     
     const currentMonthVendas = leads.filter(l => isVendaRealizadaNoMes(l, mesStr));
-    const volumeGestorMetas = currentMonthVendas.filter(l => l.responsavel_id === profile?.id).reduce((a, l) => a + Number(l.valor_credito || 0), 0);
+    const volumeGestorMetas = currentMonthVendas.filter(l => {
+        const isGestorResponsavel = !l.responsavel_id || l.responsavel_id === profile?.id;
+        const isUnmatchedToLoja = matchLeadToLoja(l, lojasConfigMetas) === null;
+        return isGestorResponsavel && isUnmatchedToLoja;
+    }).reduce((a, l) => a + Number(l.valor_credito || 0), 0);
     const realizadoMes = isManager && selectedVendedor === "all" 
         ? (volumeLojasMetas + volumeGestorMetas) 
         : currentMonthVendas.reduce((a, l) => a + Number(l.valor_credito || 0), 0);

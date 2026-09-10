@@ -279,11 +279,15 @@ export default function Dashboard() {
   const lojasPerf = calculateLojasPerformance(leads, lojasConfig, "mes");
   const volumeLojas = lojasPerf.realizadoGlobalMensal;
 
-  // Vendas do Gestor/Usuário logado no mês atual
-  const gestorLeadsMes = leadsFechadosMes.filter(l => l.responsavel_id === profile?.id);
+  // Vendas do Gestor/Usuário logado no mês atual (apenas vendas que NÃO pertencem a nenhuma loja/filial)
+  const gestorLeadsMes = leadsFechadosMes.filter(l => {
+    const isGestorResponsavel = !l.responsavel_id || l.responsavel_id === profile?.id;
+    const isUnmatchedToLoja = matchLeadToLoja(l, lojasConfig) === null;
+    return isGestorResponsavel && isUnmatchedToLoja;
+  });
   const gestorSalesVolume = gestorLeadsMes.reduce((acc, l) => acc + Number(l.valor_credito || 0), 0);
 
-  // Vendas do Mês Consolidadas (Lojas + Gestor)
+  // Vendas do Mês Consolidadas (Lojas + Gestor Direto)
   const realizadoMes = volumeLojas + gestorSalesVolume;
 
   // Comissão Recorrente Lojas Magalu
