@@ -110,7 +110,7 @@ export const useGamificationStore = create<GamificationStore>()(
     }),
     {
       name: 'contemplar-gamification-storage',
-      version: 3,
+      version: 4,
       partialize: (state) => ({
         patenteAtual: state.patenteAtual,
         previousPatente: state.previousPatente,
@@ -123,6 +123,8 @@ export const useGamificationStore = create<GamificationStore>()(
         if (persistedState) {
           persistedState.producaoMes = 0;
           persistedState.comissaoMensalAtual = 0;
+          delete persistedState.producaoMes;
+          delete persistedState.comissaoMensalAtual;
           if (persistedState.patenteAtual === 'INICIANTE' || !persistedState.patenteAtual) {
             persistedState.patenteAtual = 'STONE';
           }
@@ -136,21 +138,51 @@ export const useGamificationStore = create<GamificationStore>()(
   )
 );
 
-// Auto-correction timeout to clean legacy local storage states on load
+// Auto-correction to immediately purge cached legacy producaoMes & comissaoMensalAtual values
+if (typeof window !== 'undefined') {
+  try {
+    const raw = localStorage.getItem('contemplar-gamification-storage');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.state) {
+        let changed = false;
+        if ('producaoMes' in parsed.state) {
+          delete parsed.state.producaoMes;
+          changed = true;
+        }
+        if ('comissaoMensalAtual' in parsed.state) {
+          delete parsed.state.comissaoMensalAtual;
+          changed = true;
+        }
+        if (parsed.version !== 4) {
+          parsed.version = 4;
+          changed = true;
+        }
+        if (changed) {
+          localStorage.setItem('contemplar-gamification-storage', JSON.stringify(parsed));
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Migration error:", e);
+  }
+}
+
+// Force immediate store reset of cached production values
 setTimeout(() => {
   try {
     const state = useGamificationStore.getState();
-    const legacyValue = 'INICIANTE' as any;
     const updates: Partial<GamificationStore> = {};
-    if (state.patenteAtual === legacyValue) {
+    if (state.patenteAtual === ('INICIANTE' as any)) {
       updates.patenteAtual = 'STONE';
     }
-    if (state.previousPatente === legacyValue) {
+    if (state.previousPatente === ('INICIANTE' as any)) {
       updates.previousPatente = null;
     }
-    // Forçar limpeza de estados cacheados legados para produção do mês
-    if (state.producaoMes > 100000 && state.comissaoMensalAtual === 360) {
+    if (state.producaoMes > 100000) {
       updates.producaoMes = 100000;
+    }
+    if (state.comissaoMensalAtual === 360) {
       updates.comissaoMensalAtual = 200;
     }
     if (Object.keys(updates).length > 0) {
@@ -159,4 +191,4 @@ setTimeout(() => {
   } catch (e) {
     console.error("Migration error:", e);
   }
-}, 50);
+}, 0);
