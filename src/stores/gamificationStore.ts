@@ -110,7 +110,7 @@ export const useGamificationStore = create<GamificationStore>()(
     }),
     {
       name: 'contemplar-gamification-storage',
-      version: 2,
+      version: 3,
       partialize: (state) => ({
         patenteAtual: state.patenteAtual,
         previousPatente: state.previousPatente,
@@ -147,6 +147,11 @@ setTimeout(() => {
     }
     if (state.previousPatente === legacyValue) {
       updates.previousPatente = null;
+    }
+    // Forçar limpeza de estados cacheados legados para produção do mês
+    if (state.producaoMes > 100000 && state.comissaoMensalAtual === 360) {
+      updates.producaoMes = 100000;
+      updates.comissaoMensalAtual = 200;
     }
     if (Object.keys(updates).length > 0) {
       useGamificationStore.setState(updates);
