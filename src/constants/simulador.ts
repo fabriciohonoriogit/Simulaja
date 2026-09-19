@@ -106,7 +106,7 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
     grupo: "6041",
     reajuste: "INCC",
     primeiraAssembleia: "26/11/2025",
-    proximaAssembleia: "25/07/2026",
+    proximaAssembleia: "23/09/2026",
     caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 120.000,00 a 230.000,00. ****** DEVIDO A RESOLUÇAO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
     ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia), onde inicia repetição entre todos lances conforme saldo grupo.",
     opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
@@ -688,6 +688,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6027", credito: 280000, prazo: 187, r50: 1116.89, r100: 1820.90, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
 
     // Grupo 6041 - Promocional Agosto/26
+    { grupo: "6041", credito: 200000, prazo: 210, r50: 716.98, r100: 1193.33, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6041", credito: 230000, prazo: 211, r50: 878.48, r100: 1419.17, txLinear: 18, frLinear: 1, tx5050: 23, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6041", credito: 230000, prazo: 211, r50: 912.88, r100: 1474.65, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
 
@@ -703,21 +704,21 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6030", credito: 320000, prazo: 194, r50: 1355.05, r100: 2157.94, txLinear: 25, frLinear: 1, tx5050: 25, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
 
     // Grupo 6042 - Promocional e Plano Golden Agosto/26
-    { grupo: "6042", credito: 350000, prazo: 237, r50: 1123.81, r100: 1862.38, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6042", credito: 350000, prazo: 237, r50: 1155.32, r100: 1893.67, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 350000, prazo: 237, r50: 1249.52, r100: 1980.53, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 400000, prazo: 237, r50: 1284.35, r100: 2128.44, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 400000, prazo: 237, r50: 1320.37, r100: 2164.20, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 400000, prazo: 237, r50: 1428.02, r100: 2263.46, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 450000, prazo: 237, r50: 1444.90, r100: 2394.49, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 450000, prazo: 237, r50: 1485.38, r100: 2434.72, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 450000, prazo: 237, r50: 1606.52, r100: 2546.39, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 500000, prazo: 237, r50: 1605.44, r100: 2660.55, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 500000, prazo: 237, r50: 1650.42, r100: 2705.25, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 500000, prazo: 237, r50: 1785.02, r100: 2829.32, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 550000, prazo: 237, r50: 1765.98, r100: 2926.60, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 550000, prazo: 237, r50: 1815.46, r100: 2975.77, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 550000, prazo: 237, r50: 1963.52, r100: 3112.26, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 600000, prazo: 237, r50: 1926.53, r100: 3192.66, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 600000, prazo: 237, r50: 1980.50, r100: 3246.30, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 600000, prazo: 237, r50: 2142.03, r100: 3395.19, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 650000, prazo: 237, r50: 2087.07, r100: 3458.71, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 650000, prazo: 237, r50: 2145.54, r100: 3516.82, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 650000, prazo: 237, r50: 2320.53, r100: 3678.12, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 700000, prazo: 237, r50: 2247.62, r100: 3724.77, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 700000, prazo: 237, r50: 2310.58, r100: 3787.35, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 700000, prazo: 237, r50: 2499.03, r100: 3961.05, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
 
     // Composições de Crédito Multi-Cotas (810k, 900k, 1M, 2M)
