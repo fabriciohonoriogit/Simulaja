@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   FileText, 
-  FolderForm, 
+  FolderText, 
   Download, 
   Share2, 
   UserCheck, 
@@ -259,7 +259,7 @@ export default function CentralFormularios() {
             onClick={() => setActiveTab("ficha")}
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-2 shadow-lg shadow-emerald-900/30 rounded-xl"
           >
-            <FolderForm className="h-4 w-4" /> Ficha Cadastral
+            <FolderText className="h-4 w-4" /> Ficha Cadastral
           </Button>
         </div>
       </div>
@@ -268,7 +268,7 @@ export default function CentralFormularios() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-white border border-slate-200 p-1.5 rounded-2xl w-full justify-start overflow-x-auto shadow-sm">
           <TabsTrigger value="central" className="rounded-xl font-bold text-xs gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-            <FolderForm className="h-4 w-4" /> Central de Documentos
+            <FolderText className="h-4 w-4" /> Central de Documentos
           </TabsTrigger>
           <TabsTrigger value="alteracao" className="rounded-xl font-bold text-xs gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
             <FileText className="h-4 w-4" /> Alteração do Bem
