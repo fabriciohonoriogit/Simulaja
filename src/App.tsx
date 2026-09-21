@@ -25,6 +25,7 @@ import Register from "./pages/admin/Register";
 import ResetPassword from "./pages/admin/ResetPassword";
 import Chat from "./pages/admin/Chat";
 import CartaAnalise from "./pages/admin/CartaAnalise";
+import CentralFormularios from "./pages/admin/CentralFormularios";
 import Comissoes from "./pages/admin/Comissoes";
 import Assinatura from "./pages/admin/Assinatura";
 import Onboarding from "./pages/admin/Onboarding";
@@ -87,6 +88,7 @@ const AppContent = () => {
           <Route path="chat" element={<Chat />} />
           <Route path="whatsapp-inbox" element={<WhatsAppInbox />} />
           <Route path="carta-analise" element={<CartaAnalise />} />
+          <Route path="formularios" element={<CentralFormularios />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
