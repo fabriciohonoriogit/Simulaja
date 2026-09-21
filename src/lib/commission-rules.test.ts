@@ -69,42 +69,51 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
       expect(comissao200k + comissaoValdinei).toBe(880);
     });
 
-    it("deve calcular a comissão para os 2 contratos da cliente Doroty (50k gestor e 40k filial)", () => {
-      const leadDoroty50k = {
-        nome: "Doroty",
+    it("deve calcular a comissão para as vendas do gestor (50k e 40k)", () => {
+      const leadGestor50k = {
+        nome: "Cliente Gestor 50k",
         valor_credito: 50000,
         is_venda_gestor: true,
         administradora: "MAGALU"
       };
 
-      const leadDoroty40k = {
-        nome: "Doroty",
+      const leadGestor40k = {
+        nome: "Cliente Gestor 40k",
         valor_credito: 40000,
+        is_venda_gestor: true,
         administradora: "MAGALU"
       };
 
       // 50.000 * 4.00% = 2.000 / 10 parcelas = 200 recorrente (Gestor)
-      const comissao50k = calcularComissaoRecorrenteLead(leadDoroty50k);
+      const comissao50k = calcularComissaoRecorrenteLead(leadGestor50k);
       expect(comissao50k).toBe(200);
 
-      // 40.000 * 0.80% = 320 / 4 parcelas = 80 recorrente (Filial)
-      const comissao40k = calcularComissaoRecorrenteLead(leadDoroty40k);
-      expect(comissao40k).toBe(80);
+      // 40.000 * 4.00% = 1.600 / 10 parcelas = 160 recorrente (Gestor)
+      const comissao40k = calcularComissaoRecorrenteLead(leadGestor40k);
+      expect(comissao40k).toBe(160);
 
-      // Total Doroty = 200 + 80 = R$ 280,00/mês
-      expect(comissao50k + comissao40k).toBe(280);
+      // Total Gestor = 200 + 160 = R$ 360,00/mês
+      expect(comissao50k + comissao40k).toBe(360);
+    });
+
+    it("deve calcular o total de comissão do mês de setembro (190k total = 560,00/mês)", () => {
+      const gestor50k = calcularComissaoRecorrenteLead({ valor_credito: 50000, is_venda_gestor: true });
+      const gestor40k = calcularComissaoRecorrenteLead({ valor_credito: 40000, is_venda_gestor: true });
+      const filial60k = calcularComissaoRecorrenteLead({ valor_credito: 60000, cidade: "Paranaguá" });
+      const filial40k = calcularComissaoRecorrenteLead({ valor_credito: 40000, cidade: "São Mateus do Sul", nome: "Valdinei" });
+
+      expect(gestor50k).toBe(200);
+      expect(gestor40k).toBe(160);
+      expect(filial60k).toBe(120);
+      expect(filial40k).toBe(80);
+
+      const totalMesSetembro = gestor50k + gestor40k + filial60k + filial40k;
+      expect(totalMesSetembro).toBe(560);
     });
   });
 
   describe("Atribuição de Vendas de Gestor vs Loja", () => {
-    it("deve excluir as vendas de 200mil e 50mil do gestor das metas da loja Paranaguá", () => {
-      const lead200kGestor = {
-        nome: "Cliente Gestor 200k",
-        valor_credito: 200000,
-        cidade: "PARANAGUÁ",
-        origem: "venda_gestor"
-      };
-
+    it("deve excluir as vendas de 50mil e 40mil do gestor das metas da loja", () => {
       const lead50kGestor = {
         nome: "Cliente Gestor 50k",
         valor_credito: 50000,
@@ -112,8 +121,15 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
         is_venda_gestor: true
       };
 
-      expect(matchLeadToLoja(lead200kGestor, MOCK_LOJAS)).toBeNull(); // Não entra para a loja
-      expect(matchLeadToLoja(lead50kGestor, MOCK_LOJAS)).toBeNull(); // Não entra para a loja Paranaguá
+      const lead40kGestor = {
+        nome: "Cliente Gestor 40k",
+        valor_credito: 40000,
+        cidade: "PARANAGUÁ",
+        is_venda_gestor: true
+      };
+
+      expect(matchLeadToLoja(lead50kGestor, MOCK_LOJAS)).toBeNull(); // Não entra para a loja
+      expect(matchLeadToLoja(lead40kGestor, MOCK_LOJAS)).toBeNull(); // Não entra para a loja
     });
 
     it("deve atribuir a venda de 40mil do Valdinei para a Filial São Mateus do Sul", () => {
@@ -129,9 +145,9 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
       expect(matchedValdinei?.cidade).toBe("SÃO MATEUS DO SUL");
     });
 
-    it("deve associar corretamente vendas comuns de loja", () => {
+    it("deve associar corretamente a venda de 60k para a Filial Paranaguá", () => {
       const leadLoja = {
-        nome: "Cliente Comum Loja",
+        nome: "Cliente Paranaguá 60k",
         valor_credito: 60000,
         cidade: "PARANAGUÁ"
       };

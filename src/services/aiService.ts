@@ -104,21 +104,21 @@ export function getSystemAuthoritativeContext(): string {
   const simContext = getSimulatorAuthoritativeContext();
   return `
 --- DADOS OFICIAIS E AUTORITÁRIOS DO SISTEMA SIMULAJA / ELITE CONSÓRCIOS ---
-• Vendas Oficiais do Mês (Realizado): R$ 640.000,00 (Total = 390.000,00 Filiais Magalu + 250.000,00 Gestor)
-• Desempenho por Unidade / Filial Magalu:
-  - Filial Paranaguá (952): R$ 60.000,00 (2 vendas)
-  - Filial São Mateus do Sul (927): R$ 40.000,00 (1 venda)
-  - Filial Campo Largo (909): R$ 180.000,00 (1 venda)
-  - Filial Canoinhas (646): R$ 110.000,00 (1 venda)
+• Vendas Oficiais do Mês de Setembro (Realizado): R$ 190.000,00 (Total = 100.000,00 Filiais Magalu + 90.000,00 Gestor)
+• Desempenho por Unidade / Filial Magalu (Setembro/2026):
+  - Filial Paranaguá (952): R$ 60.000,00 (1 venda)
+  - Filial São Mateus do Sul (927): R$ 40.000,00 (1 venda - Valdinei)
+  - Filial Campo Largo (909): R$ 0,00 (0 vendas)
+  - Filial Canoinhas (646): R$ 0,00 (0 vendas)
   - Filial Irati (929): R$ 0,00 (0 vendas)
-  - Vendas do Gestor: R$ 250.000,00 (2 vendas)
-• Total de Vendas no Mês: 7 vendas
-• Ticket Médio do Mês: R$ 91.428,57 (R$ 640.000,00 / 7 vendas)
-• Comissão Recorrente Mensal Consolidada: R$ 1.780,00/mês
-  - R$ 780,00/mês das filiais Magalu ((390.000 * 0,80%) / 4 parcelas)
-  - R$ 1.000,00/mês das vendas do gestor ((250.000 * 4,00%) / 10 parcelas)
-• Status / Ranking Elite: Patente GOLD (OURO) (Vendas entre 500k e 1,5M)
-• Próximo Nível (CROMO): Meta de R$ 1.500.000,00 (42,7% atingido, Faltam R$ 860.000,00 em Vendas)
+  - Vendas do Gestor: R$ 90.000,00 (2 vendas: R$ 50.000,00 e R$ 40.000,00)
+• Total de Vendas no Mês: 4 vendas
+• Ticket Médio do Mês: R$ 47.500,00 (R$ 190.000,00 / 4 vendas)
+• Comissão Recorrente Mensal Consolidada: R$ 560,00/mês
+  - R$ 200,00/mês das filiais Magalu ((100.000 * 0,80%) / 4 parcelas)
+  - R$ 360,00/mês das vendas do gestor ((90.000 * 4,00%) / 10 parcelas)
+• Status / Ranking Elite: Patente STONE (Vendas até 500k)
+• Próximo Nível (GOLD): Meta de R$ 500.000,00 (38,0% atingido, Faltam R$ 310.000,00 em Vendas)
 
 ${simContext}
 `;
