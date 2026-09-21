@@ -5,10 +5,12 @@ import "./index.css";
 import { registerSW } from "virtual:pwa-register";
 import { checkAndClearCache } from "./lib/cacheManager";
 
-// Verifica versão do build e limpa cache se necessário (resolve Android/iOS travado)
-checkAndClearCache().then(() => {
-  createRoot(document.getElementById("root")!).render(<App />);
-});
+// Verifica versão do build e limpa cache se necessário (garante inicialização no Android/iOS)
+checkAndClearCache()
+  .catch((err) => console.warn("[PWA Boot] Erro ao verificar cache:", err))
+  .finally(() => {
+    createRoot(document.getElementById("root")!).render(<App />);
+  });
 
 // Listener de atualização do SW com reload automático
 const updateSW = registerSW({

@@ -107,7 +107,7 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
     reajuste: "INCC",
     primeiraAssembleia: "26/11/2025",
     proximaAssembleia: "23/09/2026",
-    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 120.000,00 a 230.000,00. ****** DEVIDO A RESOLUÇAO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
+    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 150.000,00 a 230.000,00. ****** DEVIDO A RESOLUÇAO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
     ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia), onde inicia repetição entre todos lances conforme saldo grupo.",
     opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
     regraReajuste: "Reajuste todo o mês de Outubro pelo INCC a partir de Outubro 2026."
@@ -688,6 +688,7 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6027", credito: 280000, prazo: 187, r50: 1116.89, r100: 1820.90, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
 
     // Grupo 6041 - Promocional Agosto/26
+    { grupo: "6041", credito: 150000, prazo: 210, r50: 537.73, r100: 895.00, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6041", credito: 200000, prazo: 210, r50: 716.98, r100: 1193.33, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6041", credito: 230000, prazo: 211, r50: 878.48, r100: 1419.17, txLinear: 18, frLinear: 1, tx5050: 23, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6041", credito: 230000, prazo: 211, r50: 912.88, r100: 1474.65, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
