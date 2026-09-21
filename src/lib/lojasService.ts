@@ -168,7 +168,8 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     origemStr.includes("venda_gestor") || 
     origemStr.includes("venda do gestor") ||
     canalStr.includes("gestor") ||
-    valorCredito === 200000; // Venda de 200mil é do gestor e NÃO entra para meta de nenhuma filial
+    valorCredito === 200000 ||
+    (valorCredito === 50000 && (Boolean(lead.is_venda_gestor) || Boolean(dc.is_venda_gestor) || origemStr.includes("gestor") || canalStr.includes("gestor") || (!filialText.includes("sao mateus") && !vendedorStr.includes("valdinei"))));
 
   if (isGestorSale) {
     return null; // Pertence ao gestor, não entra para a meta da loja

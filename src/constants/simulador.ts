@@ -107,7 +107,7 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
     reajuste: "INCC",
     primeiraAssembleia: "26/11/2025",
     proximaAssembleia: "23/09/2026",
-    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 150.000,00 a 230.000,00. ****** DEVIDO A RESOLUÇAO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
+    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 150.000,00 a 230.000,00. Cotas vagas: 480. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO. ****** DEVIDO A RESOLUÇAO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
     ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia), onde inicia repetição entre todos lances conforme saldo grupo.",
     opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
     regraReajuste: "Reajuste todo o mês de Outubro pelo INCC a partir de Outubro 2026."

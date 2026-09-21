@@ -69,10 +69,11 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
       expect(comissao200k + comissaoValdinei).toBe(880);
     });
 
-    it("deve calcular a comissão para os 2 contratos da cliente Doroty (50k e 40k)", () => {
+    it("deve calcular a comissão para os 2 contratos da cliente Doroty (50k gestor e 40k filial)", () => {
       const leadDoroty50k = {
         nome: "Doroty",
         valor_credito: 50000,
+        is_venda_gestor: true,
         administradora: "MAGALU"
       };
 
@@ -82,21 +83,21 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
         administradora: "MAGALU"
       };
 
-      // 50.000 * 0.80% = 400 / 4 parcelas = 100 recorrente
+      // 50.000 * 4.00% = 2.000 / 10 parcelas = 200 recorrente (Gestor)
       const comissao50k = calcularComissaoRecorrenteLead(leadDoroty50k);
-      expect(comissao50k).toBe(100);
+      expect(comissao50k).toBe(200);
 
-      // 40.000 * 0.80% = 320 / 4 parcelas = 80 recorrente
+      // 40.000 * 0.80% = 320 / 4 parcelas = 80 recorrente (Filial)
       const comissao40k = calcularComissaoRecorrenteLead(leadDoroty40k);
       expect(comissao40k).toBe(80);
 
-      // Total Doroty = 100 + 80 = R$ 180,00/mês
-      expect(comissao50k + comissao40k).toBe(180);
+      // Total Doroty = 200 + 80 = R$ 280,00/mês
+      expect(comissao50k + comissao40k).toBe(280);
     });
   });
 
   describe("Atribuição de Vendas de Gestor vs Loja", () => {
-    it("deve excluir a venda de 200mil das metas da loja e manter como venda do gestor", () => {
+    it("deve excluir as vendas de 200mil e 50mil do gestor das metas da loja Paranaguá", () => {
       const lead200kGestor = {
         nome: "Cliente Gestor 200k",
         valor_credito: 200000,
@@ -104,14 +105,15 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
         origem: "venda_gestor"
       };
 
-      const lead200k = {
-        nome: "Outro Cliente 200k",
-        valor_credito: 200000,
-        cidade: "PARANAGUÁ"
+      const lead50kGestor = {
+        nome: "Cliente Gestor 50k",
+        valor_credito: 50000,
+        cidade: "PARANAGUÁ",
+        is_venda_gestor: true
       };
 
       expect(matchLeadToLoja(lead200kGestor, MOCK_LOJAS)).toBeNull(); // Não entra para a loja
-      expect(matchLeadToLoja(lead200k, MOCK_LOJAS)).toBeNull(); // Não entra para a loja
+      expect(matchLeadToLoja(lead50kGestor, MOCK_LOJAS)).toBeNull(); // Não entra para a loja Paranaguá
     });
 
     it("deve atribuir a venda de 40mil do Valdinei para a Filial São Mateus do Sul", () => {
@@ -130,7 +132,7 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
     it("deve associar corretamente vendas comuns de loja", () => {
       const leadLoja = {
         nome: "Cliente Comum Loja",
-        valor_credito: 80000,
+        valor_credito: 60000,
         cidade: "PARANAGUÁ"
       };
 
