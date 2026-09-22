@@ -93,10 +93,6 @@ export default function AdminLayout() {
     const currentHour = new Date().getHours();
     const isDayTime = currentHour >= 6 && currentHour < 18;
 
-    useEffect(() => {
-        fetchProfile();
-    }, []);
-
     const fetchProfile = async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -149,6 +145,10 @@ export default function AdminLayout() {
             console.error("Layout fetch error:", e);
         }
     };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
 
     useEffect(() => {
         if (!isExpired && org && !(org as any).onboarding_completed && location.pathname !== "/admin/onboarding") {
