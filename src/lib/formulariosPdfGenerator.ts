@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf';
 import { formatCurrency } from './utils';
 
 export interface AlteracaoBemData {
@@ -126,7 +125,8 @@ export interface FichaCadastralImovelData {
 /**
  * Gera o PDF oficial do Formulário de Alteração do Bem - Consórcio Magalu
  */
-export function gerarPDFAlteracaoBem(data: AlteracaoBemData) {
+export async function gerarPDFAlteracaoBem(data: AlteracaoBemData) {
+  const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const W = 210;
   const m = 15;
@@ -307,7 +307,8 @@ export function gerarPDFAlteracaoBem(data: AlteracaoBemData) {
 /**
  * Gera a Ficha Cadastral Completa e Fidedigna ao Anexo - Consórcio Magalu (2 Páginas)
  */
-export function gerarPDFFichaCadastralImovel(data: FichaCadastralImovelData) {
+export async function gerarPDFFichaCadastralImovel(data: FichaCadastralImovelData) {
+  const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const W = 210;
   const marginX = 8;

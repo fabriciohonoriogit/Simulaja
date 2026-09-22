@@ -420,13 +420,13 @@ export default function CentralFormularios() {
     toast.info("Formulário limpo.");
   }
 
-  function handleGenerateAlteracaoPdf() {
+  async function handleGenerateAlteracaoPdf() {
     if (!alteracaoForm.nomeCliente) {
       toast.error("Por favor, preencha o Nome do Consorciado.");
       return;
     }
     try {
-      gerarPDFAlteracaoBem(alteracaoForm);
+      await gerarPDFAlteracaoBem(alteracaoForm);
       toast.success("PDF de Alteração do Bem gerado com sucesso!");
     } catch (e) {
       console.error(e);
@@ -434,13 +434,13 @@ export default function CentralFormularios() {
     }
   }
 
-  function handleGenerateFichaPdf() {
+  async function handleGenerateFichaPdf() {
     if (!fichaForm.nomeCliente || !fichaForm.cpf) {
       toast.error("Por favor, preencha o Nome e CPF do Consorciado.");
       return;
     }
     try {
-      gerarPDFFichaCadastralImovel(fichaForm);
+      await gerarPDFFichaCadastralImovel(fichaForm);
       toast.success("Ficha Cadastral em PDF gerada com sucesso!");
     } catch (e) {
       console.error(e);
