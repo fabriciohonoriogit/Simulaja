@@ -101,28 +101,6 @@ export default function Comissoes() {
   const [status, setStatus] = useState("ativo");
   const [valorEstornoStr, setValorEstornoStr] = useState("");
 
-  useEffect(() => {
-    if (!profile?.organizacao_id) return;
-    fetchComissoes();
-    fetchLeads();
-
-    // Realtime: atualiza lista de comissões automaticamente
-    const channel = supabase
-      .channel(`comissoes-realtime-${profile.organizacao_id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'comissoes',
-        filter: `organizacao_id=eq.${profile.organizacao_id}`
-      }, () => {
-        fetchComissoes();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.organizacao_id]);
-
   const fetchLeads = async () => {
     if (!profile?.organizacao_id) return;
     try {
@@ -136,51 +114,6 @@ export default function Comissoes() {
       console.error(e);
     }
   };
-
-  useEffect(() => {
-    if (selectedLeadId && selectedLeadId !== "none" && selectedLeadId !== "manual") {
-      const lead = leadsFechados.find(l => l.id === selectedLeadId);
-      if (lead) {
-        setNomeCliente(lead.nome);
-        setGrupo(lead.grupo || "");
-        setCota(lead.cota || "");
-        const vCred = Number(lead.valor_credito) || 0;
-        setValorVendaStr(formatCurrencyInput((vCred * 100).toString()));
-        
-        let initialTaxa = 4;
-        if (lead.administradora === "ADEMICON") initialTaxa = 2.5;
-        const initialTotal = (vCred * initialTaxa) / 100;
-        setComissaoTotalOverrideStr(formatCurrencyInput((initialTotal * 100).toString()));
-
-        if (lead.status_updated_at) {
-          setDataVenda(lead.status_updated_at.split("T")[0]);
-        }
-        if (lead.administradora) {
-          setAdministradora(lead.administradora);
-          if (lead.administradora === "ADEMICON") {
-            setRegra("ADEMICON");
-            const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((lead.tipo_consorcio || "").toLowerCase());
-            setTipoComissionamento(isVeiculo ? "ADEMICON_VEICULO_REDUZIDA" : "ADEMICON_IMOVEL_REDUZIDA");
-          } else {
-            setRegra("DEMAIS");
-          }
-        }
-        
-        // Auto-calculate parcela atual for retroactive
-        if (lead.status_updated_at) {
-          const saleDate = new Date(lead.status_updated_at);
-          const today = new Date();
-          const diffMonths = (today.getFullYear() - saleDate.getFullYear()) * 12 + (today.getMonth() - saleDate.getMonth());
-          setParcelaAtual(diffMonths > 0 ? diffMonths : 1);
-        }
-      }
-    } else if (selectedLeadId === "manual" && !isModalOpen) {
-      setNomeCliente("");
-      setGrupo("");
-      setCota("");
-      setValorVendaStr("");
-    }
-  }, [selectedLeadId, leadsFechados]);
 
   const fetchComissoes = async () => {
     if (!profile?.organizacao_id) return;
@@ -248,7 +181,6 @@ export default function Comissoes() {
             if (!insErr && inserted) {
               currentList = [...inserted, ...currentList];
               
-              // Garante também o cadastro na carteira
               for (const item of newItems) {
                 await supabase.from("carteira").insert({
                   organizacao_id: profile.organizacao_id,
@@ -263,27 +195,79 @@ export default function Comissoes() {
           }
         }
 
-        // Mantém valor_estorno personalizado se já definido, ou calcula default se zerado
-        const fixed = currentList.map(c => {
-          if (c.status === "estornado" && c.comissao_total && c.parcelas_comissao) {
-            if (!c.valor_estorno || Number(c.valor_estorno) === 0) {
-              const valor_parcela = c.comissao_total / c.parcelas_comissao;
-              const parcelas_pagas = c.parcela_atual || 1;
-              const estorno_correto = parseFloat((valor_parcela * parcelas_pagas * 0.5).toFixed(2));
-              supabase.from("comissoes").update({ valor_estorno: estorno_correto }).eq("id", c.id).then(() => {});
-              return { ...c, valor_estorno: estorno_correto };
-            }
-          }
-          return c;
-        });
-        setComissoes(fixed);
+        setComissoes(currentList);
       }
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!profile?.organizacao_id) return;
+    fetchComissoes();
+    fetchLeads();
+
+    const channel = supabase
+      .channel(`comissoes-realtime-${profile.organizacao_id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'comissoes',
+        filter: `organizacao_id=eq.${profile.organizacao_id}`
+      }, () => {
+        fetchComissoes();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [profile?.organizacao_id]);
+
+  useEffect(() => {
+    if (selectedLeadId && selectedLeadId !== "none" && selectedLeadId !== "manual") {
+      const lead = leadsFechados.find(l => l.id === selectedLeadId);
+      if (lead) {
+        setNomeCliente(lead.nome);
+        setGrupo(lead.grupo || "");
+        setCota(lead.cota || "");
+        const vCred = Number(lead.valor_credito) || 0;
+        setValorVendaStr(formatCurrencyInput((vCred * 100).toString()));
+        
+        let initialTaxa = 4;
+        if (lead.administradora === "ADEMICON") initialTaxa = 2.5;
+        const initialTotal = (vCred * initialTaxa) / 100;
+        setComissaoTotalOverrideStr(formatCurrencyInput((initialTotal * 100).toString()));
+
+        if (lead.status_updated_at) {
+          setDataVenda(lead.status_updated_at.split("T")[0]);
+        }
+        if (lead.administradora) {
+          setAdministradora(lead.administradora);
+          if (lead.administradora === "ADEMICON") {
+            setRegra("ADEMICON");
+            const isVeiculo = ["veiculo", "moto", "pesados", "agricolas"].includes((lead.tipo_consorcio || "").toLowerCase());
+            setTipoComissionamento(isVeiculo ? "ADEMICON_VEICULO_REDUZIDA" : "ADEMICON_IMOVEL_REDUZIDA");
+          } else {
+            setRegra("DEMAIS");
+          }
+        }
+        
+        // Auto-calculate parcela atual for retroactive
+        if (lead.status_updated_at) {
+          const saleDate = new Date(lead.status_updated_at);
+          const today = new Date();
+          const diffMonths = (today.getFullYear() - saleDate.getFullYear()) * 12 + (today.getMonth() - saleDate.getMonth());
+          setParcelaAtual(diffMonths > 0 ? diffMonths : 1);
+        }
+      }
+    } else if (selectedLeadId === "manual" && !isModalOpen) {
+      setNomeCliente("");
+      setGrupo("");
+      setCota("");
+      setValorVendaStr("");
+    }
+  }, [selectedLeadId, leadsFechados]);
 
   const fetchFechamentos = async () => {
     if (!profile?.organizacao_id) return;

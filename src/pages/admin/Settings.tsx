@@ -75,8 +75,6 @@ export default function Settings() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [profile]);
-
   const fetchData = async () => {
     if (!profile?.organizacao_id) return;
     setLoading(true);

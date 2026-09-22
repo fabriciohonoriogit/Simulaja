@@ -82,6 +82,46 @@ export default function PreCadastro() {
     prazoMeses: "",
   });
 
+  const fetchLeadData = async (id: string) => {
+    try {
+      setFetchingLead(true);
+      const { data: lead, error } = await (supabase.from("leads") as any)
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (!error && lead) {
+        const dc = lead.dados_cadastro || {};
+        setFormData(prev => ({
+          ...prev,
+          nome: lead.nome || prev.nome,
+          celular: lead.celular || prev.celular,
+          email: dc.email || prev.email,
+          cpfCnpj: dc.cpfCnpj || dc.cpf || dc.cnpj || prev.cpfCnpj,
+          rg: dc.rg || prev.rg,
+          dataNascimento: dc.dataNascimento || prev.dataNascimento,
+          estadoCivil: dc.estadoCivil || prev.estadoCivil,
+          profissao: dc.profissao || prev.profissao,
+          rendaMensal: dc.rendaMensal || prev.rendaMensal,
+          cep: dc.cep || prev.cep,
+          logradouro: dc.logradouro || dc.endereco || prev.logradouro,
+          numero: dc.numero || prev.numero,
+          complemento: dc.complemento || prev.complemento,
+          bairro: dc.bairro || prev.bairro,
+          cidade: dc.cidade || prev.cidade,
+          uf: dc.uf || prev.uf,
+          tipoConsorcio: dc.tipoConsorcio || lead.tipo_consorcio || prev.tipoConsorcio,
+          valorCredito: lead.valor_credito ? String(lead.valor_credito) : prev.valorCredito,
+          prazoMeses: dc.prazoMeses || prev.prazoMeses,
+        }));
+      }
+    } catch (e) {
+      console.error("Erro ao carregar dados do lead:", e);
+    } finally {
+      setFetchingLead(false);
+    }
+  };
+
   // Carrega os dados existentes do lead se houver lead_id ou preenche da URL
   useEffect(() => {
     if (leadId) {
@@ -106,65 +146,6 @@ export default function PreCadastro() {
       }
     }
   }, [leadId, searchParams]);
-
-  const fetchLeadData = async (id: string) => {
-    try {
-      setFetchingLead(true);
-      const { data: lead, error } = await (supabase.from("leads") as any)
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Erro ao buscar lead para pré-cadastro:", error);
-        return;
-      }
-
-      if (lead) {
-        const dc = lead.dados_cadastro || {};
-        setFormData((prev) => ({
-          ...prev,
-          nome: lead.nome || dc.nome || prev.nome,
-          celular: lead.celular || dc.celular || dc.telefone || prev.celular,
-          email: lead.email || dc.email || prev.email,
-          cpf: lead.cpf || dc.cpf || dc.CPF || prev.cpf,
-          cidade: lead.cidade || dc.cidade || prev.cidade,
-          uf: dc.uf || dc.estado || prev.uf,
-          tipoConsorcio: lead.tipo_consorcio || dc.tipoConsorcio || dc.segmento || prev.tipoConsorcio,
-          valorCredito: lead.valor_credito ? String(lead.valor_credito) : (dc.valorCredito || prev.valorCredito),
-          prazoMeses: lead.prazo_meses ? String(lead.prazo_meses) : (dc.prazoMeses || prev.prazoMeses),
-          rg: dc.rg || dc.documento || prev.rg,
-          orgaoEmissor: dc.orgaoEmissor || prev.orgaoEmissor,
-          dataEmissao: dc.dataEmissao || prev.dataEmissao,
-          dataNascimento: dc.dataNascimento || prev.dataNascimento,
-          sexo: dc.sexo || prev.sexo,
-          estadoCivil: dc.estadoCivil || prev.estadoCivil,
-          nomeMae: dc.nomeMae || prev.nomeMae,
-          nomePai: dc.nomePai || prev.nomePai,
-          naturalidade: dc.naturalidade || prev.naturalidade,
-          nomeConjuge: dc.nomeConjuge || prev.nomeConjuge,
-          cpfConjuge: dc.cpfConjuge || prev.cpfConjuge,
-          cep: dc.cep || prev.cep,
-          logradouro: dc.logradouro || dc.endereco || prev.logradouro,
-          numero: dc.numero || prev.numero,
-          complemento: dc.complemento || prev.complemento,
-          bairro: dc.bairro || prev.bairro,
-          profissao: dc.profissao || prev.profissao,
-          empresa: dc.empresa || prev.empresa,
-          rendaMensal: dc.rendaMensal || prev.rendaMensal,
-          patrimonio: dc.patrimonio || prev.patrimonio,
-          banco: dc.banco || prev.banco,
-          agencia: dc.agencia || prev.agencia,
-          conta: dc.conta || prev.conta,
-          tipoConta: dc.tipoConta || prev.tipoConta,
-        }));
-      }
-    } catch (err) {
-      console.error("Erro na consulta do lead:", err);
-    } finally {
-      setFetchingLead(false);
-    }
-  };
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

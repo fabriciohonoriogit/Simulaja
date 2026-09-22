@@ -46,6 +46,29 @@ export default function Chat() {
       .then(({ data }: any) => setMembros(data || []));
   }, [profile]);
 
+  const fetchMensagens = async () => {
+    if (!profile) return;
+    setLoadingMsgs(true);
+    const query = (supabase.from("mensagens" as any) as any)
+      .select("*, remetente:perfis!mensagens_remetente_id_fkey(nome_completo)")
+      .eq("organizacao_id", profile.organizacao_id)
+      .order("created_at", { ascending: true })
+      .limit(100);
+
+    const { data } = await query;
+    // Filter for the current conversation
+    const filtered = (data || []).filter((m: Mensagem) => {
+      if (selectedId === null) return m.destinatario_id === null;
+      return (
+        (m.remetente_id === profile.id && m.destinatario_id === selectedId) ||
+        (m.remetente_id === selectedId && m.destinatario_id === profile.id)
+      );
+    });
+    setMensagens(filtered);
+    setLoadingMsgs(false);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
+
   // Buscar mensagens e assinar Realtime
   useEffect(() => {
     if (!profile?.organizacao_id) return;
@@ -77,29 +100,6 @@ export default function Chat() {
 
     return () => { supabase.removeChannel(channel); };
   }, [profile, selectedId]);
-
-  const fetchMensagens = async () => {
-    if (!profile) return;
-    setLoadingMsgs(true);
-    const query = (supabase.from("mensagens" as any) as any)
-      .select("*, remetente:perfis!mensagens_remetente_id_fkey(nome_completo)")
-      .eq("organizacao_id", profile.organizacao_id)
-      .order("created_at", { ascending: true })
-      .limit(100);
-
-    const { data } = await query;
-    // Filter for the current conversation
-    const filtered = (data || []).filter((m: Mensagem) => {
-      if (selectedId === null) return m.destinatario_id === null;
-      return (
-        (m.remetente_id === profile.id && m.destinatario_id === selectedId) ||
-        (m.remetente_id === selectedId && m.destinatario_id === profile.id)
-      );
-    });
-    setMensagens(filtered);
-    setLoadingMsgs(false);
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-  };
 
   const handleSend = async () => {
     if (!texto.trim() || !profile?.organizacao_id) return;

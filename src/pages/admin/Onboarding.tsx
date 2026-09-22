@@ -20,13 +20,6 @@ export default function Onboarding() {
   const [orgName, setOrgName] = useState("");
   const [metaAnual, setMetaAnual] = useState("1000000");
 
-  useEffect(() => {
-    // If we have profile data, prefill some fields
-    if (profile?.organizacao_id) {
-      fetchOrg();
-    }
-  }, [profile]);
-
   const fetchOrg = async () => {
     if (!profile?.organizacao_id) return;
     const { data } = await supabase.from("organizacoes").select("*").eq("id", profile.organizacao_id).single();
@@ -37,6 +30,13 @@ export default function Onboarding() {
       setOrgName(data.nome.replace(" - CRM", ""));
     }
   };
+
+  useEffect(() => {
+    // If we have profile data, prefill some fields
+    if (profile?.organizacao_id) {
+      fetchOrg();
+    }
+  }, [profile]);
 
   const handleNext = () => setStep(2);
   const handleBack = () => setStep(1);

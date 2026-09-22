@@ -25,6 +25,67 @@ export default function WhatsAppInbox() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const fetchLeads = async (silent = false) => {
+    if (!profile?.organizacao_id) return;
+    if (!silent) setLoading(true);
+
+    // First get all leads with chat history
+    const { data: messages, error: msgError } = await supabase
+      .from("chat_messages")
+      .select("lead_id, content, created_at")
+      .order("created_at", { ascending: false });
+
+    if (msgError) {
+      console.error("Erro ao buscar mensagens:", msgError);
+      if (!silent) setLoading(false);
+      return;
+    }
+
+    if (!messages || messages.length === 0) {
+      setLeads([]);
+      if (!silent) setLoading(false);
+      return;
+    }
+
+    // Extract unique lead_ids preserving recency order
+    const leadMap = new Map<string, { last_message: string; last_message_at: string }>();
+    messages.forEach(m => {
+      if (m.lead_id && !leadMap.has(m.lead_id)) {
+        leadMap.set(m.lead_id, {
+          last_message: m.content || "",
+          last_message_at: m.created_at
+        });
+      }
+    });
+
+    const leadIds = Array.from(leadMap.keys());
+
+    // Fetch lead details
+    const { data: leadData, error: leadError } = await supabase
+      .from("leads")
+      .select("*")
+      .in("id", leadIds);
+
+    if (leadError) {
+      console.error("Erro ao buscar detalhes dos leads:", leadError);
+      if (!silent) setLoading(false);
+      return;
+    }
+
+    // Combine data and sort by latest message
+    const formatted: ChatLead[] = (leadData || []).map(l => {
+      const meta = leadMap.get(l.id);
+      return {
+        ...l,
+        last_message: meta?.last_message || "Conversa iniciada",
+        last_message_at: meta?.last_message_at || new Date().toISOString()
+      };
+    }).sort((a, b) => new Date(b.last_message_at || 0).getTime() - new Date(a.last_message_at || 0).getTime());
+
+    setLeads(formatted);
+    if (!silent) setLoading(false);
+  };
+
   useEffect(() => {
     if (profile?.organizacao_id) {
       fetchLeads();
@@ -59,50 +120,6 @@ export default function WhatsAppInbox() {
       };
     }
   }, [profile]);
-
-  const fetchLeads = async (silent = false) => {
-    if (!profile?.organizacao_id) return;
-    if (!silent) setLoading(true);
-
-    // First get all leads with chat history
-    const { data: messages, error: msgError } = await supabase
-      .from("chat_messages")
-      .select("lead_id, content, created_at")
-      .order("created_at", { ascending: false });
-
-    if (msgError) return;
-
-    // Get unique lead IDs from messages
-    const leadIds = Array.from(new Set(messages.map(m => m.lead_id)));
-
-    if (leadIds.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    // Fetch lead details
-    const { data: leadData, error: leadError } = await supabase
-      .from("leads")
-      .select("*")
-      .in("id", leadIds);
-
-    if (leadError) return;
-
-    // Combine data
-    const leadsWithMessages = leadData.map(lead => {
-      const leadMsgs = messages.filter(m => m.lead_id === lead.id);
-      return {
-        ...lead,
-        last_message: leadMsgs[0]?.content,
-        last_message_at: leadMsgs[0]?.created_at,
-      } as ChatLead;
-    }).sort((a, b) => 
-      new Date(b.last_message_at || 0).getTime() - new Date(a.last_message_at || 0).getTime()
-    );
-
-    setLeads(leadsWithMessages);
-    setLoading(false);
-  };
 
   const filteredLeads = leads.filter(l => 
     l.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||

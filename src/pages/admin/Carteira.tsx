@@ -110,10 +110,6 @@ export default function Carteira() {
   // State para contemplação manual
   const [manualContemplationClient, setManualContemplationClient] = useState<Cliente | null>(null);
 
-  useEffect(() => {
-    fetchClientes();
-  }, [profile?.organizacao_id]);
-
   const fetchClientes = async () => {
     try {
       setLoading(true);

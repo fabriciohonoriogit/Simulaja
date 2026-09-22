@@ -4,6 +4,14 @@ import { aiService } from "@/services/aiService";
 import { Sparkles, MicOff } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+function checkIfMobile() {
+  if (typeof window === "undefined") return false;
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth <= 768
+  );
+}
+
 export function GlobalJarvisVoiceListener() {
   const { toast } = useToast();
   const location = useLocation();
@@ -16,15 +24,6 @@ export function GlobalJarvisVoiceListener() {
 
   // Desativa a escuta global se o usuário estiver diretamente na página dedicada do Jarvis
   const isJarvisPage = location.pathname.includes("/admin/jarvis");
-
-  // Detecta se o dispositivo é mobile (celular/tablet)
-  const checkIfMobile = () => {
-    if (typeof window === "undefined") return false;
-    return (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-      window.innerWidth <= 768
-    );
-  };
 
   const [isMobile, setIsMobile] = useState<boolean>(checkIfMobile);
   

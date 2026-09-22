@@ -27,10 +27,6 @@ export default function Register() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (invitationToken) checkInvitation();
-  }, [invitationToken]);
-
   const checkInvitation = async () => {
     setChecking(true);
     const { data, error } = await supabase.rpc("get_convite_by_token", {
@@ -55,6 +51,10 @@ export default function Register() {
     setEmail(convite.email || "");
     setChecking(false);
   };
+
+  useEffect(() => {
+    if (invitationToken) checkInvitation();
+  }, [invitationToken]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

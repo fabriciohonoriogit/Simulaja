@@ -18,19 +18,6 @@ export const useProfile = (): UseProfileReturn => {
   const [profile, setProfile] = useState<Profile | null>(_cache);
   const [loading, setLoading] = useState(!_cache);
 
-  useEffect(() => {
-    // Subscribe to cache updates
-    const idx = _listeners.push((p) => setProfile(p)) - 1;
-
-    if (!_cache) {
-      fetchProfile();
-    }
-
-    return () => {
-      _listeners.splice(idx, 1);
-    };
-  }, []);
-
   const fetchProfile = async (): Promise<void> => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -75,6 +62,19 @@ export const useProfile = (): UseProfileReturn => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    // Subscribe to cache updates
+    const idx = _listeners.push((p) => setProfile(p)) - 1;
+
+    if (!_cache) {
+      fetchProfile();
+    }
+
+    return () => {
+      _listeners.splice(idx, 1);
+    };
+  }, []);
 
   const isAdmin = profile?.tipo_acesso === "admin";
   const isManager = profile?.tipo_acesso === "manager" || isAdmin;
