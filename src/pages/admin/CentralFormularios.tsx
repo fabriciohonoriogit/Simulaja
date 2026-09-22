@@ -15,7 +15,8 @@ import {
   Sparkles,
   ArrowRight,
   RefreshCw,
-  Info
+  Info,
+  Save
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,41 +68,98 @@ export default function CentralFormularios() {
 
   // Form State: Ficha Cadastral Imóvel
   const [fichaForm, setFichaForm] = useState<FichaCadastralImovelData>({
+    grupo: "",
+    cota: "",
+    aquisicaoImovelUrbano: true,
+    reformaConstrucao: false,
+    aquisicaoQuitacaoFinanciamento: false,
+    aquisicaoImovelRural: false,
+    energiaFotovoltaica: false,
+    quitacaoFinanciamentoProprio: false,
+
     nomeCliente: "",
+    sexo: "M",
     cpf: "",
     rg: "",
     orgaoEmissor: "SSP",
     dataNascimento: "",
+    localNascimento: "",
     nacionalidade: "Brasileira",
     estadoCivil: "Solteiro(a)",
     profissao: "",
     rendaMensal: 0,
+    rendaBruta: 0,
+    outraRenda: "",
+    tempoServico: "",
+    nomeEmpresa: "",
+    empresaEndereco: "",
+    empresaBairro: "",
+    empresaCidade: "",
+    empresaEstado: "",
+    empresaCep: "",
+    empresaTelCom: "",
+    telFixo: "",
+    telCel: "",
+    telCom: "",
     celular: "",
     email: "",
+    declaraIR: "Sim",
+    regimeTrabalho: "Funcionário(a) Empresa Privada",
+    aposentadoNumero: "",
     endereco: "",
     bairro: "",
     cep: "",
     cidade: "",
     uf: "PR",
+
     temConjuge: false,
     conjugeNome: "",
     conjugeCpf: "",
     conjugeRg: "",
+    conjugeOrgaoEmissor: "SSP",
     conjugeDataNasc: "",
+    conjugeLocalNascimento: "",
+    conjugeNacionalidade: "Brasileira",
     conjugeProfissao: "",
     conjugeRenda: 0,
+    conjugeEmail: "",
+    conjugeRegimeTrabalho: "Funcionário(a) Empresa Privada",
+    conjugeAposentadoNumero: "",
+
     isPessoaJuridica: false,
     razaoSocial: "",
     cnpj: "",
+    inscricaoEstadual: "",
+    ramoAtuacao: "",
+    dataFundacao: "",
+    formaConstituicao: "",
+    faturamentoMensal: 0,
+    pjEndereco: "",
+    pjBairro: "",
+    pjCidade: "",
+    pjEstado: "PR",
+    pjCep: "",
+    pjTelFixo: "",
+    pjTelCel: "",
+
     valorCredito: 0,
     tipoImovel: "Residencial",
     enderecoImovel: "",
-    banco: "Magalu / Itaú",
+    banco: "Itaú / Magalu Pay",
     agencia: "",
     conta: "",
     tipoConta: "Corrente",
     chavePix: "",
-    titularConta: ""
+    titularConta: "",
+    cpfTitularConta: "",
+
+    sobraAbatimento: true,
+    sobraReembolso10: false,
+    valorTotalImovel: 0,
+    valorPagoConsorcio: 0,
+
+    localAssinatura: "Curitiba - PR",
+    dataAssinatura: new Date().toLocaleDateString('pt-BR')
   });
 
   useEffect(() => {
@@ -151,29 +209,93 @@ export default function CentralFormularios() {
     if (!found) return;
     const dc = found.dados_cadastro || {};
 
+    // Tentar carregar do localStorage se salvo previamente
+    const savedLocal = localStorage.getItem(`ficha_cadastral_${leadId}`);
+    let localParsed: any = null;
+    if (savedLocal) {
+      try { localParsed = JSON.parse(savedLocal); } catch (e) {}
+    }
+
     setFichaForm(prev => ({
       ...prev,
-      nomeCliente: found.nome || "",
-      cpf: dc.cpf || "",
-      rg: dc.rg || "",
-      celular: found.celular || "",
-      email: dc.email || "",
-      endereco: dc.endereco || "",
-      bairro: dc.bairro || "",
-      cep: dc.cep || "",
-      cidade: dc.cidade || "",
-      uf: dc.uf || "PR",
-      profissao: dc.profissao || "",
-      rendaMensal: parseBRLValue(dc.renda || 0),
-      valorCredito: found.valor_credito || parseBRLValue(dc.valor_credito || 0),
-      banco: dc.banco || "Itaú / Magalu",
-      agencia: dc.agencia || "",
-      conta: dc.conta || "",
-      chavePix: dc.chave_pix || found.celular || "",
-      titularConta: found.nome || ""
+      ...dc,
+      ...(localParsed || {}),
+      nomeCliente: dc.nomeCliente || found.nome || prev.nomeCliente,
+      cpf: dc.cpf || prev.cpf,
+      rg: dc.rg || prev.rg,
+      celular: found.celular || prev.celular || prev.telCel,
+      telCel: found.celular || prev.telCel,
+      email: dc.email || prev.email,
+      endereco: dc.endereco || prev.endereco,
+      bairro: dc.bairro || prev.bairro,
+      cep: dc.cep || prev.cep,
+      cidade: dc.cidade || prev.cidade,
+      uf: dc.uf || prev.uf || "PR",
+      profissao: dc.profissao || prev.profissao,
+      rendaMensal: dc.rendaMensal || parseBRLValue(dc.renda || 0) || prev.rendaMensal,
+      valorCredito: found.valor_credito || parseBRLValue(dc.valor_credito || 0) || prev.valorCredito,
+      banco: dc.banco || prev.banco || "Itaú / Magalu Pay",
+      agencia: dc.agencia || prev.agencia,
+      conta: dc.conta || prev.conta,
+      chavePix: dc.chavePix || dc.chave_pix || found.celular || prev.chavePix,
+      titularConta: dc.titularConta || found.nome || prev.titularConta,
+      cpfTitularConta: dc.cpfTitularConta || dc.cpf || prev.cpfTitularConta
     }));
 
-    toast.success(`Ficha pré-preenchida com dados de ${found.nome}!`);
+    toast.success(`Ficha cadastral carregada para ${found.nome}!`);
+  };
+
+  const handleSaveFichaForm = async () => {
+    try {
+      // 1. Salva em localStorage
+      const storageKey = `ficha_cadastral_${selectedLeadId || 'draft'}`;
+      localStorage.setItem(storageKey, JSON.stringify(fichaForm));
+
+      // 2. Se houver lead selecionado do CRM, salva no Supabase
+      if (selectedLeadId) {
+        const found = leads.find(l => l.id === selectedLeadId);
+        const existingData = found?.dados_cadastro || {};
+        const updatedDados = {
+          ...existingData,
+          ...fichaForm,
+          cpf: fichaForm.cpf,
+          rg: fichaForm.rg,
+          email: fichaForm.email,
+          cidade: fichaForm.cidade,
+          uf: fichaForm.uf,
+          bairro: fichaForm.bairro,
+          endereco: fichaForm.endereco,
+          cep: fichaForm.cep,
+          profissao: fichaForm.profissao,
+          renda: fichaForm.rendaMensal,
+          banco: fichaForm.banco,
+          agencia: fichaForm.agencia,
+          conta: fichaForm.conta,
+          grupo: fichaForm.grupo,
+          cota: fichaForm.cota,
+          ultima_atualizacao_ficha: new Date().toISOString()
+        };
+
+        const { error } = await supabase
+          .from("leads")
+          .update({ dados_cadastro: updatedDados })
+          .eq("id", selectedLeadId);
+
+        if (error) {
+          console.error("Erro ao salvar ficha no Supabase:", error);
+          toast.error("Erro ao salvar no banco de dados.");
+          return;
+        }
+
+        // Atualiza a lista local de leads
+        setLeads(prev => prev.map(l => l.id === selectedLeadId ? { ...l, dados_cadastro: updatedDados } : l));
+      }
+
+      toast.success("Formulário pré-preenchido salvo com sucesso!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao salvar formulário.");
+    }
   };
 
   const handleGenerateAlteracaoPdf = () => {
@@ -215,12 +337,13 @@ export default function CentralFormularios() {
   };
 
   const handleSendWhatsAppFicha = () => {
-    if (!fichaForm.celular) {
+    const phone = fichaForm.telCel || fichaForm.celular;
+    if (!phone) {
       toast.error("Telefone não informado.");
       return;
     }
-    const cleanPhone = fichaForm.celular.replace(/\D/g, "");
-    const msg = `Olá, *${fichaForm.nomeCliente}*! Sua *Ficha Cadastral de Imóvel* do Consórcio Magalu foi preenchida com sucesso.\n\n*Valor do Crédito:* ${formatCurrency(fichaForm.valorCredito)}\n*Cidade:* ${fichaForm.cidade}/${fichaForm.uf}\n\nVocê receberá o PDF formatado para simples conferência e assinatura. Se precisar de algum ajuste, estamos à disposição! 🏠📄`;
+    const cleanPhone = phone.replace(/\D/g, "");
+    const msg = `Olá, *${fichaForm.nomeCliente}*! Sua *Ficha Cadastral de Imóvel* do Consórcio Magalu foi preenchida com sucesso.\n\n*Valor do Crédito:* ${formatCurrency(fichaForm.valorCredito || 0)}\n*Cidade:* ${fichaForm.cidade}/${fichaForm.uf}\n\nVocê receberá o PDF formatado para simples conferência e assinatura. Se precisar de algum ajuste, estamos à disposição! 🏠📄`;
     window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -239,12 +362,12 @@ export default function CentralFormularios() {
               Central de Documentos Magalu
             </Badge>
             <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
-              PDF Automático ⚡
+              PDF Automático Fidedigno ⚡
             </Badge>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Formulários & Fichas Oficiais</h1>
           <p className="text-slate-300 text-xs sm:text-sm max-w-xl">
-            Preencha, importe dados do CRM e gere em PDF os formulários oficiais do Consórcio Magalu para assinatura e alteração de bens.
+            Preencha, salve os dados no CRM e gere em PDF a Ficha Cadastral e a Solicitação de Alteração do Bem idênticas às originais do Consórcio Magalu.
           </p>
         </div>
 
@@ -323,7 +446,7 @@ export default function CentralFormularios() {
                     <UserCheck className="h-6 w-6" />
                   </div>
                   <Badge variant="outline" className="text-[10px] font-bold border-emerald-200 text-emerald-700 bg-emerald-50/50">
-                    Completo
+                    Layout Idêntico ao Anexo
                   </Badge>
                 </div>
                 <CardTitle className="text-lg font-bold text-slate-900">Ficha Cadastral - Imóvel</CardTitle>
@@ -333,10 +456,10 @@ export default function CentralFormularios() {
               </CardHeader>
               <CardContent className="space-y-4 pt-0">
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600 space-y-1">
-                  <p className="font-semibold text-slate-800">Campos inclusos:</p>
-                  <p>• Dados Pessoais & Cônjuge</p>
-                  <p>• Renda, Profissão & Endereço do Imóvel</p>
-                  <p>• Dados Bancários & Chave PIX</p>
+                  <p className="font-semibold text-slate-800">Recursos Exclusivos:</p>
+                  <p>• Faixas Laranjas e Logo Consórcio Magalu</p>
+                  <p>• Salvamento dos Dados Preenchidos no CRM</p>
+                  <p>• PDF de 2 Páginas em Grade Fidedigna</p>
                 </div>
                 <Button 
                   onClick={() => setActiveTab("ficha")}
@@ -369,7 +492,7 @@ export default function CentralFormularios() {
                   <p>Os dados do cliente (CPF, Renda, Cidade, Crédito) são puxados do CRM automaticamente!</p>
                 </div>
                 <Button 
-                  onClick={() => setActiveTab("alteracao")}
+                  onClick={() => setActiveTab("ficha")}
                   variant="outline"
                   className="w-full border-white/20 text-white hover:bg-white/10 font-bold gap-2 rounded-xl"
                 >
@@ -581,12 +704,17 @@ export default function CentralFormularios() {
             <CardHeader className="bg-slate-50/80 border-b border-slate-100 p-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/30 text-[10px] font-bold">
+                      Fidedigno ao Modelo Magalu
+                    </Badge>
+                  </div>
                   <CardTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
                     <UserCheck className="h-6 w-6 text-emerald-600" />
-                    Ficha Cadastral de Imóvel Consorciado
+                    Ficha Cadastral — Imóvel Consorciado
                   </CardTitle>
                   <CardDescription className="text-xs text-slate-500 mt-1">
-                    Cadastro completo do cliente, cônjuge, renda e dados bancários para análise e liberação.
+                    Preencha todos os campos do consorciado, cônjuge e PJ. Os dados podem ser salvos no CRM e emitidos em PDF de 2 páginas.
                   </CardDescription>
                 </div>
 
@@ -602,7 +730,7 @@ export default function CentralFormularios() {
                       }}
                       className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
-                      <option value="">-- Puxar Lead do CRM --</option>
+                      <option value="">-- Selecionar Lead do CRM --</option>
                       {leads.map(l => (
                         <option key={l.id} value={l.id}>{l.nome} ({l.celular || 'Sem cel'})</option>
                       ))}
@@ -613,14 +741,117 @@ export default function CentralFormularios() {
             </CardHeader>
 
             <CardContent className="p-6 space-y-6">
+              {/* Seção 0: Proposta & Finalidade */}
+              <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/60 space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> Proposta & Finalidade do Imóvel Consorciado
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Grupo</Label>
+                    <Input 
+                      value={fichaForm.grupo || ""}
+                      onChange={e => setFichaForm({...fichaForm, grupo: e.target.value})}
+                      placeholder="Ex: 6041"
+                      className="rounded-xl text-xs bg-white"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Cota</Label>
+                    <Input 
+                      value={fichaForm.cota || ""}
+                      onChange={e => setFichaForm({...fichaForm, cota: e.target.value})}
+                      placeholder="Ex: 142"
+                      className="rounded-xl text-xs bg-white"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Valor do Crédito (R$)</Label>
+                    <Input 
+                      type="number"
+                      value={fichaForm.valorCredito || ""}
+                      onChange={e => setFichaForm({...fichaForm, valorCredito: Number(e.target.value)})}
+                      placeholder="Ex: 250000"
+                      className="rounded-xl text-xs font-mono font-bold bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-700">Finalidade do Crédito (Selecione as aplicáveis)</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                      <input 
+                        type="checkbox" 
+                        checked={!!fichaForm.aquisicaoImovelUrbano} 
+                        onChange={e => setFichaForm({...fichaForm, aquisicaoImovelUrbano: e.target.checked})}
+                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Aquisição de Imóvel Urbano
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                      <input 
+                        type="checkbox" 
+                        checked={!!fichaForm.reformaConstrucao} 
+                        onChange={e => setFichaForm({...fichaForm, reformaConstrucao: e.target.checked})}
+                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Reforma e Construção
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                      <input 
+                        type="checkbox" 
+                        checked={!!fichaForm.aquisicaoQuitacaoFinanciamento} 
+                        onChange={e => setFichaForm({...fichaForm, aquisicaoQuitacaoFinanciamento: e.target.checked})}
+                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Aquisição e Quitação Financiamento
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                      <input 
+                        type="checkbox" 
+                        checked={!!fichaForm.aquisicaoImovelRural} 
+                        onChange={e => setFichaForm({...fichaForm, aquisicaoImovelRural: e.target.checked})}
+                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Aquisição de Imóvel Rural
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                      <input 
+                        type="checkbox" 
+                        checked={!!fichaForm.energiaFotovoltaica} 
+                        onChange={e => setFichaForm({...fichaForm, energiaFotovoltaica: e.target.checked})}
+                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Aquisição de Energia Fotovoltaica
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                      <input 
+                        type="checkbox" 
+                        checked={!!fichaForm.quitacaoFinanciamentoProprio} 
+                        onChange={e => setFichaForm({...fichaForm, quitacaoFinanciamentoProprio: e.target.checked})}
+                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Quitação de Financiamento Próprio
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               {/* 1. Dados Pessoais */}
               <div className="space-y-4">
                 <h3 className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-2">
                   <User className="h-4 w-4" /> 1. Dados Pessoais do Consorciado
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="sm:col-span-2">
                     <Label className="text-xs font-bold text-slate-700">Nome Completo</Label>
                     <Input 
                       value={fichaForm.nomeCliente}
@@ -628,6 +859,17 @@ export default function CentralFormularios() {
                       placeholder="Nome do cliente"
                       className="rounded-xl text-xs"
                     />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Sexo</Label>
+                    <select
+                      value={fichaForm.sexo || "M"}
+                      onChange={e => setFichaForm({...fichaForm, sexo: e.target.value as 'M' | 'F'})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"
+                    >
+                      <option value="M">Masculino (M)</option>
+                      <option value="F">Feminino (F)</option>
+                    </select>
                   </div>
                   <div>
                     <Label className="text-xs font-bold text-slate-700">CPF</Label>
@@ -638,12 +880,42 @@ export default function CentralFormularios() {
                       className="rounded-xl text-xs"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div>
-                    <Label className="text-xs font-bold text-slate-700">RG / Órgão</Label>
+                    <Label className="text-xs font-bold text-slate-700">Nº RG</Label>
                     <Input 
                       value={fichaForm.rg}
                       onChange={e => setFichaForm({...fichaForm, rg: e.target.value})}
-                      placeholder="Ex: 12.345.678-9 SSP/PR"
+                      placeholder="12.345.678-9"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Orgão Exp.</Label>
+                    <Input 
+                      value={fichaForm.orgaoEmissor || "SSP"}
+                      onChange={e => setFichaForm({...fichaForm, orgaoEmissor: e.target.value})}
+                      placeholder="SSP/PR"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Data de Nascimento</Label>
+                    <Input 
+                      value={fichaForm.dataNascimento}
+                      onChange={e => setFichaForm({...fichaForm, dataNascimento: e.target.value})}
+                      placeholder="DD/MM/AAAA"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Local Nascimento</Label>
+                    <Input 
+                      value={fichaForm.localNascimento || ""}
+                      onChange={e => setFichaForm({...fichaForm, localNascimento: e.target.value})}
+                      placeholder="Cidade/UF Nasc."
                       className="rounded-xl text-xs"
                     />
                   </div>
@@ -651,11 +923,10 @@ export default function CentralFormularios() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div>
-                    <Label className="text-xs font-bold text-slate-700">Data Nasc.</Label>
+                    <Label className="text-xs font-bold text-slate-700">Nacionalidade</Label>
                     <Input 
-                      type="date"
-                      value={fichaForm.dataNascimento}
-                      onChange={e => setFichaForm({...fichaForm, dataNascimento: e.target.value})}
+                      value={fichaForm.nacionalidade || "Brasileira"}
+                      onChange={e => setFichaForm({...fichaForm, nacionalidade: e.target.value})}
                       className="rounded-xl text-xs"
                     />
                   </div>
@@ -674,37 +945,17 @@ export default function CentralFormularios() {
                     </select>
                   </div>
                   <div>
-                    <Label className="text-xs font-bold text-slate-700">Profissão</Label>
-                    <Input 
-                      value={fichaForm.profissao}
-                      onChange={e => setFichaForm({...fichaForm, profissao: e.target.value})}
-                      placeholder="Ex: Engenheiro, Autônomo"
-                      className="rounded-xl text-xs"
-                    />
+                    <Label className="text-xs font-bold text-slate-700">Declara IR?</Label>
+                    <select
+                      value={fichaForm.declaraIR || "Sim"}
+                      onChange={e => setFichaForm({...fichaForm, declaraIR: e.target.value as 'Sim' | 'Não'})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"
+                    >
+                      <option value="Sim">Sim</option>
+                      <option value="Não">Não</option>
+                    </select>
                   </div>
                   <div>
-                    <Label className="text-xs font-bold text-slate-700">Renda Mensal (R$)</Label>
-                    <Input 
-                      type="number"
-                      value={fichaForm.rendaMensal || ""}
-                      onChange={e => setFichaForm({...fichaForm, rendaMensal: Number(e.target.value)})}
-                      placeholder="Ex: 8500"
-                      className="rounded-xl text-xs font-mono font-bold"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-xs font-bold text-slate-700">Celular / WhatsApp</Label>
-                    <Input 
-                      value={fichaForm.celular}
-                      onChange={e => setFichaForm({...fichaForm, celular: e.target.value})}
-                      placeholder="Ex: 41 99999-9999"
-                      className="rounded-xl text-xs"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
                     <Label className="text-xs font-bold text-slate-700">E-mail</Label>
                     <Input 
                       value={fichaForm.email}
@@ -715,6 +966,7 @@ export default function CentralFormularios() {
                   </div>
                 </div>
 
+                {/* Endereço Residencial */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div className="sm:col-span-2">
                     <Label className="text-xs font-bold text-slate-700">Endereço Residencial</Label>
@@ -735,6 +987,18 @@ export default function CentralFormularios() {
                     />
                   </div>
                   <div>
+                    <Label className="text-xs font-bold text-slate-700">CEP</Label>
+                    <Input 
+                      value={fichaForm.cep}
+                      onChange={e => setFichaForm({...fichaForm, cep: e.target.value})}
+                      placeholder="00000-000"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="sm:col-span-2">
                     <Label className="text-xs font-bold text-slate-700">Cidade / UF</Label>
                     <div className="flex gap-2">
                       <Input 
@@ -751,14 +1015,118 @@ export default function CentralFormularios() {
                       />
                     </div>
                   </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Tel Fixo</Label>
+                    <Input 
+                      value={fichaForm.telFixo || ""}
+                      onChange={e => setFichaForm({...fichaForm, telFixo: e.target.value})}
+                      placeholder="(41) 3333-0000"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Tel Celular</Label>
+                    <Input 
+                      value={fichaForm.telCel || fichaForm.celular || ""}
+                      onChange={e => setFichaForm({...fichaForm, telCel: e.target.value, celular: e.target.value})}
+                      placeholder="(41) 99999-9999"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* 2. Cônjuge (Opcional) */}
+              {/* 2. Ocupação & Renda */}
+              <div className="space-y-4 pt-2 border-t border-slate-100">
+                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> 2. Ocupação & Regime de Trabalho
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Regime de Trabalho</Label>
+                    <select
+                      value={fichaForm.regimeTrabalho || "Funcionário(a) Empresa Privada"}
+                      onChange={e => setFichaForm({...fichaForm, regimeTrabalho: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"
+                    >
+                      <option value="Funcionário(a) Empresa Privada">Empresa Privada</option>
+                      <option value="Funcionário(a) Empresa Pública">Empresa Pública</option>
+                      <option value="Autônomo">Autônomo</option>
+                      <option value="Profissional Liberal">Profissional Liberal</option>
+                      <option value="Aposentado">Aposentado</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                  </div>
+                  {fichaForm.regimeTrabalho?.includes('Aposentad') && (
+                    <div>
+                      <Label className="text-xs font-bold text-slate-700">Nº Benefício Aposentadoria</Label>
+                      <Input 
+                        value={fichaForm.aposentadoNumero || ""}
+                        onChange={e => setFichaForm({...fichaForm, aposentadoNumero: e.target.value})}
+                        placeholder="Ex: 123.456.789-0"
+                        className="rounded-xl text-xs"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Profissão</Label>
+                    <Input 
+                      value={fichaForm.profissao}
+                      onChange={e => setFichaForm({...fichaForm, profissao: e.target.value})}
+                      placeholder="Ex: Gerente Comercial"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Tempo de Serviço</Label>
+                    <Input 
+                      value={fichaForm.tempoServico || ""}
+                      onChange={e => setFichaForm({...fichaForm, tempoServico: e.target.value})}
+                      placeholder="Ex: 5 anos"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Nome da Empresa</Label>
+                    <Input 
+                      value={fichaForm.nomeEmpresa || ""}
+                      onChange={e => setFichaForm({...fichaForm, nomeEmpresa: e.target.value})}
+                      placeholder="Razão Social / Nome Fantasia"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Renda Bruta (R$)</Label>
+                    <Input 
+                      type="number"
+                      value={fichaForm.rendaBruta || ""}
+                      onChange={e => setFichaForm({...fichaForm, rendaBruta: Number(e.target.value)})}
+                      placeholder="Ex: 12000"
+                      className="rounded-xl text-xs font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Renda Líquida (R$)</Label>
+                    <Input 
+                      type="number"
+                      value={fichaForm.rendaMensal || ""}
+                      onChange={e => setFichaForm({...fichaForm, rendaMensal: Number(e.target.value)})}
+                      placeholder="Ex: 8500"
+                      className="rounded-xl text-xs font-mono font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Cônjuge (Opcional) */}
               <div className="space-y-4 pt-2 border-t border-slate-100">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-2">
-                    <UserCheck className="h-4 w-4" /> 2. Cônjuge / Companheiro(a)
+                    <UserCheck className="h-4 w-4" /> 3. Dados do Cônjuge / Companheiro(a)
                   </h3>
                   <div className="flex items-center gap-2">
                     <Switch 
@@ -771,13 +1139,13 @@ export default function CentralFormularios() {
 
                 {fichaForm.temConjuge && (
                   <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <Label className="text-xs font-bold text-slate-700">Nome Cônjuge</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                      <div className="sm:col-span-2">
+                        <Label className="text-xs font-bold text-slate-700">Nome do Cônjuge</Label>
                         <Input 
                           value={fichaForm.conjugeNome || ""}
                           onChange={e => setFichaForm({...fichaForm, conjugeNome: e.target.value})}
-                          placeholder="Nome do cônjuge"
+                          placeholder="Nome completo do cônjuge"
                           className="rounded-xl text-xs bg-white"
                         />
                       </div>
@@ -791,6 +1159,27 @@ export default function CentralFormularios() {
                         />
                       </div>
                       <div>
+                        <Label className="text-xs font-bold text-slate-700">RG Cônjuge</Label>
+                        <Input 
+                          value={fichaForm.conjugeRg || ""}
+                          onChange={e => setFichaForm({...fichaForm, conjugeRg: e.target.value})}
+                          placeholder="12.345.678-9"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Data Nasc. Cônjuge</Label>
+                        <Input 
+                          value={fichaForm.conjugeDataNasc || ""}
+                          onChange={e => setFichaForm({...fichaForm, conjugeDataNasc: e.target.value})}
+                          placeholder="DD/MM/AAAA"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
                         <Label className="text-xs font-bold text-slate-700">Profissão Cônjuge</Label>
                         <Input 
                           value={fichaForm.conjugeProfissao || ""}
@@ -799,18 +1188,127 @@ export default function CentralFormularios() {
                           className="rounded-xl text-xs bg-white"
                         />
                       </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Renda Líquida Cônjuge (R$)</Label>
+                        <Input 
+                          type="number"
+                          value={fichaForm.conjugeRenda || ""}
+                          onChange={e => setFichaForm({...fichaForm, conjugeRenda: Number(e.target.value)})}
+                          placeholder="Ex: 5000"
+                          className="rounded-xl text-xs font-mono font-bold bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">E-mail Cônjuge</Label>
+                        <Input 
+                          value={fichaForm.conjugeEmail || ""}
+                          onChange={e => setFichaForm({...fichaForm, conjugeEmail: e.target.value})}
+                          placeholder="conjuge@email.com"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* 3. Imóvel & Dados Bancários */}
+              {/* 4. Pessoa Jurídica (Opcional) */}
+              <div className="space-y-4 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-2">
+                    <Building2 className="h-4 w-4" /> 4. Dados da Pessoa Jurídica (PJ)
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <Switch 
+                      checked={fichaForm.isPessoaJuridica} 
+                      onCheckedChange={v => setFichaForm({...fichaForm, isPessoaJuridica: v})} 
+                    />
+                    <span className="text-xs font-bold text-slate-600">Possui Empresa (PJ)</span>
+                  </div>
+                </div>
+
+                {fichaForm.isPessoaJuridica && (
+                  <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="sm:col-span-2">
+                        <Label className="text-xs font-bold text-slate-700">Razão Social</Label>
+                        <Input 
+                          value={fichaForm.razaoSocial || ""}
+                          onChange={e => setFichaForm({...fichaForm, razaoSocial: e.target.value})}
+                          placeholder="Razão Social da Empresa"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">CNPJ</Label>
+                        <Input 
+                          value={fichaForm.cnpj || ""}
+                          onChange={e => setFichaForm({...fichaForm, cnpj: e.target.value})}
+                          placeholder="00.000.000/0001-00"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Inscrição Estadual/Municipal</Label>
+                        <Input 
+                          value={fichaForm.inscricaoEstadual || ""}
+                          onChange={e => setFichaForm({...fichaForm, inscricaoEstadual: e.target.value})}
+                          placeholder="Ex: 123.456.789"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Ramo de Atuação</Label>
+                        <Input 
+                          value={fichaForm.ramoAtuacao || ""}
+                          onChange={e => setFichaForm({...fichaForm, ramoAtuacao: e.target.value})}
+                          placeholder="Ex: Comércio / Serviços"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Faturamento Mensal (R$)</Label>
+                        <Input 
+                          type="number"
+                          value={fichaForm.faturamentoMensal || ""}
+                          onChange={e => setFichaForm({...fichaForm, faturamentoMensal: Number(e.target.value)})}
+                          placeholder="Ex: 50000"
+                          className="rounded-xl text-xs font-mono font-bold bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 5. Dados Bancários */}
               <div className="space-y-4 pt-2 border-t border-slate-100">
                 <h3 className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" /> 3. Dados Bancários para Liberação do Crédito
+                  <CreditCard className="h-4 w-4" /> 5. Dados Bancários para Liberação do Crédito
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs font-bold text-slate-700">Titular da Conta</Label>
+                    <Input 
+                      value={fichaForm.titularConta || fichaForm.nomeCliente}
+                      onChange={e => setFichaForm({...fichaForm, titularConta: e.target.value})}
+                      placeholder="Nome do Titular"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">CPF do Titular</Label>
+                    <Input 
+                      value={fichaForm.cpfTitularConta || fichaForm.cpf}
+                      onChange={e => setFichaForm({...fichaForm, cpfTitularConta: e.target.value})}
+                      placeholder="000.000.000-00"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
                   <div>
                     <Label className="text-xs font-bold text-slate-700">Banco</Label>
                     <Input 
@@ -820,6 +1318,9 @@ export default function CentralFormularios() {
                       className="rounded-xl text-xs"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <Label className="text-xs font-bold text-slate-700">Agência</Label>
                     <Input 
@@ -830,7 +1331,7 @@ export default function CentralFormularios() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-bold text-slate-700">Conta</Label>
+                    <Label className="text-xs font-bold text-slate-700">Nº da Conta</Label>
                     <Input 
                       value={fichaForm.conta}
                       onChange={e => setFichaForm({...fichaForm, conta: e.target.value})}
@@ -850,21 +1351,85 @@ export default function CentralFormularios() {
                 </div>
               </div>
 
-              {/* Botões de Ação */}
-              <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              {/* 6. Sobra de Crédito & Compra e Venda */}
+              <div className="space-y-4 pt-2 border-t border-slate-100">
+                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" /> 6. Sobra de Crédito & Valor de Compra e Venda
+                </h3>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <Label className="text-xs font-bold text-slate-800">Opções de Sobra de Crédito</Label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={!!fichaForm.sobraAbatimento} 
+                        onChange={e => setFichaForm({...fichaForm, sobraAbatimento: e.target.checked})}
+                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Autorizo o abatimento automático da sobra de crédito no saldo devedor.
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={!!fichaForm.sobraReembolso10} 
+                        onChange={e => setFichaForm({...fichaForm, sobraReembolso10: e.target.checked})}
+                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      Reservo até 10% do valor do crédito para reembolso de documentação.
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Valor Total Negociado do Imóvel (R$)</Label>
+                    <Input 
+                      type="number"
+                      value={fichaForm.valorTotalImovel || ""}
+                      onChange={e => setFichaForm({...fichaForm, valorTotalImovel: Number(e.target.value)})}
+                      placeholder="Ex: 300000"
+                      className="rounded-xl text-xs font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Valor Pago com Recursos do Consórcio (R$)</Label>
+                    <Input 
+                      type="number"
+                      value={fichaForm.valorPagoConsorcio || fichaForm.valorCredito || ""}
+                      onChange={e => setFichaForm({...fichaForm, valorPagoConsorcio: Number(e.target.value)})}
+                      placeholder="Ex: 250000"
+                      className="rounded-xl text-xs font-mono font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botões de Ação Principais */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-slate-100">
                 <Button
-                  onClick={handleSendWhatsAppFicha}
-                  variant="outline"
-                  className="w-full sm:w-auto border-emerald-500 text-emerald-700 hover:bg-emerald-50 font-bold gap-2 rounded-xl"
+                  onClick={handleSaveFichaForm}
+                  className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-bold gap-2 shadow-md rounded-xl px-6"
                 >
-                  <Send className="h-4 w-4" /> WhatsApp Cliente
+                  <Save className="h-4 w-4 text-emerald-400" /> Salvar Formulário no CRM
                 </Button>
-                <Button
-                  onClick={handleGenerateFichaPdf}
-                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-lg shadow-emerald-900/20 rounded-xl"
-                >
-                  <Download className="h-4 w-4" /> Gerar Ficha Cadastral em PDF
-                </Button>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  <Button
+                    onClick={handleSendWhatsAppFicha}
+                    variant="outline"
+                    className="w-full sm:w-auto border-emerald-500 text-emerald-700 hover:bg-emerald-50 font-bold gap-2 rounded-xl"
+                  >
+                    <Send className="h-4 w-4" /> WhatsApp Cliente
+                  </Button>
+                  <Button
+                    onClick={handleGenerateFichaPdf}
+                    className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-lg shadow-emerald-900/20 rounded-xl px-6"
+                  >
+                    <Download className="h-4 w-4" /> Gerar Ficha Cadastral em PDF
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -873,3 +1438,4 @@ export default function CentralFormularios() {
     </div>
   );
 }
+
