@@ -1391,7 +1391,7 @@ export default function CentralFormularios() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                       <div>
                         <Label className="text-xs font-bold text-slate-700">Inscrição Estadual/Municipal</Label>
                         <Input 
@@ -1411,6 +1411,27 @@ export default function CentralFormularios() {
                         />
                       </div>
                       <div>
+                        <Label className="text-xs font-bold text-slate-700">Data da Fundação / Abertura</Label>
+                        <Input 
+                          value={fichaForm.dataFundacao || ""}
+                          onChange={e => setFichaForm({...fichaForm, dataFundacao: e.target.value})}
+                          placeholder="DD/MM/AAAA"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Forma de Constituição</Label>
+                        <Input 
+                          value={fichaForm.formaConstituicao || ""}
+                          onChange={e => setFichaForm({...fichaForm, formaConstituicao: e.target.value})}
+                          placeholder="Ex: LTDA / S.A. / MEI"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
                         <Label className="text-xs font-bold text-slate-700">Faturamento Mensal (R$)</Label>
                         <Input 
                           type="number"
@@ -1418,6 +1439,75 @@ export default function CentralFormularios() {
                           onChange={e => setFichaForm({...fichaForm, faturamentoMensal: Number(e.target.value)})}
                           placeholder="Ex: 50000"
                           className="rounded-xl text-xs font-mono font-bold bg-white"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <Label className="text-xs font-bold text-slate-700">Endereço Empresarial</Label>
+                        <Input 
+                          value={fichaForm.pjEndereco || ""}
+                          onChange={e => setFichaForm({...fichaForm, pjEndereco: e.target.value})}
+                          placeholder="Rua, Número, Complemento"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Bairro</Label>
+                        <Input 
+                          value={fichaForm.pjBairro || ""}
+                          onChange={e => setFichaForm({...fichaForm, pjBairro: e.target.value})}
+                          placeholder="Bairro da Empresa"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Cidade</Label>
+                        <Input 
+                          value={fichaForm.pjCidade || ""}
+                          onChange={e => setFichaForm({...fichaForm, pjCidade: e.target.value})}
+                          placeholder="Cidade"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Estado (UF)</Label>
+                        <Input 
+                          value={fichaForm.pjEstado || ""}
+                          onChange={e => setFichaForm({...fichaForm, pjEstado: e.target.value})}
+                          placeholder="Ex: PR"
+                          className="rounded-xl text-xs bg-white uppercase"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">CEP</Label>
+                        <Input 
+                          value={fichaForm.pjCep || ""}
+                          onChange={e => setFichaForm({...fichaForm, pjCep: e.target.value})}
+                          placeholder="00000-000"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Tel. Fixo Empresarial</Label>
+                        <Input 
+                          value={fichaForm.pjTelFixo || ""}
+                          onChange={e => setFichaForm({...fichaForm, pjTelFixo: e.target.value})}
+                          placeholder="(00) 0000-0000"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Tel. Celular Empresarial</Label>
+                        <Input 
+                          value={fichaForm.pjTelCel || ""}
+                          onChange={e => setFichaForm({...fichaForm, pjTelCel: e.target.value})}
+                          placeholder="(00) 90000-0000"
+                          className="rounded-xl text-xs bg-white"
                         />
                       </div>
                     </div>
