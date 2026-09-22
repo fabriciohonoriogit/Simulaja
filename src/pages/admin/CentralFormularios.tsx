@@ -162,10 +162,6 @@ export default function CentralFormularios() {
     dataAssinatura: new Date().toLocaleDateString('pt-BR')
   });
 
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
   const fetchLeads = async () => {
     try {
       const { data, error } = await supabase
@@ -181,6 +177,10 @@ export default function CentralFormularios() {
       console.error("Erro ao carregar leads:", e);
     }
   };
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
 
   const handleSelectLeadForAlteracao = (leadId: string) => {
     const found = leads.find(l => l.id === leadId);
