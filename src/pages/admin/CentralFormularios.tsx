@@ -162,24 +162,25 @@ export default function CentralFormularios() {
     dataAssinatura: new Date().toLocaleDateString('pt-BR')
   });
 
-  const fetchLeads = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("leads")
-        .select("id, nome, celular, valor_credito, dados_cadastro")
-        .order("created_at", { ascending: false })
-        .limit(100);
-
-      if (!error && data) {
-        setLeads(data as LeadOption[]);
-      }
-    } catch (e) {
-      console.error("Erro ao carregar leads:", e);
-    }
-  };
-
   useEffect(() => {
-    fetchLeads();
+    let isMounted = true;
+    const loadLeads = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("leads")
+          .select("id, nome, celular, valor_credito, dados_cadastro")
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (!error && data && isMounted) {
+          setLeads(data as LeadOption[]);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar leads:", e);
+      }
+    };
+    loadLeads();
+    return () => { isMounted = false; };
   }, []);
 
   const handleSelectLeadForAlteracao = (leadId: string) => {
