@@ -165,7 +165,7 @@ export default function CentralFormularios() {
 
   useEffect(() => {
     let isMounted = true;
-    const loadLeads = async () => {
+    async function loadLeads() {
       try {
         const { data, error } = await supabase
           .from("leads")
@@ -179,13 +179,13 @@ export default function CentralFormularios() {
       } catch (e) {
         console.error("Erro ao carregar leads:", e);
       }
-    };
+    }
     loadLeads();
     return () => { isMounted = false; };
   }, []);
 
-  const handleSelectLeadForAlteracao = (leadId: string) => {
-    const found = leads.find(l => l.id === leadId);
+  function handleSelectLeadForAlteracao(leadId: string) {
+    const found = leads.find(l => l && l.id === leadId);
     if (!found) return;
     const dc = found.dados_cadastro || {};
 
@@ -203,11 +203,11 @@ export default function CentralFormularios() {
       valorCredito: found.valor_credito || parseBRLValue(dc.valor_credito || 0)
     }));
 
-    toast.success(`Dados de ${found.nome} carregados no formulário!`);
-  };
+    toast.success(`Dados de ${found.nome || 'Cliente'} carregados no formulário!`);
+  }
 
-  const handleSelectLeadForFicha = (leadId: string) => {
-    const found = leads.find(l => l.id === leadId);
+  function handleSelectLeadForFicha(leadId: string) {
+    const found = leads.find(l => l && l.id === leadId);
     if (!found) return;
     const dc = found.dados_cadastro || {};
 
@@ -244,10 +244,10 @@ export default function CentralFormularios() {
       cpfTitularConta: dc.cpfTitularConta || dc.cpf || prev.cpfTitularConta
     }));
 
-    toast.success(`Ficha cadastral carregada para ${found.nome}!`);
-  };
+    toast.success(`Ficha cadastral carregada para ${found.nome || 'Cliente'}!`);
+  }
 
-  const handleSaveFichaForm = async () => {
+  async function handleSaveFichaForm() {
     try {
       let activeId = selectedLeadId;
       const updatedDados = {
@@ -319,9 +319,9 @@ export default function CentralFormularios() {
       console.error(e);
       toast.error("Erro ao salvar formulário.");
     }
-  };
+  }
 
-  const handleClearFichaForm = () => {
+  function handleClearFichaForm() {
     setSelectedLeadId("");
     setFichaForm({
       grupo: "",
@@ -418,9 +418,9 @@ export default function CentralFormularios() {
       dataAssinatura: new Date().toLocaleDateString('pt-BR')
     });
     toast.info("Formulário limpo.");
-  };
+  }
 
-  const handleGenerateAlteracaoPdf = () => {
+  function handleGenerateAlteracaoPdf() {
     if (!alteracaoForm.nomeCliente) {
       toast.error("Por favor, preencha o Nome do Consorciado.");
       return;
@@ -432,9 +432,9 @@ export default function CentralFormularios() {
       console.error(e);
       toast.error("Erro ao gerar PDF.");
     }
-  };
+  }
 
-  const handleGenerateFichaPdf = () => {
+  function handleGenerateFichaPdf() {
     if (!fichaForm.nomeCliente || !fichaForm.cpf) {
       toast.error("Por favor, preencha o Nome e CPF do Consorciado.");
       return;
@@ -446,9 +446,9 @@ export default function CentralFormularios() {
       console.error(e);
       toast.error("Erro ao gerar PDF.");
     }
-  };
+  }
 
-  const handleSendWhatsAppAlteracao = () => {
+  function handleSendWhatsAppAlteracao() {
     if (!alteracaoForm.telefone) {
       toast.error("Telefone não informado.");
       return;
@@ -456,9 +456,9 @@ export default function CentralFormularios() {
     const cleanPhone = alteracaoForm.telefone.replace(/\D/g, "");
     const msg = `Olá, *${alteracaoForm.nomeCliente}*! Conforme solicitado, geramos o seu formulário oficial de *Alteração do Bem / Crédito* do Consórcio Magalu.\n\n*Proposta:* ${alteracaoForm.proposta || '—'}\n*Novo Crédito:* ${formatCurrency(alteracaoForm.valorCredito)}\n\nO documento oficial em PDF foi emitido e está pronto para assinatura! 📄✨`;
     window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
-  };
+  }
 
-  const handleSendWhatsAppFicha = () => {
+  function handleSendWhatsAppFicha() {
     const phone = fichaForm.telCel || fichaForm.celular;
     if (!phone) {
       toast.error("Telefone não informado.");
@@ -467,12 +467,15 @@ export default function CentralFormularios() {
     const cleanPhone = phone.replace(/\D/g, "");
     const msg = `Olá, *${fichaForm.nomeCliente}*! Sua *Ficha Cadastral de Imóvel* do Consórcio Magalu foi preenchida com sucesso.\n\n*Valor do Crédito:* ${formatCurrency(fichaForm.valorCredito || 0)}\n*Cidade:* ${fichaForm.cidade}/${fichaForm.uf}\n\nVocê receberá o PDF formatado para simples conferência e assinatura. Se precisar de algum ajuste, estamos à disposição! 🏠📄`;
     window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
-  };
+  }
 
-  const filteredLeads = leads.filter(l => 
-    l.nome.toLowerCase().includes(searchLead.toLowerCase()) || 
-    (l.celular && l.celular.includes(searchLead))
-  );
+  const filteredLeads = (leads || []).filter(l => {
+    if (!l) return false;
+    const nome = l.nome || "";
+    const celular = l.celular || "";
+    const query = (searchLead || "").toLowerCase();
+    return nome.toLowerCase().includes(query) || celular.includes(query);
+  });
 
   return (
     <div className="flex-1 flex flex-col space-y-6 w-full max-w-[1600px] mx-auto pb-12">
