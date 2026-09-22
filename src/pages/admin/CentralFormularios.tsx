@@ -16,7 +16,8 @@ import {
   ArrowRight,
   RefreshCw,
   Info,
-  Save
+  Save,
+  RotateCcw
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -248,39 +249,57 @@ export default function CentralFormularios() {
 
   const handleSaveFichaForm = async () => {
     try {
-      // 1. Salva em localStorage
-      const storageKey = `ficha_cadastral_${selectedLeadId || 'draft'}`;
-      localStorage.setItem(storageKey, JSON.stringify(fichaForm));
+      let activeId = selectedLeadId;
+      const updatedDados = {
+        ...fichaForm,
+        cpf: fichaForm.cpf,
+        rg: fichaForm.rg,
+        email: fichaForm.email,
+        cidade: fichaForm.cidade,
+        uf: fichaForm.uf,
+        bairro: fichaForm.bairro,
+        endereco: fichaForm.endereco,
+        cep: fichaForm.cep,
+        profissao: fichaForm.profissao,
+        renda: fichaForm.rendaMensal,
+        banco: fichaForm.banco,
+        agencia: fichaForm.agencia,
+        conta: fichaForm.conta,
+        grupo: fichaForm.grupo,
+        cota: fichaForm.cota,
+        ultima_atualizacao_ficha: new Date().toISOString()
+      };
 
-      // 2. Se houver lead selecionado do CRM, salva no Supabase
-      if (selectedLeadId) {
-        const found = leads.find(l => l.id === selectedLeadId);
-        const existingData = found?.dados_cadastro || {};
-        const updatedDados = {
-          ...existingData,
-          ...fichaForm,
-          cpf: fichaForm.cpf,
-          rg: fichaForm.rg,
-          email: fichaForm.email,
-          cidade: fichaForm.cidade,
-          uf: fichaForm.uf,
-          bairro: fichaForm.bairro,
-          endereco: fichaForm.endereco,
-          cep: fichaForm.cep,
-          profissao: fichaForm.profissao,
-          renda: fichaForm.rendaMensal,
-          banco: fichaForm.banco,
-          agencia: fichaForm.agencia,
-          conta: fichaForm.conta,
-          grupo: fichaForm.grupo,
-          cota: fichaForm.cota,
-          ultima_atualizacao_ficha: new Date().toISOString()
+      // Se não houver lead selecionado, mas houver nome do cliente preenchido, cria o lead no CRM!
+      if (!activeId && fichaForm.nomeCliente) {
+        const { data: newLead, error: insErr } = await (supabase.from("leads") as any)
+          .insert({
+            nome: fichaForm.nomeCliente,
+            celular: fichaForm.telCel || fichaForm.celular || null,
+            valor_credito: fichaForm.valorCredito || 0,
+            status: "em_atendimento",
+            dados_cadastro: updatedDados
+          })
+          .select("id, nome, celular, valor_credito, dados_cadastro")
+          .single();
+
+        if (!insErr && newLead) {
+          activeId = newLead.id;
+          setSelectedLeadId(newLead.id);
+          setLeads(prev => [newLead as LeadOption, ...prev]);
+        }
+      } else if (activeId) {
+        // Atualiza lead existente no Supabase
+        const found = leads.find(l => l.id === activeId);
+        const mergedDados = {
+          ...(found?.dados_cadastro || {}),
+          ...updatedDados
         };
 
         const { error } = await supabase
           .from("leads")
-          .update({ dados_cadastro: updatedDados })
-          .eq("id", selectedLeadId);
+          .update({ dados_cadastro: mergedDados })
+          .eq("id", activeId);
 
         if (error) {
           console.error("Erro ao salvar ficha no Supabase:", error);
@@ -288,15 +307,117 @@ export default function CentralFormularios() {
           return;
         }
 
-        // Atualiza a lista local de leads
-        setLeads(prev => prev.map(l => l.id === selectedLeadId ? { ...l, dados_cadastro: updatedDados } : l));
+        setLeads(prev => prev.map(l => l.id === activeId ? { ...l, dados_cadastro: mergedDados } : l));
       }
 
-      toast.success("Formulário pré-preenchido salvo com sucesso!");
+      // 3. Salva também em localStorage
+      const storageKey = `ficha_cadastral_${activeId || 'draft'}`;
+      localStorage.setItem(storageKey, JSON.stringify(fichaForm));
+
+      toast.success(activeId ? "Formulário salvo e vinculado ao CRM com sucesso!" : "Rascunho salvo no navegador!");
     } catch (e) {
       console.error(e);
       toast.error("Erro ao salvar formulário.");
     }
+  };
+
+  const handleClearFichaForm = () => {
+    setSelectedLeadId("");
+    setFichaForm({
+      grupo: "",
+      cota: "",
+      aquisicaoImovelUrbano: true,
+      reformaConstrucao: false,
+      aquisicaoQuitacaoFinanciamento: false,
+      aquisicaoImovelRural: false,
+      energiaFotovoltaica: false,
+      quitacaoFinanciamentoProprio: false,
+
+      nomeCliente: "",
+      sexo: "M",
+      cpf: "",
+      rg: "",
+      orgaoEmissor: "SSP",
+      dataNascimento: "",
+      localNascimento: "",
+      nacionalidade: "Brasileira",
+      estadoCivil: "Solteiro(a)",
+      profissao: "",
+      rendaMensal: 0,
+      rendaBruta: 0,
+      outraRenda: "",
+      tempoServico: "",
+      nomeEmpresa: "",
+      empresaEndereco: "",
+      empresaBairro: "",
+      empresaCidade: "",
+      empresaEstado: "",
+      empresaCep: "",
+      empresaTelCom: "",
+      telFixo: "",
+      telCel: "",
+      telCom: "",
+      celular: "",
+      email: "",
+      declaraIR: "Sim",
+      regimeTrabalho: "Funcionário(a) Empresa Privada",
+      aposentadoNumero: "",
+      endereco: "",
+      bairro: "",
+      cep: "",
+      cidade: "",
+      uf: "PR",
+
+      temConjuge: false,
+      conjugeNome: "",
+      conjugeCpf: "",
+      conjugeRg: "",
+      conjugeOrgaoEmissor: "SSP",
+      conjugeDataNasc: "",
+      conjugeLocalNascimento: "",
+      conjugeNacionalidade: "Brasileira",
+      conjugeProfissao: "",
+      conjugeRenda: 0,
+      conjugeEmail: "",
+      conjugeRegimeTrabalho: "Funcionário(a) Empresa Privada",
+      conjugeAposentadoNumero: "",
+
+      isPessoaJuridica: false,
+      razaoSocial: "",
+      cnpj: "",
+      inscricaoEstadual: "",
+      ramoAtuacao: "",
+      dataFundacao: "",
+      formaConstituicao: "",
+      faturamentoMensal: 0,
+      pjEndereco: "",
+      pjBairro: "",
+      pjCidade: "",
+      pjEstado: "PR",
+      pjCep: "",
+      pjTelFixo: "",
+      pjTelCel: "",
+
+      valorCredito: 0,
+      tipoImovel: "Residencial",
+      enderecoImovel: "",
+      banco: "Itaú / Magalu Pay",
+      agencia: "",
+      conta: "",
+      tipoConta: "Corrente",
+      chavePix: "",
+      titularConta: "",
+      cpfTitularConta: "",
+
+      sobraAbatimento: true,
+      sobraReembolso10: false,
+      valorTotalImovel: 0,
+      valorPagoConsorcio: 0,
+
+      localAssinatura: "Curitiba - PR",
+      dataAssinatura: new Date().toLocaleDateString('pt-BR')
+    });
+    toast.info("Formulário limpo.");
   };
 
   const handleGenerateAlteracaoPdf = () => {
@@ -519,24 +640,31 @@ export default function CentralFormularios() {
                   </CardDescription>
                 </div>
 
-                {/* Integrador de Lead */}
-                <div className="flex items-center gap-2 min-w-[280px]">
-                  <div className="relative flex-1">
-                    <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
-                    <select
-                      value={selectedLeadId}
-                      onChange={(e) => {
-                        setSelectedLeadId(e.target.value);
-                        handleSelectLeadForAlteracao(e.target.value);
-                      }}
-                      className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Importar do CRM --</option>
-                      {leads.map(l => (
-                        <option key={l.id} value={l.id}>{l.nome} ({l.celular || 'Sem cel'})</option>
-                      ))}
-                    </select>
+                {/* Integrador e Pesquisa de Lead */}
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                  <div className="relative flex-1 min-w-[180px]">
+                    <Search className="h-3.5 w-3.5 absolute left-3 top-3 text-slate-400" />
+                    <Input
+                      type="text"
+                      placeholder="Pesquisar por nome..."
+                      value={searchLead}
+                      onChange={(e) => setSearchLead(e.target.value)}
+                      className="pl-8 pr-3 py-1.5 h-9 text-xs rounded-xl border-slate-200 bg-white"
+                    />
                   </div>
+                  <select
+                    value={selectedLeadId}
+                    onChange={(e) => {
+                      setSelectedLeadId(e.target.value);
+                      handleSelectLeadForAlteracao(e.target.value);
+                    }}
+                    className="w-full sm:w-[240px] h-9 px-3 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">-- Importar do CRM ({filteredLeads.length}) --</option>
+                    {filteredLeads.map(l => (
+                      <option key={l.id} value={l.id}>{l.nome} ({l.celular || 'Sem cel'})</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </CardHeader>
@@ -719,24 +847,33 @@ export default function CentralFormularios() {
                   </CardDescription>
                 </div>
 
-                {/* Importador do CRM */}
-                <div className="flex items-center gap-2 min-w-[280px]">
-                  <div className="relative flex-1">
-                    <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
-                    <select
-                      value={selectedLeadId}
-                      onChange={(e) => {
-                        setSelectedLeadId(e.target.value);
-                        handleSelectLeadForFicha(e.target.value);
-                      }}
-                      className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    >
-                      <option value="">-- Selecionar Lead do CRM --</option>
-                      {leads.map(l => (
-                        <option key={l.id} value={l.id}>{l.nome} ({l.celular || 'Sem cel'})</option>
-                      ))}
-                    </select>
+                {/* Importador e Pesquisa do CRM */}
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                  <div className="relative flex-1 min-w-[180px]">
+                    <Search className="h-3.5 w-3.5 absolute left-3 top-3 text-slate-400" />
+                    <Input
+                      type="text"
+                      placeholder="Pesquisar por nome..."
+                      value={searchLead}
+                      onChange={(e) => setSearchLead(e.target.value)}
+                      className="pl-8 pr-3 py-1.5 h-9 text-xs rounded-xl border-slate-200 bg-white"
+                    />
                   </div>
+                  <select
+                    value={selectedLeadId}
+                    onChange={(e) => {
+                      setSelectedLeadId(e.target.value);
+                      handleSelectLeadForFicha(e.target.value);
+                    }}
+                    className="w-full sm:w-[240px] h-9 px-3 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="">-- Selecionar Lead ({filteredLeads.length}) --</option>
+                    {filteredLeads.map(l => (
+                      <option key={l.id} value={l.id}>
+                        {l.nome} {l.dados_cadastro?.ultima_atualizacao_ficha ? '✓ (Salvo)' : ''} ({l.celular || 'Sem cel'})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </CardHeader>
@@ -1443,12 +1580,21 @@ export default function CentralFormularios() {
 
               {/* Botões de Ação Principais */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-slate-100">
-                <Button
-                  onClick={handleSaveFichaForm}
-                  className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-bold gap-2 shadow-md rounded-xl px-6"
-                >
-                  <Save className="h-4 w-4 text-emerald-400" /> Salvar Formulário no CRM
-                </Button>
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    onClick={handleSaveFichaForm}
+                    className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-bold gap-2 shadow-md rounded-xl px-6"
+                  >
+                    <Save className="h-4 w-4 text-emerald-400" /> Salvar Formulário no CRM
+                  </Button>
+                  <Button
+                    onClick={handleClearFichaForm}
+                    variant="outline"
+                    className="w-full sm:w-auto border-slate-200 text-slate-600 hover:bg-slate-100 font-bold gap-2 rounded-xl"
+                  >
+                    <RotateCcw className="h-4 w-4 text-slate-500" /> Limpar Formulário
+                  </Button>
+                </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                   <Button
