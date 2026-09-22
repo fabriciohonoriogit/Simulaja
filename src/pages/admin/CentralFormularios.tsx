@@ -1406,6 +1406,40 @@ export default function CentralFormularios() {
                 </div>
               </div>
 
+              {/* 7. Declaração de Veracidade (Local e Data da Assinatura) */}
+              <div className="space-y-4 pt-2 border-t border-slate-100">
+                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-2">
+                  <FileCheck2 className="h-4 w-4" /> 7. Declaração de Veracidade (Local e Data da Emissão/Assinatura)
+                </h3>
+
+                <div className="p-4 rounded-2xl bg-emerald-50/40 border border-emerald-100 space-y-3">
+                  <p className="text-xs font-semibold text-slate-700">
+                    "Declaro que as informações acima são a pura expressão de verdade responsabilizando-me por estas."
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                      <Label className="text-xs font-bold text-slate-700">Local da Assinatura (Cidade - UF)</Label>
+                      <Input 
+                        value={fichaForm.localAssinatura || ""}
+                        onChange={e => setFichaForm({...fichaForm, localAssinatura: e.target.value})}
+                        placeholder="Ex: Curitiba - PR"
+                        className="rounded-xl text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-bold text-slate-700">Data da Assinatura</Label>
+                      <Input 
+                        value={fichaForm.dataAssinatura || ""}
+                        onChange={e => setFichaForm({...fichaForm, dataAssinatura: e.target.value})}
+                        placeholder="Ex: 22/09/2026"
+                        className="rounded-xl text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Botões de Ação Principais */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-slate-100">
                 <Button
