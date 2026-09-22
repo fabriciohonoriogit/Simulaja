@@ -1174,16 +1174,25 @@ export default function CentralFormularios() {
                       className="rounded-xl text-xs"
                     />
                   </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Tel Comercial</Label>
+                    <Input 
+                      value={fichaForm.telCom || ""}
+                      onChange={e => setFichaForm({...fichaForm, telCom: e.target.value})}
+                      placeholder="(41) 3333-0000"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* 2. Ocupação & Renda */}
+              {/* 2. Ocupação & Regime de Trabalho */}
               <div className="space-y-4 pt-2 border-t border-slate-100">
                 <h3 className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-2">
                   <Building2 className="h-4 w-4" /> 2. Ocupação & Regime de Trabalho
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-xs font-bold text-slate-700">Regime de Trabalho</Label>
                     <select
@@ -1228,15 +1237,72 @@ export default function CentralFormularios() {
                       className="rounded-xl text-xs"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <Label className="text-xs font-bold text-slate-700">Nome da Empresa</Label>
                     <Input 
                       value={fichaForm.nomeEmpresa || ""}
                       onChange={e => setFichaForm({...fichaForm, nomeEmpresa: e.target.value})}
                       placeholder="Razão Social / Nome Fantasia"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Endereço e Contatos da Empresa */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs font-bold text-slate-700">Endereço da Empresa</Label>
+                    <Input 
+                      value={fichaForm.empresaEndereco || ""}
+                      onChange={e => setFichaForm({...fichaForm, empresaEndereco: e.target.value})}
+                      placeholder="Rua, Número, Conjunto"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Bairro da Empresa</Label>
+                    <Input 
+                      value={fichaForm.empresaBairro || ""}
+                      onChange={e => setFichaForm({...fichaForm, empresaBairro: e.target.value})}
+                      placeholder="Bairro"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Cidade / UF Empresa</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        value={fichaForm.empresaCidade || ""}
+                        onChange={e => setFichaForm({...fichaForm, empresaCidade: e.target.value})}
+                        placeholder="Cidade"
+                        className="rounded-xl text-xs flex-1"
+                      />
+                      <Input 
+                        value={fichaForm.empresaEstado || ""}
+                        onChange={e => setFichaForm({...fichaForm, empresaEstado: e.target.value})}
+                        placeholder="PR"
+                        className="rounded-xl text-xs w-14 uppercase"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">CEP Empresa</Label>
+                    <Input 
+                      value={fichaForm.empresaCep || ""}
+                      onChange={e => setFichaForm({...fichaForm, empresaCep: e.target.value})}
+                      placeholder="00000-000"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Tel. Comercial Empresa</Label>
+                    <Input 
+                      value={fichaForm.empresaTelCom || ""}
+                      onChange={e => setFichaForm({...fichaForm, empresaTelCom: e.target.value})}
+                      placeholder="(00) 3000-0000"
                       className="rounded-xl text-xs"
                     />
                   </div>
@@ -1258,6 +1324,18 @@ export default function CentralFormularios() {
                       onChange={e => setFichaForm({...fichaForm, rendaMensal: Number(e.target.value)})}
                       placeholder="Ex: 8500"
                       className="rounded-xl text-xs font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700">Outra Renda (especifique se houver)</Label>
+                    <Input 
+                      value={fichaForm.outraRenda || ""}
+                      onChange={e => setFichaForm({...fichaForm, outraRenda: e.target.value})}
+                      placeholder="Ex: Aluguel R$ 2.000 / Dividendos"
+                      className="rounded-xl text-xs"
                     />
                   </div>
                 </div>
@@ -1312,6 +1390,15 @@ export default function CentralFormularios() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                       <div>
+                        <Label className="text-xs font-bold text-slate-700">Orgão Exp. Cônjuge</Label>
+                        <Input 
+                          value={fichaForm.conjugeOrgaoEmissor || "SSP"}
+                          onChange={e => setFichaForm({...fichaForm, conjugeOrgaoEmissor: e.target.value})}
+                          placeholder="SSP/PR"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
                         <Label className="text-xs font-bold text-slate-700">Data Nasc. Cônjuge</Label>
                         <Input 
                           value={fichaForm.conjugeDataNasc || ""}
@@ -1320,6 +1407,27 @@ export default function CentralFormularios() {
                           className="rounded-xl text-xs bg-white"
                         />
                       </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Local Nascimento Cônjuge</Label>
+                        <Input 
+                          value={fichaForm.conjugeLocalNascimento || ""}
+                          onChange={e => setFichaForm({...fichaForm, conjugeLocalNascimento: e.target.value})}
+                          placeholder="Cidade/UF Nasc."
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Nacionalidade Cônjuge</Label>
+                        <Input 
+                          value={fichaForm.conjugeNacionalidade || "Brasileira"}
+                          onChange={e => setFichaForm({...fichaForm, conjugeNacionalidade: e.target.value})}
+                          placeholder="Brasileira"
+                          className="rounded-xl text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                       <div>
                         <Label className="text-xs font-bold text-slate-700">Profissão Cônjuge</Label>
                         <Input 
@@ -1348,7 +1456,36 @@ export default function CentralFormularios() {
                           className="rounded-xl text-xs bg-white"
                         />
                       </div>
+                      <div>
+                        <Label className="text-xs font-bold text-slate-700">Regime Trabalho Cônjuge</Label>
+                        <select
+                          value={fichaForm.conjugeRegimeTrabalho || "Funcionário(a) Empresa Privada"}
+                          onChange={e => setFichaForm({...fichaForm, conjugeRegimeTrabalho: e.target.value})}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"
+                        >
+                          <option value="Funcionário(a) Empresa Privada">Empresa Privada</option>
+                          <option value="Funcionário(a) Empresa Pública">Empresa Pública</option>
+                          <option value="Autônomo">Autônomo</option>
+                          <option value="Profissional Liberal">Profissional Liberal</option>
+                          <option value="Aposentado">Aposentado</option>
+                          <option value="Outro">Outro</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {fichaForm.conjugeRegimeTrabalho?.includes('Aposentad') && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-xs font-bold text-slate-700">Nº Benefício Cônjuge Aposentado</Label>
+                          <Input 
+                            value={fichaForm.conjugeAposentadoNumero || ""}
+                            onChange={e => setFichaForm({...fichaForm, conjugeAposentadoNumero: e.target.value})}
+                            placeholder="Ex: 123.456.789-0"
+                            className="rounded-xl text-xs bg-white"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
