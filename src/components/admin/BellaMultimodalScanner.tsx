@@ -39,7 +39,7 @@ export function BellaMultimodalScanner({ onAnalysisResult }: BellaMultimodalScan
     return () => window.removeEventListener("paste", handlePaste);
   }, []);
 
-  const readAndSetFile = (file: File) => {
+  function readAndSetFile(file: File) {
     if (!file.type.startsWith("image/")) {
       toast({
         title: "Arquivo Inválido",

@@ -46,7 +46,7 @@ export default function Chat() {
       .then(({ data }: any) => setMembros(data || []));
   }, [profile]);
 
-  const fetchMensagens = async () => {
+  async function fetchMensagens() {
     if (!profile) return;
     setLoadingMsgs(true);
     const query = (supabase.from("mensagens" as any) as any)
@@ -67,7 +67,7 @@ export default function Chat() {
     setMensagens(filtered);
     setLoadingMsgs(false);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-  };
+  }
 
   // Buscar mensagens e assinar Realtime
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function Chat() {
     return () => { supabase.removeChannel(channel); };
   }, [profile, selectedId]);
 
-  const handleSend = async () => {
+  async function handleSend() {
     if (!texto.trim() || !profile?.organizacao_id) return;
     setSending(true);
     await (supabase.from("mensagens" as any) as any).insert({

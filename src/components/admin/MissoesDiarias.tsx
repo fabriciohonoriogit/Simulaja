@@ -58,16 +58,16 @@ export default function MissoesDiarias({
   const [missionLeadsMap, setMissionLeadsMap] = useState<Record<string, MissaoLead[]>>({});
   const [loadingMission, setLoadingMission] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!userId || !orgId) return;
-    refreshMissions();
-  }, [userId, orgId, tipoAcesso]);
-
   const refreshMissions = async () => {
     const r = await calcularMissoes(userId, orgId, tipoAcesso);
     setResultado(r);
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!userId || !orgId) return;
+    refreshMissions();
+  }, [userId, orgId, tipoAcesso]);
 
   const handleMissionClick = async (missaoId: string) => {
     if (expandedMission === missaoId) {

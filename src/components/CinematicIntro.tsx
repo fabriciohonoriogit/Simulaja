@@ -87,7 +87,7 @@ export default function CinematicIntro({ onClose }: CinematicIntroProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleClose = () => {
+  function handleClose() {
     setIsClosing(true);
     setTimeout(() => onClose(), 1000);
   };

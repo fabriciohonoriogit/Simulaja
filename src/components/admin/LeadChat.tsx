@@ -26,6 +26,44 @@ export const LeadChat: React.FC<LeadChatProps> = ({ leadId, leadName, leadCelula
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+  };
+
+  const fetchChatData = async () => {
+    setLoading(true);
+    try {
+      // 1. Fetch AI Status
+      const { data: leadData } = await supabase
+        .from('leads')
+        .select('atendimento_ia')
+        .eq('id', leadId)
+        .single();
+      
+      if (leadData) {
+        setIsAiActive(leadData.atendimento_ia ?? true);
+      }
+
+      // 2. Fetch Messages
+      const { data: msgData, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('lead_id', leadId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setMessages(msgData || []);
+    } catch (err) {
+      console.error("Error fetching chat data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchChatData();
     
@@ -61,45 +99,6 @@ export const LeadChat: React.FC<LeadChatProps> = ({ leadId, leadName, leadCelula
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
-  };
-
-  const fetchChatData = async () => {
-    setLoading(true);
-    try {
-      // 1. Fetch AI Status
-      const { data: leadData } = await supabase
-        .from('leads')
-        .select('atendimento_ia')
-        .eq('id', leadId)
-        .single();
-      
-      if (leadData) {
-        setIsAiActive(leadData.atendimento_ia ?? true);
-      }
-
-      // 2. Fetch Messages
-      const { data: msgs, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('lead_id', leadId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      setMessages(msgs || []);
-    } catch (error) {
-      console.error("Error fetching chat data:", error);
-    } finally {
-      setLoading(false);
-      scrollToBottom();
-    }
-  };
 
   const handleToggleAi = async () => {
     setToggling(true);

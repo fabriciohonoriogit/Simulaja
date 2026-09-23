@@ -323,7 +323,7 @@ export default function Carteira() {
     }
   };
 
-  const fetchContemplations = async (grupo: string) => {
+  async function fetchContemplations(grupo: string) {
     setLoadingContemplations(true);
     const { data } = await supabase.from("cotas_contempladas").select("*").eq("grupo", grupo);
     const sorted = (data || []).sort((a, b) => (a.cota || "").localeCompare(b.cota || "", undefined, { numeric: true }));

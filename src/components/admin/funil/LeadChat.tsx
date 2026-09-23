@@ -68,7 +68,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
     }
   }, [messages]);
 
-  const fetchMessages = async (silent = false) => {
+  async function fetchMessages(silent = false) {
     if (!silent) setLoading(true);
     const { data, error } = await supabase
       .from("chat_messages")

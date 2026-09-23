@@ -90,7 +90,7 @@ const AIChatbot = () => {
     setMessages((prev) => [...prev, { role: "user", content }]);
   };
 
-  const handleOpen = () => {
+  function handleOpen() {
     setIsOpen(true);
     if (messages.length === 0) {
       if (isIndicacoes) {
@@ -282,7 +282,7 @@ const AIChatbot = () => {
     }
   };
 
-  const saveLeadToCrm = async (nome: string, telefone: string, currentLead: typeof leadData) => {
+  async function saveLeadToCrm(nome: string, telefone: string, currentLead: typeof leadData) {
     try {
       const rawPhone = telefone.replace(/\D/g, "");
       const { error } = await (supabase.from("leads") as any).insert({

@@ -163,17 +163,6 @@ export default function Inadimplentes() {
 
   const resizingRef = useRef<{ id: string; startX: number; startWidth: number } | null>(null);
 
-  const startResizing = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    resizingRef.current = {
-      id,
-      startX: e.pageX,
-      startWidth: columnWidths[id] || (isWideView ? 180 : 280),
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResizing);
-  };
-
   const handleMouseMove = (e: MouseEvent) => {
     if (!resizingRef.current) return;
     const { id, startX, startWidth } = resizingRef.current;
@@ -185,6 +174,17 @@ export default function Inadimplentes() {
     resizingRef.current = null;
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", stopResizing);
+  };
+
+  const startResizing = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = {
+      id,
+      startX: e.pageX,
+      startWidth: columnWidths[id] || (isWideView ? 180 : 280),
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", stopResizing);
   };
 
   const ADMINISTRADORAS = ["MAGALU", "ADEMICON", "SERVOPA"];

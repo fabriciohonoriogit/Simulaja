@@ -31,7 +31,7 @@ export const useAuth = (): UseAuthReturn => {
   useEffect(() => {
     let mounted = true;
 
-    const fetchProfile = async (userId: string, userEmail?: string) => {
+    async function fetchProfile(userId: string, userEmail?: string) {
       try {
         const { data: profileData } = await supabase
           .from("perfis")

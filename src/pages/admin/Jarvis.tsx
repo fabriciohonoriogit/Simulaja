@@ -322,7 +322,7 @@ export default function Jarvis() {
         }
     };
 
-    const stopRecording = () => {
+    function stopRecording() {
         if (silenceTimerRef.current) {
             clearTimeout(silenceTimerRef.current);
             silenceTimerRef.current = null;
@@ -423,7 +423,7 @@ export default function Jarvis() {
         }
     };
 
-    const handleAnalyze = async (query: string = question) => {
+    async function handleAnalyze(query: string = question) {
         const trimmed = query.trim();
         if (!trimmed || isAnalyzingRef.current) return;
 

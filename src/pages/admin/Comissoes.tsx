@@ -317,14 +317,14 @@ export default function Comissoes() {
     }
   };
 
-  useEffect(() => {
-    fetchFechamentos();
-  }, [profile?.organizacao_id]);
-
   const fetchInadimplentes = async () => {
     const { data } = await supabase.from("inadimplentes").select("lead_id, status");
     setInadimplentes(data || []);
   };
+
+  useEffect(() => {
+    fetchFechamentos();
+  }, [profile?.organizacao_id]);
 
   useEffect(() => {
     fetchInadimplentes();
@@ -426,7 +426,7 @@ export default function Comissoes() {
     }
   };
 
-  const resetForm = () => {
+  function resetForm() {
     setEditingComissao(null);
     setSelectedLeadId("none");
     setNomeCliente("");
@@ -640,7 +640,7 @@ export default function Comissoes() {
     toast({ title: "Relatório gerado com sucesso!" });
   };
 
-  const formatCurrencyInput = (value: string) => {
+  function formatCurrencyInput(value: string) {
     const numbers = value.replace(/\D/g, "");
     if (!numbers) return "";
     return new Intl.NumberFormat("pt-BR", {
@@ -664,7 +664,7 @@ export default function Comissoes() {
   }, [filtered]);
 
   // Função para calcular o estorno correto (respeita valor_estorno customizado ou calcula default)
-  const calcEstornoCorreto = (c: Comissao) => {
+  function calcEstornoCorreto(c: Comissao) {
     if (c.status !== "estornado") return 0;
     if (c.valor_estorno !== undefined && c.valor_estorno !== null && Number(c.valor_estorno) >= 0) {
       return Number(c.valor_estorno);

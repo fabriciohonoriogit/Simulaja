@@ -24,7 +24,7 @@ export function WeatherWidget() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchWeather = async (lat: number, lon: number) => {
+    async function fetchWeather(lat: number, lon: number) {
       try {
         const [weatherRes, geoRes] = await Promise.all([
           fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`),
