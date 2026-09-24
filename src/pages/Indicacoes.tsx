@@ -186,10 +186,10 @@ export default function Indicacoes() {
   const parcelaPos = prazoRestante > 0 && saldoDevedorPosLance > 0 ? saldoDevedorPosLance / prazoRestante : 0;
 
   const mascaraWpp = (value: string, setter: (v: string) => void) => {
-    let v = value.replace(/D/g, "");
+    let v = value.replace(/\D/g, "");
     if (v.length > 11) v = v.slice(0, 11);
-    if (v.length > 7) v = v.replace(/(d{2})(d{5})(d*)/, "($1) $2-$3");
-    else if (v.length > 2) v = v.replace(/(d{2})(d*)/, "($1) $2");
+    if (v.length > 7) v = v.replace(/(\d{2})(\d{5})(\d*)/, "($1) $2-$3");
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d*)/, "($1) $2");
     setter(v);
   };
 
@@ -198,13 +198,13 @@ export default function Indicacoes() {
   const simular = async () => {
     // Validate partner
     const pNomeOk = pNome.trim().length > 0;
-    const pWppOk = pWpp.replace(/D/g, "").length >= 10;
+    const pWppOk = pWpp.replace(/\D/g, "").length >= 10;
     setErrPNome(!pNomeOk);
     setErrPWpp(!pWppOk);
 
     // Validate client
     const nomeOk = nomeCliente.trim().length > 0;
-    const wppOk = wppCliente.replace(/D/g, "").length >= 10;
+    const wppOk = wppCliente.replace(/\D/g, "").length >= 10;
     setErrNomeC(!nomeOk);
     setErrWppC(!wppOk);
 
@@ -229,7 +229,7 @@ export default function Indicacoes() {
     try {
       await supabase.from("leads").insert({
         nome: nomeCliente.trim(),
-        celular: wppCliente.replace(/D/g, ""),
+        celular: wppCliente.replace(/\D/g, ""),
         tipo_consorcio: `${CATEGORIAS.find(c => c.id === categoria)?.label || categoria} (G: ${g.grupo} - ${isLinear ? 'Linear' : '50/50'})`,
         valor_credito: g.credito,
         prazo_meses: g.prazo,
@@ -238,7 +238,7 @@ export default function Indicacoes() {
         lead_temperatura: "quente",
         organizacao_id: orgParam,
         indicador_nome: pNome.trim(),
-        indicador_celular: pWpp.replace(/D/g, ""),
+        indicador_celular: pWpp.replace(/\D/g, ""),
         origem: "indicacao"
       });
     } catch (e) { console.warn("Supabase:", e); }
