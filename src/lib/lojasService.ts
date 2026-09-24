@@ -159,7 +159,20 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
   const valorCredito = parseBRLValue(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
   const origemStr = normalizeStr(lead.origem || dc.origem || "");
   const canalStr = normalizeStr(lead.canal || dc.canal || dc.tipo_venda || "");
-  
+  const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
+  const indicadorInfoStr = normalizeStr(
+    lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
+    dc.indicador_nome || dc.indicador || dc.indicacao || dc.indicado_por || dc.quem_indicou || ""
+  );
+  const vendedorStr = normalizeStr(
+    lead.vendedor || lead.vendedora || lead.responsavel || lead.responsavel_nome || lead.consultor || lead.consultora || lead.user || lead.usuario ||
+    dc.vendedor || dc.vendedora || dc.responsavel || dc.responsavel_nome || dc.consultor || dc.consultora || dc.user || dc.usuario || ""
+  );
+  const filialText = normalizeStr(
+    lead.filial_nome || lead.filial || lead.loja || lead.unidade ||
+    dc.filial_nome || dc.filial || dc.loja || dc.unidade || ""
+  );
+
   const isGestorSale = 
     Boolean(lead.is_venda_gestor) || 
     Boolean(dc.is_venda_gestor) || 
@@ -190,20 +203,6 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     );
     if (matched) return matched;
   }
-
-  const leadName = normalizeStr(lead.nome || lead.cliente_nome || dc.nome_cliente || dc.nome || "");
-  const indicadorInfoStr = normalizeStr(
-    lead.indicador_nome || lead.indicador || lead.indicacao || lead.indicado_por || lead.quem_indicou ||
-    dc.indicador_nome || dc.indicador || dc.indicacao || dc.indicado_por || dc.quem_indicou || ""
-  );
-  const vendedorStr = normalizeStr(
-    lead.vendedor || lead.vendedora || lead.responsavel || lead.responsavel_nome || lead.consultor || lead.consultora || lead.user || lead.usuario ||
-    dc.vendedor || dc.vendedora || dc.responsavel || dc.responsavel_nome || dc.consultor || dc.consultora || dc.user || dc.usuario || ""
-  );
-  const filialText = normalizeStr(
-    lead.filial_nome || lead.filial || lead.loja || lead.unidade ||
-    dc.filial_nome || dc.filial || dc.loja || dc.unidade || ""
-  );
 
   // 2. OVERRIDES DE CLIENTES / VENDEDORAS / INDICAÇÕES ESPECÍFICAS
   // Canoinhas (646) - Karine / Carine / Angelo / Lucas Matias
