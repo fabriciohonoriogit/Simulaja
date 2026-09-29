@@ -253,9 +253,9 @@ export default function JarvisHUDPage() {
 
           <div className="space-y-1 bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
             <span className="text-[10px] text-slate-500 uppercase font-bold flex items-center gap-1">
-              <Trophy className="h-3 w-3 text-amber-400" /> Cotas em Lance Fixo
+              <Search className="h-3 w-3 text-amber-400" /> Leads no Funil
             </span>
-            <p className="text-xl font-black text-amber-400">{vitals.cotasLanceFixo} Cotas Ativas</p>
+            <p className="text-xl font-black text-amber-400">{vitals.totalLeads} Leads Ativos</p>
           </div>
 
           <div className="space-y-1 bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
@@ -286,7 +286,7 @@ export default function JarvisHUDPage() {
         </div>
 
         {/* Center Column: Interactive 3D Orb & Voice Prompt */}
-        <div className="col-span-12 lg:col-span-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 flex flex-col items-center justify-between relative backdrop-blur-md min-h-[450px]">
+        <div className="col-span-12 lg:col-span-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 flex flex-col items-center justify-between relative backdrop-blur-md min-h-[550px]">
           <div className="text-center space-y-1">
             <span className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center justify-center gap-2">
               <Zap className="h-4 w-4 fill-cyan-400 text-cyan-400" /> Sua Voz é a Interface
@@ -294,8 +294,8 @@ export default function JarvisHUDPage() {
             <p className="text-xs text-slate-500">Fale com a Bella IA ou execute comandos por texto</p>
           </div>
 
-          {/* Orbe 3D Central (Three.js) */}
-          <div className="my-auto w-64 h-64 flex items-center justify-center relative">
+          {/* Orbe 3D Central (Three.js - Tamanho Aumentado) */}
+          <div className="my-auto w-80 h-80 sm:w-96 sm:h-96 lg:w-[480px] lg:h-[480px] flex items-center justify-center relative transition-all duration-500">
             <JarvisOrb state={orbState} theme="cobalt" />
           </div>
 
