@@ -197,10 +197,10 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
       const wantsSemSeguro = lower.includes("sem seguro");
       const wantsComSeguro = lower.includes("com seguro");
 
-      if (lower.includes("50/50") || lower.includes("cinquenta")) {
-        if (wantsSemSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela SEM SEGURO: ${p50SemSeguro}/mês.`;
-        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela COM SEGURO: ${p50ComSeguro}/mês.`;
-        return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
+      if (lower.includes("50/50") || lower.includes("cinquenta") || lower.includes("meia")) {
+        if (wantsSemSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 (Meia Parcela) SEM SEGURO: ${p50SemSeguro}/mês.`;
+        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 (Meia Parcela) COM SEGURO: ${p50ComSeguro}/mês.`;
+        return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): 50/50 (Meia Parcela) Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
       }
 
       if (lower.includes("linear") || lower.includes("100%")) {
@@ -210,10 +210,10 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
       }
 
       if (lower.includes("gold")) {
-        return `[Segmento: ${segmento}] Crédito ${credFmt} (Plano Gold - Grupo ${closest.grupo}): Parcela Gold Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
+        return `[Segmento: ${segmento}] Crédito ${credFmt} (Plano Gold - Grupo ${closest.grupo}): Parcela 50/50 (Meia Parcela) Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
       }
 
-      return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela Com Seguro: ${p50ComSeguro}/mês (Sem Seguro: ${p50SemSeguro}/mês) | Linear Com Seguro: ${p100ComSeguro}/mês (Sem Seguro: ${p100SemSeguro}/mês).`;
+      return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 (Meia Parcela Sem Seguro): ${p50SemSeguro}/mês | Parcela Linear (Integral Sem Seguro): ${p100SemSeguro}/mês.`;
     }
   }
 

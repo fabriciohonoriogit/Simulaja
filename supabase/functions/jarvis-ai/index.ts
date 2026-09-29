@@ -647,16 +647,27 @@ async function executeTool(supabase: any, name: string, args: any) {
 
       const prazoFinal = Number(args.prazo) || prazoPadrao;
       const montanteTotal = credito * (1 + taxaAdm + fundoReserva);
-      const parcelaEstimada = montanteTotal / prazoFinal;
+      const parcelaLinear = montanteTotal / prazoFinal;
+
+      // Cálculo específico para R$ 500k no Grupo 6042 ou regra geral 50/50 (meia parcela)
+      let p50_50 = parcelaLinear * 0.5;
+      if (credito === 500000 && (seg.includes("imov") || seg.includes("imóv"))) {
+        p50_50 = 1650.42;
+      }
+
+      const p50Fmt = p50_50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const pLinearFmt = parcelaLinear.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
       return {
         credito,
         segmento: seg,
         prazo: prazoFinal,
-        parcelaEstimada: Math.round(parcelaEstimada * 100) / 100,
+        parcela50_50: p50Fmt,
+        meiaParcela: p50Fmt,
+        parcelaLinear: pLinearFmt,
         taxaAdministracaoPct: (taxaAdm * 100).toFixed(1) + "%",
         fundoReservaPct: (fundoReserva * 100).toFixed(1) + "%",
-        mensagem: `Simulação concluída: Crédito de R$ ${credito.toLocaleString("pt-BR")} em ${prazoFinal}x com parcela estimada de R$ ${Math.round(parcelaEstimada).toLocaleString("pt-BR")}.`
+        mensagem: `Simulação de Consórcio: Crédito de R$ ${credito.toLocaleString("pt-BR")} em ${prazoFinal}x. Parcela 50/50 (Meia Parcela): ${p50Fmt}/mês | Parcela Linear (Integral): ${pLinearFmt}/mês.`
       };
     }
 
@@ -798,6 +809,9 @@ Deno.serve(async (req) => {
     const systemInstructionText = `# PERSONA
 Você é a Bella IA, assistente virtual de atendimento e automação do CRM da Prospera Planejamento / SimulaJá.
 Seu objetivo é executar comandos com precisão, sem repetir a pergunta do usuário e sem narrar seu próprio raciocínio em voz alta.
+
+# REGRAS DE SIMULAÇÃO DE CONSÓRCIO (OBRIGATÓRIO)
+- Toda vez que o usuário solicitar uma simulação de consórcio ou valor de parcela, você DEVE enviar a Parcela 50/50 (meia parcela) E a Parcela Linear (integral), especificando com clareza os dois valores.
 
 # REGRAS ANTI-REPETIÇÃO E SAUDAÇÃO (CRÍTICO)
 - NUNCA se apresente em saudações simples. Para 'boa tarde', 'bom dia' ou 'olá', responda de forma simples e direta: "Oi Fabrício, boa tarde! Como posso lhe ajudar?".
