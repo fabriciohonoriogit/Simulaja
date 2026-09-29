@@ -224,6 +224,18 @@ const tools = [
             status: { type: "STRING", description: "Status opcional das propostas." }
           }
         }
+      },
+      {
+        name: "auditar_sorteio_loteria",
+        description: "Audita o número sorteado da Loteria Federal em relação às cotas ativas dos clientes na carteira do CRM (calcula cota sorteada por grupo, aponta ganhadores do sorteio, lances fixos contemplados e probabilidade alta).",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            numero_loteria: { type: "STRING", description: "O número extraído da Loteria Federal (ex: '25812' ou '025812')." },
+            administradora: { type: "STRING", description: "Filtro de administradora opcional (ex: 'MAGALU', 'ADEMICON', 'TODAS')." }
+          },
+          required: ["numero_loteria"]
+        }
       }
     ]
   }
@@ -257,8 +269,55 @@ async function executeTool(supabase: any, name: string, args: any) {
       }
     }
 
-    const useAdmin = Boolean(adminClient && orgId);
-    const dbClient = adminClient || client;
+    if (name === "auditar_sorteio_loteria") {
+      const { numero_loteria, administradora = "TODAS" } = args;
+      const lotId = parseInt(numero_loteria.replace(/\D/g, ''));
+      if (isNaN(lotId)) return { error: "Número da Loteria Federal inválido." };
+
+      let query = dbClient.from("carteira").select("*");
+      if (useAdmin) query = query.eq("organizacao_id", orgId);
+      const { data: carteira } = await query;
+
+      const groupMap: Record<string, number> = {
+        "6035": 2500, "6037": 2500, "6038": 2500, "6039": 3100, "6040": 3100, "6041": 3100, "6042": 4300, "6043": 4300,
+        "5297": 2500, "5295": 2500, "5294": 2500, "5292": 2500, "5291": 1800, "5290": 1800, "5288": 1800, "5287": 1800,
+        "5286": 2500, "5284": 1800, "5282": 2500, "5281": 1800, "5278": 1800, "5277": 1800, "5275": 2500, "5274": 1800,
+        "5272": 1800, "5271": 1800, "5268": 2500, "5267": 1800, "5264": 1800, "5263": 1800, "5260": 1800, "5259": 2500,
+        "5257": 1800, "5251": 2500, "5247": 1800, "5245": 1800, "5243": 2500, "5242": 2500, "5240": 2500,
+        "5296": 1800, "5293": 1800, "5289": 1800, "5285": 1800, "5283": 1800, "5280": 1800, "5276": 1800, "5273": 1800,
+        "5270": 1800, "5266": 1800, "5265": 1800, "5261": 1800, "5999": 1800, "5998": 1800, "5997": 1800, "5996": 1800
+      };
+
+      const winners: any[] = [];
+      (carteira || []).forEach((c: any) => {
+        if (!c.grupo || !c.cota) return;
+        const adminName = (c.administradora || "").toUpperCase();
+        if (administradora !== "TODAS" && !adminName.includes(administradora.toUpperCase())) return;
+
+        const totalCot = groupMap[c.grupo] || 600;
+        const calcBasis = adminName.includes("ADEMICON") ? (lotId % 10000) : lotId;
+        const winCota = calcBasis % totalCot === 0 ? totalCot : calcBasis % totalCot;
+        const clientCotaNum = Number(c.cota.replace(/\D/g, ''));
+        if (clientCotaNum === 0) return;
+
+        const diff = Math.min(Math.abs(clientCotaNum - winCota), totalCot - Math.abs(clientCotaNum - winCota));
+
+        if (clientCotaNum === winCota) {
+          winners.push({ nome: c.nome, grupo: c.grupo, cota: c.cota, administradora: c.administradora, tipo: "SORTEIO_GANHADOR", cotaSorteada: winCota });
+        } else if (diff <= 10 && c.protocolo_lance_fixo === "SIM") {
+          winners.push({ nome: c.nome, grupo: c.grupo, cota: c.cota, administradora: c.administradora, tipo: "LANCE_FIXO_CONTEMPLADO", cotaSorteada: winCota, diferenca: diff });
+        } else if (diff <= 10) {
+          winners.push({ nome: c.nome, grupo: c.grupo, cota: c.cota, administradora: c.administradora, tipo: "PROBABILIDADE_ALTA", cotaSorteada: winCota, diferenca: diff });
+        }
+      });
+
+      return {
+        numero_loteria: numero_loteria,
+        total_clientes_analisados: (carteira || []).length,
+        destaques_encontrados: winners.length,
+        ganhadores: winners
+      };
+    }
 
     if (name === "get_dashboard_metrics") {
       let leadsQuery = dbClient.from('leads').select('*', { count: 'exact', head: true });

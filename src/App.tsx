@@ -20,6 +20,7 @@ import ProtectedRoute from "./components/admin/ProtectedRoute";
 import SimuladorAdmin from "./pages/admin/SimuladorAdmin";
 import Agendamentos from "./pages/admin/Agendamentos";
 import Jarvis from "./pages/admin/Jarvis";
+import JarvisHUDPage from "./pages/admin/JarvisHUDPage";
 import Settings from "./pages/admin/Settings";
 import Register from "./pages/admin/Register";
 import ResetPassword from "./pages/admin/ResetPassword";
@@ -81,6 +82,7 @@ const AppContent = () => {
           <Route path="leads" element={<Leads />} />
           <Route path="metas" element={<Metas />} />
           <Route path="jarvis" element={<Jarvis />} />
+          <Route path="jarvis-hud" element={<JarvisHUDPage />} />
           <Route path="carteira" element={<Carteira />} />
           <Route path="inadimplentes" element={<Inadimplentes />} />
           <Route path="comissoes" element={<Comissoes />} />

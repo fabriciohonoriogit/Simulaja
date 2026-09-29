@@ -3,7 +3,7 @@ import { Profile, OrganizationRow } from "@/types";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Filter, Users, LogOut, Target, Briefcase, AlertTriangle, Menu, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Calculator, CalendarDays, Sparkles, Settings, MessageSquare, RefreshCw, FileText } from "lucide-react";
+import { LayoutDashboard, Filter, Users, LogOut, Target, Briefcase, AlertTriangle, Menu, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Calculator, CalendarDays, Sparkles, Zap, Settings, MessageSquare, RefreshCw, FileText } from "lucide-react";
 import { Suspense } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,7 @@ const menuGroups: MenuGroup[] = [
         label: "SUPORTE / IA",
         items: [
             { icon: Sparkles, label: "Bella IA", path: "/admin/jarvis", color: "text-purple-500" },
+            { icon: Zap, label: "Jarvis OS (HUD)", path: "/admin/jarvis-hud", color: "text-cyan-400" },
         ]
     }
 ];
