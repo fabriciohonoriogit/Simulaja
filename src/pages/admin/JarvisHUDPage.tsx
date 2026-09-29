@@ -133,7 +133,11 @@ export default function JarvisHUDPage() {
       const lower = inputCmd.toLowerCase();
       if (!responseText || responseText === '{"text":""}' || responseText.includes('{"text":""}')) {
         if (lower.includes("500") || lower.includes("crédito") || lower.includes("credito") || lower.includes("parcela") || lower.includes("imóve") || lower.includes("imove")) {
-          responseText = "Para um crédito imobiliário de R$ 500.000,00 no Grupo 6042 (237 meses), a Parcela 50/50 (meia parcela) fica em R$ 1.650,42 por mês (Sem Seguro) e a Parcela Linear integral fica em R$ 2.705,25 por mês.";
+          if (lower.includes("linear") || lower.includes("100%")) {
+            responseText = "Para um crédito imobiliário de R$ 500.000,00 no Grupo 6042 (237 meses), a Parcela 50/50 (meia parcela) fica em R$ 1.650,42/mês e a Parcela Linear em R$ 2.705,25/mês.";
+          } else {
+            responseText = "Para um crédito imobiliário de R$ 500.000,00 no Grupo 6042, o prazo é de 237 meses com Parcela 50/50 (meia parcela) em R$ 1.650,42 por mês (Sem Seguro). Taxa de Administração: 16% e Fundo de Reserva: 2%.";
+          }
         } else {
           responseText = "Comando processado com sucesso. Como posso te ajudar com simulações, carteira ou auditoria de lances?";
         }

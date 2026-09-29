@@ -213,7 +213,7 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
         return `[Segmento: ${segmento}] Crédito ${credFmt} (Plano Gold - Grupo ${closest.grupo}): Parcela 50/50 (Meia Parcela) Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
       }
 
-      return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 (Meia Parcela Sem Seguro): ${p50SemSeguro}/mês | Parcela Linear (Integral Sem Seguro): ${p100SemSeguro}/mês.`;
+      return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo}): Prazo de ${closest.prazo} meses. Parcela 50/50 (Meia Parcela Sem Seguro): ${p50SemSeguro}/mês. Taxa de Adm: ${closest.txLinear || closest.tx || 16}% | Fundo de Reserva: ${closest.fundoReserva || 2}%.`;
     }
   }
 

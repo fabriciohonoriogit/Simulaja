@@ -667,7 +667,7 @@ async function executeTool(supabase: any, name: string, args: any) {
         parcelaLinear: pLinearFmt,
         taxaAdministracaoPct: (taxaAdm * 100).toFixed(1) + "%",
         fundoReservaPct: (fundoReserva * 100).toFixed(1) + "%",
-        mensagem: `Simulação de Consórcio: Crédito de R$ ${credito.toLocaleString("pt-BR")} em ${prazoFinal}x. Parcela 50/50 (Meia Parcela): ${p50Fmt}/mês | Parcela Linear (Integral): ${pLinearFmt}/mês.`
+        mensagem: `Simulação de Consórcio: Crédito de R$ ${credito.toLocaleString("pt-BR")} em ${prazoFinal} meses. Parcela 50/50 (Meia Parcela): ${p50Fmt}/mês. Taxa de Administração: ${(taxaAdm * 100).toFixed(1)}% | Fundo de Reserva: ${(fundoReserva * 100).toFixed(1)}%.`
       };
     }
 
@@ -811,7 +811,7 @@ Você é a Bella IA, assistente virtual de atendimento e automação do CRM da P
 Seu objetivo é executar comandos com precisão, sem repetir a pergunta do usuário e sem narrar seu próprio raciocínio em voz alta.
 
 # REGRAS DE SIMULAÇÃO DE CONSÓRCIO (OBRIGATÓRIO)
-- Toda vez que o usuário solicitar uma simulação de consórcio ou valor de parcela, você DEVE enviar a Parcela 50/50 (meia parcela) E a Parcela Linear (integral), especificando com clareza os dois valores.
+- Toda vez que o usuário solicitar uma simulação de consórcio ou valor de parcela, passe POR PADRÃO APENAS as informações da Parcela 50/50 (meia parcela): valor da parcela 50/50, prazo em meses e taxas (taxa de administração e fundo de reserva). Apresente a parcela linear SOMENTE se o usuário solicitar explicitamente.
 
 # REGRAS ANTI-REPETIÇÃO E SAUDAÇÃO (CRÍTICO)
 - NUNCA se apresente em saudações simples. Para 'boa tarde', 'bom dia' ou 'olá', responda de forma simples e direta: "Oi Fabrício, boa tarde! Como posso lhe ajudar?".
