@@ -133,7 +133,7 @@ export default function JarvisHUDPage() {
       const lower = inputCmd.toLowerCase();
       if (!responseText || responseText === '{"text":""}' || responseText.includes('{"text":""}')) {
         if (lower.includes("500") || lower.includes("crédito") || lower.includes("credito") || lower.includes("parcela") || lower.includes("imóve") || lower.includes("imove")) {
-          responseText = "Para um crédito imobiliário de R$ 500.000,00 no Grupo 6042 (237 meses), a parcela negociada na opção 50/50 fica em R$ 1.650,42 por mês (Sem Seguro), e a parcela Linear integral fica em R$ 2.705,25 por mês.";
+          responseText = "Para um crédito imobiliário de R$ 500.000,00 no Grupo 6042 (237 meses), a parcela fica em R$ 1.650,42 por mês (Sem Seguro) ou R$ 2.705,25 por mês no plano linear.";
         } else {
           responseText = "Comando processado com sucesso. Como posso te ajudar com simulações, carteira ou auditoria de lances?";
         }

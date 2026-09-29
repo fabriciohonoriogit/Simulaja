@@ -80,7 +80,7 @@ export function normalizeTextForSpeech(text: string): string {
     .replace(/R\$\s*500mil/gi, "quinhentos mil reais")
     .replace(/R\$\s*1\.650,42/gi, "mil seiscentos e cinquenta reais e quarenta e dois centavos")
     .replace(/R\$\s*2\.705,25/gi, "dois mil setecentos e cinco reais e vinte e cinco centavos")
-    .replace(/50\/50/gi, "cinquenta por cinquenta")
+    .replace(/50\/50|meia parcela/gi, "")
     .replace(/237\s*meses/gi, "duzentos e trinta e sete meses")
     .replace(/R\$\s*([\d\.]+),(\d{2})/gi, (_, intVal, cents) => {
       const num = intVal.replace(/\./g, "");
