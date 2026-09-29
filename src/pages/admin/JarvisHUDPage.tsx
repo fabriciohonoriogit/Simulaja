@@ -17,7 +17,10 @@ import {
   AlertTriangle,
   RefreshCw,
   Search,
-  Volume2
+  Volume2,
+  VolumeX,
+  Play,
+  Sun
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
@@ -26,10 +29,11 @@ export default function JarvisHUDPage() {
   const [orbState, setOrbState] = useState<OrbState>("idle");
   const [command, setCommand] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
   const [logs, setLogs] = useState<Array<{ id: string; time: string; tag: string; text: string; color: string }>>([
-    { id: "1", time: "16:45", tag: "SISTEMA", text: "Jarvis OS inicializado com sucesso. Conectado ao Supabase.", color: "text-cyan-400" },
+    { id: "1", time: "16:45", tag: "SISTEMA", text: "Jarvis OS 2.0 ativo. Síntese de voz e auditoria em tempo real prontas.", color: "text-cyan-400" },
     { id: "2", time: "16:46", tag: "COFRE 3CÉREBROS", text: "Indexação vetorial de clientes e cotas concluída.", color: "text-emerald-400" },
-    { id: "3", time: "16:48", tag: "LOTERIA FEDERAL", text: "Grupo 6042 reajustado para 4.300 cotas. Auditoria ativa.", color: "text-amber-400" },
+    { id: "3", time: "16:48", tag: "LOTERIA FEDERAL", text: "Grupo 6042 (4.300 cotas) pronto para auditoria automática.", color: "text-amber-400" },
   ]);
 
   const [vitals, setVitals] = useState({
@@ -73,9 +77,22 @@ export default function JarvisHUDPage() {
     loadVitals();
   }, [profile?.organizacao_id]);
 
-  const handleSendCommand = async () => {
-    if (!command.trim() || isProcessing) return;
-    const inputCmd = command;
+  const speakResponse = (text: string) => {
+    if (!audioEnabled || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/[*_#`~]/g, "").slice(0, 300);
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = "pt-BR";
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
+    utterance.onstart = () => setOrbState("speaking");
+    utterance.onend = () => setOrbState("idle");
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleSendCommand = async (presetText?: string) => {
+    const inputCmd = presetText || command;
+    if (!inputCmd.trim() || isProcessing) return;
     setCommand("");
     setIsProcessing(true);
     setOrbState("thinking");
@@ -92,16 +109,15 @@ export default function JarvisHUDPage() {
       });
 
       if (error) throw error;
-      setOrbState("speaking");
 
-      const responseText = data?.reply || data?.response || JSON.stringify(data);
+      const responseText = data?.reply || data?.response || (typeof data === "string" ? data : JSON.stringify(data));
       
       setLogs(prev => [
         { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS OS", text: responseText, color: "text-cyan-400" },
         ...prev
       ]);
 
-      setTimeout(() => setOrbState("idle"), 4000);
+      speakResponse(responseText);
     } catch (e: any) {
       setLogs(prev => [
         { id: (Date.now() + 1).toString(), time: timeStr, tag: "ERRO", text: e.message || "Erro ao processar instrução.", color: "text-rose-400" },
@@ -113,12 +129,23 @@ export default function JarvisHUDPage() {
     }
   };
 
+  const handleMorningBriefing = () => {
+    const briefingText = `Bom dia! Hoje acumulamos ${formatCurrency(vitals.vendasMes)} em crédito na carteira, com estimativa de ${formatCurrency(vitals.comissoesEstimadas)} em comissões. Temos ${vitals.cotasLanceFixo} cotas ativas com Lance Fixo e o Grupo 6042 reajustado para 4.300 cotas.`;
+    const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+    setLogs(prev => [
+      { id: Date.now().toString(), time: timeStr, tag: "BRIEFING DIÁRIO", text: briefingText, color: "text-emerald-400 font-bold" },
+      ...prev
+    ]);
+
+    speakResponse(briefingText);
+  };
+
   const toggleMic = () => {
     if (orbState === "listening") {
       setOrbState("idle");
     } else {
       setOrbState("listening");
-      // Voz simulada ou integração nativa Web Speech
       if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
@@ -127,6 +154,7 @@ export default function JarvisHUDPage() {
           const text = event.results[0][0].transcript;
           setCommand(text);
           setOrbState("thinking");
+          handleSendCommand(text);
         };
         recognition.start();
       }
@@ -149,12 +177,16 @@ export default function JarvisHUDPage() {
             <p className="text-[10px] text-slate-500 uppercase tracking-widest">Interface Unificada & Engine de Execução por Voz</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+          <button 
+            onClick={() => setAudioEnabled(!audioEnabled)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-bold transition-all border ${audioEnabled ? 'bg-cyan-950/60 text-cyan-300 border-cyan-500/40' : 'bg-slate-900 text-slate-500 border-slate-800'}`}
+          >
+            {audioEnabled ? <Volume2 className="h-3.5 w-3.5 text-cyan-400" /> : <VolumeX className="h-3.5 w-3.5 text-slate-500" />}
+            {audioEnabled ? "Voz Ativa" : "Mudo"}
+          </button>
           <span className="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/20 px-3 py-1 rounded-full text-emerald-400 font-bold">
             <Radio className="h-3.5 w-3.5 animate-pulse" /> ONLINE
-          </span>
-          <span className="flex items-center gap-1.5 bg-blue-950/40 border border-blue-500/20 px-3 py-1 rounded-full text-blue-300 font-bold">
-            <Database className="h-3.5 w-3.5 text-blue-400" /> COFRE PERSISTENTE
           </span>
           <span className="font-black text-slate-200 bg-slate-900 border border-slate-800 px-3 py-1 rounded-full">
             {new Date().toLocaleTimeString("pt-BR")}
@@ -166,7 +198,7 @@ export default function JarvisHUDPage() {
       <div className="grid grid-cols-12 gap-6 flex-1 relative z-10">
         
         {/* Left Column: Vitais Vivas */}
-        <div className="col-span-12 lg:col-span-3 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 flex flex-col gap-5 backdrop-blur-md">
+        <div className="col-span-12 lg:col-span-3 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 flex flex-col gap-4 backdrop-blur-md">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Activity className="h-4 w-4 text-cyan-400" /> Vitais do CRM
@@ -176,7 +208,7 @@ export default function JarvisHUDPage() {
 
           <div className="space-y-1 bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
             <span className="text-[10px] text-slate-500 uppercase font-bold flex items-center gap-1">
-              <TrendingUp className="h-3 w-3 text-cyan-400" /> Crédito Comercializado (Mês)
+              <TrendingUp className="h-3 w-3 text-cyan-400" /> Crédito Comercializado
             </span>
             <p className="text-xl font-black text-cyan-300">{formatCurrency(vitals.vendasMes)}</p>
           </div>
@@ -190,7 +222,7 @@ export default function JarvisHUDPage() {
 
           <div className="space-y-1 bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
             <span className="text-[10px] text-slate-500 uppercase font-bold flex items-center gap-1">
-              <Trophy className="h-3 w-3 text-amber-400" /> Cotas com Lance Fixo
+              <Trophy className="h-3 w-3 text-amber-400" /> Cotas em Lance Fixo
             </span>
             <p className="text-xl font-black text-amber-400">{vitals.cotasLanceFixo} Cotas Ativas</p>
           </div>
@@ -201,6 +233,25 @@ export default function JarvisHUDPage() {
             </span>
             <p className="text-xl font-black text-rose-400">{vitals.inadimplentesCount} Clientes</p>
           </div>
+
+          {/* Quick Actions / Preset Pills */}
+          <div className="pt-2 border-t border-slate-800/80 space-y-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Ações Rápidas</span>
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                onClick={handleMorningBriefing}
+                className="p-2 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 text-emerald-300 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-colors"
+              >
+                <Sun className="h-3 w-3 text-amber-400" /> Briefing
+              </button>
+              <button 
+                onClick={() => handleSendCommand("Auditar sorteio da Loteria Federal número 25812 no grupo 6042")}
+                className="p-2 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/30 text-amber-300 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 transition-colors"
+              >
+                <Trophy className="h-3 w-3 text-amber-400" /> Sorteio 6042
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Center Column: Interactive 3D Orb & Voice Prompt */}
@@ -209,7 +260,7 @@ export default function JarvisHUDPage() {
             <span className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center justify-center gap-2">
               <Zap className="h-4 w-4 fill-cyan-400 text-cyan-400" /> Sua Voz é a Interface
             </span>
-            <p className="text-xs text-slate-500">Fale com a Bella IA ou execute comandos rápidos</p>
+            <p className="text-xs text-slate-500">Fale com a Bella IA ou execute comandos por texto</p>
           </div>
 
           {/* Orbe 3D Central (Three.js) */}
@@ -236,7 +287,7 @@ export default function JarvisHUDPage() {
                 <Mic className="h-4 w-4" />
               </button>
               <button 
-                onClick={handleSendCommand}
+                onClick={() => handleSendCommand()}
                 disabled={isProcessing || !command.trim()}
                 className="p-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-slate-950 font-bold rounded-lg transition-colors"
                 title="Enviar Instrução"
