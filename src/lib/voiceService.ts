@@ -1,4 +1,4 @@
-// Helper para carregar e selecionar vozes humanas com sensibilidade e alta naturalidade no Web Speech API
+// Helper para carregar e selecionar vozes humanas de altíssima qualidade (Neural/Natural) no Web Speech API
 
 let availableVoices: SpeechSynthesisVoice[] = [];
 
@@ -16,7 +16,7 @@ export function initVoices(onLoaded?: (voices: SpeechSynthesisVoice[]) => void) 
   }
 }
 
-export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
+export function getBestPtBrVoice(): SpeechSynthesisVoice | null {
   if (typeof window === "undefined" || !window.speechSynthesis) return null;
   
   if (availableVoices.length === 0) {
@@ -29,60 +29,69 @@ export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
 
   if (ptVoices.length === 0) return null;
 
-  // Nomes de vozes femininas neurais prioritárias com alta sensibilidade e dicção humana natural
-  const priorityFemaleVoices = [
-    "francisca", // Microsoft Francisca Online (Natural) - PT-BR (Altíssima qualidade e empatia)
-    "thalita",   // Microsoft Thalita Online (Natural) - PT-BR
+  // Vozes com tecnologia Neural / Natural no Windows, Chrome, Edge, Safari e Android
+  const priorityVoices = [
+    "francisca",       // Microsoft Francisca Online (Natural) - PT-BR (Empática e aveludada)
+    "thalita",         // Microsoft Thalita Online (Natural) - PT-BR
+    "antonio",         // Microsoft Antonio Online (Natural) - PT-BR (Masculino Humano)
+    "fabio",           // Microsoft Fabio Online (Natural) - PT-BR
     "giovanna",
     "luciana",
     "vitória",
     "vitoria",
-    "camila",
+    "google português do brasil",
+    "brazil female",
     "leticia",
     "letícia",
     "heloisa",
     "heloísa",
-    "maria",
-    "yalda",
-    "fernanda",
-    "google português do brasil",
-    "brazil female",
-    "female",
-    "zira",
+    "daniel"
   ];
 
-  const maleKeywords = [
-    "daniel",
-    "ricardo",
-    "helder",
-    "antonio",
-    "antônio",
-    "thiago",
-    "guilherme",
-    "felipe",
-    "humberto",
-    "julio",
-    "júlio",
-    "david",
-    "george",
-    "male",
-    "masculino",
-  ];
-
-  // 1. Procura pelas vozes neurais prioritárias em português
-  for (const keyword of priorityFemaleVoices) {
+  for (const keyword of priorityVoices) {
     const found = ptVoices.find((v) => v.name.toLowerCase().includes(keyword));
     if (found) return found;
   }
 
-  // 2. Se não achou na lista prioritária, seleciona qualquer voz em PT que NÃO seja masculina
-  const nonMale = ptVoices.find(
-    (v) => !maleKeywords.some((m) => v.name.toLowerCase().includes(m))
-  );
-  if (nonMale) return nonMale;
-
-  // 3. Fallback: primeira voz em português
   return ptVoices[0] || null;
+}
+
+export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
+  return getBestPtBrVoice();
+}
+
+export function normalizeTextForSpeech(text: string): string {
+  if (!text) return "";
+
+  let cleaned = text
+    .replace(/```json[\s\S]*?```/g, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/\{[\s\S]*?\}/g, "")
+    .replace(/[*_#`~{}]/g, "")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F300}-\u{1F5FF}]/gu, "")
+    .replace(/🚀|✨|🏆|💡|📊|🤖|✴|●|🟢|⚠️|[\u2000-\u3300]/g, "")
+    .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, "");
+
+  // Converte valores monetários, porcentagens e jargões para pronúncia humana fluida
+  cleaned = cleaned
+    .replace(/R\$\s*500\.000,00/gi, "quinhentos mil reais")
+    .replace(/R\$\s*500\.000/gi, "quinhentos mil reais")
+    .replace(/R\$\s*500mil/gi, "quinhentos mil reais")
+    .replace(/R\$\s*1\.650,42/gi, "mil seiscentos e cinquenta reais e quarenta e dois centavos")
+    .replace(/R\$\s*2\.705,25/gi, "dois mil setecentos e cinco reais e vinte e cinco centavos")
+    .replace(/50\/50/gi, "cinquenta por cinquenta")
+    .replace(/237\s*meses/gi, "duzentos e trinta e sete meses")
+    .replace(/R\$\s*([\d\.]+),(\d{2})/gi, (_, intVal, cents) => {
+      const num = intVal.replace(/\./g, "");
+      return `${num} reais e ${cents} centavos`;
+    })
+    .replace(/R\$\s*([\d\.]+)/gi, (_, intVal) => {
+      const num = intVal.replace(/\./g, "");
+      return `${num} reais`;
+    });
+
+  return cleaned.replace(/\s+/g, " ").trim();
 }
 
 export function speakBellaText(
@@ -96,28 +105,18 @@ export function speakBellaText(
     return;
   }
 
-  // Limpa Emojis, caracteres técnicos, blocos JSON, URLs e formatações markdown
-  const cleanText = text
-    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F300}-\u{1F5FF}]/gu, "")
-    .replace(/🚀|✨|🏆|💡|📊|🤖|✴|●|🟢|⚠️|[\u2000-\u3300]/g, "")
-    .replace(/```json[\s\S]*?```/g, "")
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/\{[\s\S]*?\}/g, "")
-    .replace(/[*_#`~{}]/g, "")
-    .replace(/foguete|emoji/gi, "")
-    .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, "")
-    .replace(/https?:\/\/\S+/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  const cleanText = normalizeTextForSpeech(text);
 
   if (!cleanText || cleanText.length < 2) {
     if (onEnd) onEnd();
     return;
   }
 
-  window.speechSynthesis.cancel();
+  try {
+    window.speechSynthesis.cancel();
+  } catch (e) {}
 
-  // Divide o texto em frases para permitir entonação suave, sensível e pausas humanas naturais
+  // Divide o texto em frases com pontuação para respiração natural
   const sentences = cleanText
     .split(/(?<=[.!?])\s+/)
     .filter((s) => s.trim().length > 0);
@@ -127,7 +126,7 @@ export function speakBellaText(
     return;
   }
 
-  const voice = customVoice || getBestFemaleVoice();
+  const voice = customVoice || getBestPtBrVoice();
   let currentIndex = 0;
 
   const speakNextSentence = () => {
@@ -144,10 +143,9 @@ export function speakBellaText(
       msg.voice = voice;
     }
 
-    // Configuração de tom humano quente, natural e sensível (prosódia orgânica)
-    // Ritmo próximo ao da fala humana empática (1.02) e tom de voz aveludado (1.12)
-    msg.rate = 1.02;
-    msg.pitch = 1.12;
+    // Parâmetros para voz humana aveludada, ritmada e calorosa
+    msg.rate = 1.0;   // Velocidade natural de conversa humana
+    msg.pitch = 1.02; // Tom equilibrado e agradável
 
     if (currentIndex === 0 && onStart) {
       msg.onstart = () => onStart();
@@ -155,8 +153,8 @@ export function speakBellaText(
 
     msg.onend = () => {
       currentIndex++;
-      // Adiciona uma micro-pausa sensível entre frases (120ms) para respiro natural
-      setTimeout(speakNextSentence, 120);
+      // Micro-pausa de respiração de 100ms entre frases
+      setTimeout(speakNextSentence, 100);
     };
 
     msg.onerror = () => {
@@ -171,10 +169,5 @@ export function speakBellaText(
     }
   };
 
-  try {
-    window.speechSynthesis.cancel();
-  } catch (e) {}
-
   speakNextSentence();
 }
-

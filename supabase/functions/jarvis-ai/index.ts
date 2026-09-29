@@ -970,12 +970,15 @@ Ao concluir tarefas de boleto, responda apenas com:
         });
         continue;
       } else {
-        const text = parts.map((p: any) => p.text || "").join("");
+        let text = parts.map((p: any) => p.text || "").join("").trim();
+        if (!text || text === '{"text":""}' || text === '{"text": ""}') {
+          text = "Análise concluída com sucesso. Como posso te auxiliar com simulações, carteira ou auditoria de lances agora?";
+        }
         return new Response(JSON.stringify({ text }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
 
-    return new Response(JSON.stringify({ text: "Análise concluída. Como posso te auxiliar a bater as metas de hoje?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ text: "Análise concluída com sucesso. Como posso te auxiliar a bater as metas de hoje?" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err: any) {
     console.error("Internal Error in Jarvis Edge Function:", err);
