@@ -37,4 +37,12 @@ describe("getLoteriaStatus", () => {
     expect(result?.isClose).toBe(false);
     expect(result?.diff).toBeNull();
   });
+
+  it("calcula cota sorteada e participantes corretamente para o Grupo 6042 Magalu (4300 cotas)", () => {
+    // Sorteio 4305 % 4300 = cota 5
+    const result = getLoteriaStatus("4305", "5", "6042", "MAGALU");
+    expect(result?.participants).toBe(4300);
+    expect(result?.winCota).toBe(5);
+    expect(result?.isWinner).toBe(true);
+  });
 });

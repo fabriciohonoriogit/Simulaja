@@ -293,6 +293,10 @@ export default function Carteira() {
     }
   };
 
+  useEffect(() => {
+    fetchClientes();
+  }, [profile?.organizacao_id]);
+
   const restoreLegacyData = async () => {
     if (!profile?.organizacao_id) return;
     try {
