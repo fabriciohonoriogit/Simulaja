@@ -526,12 +526,23 @@ export default function Jarvis() {
 
                 {/* Status Pills & Reset Button */}
                 <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
+                    <Badge variant="outline" className="border-amber-500/30 text-amber-300 bg-amber-500/10 text-[10px] font-mono py-1">
+                        GRUPO 6042: 4.300 COTAS
+                    </Badge>
                     <Badge variant="outline" className="border-cyan-500/30 text-cyan-300 bg-cyan-500/10 text-[10px] font-mono py-1">
                         SELIC: {economiaDados?.selic?.valor || "10.50%"}
                     </Badge>
                     <Badge variant="outline" className="border-emerald-500/30 text-emerald-300 bg-emerald-500/10 text-[10px] font-mono py-1">
                         OBSIDIAN: {obsidianStatus?.total_notes || 16} NOTAS .MD
                     </Badge>
+                    <Button
+                        size="sm"
+                        onClick={() => navigate("/admin/jarvis-hud")}
+                        className="h-8 text-xs font-mono bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 rounded-lg flex items-center gap-1.5 transition-all"
+                    >
+                        <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                        MODO ONE HUD
+                    </Button>
                     <Button
                         size="sm"
                         onClick={handleResetSystem}
@@ -811,6 +822,24 @@ export default function Jarvis() {
                             >
                                 <Target className="w-4 h-4 text-emerald-400" />
                                 Diagnóstico Metas
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                onClick={() => handleAnalyze("Bella, audite o sorteio da Loteria Federal para o Grupo 6042 com 4300 cotas.")}
+                                className="h-14 bg-slate-950 border-slate-800 hover:border-amber-500/40 hover:bg-slate-900 text-slate-200 text-xs flex flex-col gap-1 items-center justify-center font-mono"
+                            >
+                                <Sparkles className="w-4 h-4 text-amber-400" />
+                                Sorteio 6042 (4.3k)
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                onClick={() => speak("Bom dia! Hoje temos 4.300 cotas ativas no Grupo 6042 para auditoria e acompanhamento de lances.")}
+                                className="h-14 bg-slate-950 border-slate-800 hover:border-cyan-500/40 hover:bg-slate-900 text-slate-200 text-xs flex flex-col gap-1 items-center justify-center font-mono"
+                            >
+                                <Volume2 className="w-4 h-4 text-cyan-400" />
+                                Briefing em Voz
                             </Button>
                         </CardContent>
                     </Card>
