@@ -1,6 +1,6 @@
 /**
  * Service de Enriquecimento de Dados & Validação baseada em APIs Públicas (public-apis)
- * Conecta o Contemplar CRM com APIs gratuitas como BrasilAPI, BCB e Validações de Mídia.
+ * Conecta o Contemplar CRM com APIs gratuitas como BrasilAPI, BCB, AwesomeAPI e Validações de Mídia.
  */
 
 export interface CNPJEnrichmentResult {
@@ -29,6 +29,8 @@ export interface EconomyIndexesResult {
   selic: number;
   cdi: number;
   ipca: number;
+  incc: number;
+  dolar: number;
   atualizadoEm: string;
 }
 
@@ -99,30 +101,63 @@ export async function enrichCEP(cepInput: string): Promise<CEPEnrichmentResult |
 }
 
 /**
- * Obtém os principais indicadores financeiros atualizados (Selic/CDI/IPCA) via BrasilAPI & BCB
+ * Obtém os principais indicadores financeiros atualizados (Selic/CDI/IPCA/INCC/Dólar) via BrasilAPI, BCB e AwesomeAPI
  */
 export async function fetchEconomyIndexes(): Promise<EconomyIndexesResult> {
+  let selic = 10.75;
+  let cdi = 10.65;
+  let ipca = 4.5;
+  let incc = 4.25; // Índice da Construção Civil
+  let dolar = 5.65; // Cotação Dólar Comercial
+
   try {
-    const res = await fetch("https://brasilapi.com.br/api/taxas/v1");
-    if (!res.ok) throw new Error("Falha ao obter taxas de juros");
-    
-    const taxas = await res.json();
-    const selicObj = taxas.find((t: any) => t.nome === "Selic");
-    const cdiObj = taxas.find((t: any) => t.nome === "CDI");
-    const ipcaObj = taxas.find((t: any) => t.nome === "IPCA");
+    const [taxasRes, dolarRes, inccRes] = await Promise.all([
+      fetch("https://brasilapi.com.br/api/taxas/v1").catch(() => null),
+      fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL").catch(() => null),
+      fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.192/dados/ultimos/1?formato=json").catch(() => null),
+    ]);
+
+    if (taxasRes && taxasRes.ok) {
+      const taxas = await taxasRes.json();
+      const selicObj = taxas.find((t: any) => t.nome === "Selic");
+      const cdiObj = taxas.find((t: any) => t.nome === "CDI");
+      const ipcaObj = taxas.find((t: any) => t.nome === "IPCA");
+
+      if (selicObj) selic = Number(selicObj.valor);
+      if (cdiObj) cdi = Number(cdiObj.valor);
+      if (ipcaObj) ipca = Number(ipcaObj.valor);
+    }
+
+    if (dolarRes && dolarRes.ok) {
+      const dolarData = await dolarRes.json();
+      if (dolarData?.USDBRL?.bid) {
+        dolar = parseFloat(dolarData.USDBRL.bid);
+      }
+    }
+
+    if (inccRes && inccRes.ok) {
+      const inccData = await inccRes.json();
+      if (Array.isArray(inccData) && inccData[0]?.valor) {
+        incc = parseFloat(inccData[0].valor);
+      }
+    }
 
     return {
-      selic: selicObj ? selicObj.valor : 10.75,
-      cdi: cdiObj ? cdiObj.valor : 10.65,
-      ipca: ipcaObj ? ipcaObj.valor : 4.5,
+      selic,
+      cdi,
+      ipca,
+      incc,
+      dolar,
       atualizadoEm: new Date().toLocaleDateString("pt-BR"),
     };
   } catch (error) {
     console.warn("⚠️ Usando taxas padrão do mercado:", error);
     return {
-      selic: 10.75,
-      cdi: 10.65,
-      ipca: 4.5,
+      selic,
+      cdi,
+      ipca,
+      incc,
+      dolar,
       atualizadoEm: new Date().toLocaleDateString("pt-BR"),
     };
   }
