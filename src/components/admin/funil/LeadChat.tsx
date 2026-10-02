@@ -178,12 +178,12 @@ export function LeadChat({ lead }: { lead: Lead }) {
 
   return (
     <div className="flex flex-col h-[500px] bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-inner">
-      {/* Header com Toggle IA e Botão WhatsApp Web */}
+      {/* Header com Toggle IA e Status Evolution API */}
       <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div className={`h-2 w-2 rounded-full ${aiEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
           <span className="text-xs font-black uppercase tracking-widest text-slate-600">
-            {aiEnabled ? "IA Ativa" : "Atendimento Humano"}
+            {aiEnabled ? "IA Ativa (Jarvis)" : "Atendimento Humano"}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -192,12 +192,26 @@ export function LeadChat({ lead }: { lead: Lead }) {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => window.open(getWhatsAppWebUrl(targetPhone), "_blank")}
+              onClick={async () => {
+                const res = await sendWhatsAppMessage({
+                  number: targetPhone,
+                  text: `Olá ${lead.nome}! Como posso ajudar com seu consórcio?`,
+                  leadId: lead.id,
+                  leadNome: lead.nome,
+                  organizacaoId: lead.organizacao_id
+                });
+                if (res.success) {
+                  toast.success(res.viaMake ? "Mensagem enviada via Make.com!" : "Mensagem enviada via Evolution API!");
+                  fetchMessages();
+                } else if (res.webUrl) {
+                  window.open(res.webUrl, "_blank");
+                }
+              }}
               className="h-7 text-[11px] font-bold text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100 gap-1 rounded-lg shadow-sm"
-              title="Abrir bate-papo direto no WhatsApp Web / App"
+              title="Disparar mensagem via Evolution API / Make"
             >
               <ExternalLink className="h-3.5 w-3.5 text-emerald-600" />
-              Abrir no WhatsApp
+              Enviar via Evolution API
             </Button>
           )}
           <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
@@ -304,11 +318,10 @@ export function LeadChat({ lead }: { lead: Lead }) {
       {/* Input de Mensagem */}
       <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-200 flex gap-2">
         <Input 
-          placeholder={aiEnabled ? "IA está respondendo... Desative para assumir." : "Digite sua mensagem humana..."}
+          placeholder="Digite a mensagem para enviar via Evolution API / Make..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-1 rounded-full bg-slate-50 border-slate-100 focus:bg-white transition-all"
-          disabled={aiEnabled && false} // Opcional: deixar habilitado mesmo com IA se quiser intervir
+          className="flex-1 rounded-full bg-slate-50 border-slate-100 focus:bg-white transition-all text-xs"
         />
         <Button 
           type="submit" 
