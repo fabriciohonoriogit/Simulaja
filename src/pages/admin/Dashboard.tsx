@@ -26,6 +26,7 @@ import { EliteRewardsPanel } from "@/components/admin/gamification/EliteRewardsP
 import { useGamificationStore } from "@/stores/gamificationStore";
 import { calcularComissaoRecorrenteLead } from "@/lib/gamificationUtils";
 import { WeatherWidget } from "@/components/admin/WeatherWidget";
+import { EconomyRatesBadge } from "@/components/admin/EconomyRatesBadge";
 import { LojasDashboardSection } from "@/components/admin/lojas/LojasDashboardSection";
 import { calculateLojasPerformance, getLojasConfig, matchLeadToLoja } from "@/lib/lojasService";
 
@@ -439,7 +440,10 @@ export default function Dashboard() {
                 </Button>
               </div>
             ) : <div />}
-            <WeatherWidget />
+            <div className="flex flex-wrap items-center gap-3">
+              <EconomyRatesBadge />
+              <WeatherWidget />
+            </div>
           </div>
           <AICoachMessage />
           <DashboardHero />
