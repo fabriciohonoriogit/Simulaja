@@ -10,8 +10,11 @@ export interface EvolutionConfig {
 }
 
 export const getWhatsAppMode = (): WhatsAppMode => {
-  if (typeof window === "undefined") return "web";
-  return (localStorage.getItem("whatsapp_mode") as WhatsAppMode) || "web";
+  if (typeof window === "undefined") return "evolution";
+  const saved = localStorage.getItem("whatsapp_mode") as WhatsAppMode;
+  if (saved) return saved;
+  // Padrão 'evolution': Envia via Evolution API / Make.com por padrão
+  return "evolution";
 };
 
 export const saveWhatsAppMode = (mode: WhatsAppMode) => {

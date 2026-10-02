@@ -24,6 +24,7 @@ import {
 import { LeadImportModal } from "@/components/admin/LeadImportModal";
 import { LeadEnrichmentWidget } from "@/components/admin/LeadEnrichmentWidget";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
+import { sendWhatsAppMessage, getWhatsAppMode } from "@/services/evolutionApiService";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -413,16 +414,40 @@ export default function Leads() {
                         >
                           <ClipboardList className="h-3.5 w-3.5" />
                         </button>
-                        <a
-                          href={`https://wa.me/55${(l.celular || "").replace(/\D/g, "")}?text=Olá!`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-500 transition-colors"
-                          title="WhatsApp"
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!l.celular) {
+                              toast.error("Lead sem telefone cadastrado");
+                              return;
+                            }
+                            const mode = getWhatsAppMode();
+                            if (mode === "web") {
+                              const clean = l.celular.replace(/\D/g, "");
+                              window.open(`https://wa.me/55${clean}?text=Olá!`, "_blank");
+                            } else {
+                              toast.info(`Enviando mensagem via Evolution API para ${l.nome}...`);
+                              const res = await sendWhatsAppMessage({
+                                number: l.celular,
+                                text: `Olá ${l.nome}! Tudo bem? Sou da equipe do consórcio, vi seu interesse e gostaria de tirar suas dúvidas sobre o planejamento.`,
+                                leadId: l.id,
+                                leadNome: l.nome,
+                                organizacaoId: l.organizacao_id
+                              });
+                              if (res.success) {
+                                toast.success(res.viaMake ? "Enviado via Make.com!" : "Mensagem enviada via Evolution API!");
+                              } else if (res.webUrl) {
+                                window.open(res.webUrl, "_blank");
+                              } else {
+                                toast.error(res.error || "Falha ao enviar via Evolution API");
+                              }
+                            }
+                          }}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors"
+                          title="Enviar WhatsApp (Evolution API / Make)"
                         >
                           <WhatsAppIcon className="h-3.5 w-3.5" />
-                        </a>
+                        </button>
                         <button
                           onTouchStart={(e) => e.stopPropagation()}
                           onClick={() => setHistoryLead(l as Lead)}
