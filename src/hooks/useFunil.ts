@@ -169,11 +169,32 @@ export function useFunil() {
       (v: Lead, i: number, a: Lead[]) => a.findIndex((t: Lead) => t.id === v.id) === i
     );
 
-    const fetchedLeads: Lead[] = uniqueRaw.map((lead) => ({
-      ...lead,
-      nome: lead.nome || "Lead Sem Nome",
-      status: normalizeStatus(lead.status),
-    }));
+    const now = new Date();
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+
+    const fetchedLeads: Lead[] = uniqueRaw.map((lead) => {
+      let currentStatus = normalizeStatus(lead.status);
+      const lastActive = new Date(lead.last_interaction_at || lead.updated_at || lead.status_updated_at || lead.created_at || 0).getTime();
+      
+      // Se não for venda fechada/perdido e tiver mais de 30 dias sem interação -> mover para 'perdido' (Lead Morto)
+      if (currentStatus !== "fechado" && currentStatus !== "venda_fechada" && currentStatus !== "perdido") {
+        if (lastActive > 0 && (now.getTime() - lastActive >= thirtyDaysMs)) {
+          currentStatus = "perdido";
+          // Atualiza no banco em segundo plano para manter integridade
+          supabase.from("leads").update({ 
+            status: "perdido", 
+            lead_temperatura: "morto",
+            updated_at: now.toISOString() 
+          }).eq("id", lead.id).then();
+        }
+      }
+
+      return {
+        ...lead,
+        nome: lead.nome || "Lead Sem Nome",
+        status: currentStatus,
+      };
+    });
     setLeads(fetchedLeads);
     setLoading(false);
   }, [profile?.organizacao_id]);

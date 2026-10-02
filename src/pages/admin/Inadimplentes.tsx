@@ -23,6 +23,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/SocialIcons";
+import { sendWhatsAppMessage } from "@/services/evolutionApiService";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
@@ -108,6 +109,44 @@ export default function Inadimplentes() {
     };
   });
   const [editingStage, setEditingStage] = useState<string | null>(null);
+  const [disparando, setDisparando] = useState(false);
+
+  const handleDispararCobrancaPreventiva = async () => {
+    const devedores = data.filter(d => d.status !== 'regularizado' && d.celular);
+    if (devedores.length === 0) {
+      toast.error("Nenhum cliente com WhatsApp disponível para cobrança.");
+      return;
+    }
+
+    if (!confirm(`Confirmar envio automático da cobrança preventiva via WhatsApp/Make para ${devedores.length} cliente(s)?`)) return;
+
+    setDisparando(true);
+    let okCount = 0;
+
+    for (const d of devedores) {
+      let texto = copyTemplate
+        .replace(/{nome}/g, d.nome || "")
+        .replace(/{cota}/g, d.cota || "")
+        .replace(/{grupo}/g, d.grupo || "")
+        .replace(/{parcelas_atrasadas}/g, String(d.parcelas_atrasadas || 0))
+        .replace(/{valor_parcela}/g, formatCurrency(d.valor_parcela || 0));
+
+      const res = await sendWhatsAppMessage({
+        number: d.celular!,
+        text: texto,
+        leadNome: d.nome
+      });
+
+      if (res.success) {
+        okCount++;
+        await supabase.from("inadimplentes").update({ status: "notificado" }).eq("id", d.id);
+      }
+    }
+
+    toast.success(`Cobrança preventiva enviada com sucesso para ${okCount} de ${devedores.length} clientes!`);
+    setDisparando(false);
+    fetchData();
+  };
 
   const kanbanRef = useRef<HTMLDivElement>(null);
   const isDraggingCardRef = useRef(false);
@@ -723,19 +762,30 @@ export default function Inadimplentes() {
            <DialogHeader><DialogTitle className="text-2xl font-black">Régua de WhatsApp</DialogTitle></DialogHeader>
            <div className="space-y-4 mt-6">
               <Textarea rows={6} value={copyTemplate} onChange={e => setCopyTemplate(e.target.value)} className="bg-slate-50 border-none rounded-2xl p-4 text-sm" />
-              <button onClick={() => {
-                const msgs = data.filter(d => d.status !== 'regularizado').map(d => {
-                  let msg = copyTemplate;
-                  msg = msg.replace(/{nome}/g, d.nome || "");
-                  msg = msg.replace(/{cota}/g, d.cota || "");
-                  msg = msg.replace(/{grupo}/g, d.grupo || "");
-                  msg = msg.replace(/{parcelas_atrasadas}/g, String(d.parcelas_atrasadas || 0));
-                  msg = msg.replace(/{valor_parcela}/g, formatCurrency(d.valor_parcela || 0));
-                  return msg;
-                }).join('\n\n---\n\n');
-                navigator.clipboard.writeText(msgs);
-                toast.success('Mensagens copiadas!');
-              }} className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-[4px] shadow-lg shadow-emerald-500/20 rounded-2xl">Copiar Lista Completa</button>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button onClick={() => {
+                  const msgs = data.filter(d => d.status !== 'regularizado').map(d => {
+                    let msg = copyTemplate;
+                    msg = msg.replace(/{nome}/g, d.nome || "");
+                    msg = msg.replace(/{cota}/g, d.cota || "");
+                    msg = msg.replace(/{grupo}/g, d.grupo || "");
+                    msg = msg.replace(/{parcelas_atrasadas}/g, String(d.parcelas_atrasadas || 0));
+                    msg = msg.replace(/{valor_parcela}/g, formatCurrency(d.valor_parcela || 0));
+                    return msg;
+                  }).join('\n\n---\n\n');
+                  navigator.clipboard.writeText(msgs);
+                  toast.success('Mensagens copiadas!');
+                }} className="h-14 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all">Copiar Texto</button>
+
+                <button 
+                  onClick={handleDispararCobrancaPreventiva}
+                  disabled={disparando}
+                  className="h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-500/20 rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                >
+                  <WhatsAppIcon className="h-4 w-4" />
+                  {disparando ? "Disparando..." : "Disparar Automático (Evolution/Make)"}
+                </button>
+              </div>
            </div>
         </DialogContent>
       </Dialog>
