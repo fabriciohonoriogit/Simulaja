@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { makeService } from "@/services/makeService";
 
 export type WhatsAppMode = "web" | "evolution";
 
@@ -36,8 +37,6 @@ export const getEvolutionConfig = (): EvolutionConfig => {
   if (typeof window === "undefined") {
     return { apiUrl: "", apiKey: "", instanceName: "simulaja" };
   }
-  // Sem fallback para localhost/chave fixa: se não estiver configurado,
-  // o valor fica vazio e quem chamar deve tratar isso como "não configurado".
   const savedUrl = localStorage.getItem("evolution_api_url") || "";
   const savedKey = localStorage.getItem("evolution_api_key") || "";
   const savedInstance = localStorage.getItem("evolution_instance_name") || "simulaja";
@@ -60,14 +59,16 @@ export interface SendMessageParams {
   number: string;
   text: string;
   organizacaoId?: string;
+  leadId?: string;
+  leadNome?: string;
 }
 
-export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendMessageParams) => {
+export const sendWhatsAppMessage = async ({ number, text, organizacaoId, leadId, leadNome }: SendMessageParams) => {
   const cleanNumber = formatWhatsAppNumber(number);
   const mode = getWhatsAppMode();
   const webUrl = getWhatsAppWebUrl(cleanNumber, text);
 
-  // Se o modo estiver configurado como WhatsApp Web (Direto), abre diretamente a janela
+  // Modo WhatsApp Web Direto (Abre guia no navegador)
   if (mode === "web") {
     window.open(webUrl, "_blank");
     return { success: true, isWebFallback: true, webUrl };
@@ -75,98 +76,101 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId }: SendM
 
   const config = getEvolutionConfig();
 
-  if (!isEvolutionConfigured()) {
-    console.warn("[Evolution API] Configurações de API URL ou API Key ausentes/inválidas.");
-    return {
-      success: false,
-      error: "A Evolution API não está configurada (URL ou chave ausentes, ou apontando para localhost). Configure em Configurações > WhatsApp, ou use o Modo WhatsApp Web Direto.",
-      webUrl,
-    };
-  }
+  // 1. Tentar envio direto via Evolution API (se configurado)
+  if (isEvolutionConfigured()) {
+    try {
+      const endpoint = `${config.apiUrl}/message/sendText/${config.instanceName}`;
+      let response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: config.apiKey,
+        },
+        body: JSON.stringify({
+          number: cleanNumber,
+          text: text,
+          delay: 1200,
+        }),
+      });
 
-  try {
-    // 1. Tenta enviar diretamente via API do Evolution
-    const endpoint = `${config.apiUrl}/message/sendText/${config.instanceName}`;
-    let response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: config.apiKey,
-      },
-      body: JSON.stringify({
-        number: cleanNumber,
-        text: text,
-        delay: 1200,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      // Se a conexão estiver fechada ou offline, tenta reconectar a instância automaticamente
-      if (errText.includes("Connection Closed") || response.status === 500) {
-        console.warn("[Evolution API] Conexão fechada detectada. Tentando reconectar a instância...");
-        try {
-          await fetch(`${config.apiUrl}/instance/connect/${config.instanceName}`, {
-            headers: { apikey: config.apiKey }
-          });
-          await new Promise(r => setTimeout(r, 1500));
-          response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: config.apiKey,
-            },
-            body: JSON.stringify({
-              number: cleanNumber,
-              text: text,
-              delay: 1200,
-            }),
-          });
-        } catch (reconnectErr) {
-          console.error("[Evolution API] Falha na tentativa de reconexão automática:", reconnectErr);
+      if (!response.ok) {
+        const errText = await response.text();
+        if (errText.includes("Connection Closed") || response.status === 500) {
+          console.warn("[Evolution API] Conexão fechada. Tentando auto-reconectar instância...");
+          try {
+            await fetch(`${config.apiUrl}/instance/connect/${config.instanceName}`, {
+              headers: { apikey: config.apiKey }
+            });
+            await new Promise(r => setTimeout(r, 1500));
+            response = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: config.apiKey,
+              },
+              body: JSON.stringify({ number: cleanNumber, text: text, delay: 1200 }),
+            });
+          } catch (reconnectErr) {
+            console.error("[Evolution API] Erro ao reconectar:", reconnectErr);
+          }
         }
       }
 
-      if (!response.ok) {
-        const retryErrText = await response.text();
-        console.error("[Evolution API] Erro ao enviar mensagem:", retryErrText);
-        throw new Error(retryErrText);
-      }
-    }
-
-    const data = await response.json();
-    return { success: true, data };
-  } catch (error: any) {
-    console.warn("[Evolution API] Chamada direta falhou, acionando Edge Function de fallback:", error);
-
-    try {
-      const { data, error: edgeErr } = await supabase.functions.invoke("evolution-send-message", {
-        body: { 
-          number: cleanNumber, 
-          text, 
-          instanceName: config.instanceName || "simulaja",
-          organizacaoId: organizacaoId || "",
-          clients: [{ id: '1', nome: 'Cliente', celular: cleanNumber }],
-          template: text
-        },
-      });
-      if (!edgeErr && data && (data.success || !data.error)) {
+      if (response.ok) {
+        const data = await response.json();
         return { success: true, data };
       }
-    } catch (e) {
-      console.error("[Evolution API] Fallback Edge Function falhou totalmente:", e);
+    } catch (error: any) {
+      console.warn("[Evolution API] Envio direto falhou. Tentando fallbacks via Make & Edge Function...", error);
     }
-
-    return { 
-      success: false, 
-      error: `Servidor Evolution API indisponível em ${config.apiUrl}. Caso não possua o servidor rodando, altere para o Modo WhatsApp Web Direto.`, 
-      webUrl 
-    };
   }
+
+  // 2. Fallback via Webhook do Make.com
+  try {
+    const makeSuccess = await makeService.dispararWhatsAppViaMake({
+      number: cleanNumber,
+      text,
+      leadId,
+      leadNome,
+      tipoEnvio: "manual"
+    });
+    if (makeSuccess) {
+      return { success: true, viaMake: true };
+    }
+  } catch (e) {
+    console.warn("[Make.com Fallback] Erro ao enviar por webhook do Make:", e);
+  }
+
+  // 3. Fallback via Edge Function do Supabase
+  try {
+    const { data, error: edgeErr } = await supabase.functions.invoke("evolution-send-message", {
+      body: { 
+        number: cleanNumber, 
+        text, 
+        instanceName: config.instanceName || "simulaja",
+        organizacaoId: organizacaoId || "",
+        clients: [{ id: '1', nome: leadNome || 'Cliente', celular: cleanNumber }],
+        template: text
+      },
+    });
+    if (!edgeErr && data && (data.success || !data.error)) {
+      return { success: true, data };
+    }
+  } catch (e) {
+    console.error("[Edge Function Fallback] Erro total:", e);
+  }
+
+  // 4. Última instância: Retorna URL para abrir no WhatsApp Web
+  return { 
+    success: false, 
+    error: `Não foi possível enviar automaticamente. Clique para abrir no WhatsApp Web.`, 
+    webUrl 
+  };
 };
 
 export const ensureWebhookConfigured = async (instanceName = "simulaja") => {
   const config = getEvolutionConfig();
+  if (!isEvolutionConfigured()) return;
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://pfedvdqpnpbrlhfbzjcj.supabase.co";
     const webhookUrl = `${supabaseUrl}/functions/v1/webhook-evolution`;
@@ -226,7 +230,6 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
   }
 
   try {
-    // 1. Tenta buscar o QR Code ou status da instância existente
     let res = await fetch(`${config.apiUrl}/instance/connect/${instanceName}`, {
       headers: { apikey: config.apiKey },
     });
@@ -235,7 +238,6 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
     if (res.ok) {
       data = await res.json();
     } else {
-      // 2. Se a instância ainda não existir, tenta criar a instância
       const createRes = await fetch(`${config.apiUrl}/instance/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: config.apiKey },
@@ -271,35 +273,13 @@ export const fetchEvolutionQrCode = async (instanceName = "simulaja") => {
 
     return { 
       success: false, 
-      error: `Não foi possível gerar QR Code. O servidor Evolution API em ${config.apiUrl} não respondeu adequadamente.` 
+      error: `Não foi possível gerar QR Code em ${config.apiUrl}.` 
     };
   } catch (err: any) {
-    console.warn("[Evolution API] Chamada direta de QR Code falhou, tentando via Edge Function proxy...", err);
-
-    try {
-      const { data, error: edgeErr } = await supabase.functions.invoke("evolution-create-instance", {
-        body: { instanceName },
-      });
-      if (!edgeErr && data) {
-        if (data.connected) {
-          return { success: true, connected: true, message: "WhatsApp já está conectado!" };
-        }
-        if (data.qrcode) {
-          const rawQr = data.qrcode;
-          const qrcode = rawQr.startsWith("data:") 
-            ? rawQr 
-            : `data:image/png;base64,${rawQr.replace(/^data:image\/png;base64,/, "")}`;
-          return { success: true, qrcode };
-        }
-      }
-    } catch (e) {
-      console.error("Fallback de Edge Function para QR Code também falhou:", e);
-    }
-
+    console.warn("[Evolution API] Chamada direta de QR Code falhou...", err);
     return { 
       success: false, 
-      error: `Servidor Evolution API não encontrado em ${config.apiUrl}. Verifique se o servidor está em execução ou mude para o Modo WhatsApp Web (Direto).` 
+      error: `Servidor Evolution API indisponível em ${config.apiUrl}.` 
     };
   }
 };
-

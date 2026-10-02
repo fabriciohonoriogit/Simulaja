@@ -175,9 +175,9 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
   "5297": {
     grupo: "5297",
     reajuste: "IPCA",
-    primeiraAssembleia: "25/07/2026",
-    proximaAssembleia: "25/07/2026",
-    caracteristicas: "AUTO LINEAR, 50/50 E 75/25 - CRÉD 40 A 80 MIL. ****** DEVIDO A RESOLUÇÃO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
+    primeiraAssembleia: "28/10/2026",
+    proximaAssembleia: "28/10/2026",
+    caracteristicas: "AUTO LINEAR, 50/50 E 75/25 - CRÉD 40 A 80 MIL. Cotas vagas: 491. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO. ****** DEVIDO A RESOLUÇÃO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
     ordemContemplacao: "Sorteio, Lance Livre, Fixo 25% e Segundo Fixo 45% (desde a 1ª ass. conforme saldo). A partir da 3ª ass inicia repetição entre os lances enquanto houver saldo.",
     opcaoDiluir: "Opção de diluir o lance total. O lance poderá quitar até 2 parcelas subsequentes na contemplação.",
     regraReajuste: "Reajuste anual no mês de Outubro pelo IPCA a partir de Outubro 2027."
@@ -745,12 +745,12 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "5296", credito: 28000, prazo: 80, r50: 264.18, r100: 428.47, txLinear: 18, frLinear: 2, tx5050: 21, fr5050: 2, seguro: 0.0252, isPromo: true },
     { grupo: "5296", credito: 30000, prazo: 80, r50: 283.05, r100: 459.07, txLinear: 18, frLinear: 2, tx5050: 21, fr5050: 2, seguro: 0.0252, isPromo: true },
 
-    // Grupo Carro 5297 (Julho/26)
-    { grupo: "5297", credito: 40000, prazo: 99, r50: 290.79, r100: 480.38, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5297", credito: 50000, prazo: 99, r50: 363.48, r100: 600.47, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5297", credito: 60000, prazo: 99, r50: 436.17, r100: 720.57, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5297", credito: 70000, prazo: 99, r50: 508.87, r100: 840.66, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "5297", credito: 80000, prazo: 99, r50: 581.57, r100: 960.76, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    // Grupo Carro 5297 (Outubro/26)
+    { grupo: "5297", credito: 40000, prazo: 97, r50: 296.52, r100: 490.35, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5297", credito: 50000, prazo: 97, r50: 370.67, r100: 612.94, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5297", credito: 60000, prazo: 97, r50: 444.80, r100: 735.53, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5297", credito: 70000, prazo: 97, r50: 518.94, r100: 858.11, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "5297", credito: 80000, prazo: 97, r50: 593.07, r100: 980.70, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
 
     // Grupo Carro 5295
     { grupo: "5295", credito: 90000, prazo: 95, r50: 680.66, r100: 1116.47, txLinear: 14, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },

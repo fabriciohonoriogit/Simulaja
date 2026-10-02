@@ -15,7 +15,8 @@ import {
   FileText,
   Share2,
   CheckCircle2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Shield
 } from "lucide-react";
 
 import { GRUPOS, CATEGORIAS, GrupoItem, GRUPO_CARACTERISTICAS, MEDIA_LANCES_GRUPOS } from "@/constants/simulador";
@@ -136,6 +137,7 @@ export default function Simulador() {
   const [simulationMode, setSimulationMode] = useState<"credit" | "installment">("credit");
   const [paymentMode, setPaymentMode] = useState<"linear" | "reduzido">("reduzido");
   const [filterPlanoGold, setFilterPlanoGold] = useState(false);
+  const [incluirSeguro, setIncluirSeguro] = useState(true);
 
   const [fathersDayVar, setFathersDayVar] = useState<1 | 2 | 3 | 4>(1);
 
@@ -211,26 +213,31 @@ export default function Simulador() {
     return filtered.sort((a, b) => a.credito - b.credito);
   }, [categoria, filterPlanoGold]);
 
-  const g = lista[idx] || lista[0];
+  const _g = lista[idx] || lista[0];
 
   useEffect(() => {
     setIdx(Math.min(4, lista.length - 1));
   }, [categoria, lista.length]);
 
   // effectiveMode: respeita a escolha do usuário, força "linear" apenas quando o grupo não tem plano reduzido
-  const hasBothPlans = g.r100 !== undefined && g.r50 !== g.r100;
+  const hasBothPlans = _g.r100 !== undefined && _g.r50 !== _g.r100;
   const effectiveMode: "linear" | "reduzido" = hasBothPlans ? paymentMode : "linear";
 
-  const mascaraWpp = (value: string) => {
-    let v = value.replace(/\D/g, "");
-    if (v.length > 11) v = v.slice(0, 11);
-    if (v.length > 7) v = v.replace(/(\d{2})(\d{5})(\d*)/, "($1) $2-$3");
-    else if (v.length > 2) v = v.replace(/(\d{2})(\d*)/, "($1) $2");
-    setWpp(v);
+  const isLinear = effectiveMode === "linear";
+  const txAtual = isLinear ? (_g.txLinear ?? _g.tx ?? 20) : (_g.tx5050 ?? _g.tx ?? 20);
+  const frAtual = isLinear ? (_g.frLinear ?? _g.fr ?? 1) : (_g.fr5050 ?? _g.fr ?? 1);
+  const saldoTotalContrato = (_g?.credito || 0) * (1 + (txAtual + frAtual) / 100);
+  const valorSeguroMensal = (saldoTotalContrato * (_g?.seguro ?? 0)) / 100;
+
+  const g = {
+    ..._g,
+    prazo: isLinear && _g.prazoLinear ? _g.prazoLinear : _g.prazo,
+    grupo: isLinear && _g.grupoLinear ? _g.grupoLinear : _g.grupo,
+    r50: incluirSeguro ? _g.r50 : _g.r50 - valorSeguroMensal,
+    r100: _g.r100 !== undefined ? (incluirSeguro ? _g.r100 : _g.r100 - valorSeguroMensal) : undefined,
+    seguro: incluirSeguro ? _g.seguro : 0,
   };
 
-  const pct = lista.length > 1 ? (idx / (lista.length - 1)) * 100 : 0;
-  const isLinear = effectiveMode === "linear";
   const selectedInstallment = effectiveMode === "linear" ? (g.r100 ?? g.r50) : g.r50;
 
   const confirmar = async () => {
@@ -520,7 +527,7 @@ export default function Simulador() {
           )}
 
           {hasBothPlans && (
-            <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-center mb-4 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                 <button 
                   onClick={() => setPaymentMode('reduzido')}
@@ -537,6 +544,31 @@ export default function Simulador() {
               </div>
             </div>
           )}
+
+          {_g?.seguro ? (
+            <div className="flex flex-col items-center justify-center mb-4">
+              <label
+                htmlFor="chk-seguro-sim"
+                className={`inline-flex items-center gap-1.5 cursor-pointer select-none text-xs font-bold px-3 py-1 rounded-full transition-all duration-200 border ${incluirSeguro ? 'bg-green-50 text-green-700 border-green-300' : 'bg-slate-50 text-slate-500 border-slate-300'}`}
+              >
+                <input
+                  id="chk-seguro-sim"
+                  type="checkbox"
+                  checked={incluirSeguro}
+                  onChange={() => setIncluirSeguro(!incluirSeguro)}
+                  className="w-3.5 h-3.5 accent-green-600 cursor-pointer shrink-0"
+                />
+                <Shield className="w-3 h-3 shrink-0" />
+                {incluirSeguro ? 'Com Seguro de Vida' : 'Sem Seguro'}
+              </label>
+              <p className="text-[10px] text-slate-400 mt-1 font-semibold">
+                {incluirSeguro 
+                  ? `(Sem seguro: ${(_g.r50 - valorSeguroMensal).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})` 
+                  : `(Com seguro: ${_g.r50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})`
+                }
+              </p>
+            </div>
+          ) : null}
 
           {/* Card da Parcela Reduzida */}
           <div className="rounded-2xl p-5 text-center mb-5 relative overflow-hidden shadow-lg border-2 border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50/60 to-emerald-100/50">

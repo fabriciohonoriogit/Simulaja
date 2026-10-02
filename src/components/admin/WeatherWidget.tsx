@@ -1,98 +1,149 @@
-import { useState, useEffect } from "react";
-import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, Sun, Thermometer } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback } from "react";
+import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, Sun, Thermometer, RefreshCw } from "lucide-react";
 
 interface WeatherData {
   temperature: number;
   weathercode: number;
   city?: string;
+  updatedAt?: number;
 }
 
 const getWeatherIconAndDesc = (code: number) => {
-  if (code === 0) return { icon: <Sun className="h-5 w-5 text-amber-500" />, desc: "Céu Limpo" };
+  if (code === 0) return { icon: <Sun className="h-5 w-5 text-amber-500 animate-spin-slow" />, desc: "Céu Limpo" };
   if (code === 1 || code === 2 || code === 3) return { icon: <Cloud className="h-5 w-5 text-slate-400" />, desc: "Parcialmente Nublado" };
   if (code === 45 || code === 48) return { icon: <CloudFog className="h-5 w-5 text-slate-400" />, desc: "Neblina" };
   if (code === 51 || code === 53 || code === 55) return { icon: <CloudDrizzle className="h-5 w-5 text-blue-400" />, desc: "Chuvisco" };
   if (code === 61 || code === 63 || code === 65) return { icon: <CloudRain className="h-5 w-5 text-blue-500" />, desc: "Chuva" };
   if (code === 71 || code === 73 || code === 75) return { icon: <CloudSnow className="h-5 w-5 text-sky-300" />, desc: "Neve" };
-  if (code === 95 || code === 96 || code === 99) return { icon: <CloudLightning className="h-5 w-5 text-yellow-500" />, desc: "Tempestade" };
+  if (code === 95 || code === 96 || code === 99) return { icon: <CloudLightning className="h-5 w-5 text-yellow-500 animate-pulse" />, desc: "Tempestade" };
   return { icon: <Sun className="h-5 w-5 text-amber-500" />, desc: "Ensolarado" };
 };
 
 export function WeatherWidget() {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [weather, setWeather] = useState<WeatherData | null>(() => {
+    try {
+      const cached = localStorage.getItem("jarvis_weather");
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // Ignore cache parse error
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState(!weather);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchWeather = useCallback(async (lat: number, lon: number) => {
+    setRefreshing(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s strict timeout
+
+    try {
+      const [weatherRes, geoRes] = await Promise.all([
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`, {
+          signal: controller.signal,
+        }),
+        fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`, {
+          signal: controller.signal,
+        }).catch(() => null), // If geocode fails, gracefully fall back
+      ]);
+
+      clearTimeout(timeoutId);
+
+      if (!weatherRes.ok) throw new Error("Erro Open-Meteo");
+
+      const data = await weatherRes.json();
+      let city = "Sua Região";
+
+      if (geoRes && geoRes.ok) {
+        const geoData = await geoRes.json();
+        city = geoData.city || geoData.locality || "Sua Região";
+      }
+
+      if (data.current_weather) {
+        const w: WeatherData = {
+          temperature: Math.round(data.current_weather.temperature),
+          weathercode: data.current_weather.weathercode,
+          city,
+          updatedAt: Date.now(),
+        };
+        setWeather(w);
+        localStorage.setItem("jarvis_weather", JSON.stringify(w));
+      }
+    } catch (e) {
+      console.warn("⚠️ Weather fetch fallback executed:", e);
+      // If we don't have weather yet, set a sensible default so UI never blocks
+      if (!weather) {
+        setWeather({ temperature: 24, weathercode: 0, city: "Curitiba / SP" });
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [weather]);
 
   useEffect(() => {
-    async function fetchWeather(lat: number, lon: number) {
-      try {
-        const [weatherRes, geoRes] = await Promise.all([
-          fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`),
-          fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`)
-        ]);
-        const data = await weatherRes.json();
-        const geoData = await geoRes.json();
-        
-        let city = geoData.city || geoData.locality || "Sua Região";
-
-        if (data.current_weather) {
-          const w = {
-            temperature: data.current_weather.temperature,
-            weathercode: data.current_weather.weathercode,
-            city
-          };
-          setWeather(w);
-          localStorage.setItem("jarvis_weather", JSON.stringify(w));
-        }
-      } catch (e) {
-        console.error("Erro ao buscar clima", e);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // If cache is fresh (< 30 min old), don't even re-fetch automatically unless user requests
+    if (weather?.updatedAt && Date.now() - weather.updatedAt < 30 * 60 * 1000) {
+      setLoading(false);
+      return;
+    }
 
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          fetchWeather(position.coords.latitude, position.coords.longitude);
-        },
-        (error) => {
-          console.error("Erro geolocalizacao", error);
-          // Fallback SP: -23.55, -46.63
-          fetchWeather(-23.55, -46.63);
-        }
+        (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+        () => fetchWeather(-23.55, -46.63), // Default SP fallback
+        { timeout: 3000, maximumAge: 600000 } // Fast 3s timeout
       );
     } else {
-      // Fallback
       fetchWeather(-23.55, -46.63);
     }
-  }, []);
+  }, [fetchWeather]);
 
-  if (loading || !weather) {
+  if (loading && !weather) {
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 animate-pulse">
         <Thermometer className="h-4 w-4 text-slate-300" />
-        <span className="text-[10px] font-bold text-slate-400">Calculando clima...</span>
+        <span className="text-[10px] font-bold text-slate-400">Carregando clima...</span>
       </div>
     );
   }
 
+  if (!weather) return null;
+
   const { icon, desc } = getWeatherIconAndDesc(weather.weathercode);
-  const dataHoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+  const dataHoje = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "");
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-100/50 shadow-sm transition-all hover:scale-105 cursor-default">
+    <div
+      onClick={() => {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+            () => fetchWeather(-23.55, -46.63),
+            { timeout: 3000 }
+          );
+        }
+      }}
+      className="group relative flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50/80 via-sky-50/80 to-slate-50 border border-blue-100/60 shadow-sm transition-all hover:scale-105 hover:shadow-md cursor-pointer select-none"
+      title="Clique para atualizar o clima agora"
+    >
       {icon}
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-black text-slate-700 leading-none">{weather.temperature}°C</span>
-          <span className="text-[10px] font-bold text-slate-400 border-l border-slate-300 pl-1.5 leading-none capitalize">{weather.city}</span>
+          <span className="text-xs font-black text-slate-800 leading-none">{weather.temperature}°C</span>
+          <span className="text-[10px] font-bold text-slate-500 border-l border-slate-300 pl-1.5 leading-none capitalize">
+            {weather.city}
+          </span>
         </div>
         <div className="flex items-center gap-1.5 mt-1">
           <span className="text-[9px] font-bold text-slate-500 tracking-wider uppercase leading-none">{desc}</span>
           <span className="text-[9px] font-bold text-slate-400 border-l border-slate-300 pl-1.5 leading-none">{dataHoje}</span>
         </div>
       </div>
+      {refreshing && (
+        <RefreshCw className="h-3 w-3 text-sky-500 animate-spin ml-1 opacity-70" />
+      )}
     </div>
   );
 }

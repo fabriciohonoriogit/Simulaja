@@ -3,10 +3,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, MessageSquare } from "lucide-react";
+import { ClipboardList, MessageSquare, Loader2, Sparkles } from "lucide-react";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LeadChat } from "./funil/LeadChat";
+import { enrichCEP, enrichCNPJ } from "@/services/enrichmentService";
+import { toast } from "sonner";
 
 export const STATUS_OPTIONS = [
   { value: "novo_lead", label: "Novo Lead" },
@@ -134,6 +136,68 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
         }
         return { ...prev, ...updates };
     });
+  };
+
+  const [loadingCep, setLoadingCep] = useState(false);
+  const [loadingCnpj, setLoadingCnpj] = useState(false);
+
+  const handleCepBlur = async (cepVal: string) => {
+    const clean = cepVal.replace(/\D/g, "");
+    if (clean.length === 8) {
+      setLoadingCep(true);
+      try {
+        const res = await enrichCEP(clean);
+        if (res) {
+          setForm(prev => ({
+            ...prev,
+            cidade: res.cidade || prev.cidade,
+            dados_cadastro: {
+              ...(prev.dados_cadastro || {}),
+              CEP: res.cep,
+              LOGRADOURO: res.logradouro,
+              BAIRRO: res.bairro,
+              CIDADE: res.cidade,
+              UF: res.uf
+            }
+          }));
+          toast.success(`Endereço localizado via BrasilAPI: ${res.logradouro}, ${res.bairro}`);
+        }
+      } catch (e) {
+        console.error("CEP Auto-fill error:", e);
+      } finally {
+        setLoadingCep(false);
+      }
+    }
+  };
+
+  const handleCnpjBlur = async (val: string) => {
+    const clean = val.replace(/\D/g, "");
+    if (clean.length === 14) {
+      setLoadingCnpj(true);
+      try {
+        const res = await enrichCNPJ(clean);
+        if (res) {
+          setForm(prev => ({
+            ...prev,
+            nome: prev.nome || res.razaoSocial,
+            cidade: res.municipio || prev.cidade,
+            dados_cadastro: {
+              ...(prev.dados_cadastro || {}),
+              nomeEmpresa: res.razaoSocial,
+              cnae: res.cnaeDescricao,
+              capitalSocial: res.capitalSocial,
+              CIDADE: res.municipio,
+              UF: res.uf
+            }
+          }));
+          toast.success(`Empresa localizada na Receita: ${res.razaoSocial}`);
+        }
+      } catch (e) {
+        console.error("CNPJ Auto-fill error:", e);
+      } finally {
+        setLoadingCnpj(false);
+      }
+    }
   };
 
   const handleNestedChange = (field: string, value: string) => {
@@ -464,11 +528,16 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-[10px] uppercase text-slate-400">CPF / CNPJ</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] uppercase text-slate-400">CPF / CNPJ</Label>
+                    {loadingCnpj && <Loader2 className="h-3 w-3 text-primary animate-spin" />}
+                  </div>
                   <Input 
                     value={getNestedValue(["cpf", "CPF", "CNPJ", "cnpj"])}
                     onChange={(e) => handleNestedChange("cpf", e.target.value)}
-                    className="bg-white rounded-lg h-9 text-xs"
+                    onBlur={(e) => handleCnpjBlur(e.target.value)}
+                    placeholder="Digite CPF ou CNPJ..."
+                    className="bg-white rounded-lg h-9 text-xs font-mono"
                   />
                 </div>
                 <div className="space-y-1">
@@ -652,11 +721,16 @@ export const LeadForm: React.FC<LeadFormProps> = ({ initialData, onSubmit, onCan
             <div className="grid gap-3">
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1 col-span-1">
-                  <Label className="text-[10px] uppercase text-slate-400">CEP</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] uppercase text-slate-400">CEP</Label>
+                    {loadingCep && <Loader2 className="h-3 w-3 text-emerald-500 animate-spin" />}
+                  </div>
                   <Input 
                     value={getNestedValue(["CEP"])}
                     onChange={(e) => handleNestedChange("CEP", e.target.value)}
-                    className="bg-white rounded-lg h-9 text-xs"
+                    onBlur={(e) => handleCepBlur(e.target.value)}
+                    placeholder="00000-000"
+                    className="bg-white rounded-lg h-9 text-xs font-mono"
                   />
                 </div>
                 <div className="space-y-1 col-span-2">

@@ -22,6 +22,7 @@ import {
   FileUp
 } from "lucide-react";
 import { LeadImportModal } from "@/components/admin/LeadImportModal";
+import { LeadEnrichmentWidget } from "@/components/admin/LeadEnrichmentWidget";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,7 @@ export default function Leads() {
   const [historyLead, setHistoryLead] = useState<Lead | null>(null);
   const [viewingFichaLead, setViewingFichaLead] = useState<Lead | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [showEnrichment, setShowEnrichment] = useState(false);
 
   const { mutateAsync: deleteLead } = useDelete();
   const { mutateAsync: createLead } = useCreate();
@@ -266,6 +268,17 @@ export default function Leads() {
         <h1 className="text-2xl font-black text-slate-900">Operação Leads</h1>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowEnrichment(prev => !prev)}
+            className={`flex items-center gap-1.5 h-8 px-3 rounded-lg transition-colors border text-[11px] font-black uppercase tracking-wide ${
+              showEnrichment 
+                ? "bg-primary text-white border-primary" 
+                : "bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-100"
+            }`}
+            title="Enriquecimento via Public APIs (BrasilAPI, Receita, BCB)"
+          >
+            Enriquecer Dados (Public APIs)
+          </button>
+          <button
             onClick={() => setIsImportOpen(true)}
             className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors border border-emerald-100 text-[11px] font-black uppercase tracking-wide"
             title="Importar leads em massa (CSV/XLS)"
@@ -283,6 +296,8 @@ export default function Leads() {
           </button>
         </div>
       </div>
+
+      {showEnrichment && <LeadEnrichmentWidget />}
 
       <AdminHeroCard
         title="Gerenciamento"
