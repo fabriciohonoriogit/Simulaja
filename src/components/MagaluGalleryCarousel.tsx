@@ -17,13 +17,13 @@ const BANNERS = [
   {
     id: "reforma-110k",
     title: "Reforma & Ampliação",
-    subtitle: "Transforme seu lar do seu jeito com planejamento inteligente!",
+    subtitle: "Transforme seu lar com o novo Grupo 6044! Taxa de 22% + 1% FR e parcela 50% reduzida.",
     credito: "R$ 110.000",
-    parcela: "R$ 353,14",
-    prazo: "218 meses",
+    parcela: "R$ 399,08",
+    prazo: "220 meses",
     src: "/images/magalu/banner_reforma_110k.jpg",
     categoria: "imoveis",
-    badge: "Linha Reforma",
+    badge: "Novo Grupo 6044",
   },
   {
     id: "carro-120k",

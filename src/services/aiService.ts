@@ -104,21 +104,19 @@ export function getSystemAuthoritativeContext(): string {
   const simContext = getSimulatorAuthoritativeContext();
   return `
 --- DADOS OFICIAIS E AUTORITÁRIOS DO SISTEMA SIMULAJA / ELITE CONSÓRCIOS ---
-• Vendas Oficiais do Mês de Setembro (Realizado): R$ 190.000,00 (Total = 100.000,00 Filiais Magalu + 90.000,00 Gestor)
-• Desempenho por Unidade / Filial Magalu (Setembro/2026):
-  - Filial Paranaguá (952): R$ 60.000,00 (1 venda)
-  - Filial São Mateus do Sul (927): R$ 40.000,00 (1 venda - Valdinei)
-  - Filial Campo Largo (909): R$ 0,00 (0 vendas)
-  - Filial Canoinhas (646): R$ 0,00 (0 vendas)
-  - Filial Irati (929): R$ 0,00 (0 vendas)
-  - Vendas do Gestor: R$ 90.000,00 (2 vendas: R$ 50.000,00 e R$ 40.000,00)
-• Total de Vendas no Mês: 4 vendas
-• Ticket Médio do Mês: R$ 47.500,00 (R$ 190.000,00 / 4 vendas)
-• Comissão Recorrente Mensal Consolidada: R$ 560,00/mês
-  - R$ 200,00/mês das filiais Magalu ((100.000 * 0,80%) / 4 parcelas)
-  - R$ 360,00/mês das vendas do gestor ((90.000 * 4,00%) / 10 parcelas)
-• Status / Ranking Elite: Patente STONE (Vendas até 500k)
-• Próximo Nível (GOLD): Meta de R$ 500.000,00 (38,0% atingido, Faltam R$ 310.000,00 em Vendas)
+• Campanha Vigente: Elite Consórcio Magalu — Outubro, Novembro e Dezembro (Q4)
+• Tabela de Premiação de Elite (Varejo):
+  - CROMO (Meta Venda: R$ 1,5 Mi | RPC ≥42% | EP ≥84% | NPS ≥70): Prêmio Base R$ 1.500 + Bônus Linear R$ 500 + Bônus Seguro R$ 500 + Bônus Aliança R$ 1.000 = Total R$ 3.500
+  - TITÂNIO (Meta Venda: R$ 3,0 Mi | RPC ≥42% | EP ≥84% | NPS ≥70): Prêmio Base R$ 3.000 + Bônus Linear R$ 1.100 + Bônus Seguro R$ 1.100 + Bônus Aliança R$ 1.500 = Total R$ 6.700
+  - PLATINA (Meta Venda: R$ 4,5 Mi | RPC ≥42% | EP ≥84% | NPS ≥70): Prêmio Base R$ 5.500 + Bônus Linear R$ 1.300 + Bônus Seguro R$ 1.300 + Bônus Aliança R$ 1.700 = Total R$ 9.800
+  - DIAMANTE (Meta Venda: R$ 6,0 Mi | RPC ≥42% | EP ≥84% | NPS ≥70): Prêmio Base R$ 9.000 + Bônus Linear R$ 1.500 + Bônus Seguro R$ 1.500 + Bônus Aliança R$ 2.000 = Total R$ 14.000
+• Regras Adicionais dos Bônus:
+  - Plano Linear: Mínimo 20% do total de cotas nos segmentos de Automóvel e Imóvel no plano linear.
+  - Seguro: Mínimo 70% do total das cotas vendidas com seguro.
+  - Aliança: Entrega mínima de 100% do desafio global das lojas atendidas.
+  - NPS: Mínimo 1 avaliação registrada (Classificação Mensal).
+• Status / Ranking Elite Atual: Patente STONE (Vendas até 500k)
+• Próximo Nível (GOLD): Meta de R$ 500.000,00
 
 ${simContext}
 `;

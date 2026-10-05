@@ -62,14 +62,14 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
   // 7. Determinar a patente do Ranking com base nos indicadores
   // Cromo (1.5M, RPC 42%, EP 84%, NPS 70)
   // Titânio (3M, RPC 42%, EP 84%, NPS 70)
-  // Platina (4M, RPC 42%, EP 84%, NPS 70)
-  // Diamante (5M, RPC 42%, EP 84%, NPS 70)
+  // Platina (4.5M, RPC 42%, EP 84%, NPS 70)
+  // Diamante (6M, RPC 42%, EP 84%, NPS 70)
   const atingeIndicadoresComuns = rpcRealizado >= 42 && epRealizado >= 84 && npsRealizado >= 70;
   
   let patenteEfetiva: Patente = 'STONE';
   if (atingeIndicadoresComuns) {
-    if (producaoMes >= 5000000) patenteEfetiva = 'DIAMANTE';
-    else if (producaoMes >= 4000000) patenteEfetiva = 'PLATINA';
+    if (producaoMes >= 6000000) patenteEfetiva = 'DIAMANTE';
+    else if (producaoMes >= 4500000) patenteEfetiva = 'PLATINA';
     else if (producaoMes >= 3000000) patenteEfetiva = 'TITÂNIO';
     else if (producaoMes >= 1500000) patenteEfetiva = 'CROMO';
     else if (producaoMes >= 500000) patenteEfetiva = 'GOLD';
@@ -138,8 +138,12 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
                   <span className="font-bold text-foreground">3,0 M</span>
                 </div>
                 <div className="flex justify-between">
+                  <span>Meta Platina:</span>
+                  <span className="font-bold text-foreground">4,5 M</span>
+                </div>
+                <div className="flex justify-between">
                   <span>Meta Diamante:</span>
-                  <span className="font-bold text-foreground">5,0 M</span>
+                  <span className="font-bold text-foreground">6,0 M</span>
                 </div>
               </div>
             </div>
@@ -455,7 +459,7 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
               <p>
                 {(patenteEfetiva === 'STONE' || patenteEfetiva === 'GOLD') ? (
                   <span>
-                    🚨 <strong className="text-white">Atenção à ativação da patente:</strong> Seu volume de vendas de {fmt(producaoMes)} está na categoria {patenteEfetiva === 'STONE' ? 'STONE (PEDRA)' : 'GOLD (OURO)'} (abaixo do limite de Cromo de 1.5M) ou seus KPIs (RPC/EP/NPS) estão abaixo dos limites. Melhore seus KPIs e atinja 1,5M em vendas para destravar a patente Cromo e seu prêmio base de R$ 1.200.
+                    🚨 <strong className="text-white">Atenção à ativação da patente:</strong> Seu volume de vendas de {fmt(producaoMes)} está na categoria {patenteEfetiva === 'STONE' ? 'STONE (PEDRA)' : 'GOLD (OURO)'} (abaixo do limite de Cromo de 1.5M) ou seus KPIs (RPC/EP/NPS) estão abaixo dos limites. Melhore seus KPIs e atinja 1,5M em vendas para destravar a patente Cromo e seu prêmio base de R$ 1.500.
                   </span>
                 ) : (
                   <span>
@@ -464,7 +468,7 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
                 )}
               </p>
               <p>
-                Abaixo, montei um plano de ação estratégico detalhado focado em alavancar suas comissões e garantir o prêmio máximo de até <strong className="text-emerald-400 font-bold">{fmt(config.premioBase > 0 ? config.premioBase + config.bonusLinear + config.bonusSeguro + config.bonusAlianca : 12800)}</strong> {config.premioBase > 0 ? 'da sua patente ativa' : 'no nível Diamante'}.
+                Abaixo, montei um plano de ação estratégico detalhado focado em alavancar suas comissões e garantir o prêmio máximo de até <strong className="text-emerald-400 font-bold">{fmt(config.premioBase > 0 ? config.premioBase + config.bonusLinear + config.bonusSeguro + config.bonusAlianca : 14000)}</strong> {config.premioBase > 0 ? 'da sua patente ativa' : 'no nível Diamante'}.
               </p>
             </div>
           </div>
@@ -514,10 +518,10 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
           <div className="p-5 rounded-xl border border-amber-500/30 bg-gradient-to-br from-zinc-900 to-amber-950/20 space-y-4">
             <h4 className="text-sm font-black uppercase text-amber-400 tracking-wider flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
-              Planejamento Estratégico de Julho: Rumo ao Nível Máximo (DIAMANTE)
+              Planejamento Estratégico Q4 (Out/Nov/Dez): Rumo ao Nível Máximo (DIAMANTE)
             </h4>
             <p className="text-xs text-zinc-300">
-              Para atingir a patente máxima de <strong className="text-amber-400">DIAMANTE (R$ 5.000.000,00+)</strong> e desbloquear o prêmio base de <strong className="text-emerald-400">R$ 8.000,00</strong> (+ bônus adicionais de até R$ 4.800,00, totalizando <strong className="text-emerald-400">R$ 12.800,00</strong>), você deve seguir o seguinte planejamento prático de 10 minutos:
+              Para atingir a patente máxima de <strong className="text-amber-400">DIAMANTE (R$ 6.000.000,00+)</strong> e desbloquear o prêmio base de <strong className="text-emerald-400">R$ 9.000,00</strong> (+ bônus adicionais de até R$ 5.000,00, totalizando <strong className="text-emerald-400">R$ 14.000,00</strong>), você deve seguir o seguinte planejamento prático:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
               <div className="p-3.5 rounded-lg bg-black/40 border border-zinc-800 space-y-2">
@@ -526,8 +530,8 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
                 </h5>
                 <p className="text-[11px] text-zinc-300 font-semibold mb-1">Passo 2: Transforme em semanas</p>
                 <ul className="text-zinc-400 space-y-1 list-disc list-inside">
-                  <li>Meta Mensal: <strong className="text-white">R$ 5.000.000,00</strong></li>
-                  <li>Meta Semanal: <strong className="text-emerald-400">R$ 1.250.000,00 / semana</strong></li>
+                  <li>Meta Mensal: <strong className="text-white">R$ 6.000.000,00</strong></li>
+                  <li>Meta Semanal: <strong className="text-emerald-400">R$ 1.500.000,00 / semana</strong></li>
                   <li>Dividir a meta torna o plano claro e fácil de corrigir rotas ao longo do mês.</li>
                 </ul>
               </div>

@@ -163,7 +163,7 @@ export default function Indicacoes() {
     ..._g,
     prazo: isLinear && _g.prazoLinear ? _g.prazoLinear : _g.prazo,
     grupo: isLinear && _g.grupoLinear ? _g.grupoLinear : _g.grupo,
-    r50: incluirSeguro ? _g.r50 : _g.r50 - valorSeguroMensal,
+    r50: incluirSeguro ? _g.r50 : (_g.r50SemSeguro ?? (_g.r50 - valorSeguroMensal)),
     r100: _g.r100 !== undefined ? (incluirSeguro ? _g.r100 : _g.r100 - valorSeguroMensal) : undefined,
     seguro: incluirSeguro ? _g.seguro : 0,
   };

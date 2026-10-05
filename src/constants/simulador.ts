@@ -5,6 +5,7 @@ export type GrupoItem = {
   prazo: number; 
   prazoLinear?: number;
   r50: number; 
+  r50SemSeguro?: number;
   r100?: number; 
   tx5050?: number; 
   txLinear?: number; 
@@ -32,6 +33,16 @@ export type GrupoCaracteristicas = {
 export type Category = { id: string; label: string; icon: string; };
 
 export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
+  "6044": {
+    grupo: "6044",
+    reajuste: "INCC",
+    primeiraAssembleia: "25/11/2026",
+    proximaAssembleia: "25/11/2026",
+    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito de R$ 110.000,00 a R$ 210.000,00. 220 meses. Cotas vagas: 4.292. Status: Formação. Tipo de venda: 50/50 NEGOCIADO. DEVIDO À RESOLUÇÃO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%. Taxa 22% + 1% Fundo de Reserva.",
+    ordemContemplacao: "Sorteio, Lance Livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia).",
+    opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
+    regraReajuste: "Reajuste todo o mês de Outubro pelo INCC a partir de Outubro 2027."
+  },
   "6043": {
     grupo: "6043",
     reajuste: "INCC",
@@ -45,19 +56,19 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
   "6042": {
     grupo: "6042",
     reajuste: "INCC",
-    primeiraAssembleia: "24/06/2026",
-    proximaAssembleia: "23/09/2026",
-    caracteristicas: "Imóvel linear e 50/50. Crédito - 350.000,00 a 700.000,00. 237 meses. Linear: 22+1% por 18+1% | 50/50: 24+1% por 18+1%. Seguro 0,0252%. EMBUTIDO 25%.",
-    ordemContemplacao: "Sorteio, Lance livre, Lance Fidelidade (a partir da 13ª ass - limitado a 50% - cotas com 12 pagamentos), Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia), após a 14ª ass lances alternados por 3 vezes.",
+    primeiraAssembleia: "Em andamento",
+    proximaAssembleia: "28/10/2026",
+    caracteristicas: "Imóvel linear e 50/50. Crédito - 350.000,00 a 700.000,00. Prazo: 236 meses. Taxa ADM: 20% + 1% FR. Cotas vagas: 1057. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO. EMBUTIDO DE 25%.",
+    ordemContemplacao: "Sorteio, Lance livre, Lance Fidelidade (a partir da 13ª ass - limitado a 50% - cotas com 12 pagamentos), Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia).",
     opcaoDiluir: "Opção de diluir o lance total. Quitação de 2 parcelas subsequentes na contemplação por lance.",
-    regraReajuste: "Reajuste todo o mês de Outubro pelo INCC a partir de Outubro 2027."
+    regraReajuste: "Reajuste pelo INCC."
   },
   "6027": {
     grupo: "6027",
     reajuste: "INCC",
     primeiraAssembleia: "Em andamento",
-    proximaAssembleia: "23/09/2026",
-    caracteristicas: "Imóvel linear e 50/50. Crédito - 140.000,00 a 280.000,00. 187 meses. Linear: 20+1% por 15+1% | 50/50: 22+1% por 18+1%. Seguro 0,0252%.",
+    proximaAssembleia: "28/10/2026",
+    caracteristicas: "Imóvel linear e 50/50. Crédito - 140.000,00 a 280.000,00. 186 meses. Taxa ADM: 18% + 1% FR. Cotas vagas: 854. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO.",
     ordemContemplacao: "Sorteio, Lance livre e Lances Fixos.",
     opcaoDiluir: "Opção de diluir o lance total.",
     regraReajuste: "Reajuste pelo INCC."
@@ -106,9 +117,9 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
     grupo: "6041",
     reajuste: "INCC",
     primeiraAssembleia: "26/11/2025",
-    proximaAssembleia: "23/09/2026",
-    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 150.000,00 a 230.000,00. Cotas vagas: 480. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO. ****** DEVIDO A RESOLUÇAO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
-    ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia), onde inicia repetição entre todos lances conforme saldo grupo.",
+    proximaAssembleia: "28/10/2026",
+    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 120.000,00 a 230.000,00. Prazo: 209 meses. Taxa ADM: 18% + 1% FR. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO. DEVIDO À RESOLUÇÃO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
+    ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia).",
     opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
     regraReajuste: "Reajuste todo o mês de Outubro pelo INCC a partir de Outubro 2026."
   },
@@ -136,9 +147,9 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
     grupo: "6038",
     reajuste: "INCC",
     primeiraAssembleia: "25/01/2025",
-    proximaAssembleia: "25/07/2026",
-    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 130.000,00 a 230.000,00. ****** DEVIDO A RESOLUÇAO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
-    ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia), onde inicia repetição entre todos lances conforme saldo grupo.",
+    proximaAssembleia: "28/10/2026",
+    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 130.000,00 a 230.000,00. Prazo: 199 meses. Taxa ADM: 20% + 1% FR. Cotas vagas: 727. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO. DEVIDO À RESOLUÇÃO 285, GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA. LANCE EMBUTIDO DE 25%.",
+    ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia).",
     opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
     regraReajuste: "Reajuste todo o mês de Outubro pelo INCC a partir de Outubro 2025."
   },
@@ -155,19 +166,19 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
   "6035": {
     grupo: "6035",
     reajuste: "INCC",
-    primeiraAssembleia: "22/06/2024",
-    proximaAssembleia: "25/07/2026",
-    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 340.000,00 a 650.000,00. LANCE EMBUTIDO DE 25%.",
-    ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia), onde inicia alternação 3x dos lances conforme saldo do grupo.",
+    primeiraAssembleia: "Em andamento",
+    proximaAssembleia: "28/10/2026",
+    caracteristicas: "Imóvel linear, 75/25 e 50/50. Crédito - 340.000,00 a 650.000,00. Prazo: 220 meses. Taxa ADM: 23% + 1% FR. Cotas vagas: 34. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO. LANCE EMBUTIDO DE 25%.",
+    ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia).",
     opcaoDiluir: "Opção de diluir o lance total e quitar 2 parcelas subsequentes na contemplação por lance.",
-    regraReajuste: "Reajuste todo o mês de Outubro pelo INCC a partir de Outubro 2025."
+    regraReajuste: "Reajuste pelo INCC."
   },
   "6030": {
     grupo: "6030",
     reajuste: "INCC",
     primeiraAssembleia: "22/12/2021",
-    proximaAssembleia: "25/07/2026",
-    caracteristicas: "Imóvel linear e 50/50. Crédito - 240.000,00 a 320.000,00. Cotas vagas: 265. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO.",
+    proximaAssembleia: "28/10/2026",
+    caracteristicas: "Imóvel linear e 50/50. Crédito - 240.000,00 a 320.000,00. Prazo: 192 meses. Taxa ADM: 22% + 1% FR. Cotas vagas: 347. Status: Andamento. Tipo de venda: 50/50 NEGOCIADO.",
     ordemContemplacao: "Sorteio, Lance livre, Fixo 25% (desde a 1ª conf. saldo) e Fixo 45% (a partir da 10ª assembleia).",
     opcaoDiluir: "Opção de diluir o lance total.",
     regraReajuste: "Reajuste pelo INCC."
@@ -646,8 +657,11 @@ export const GRUPO_CARACTERISTICAS: Record<string, GrupoCaracteristicas> = {
 
 export const GRUPOS: Record<string, GrupoItem[]> = {
   imovel: [
+    // Grupo 6044 - Novo Grupo Promocional (110k, 210k - 220m)
+    { grupo: "6044", credito: 110000, prazo: 220, r50: 399.08, r50SemSeguro: 395.99, r100: 649.10, txLinear: 22, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6044", credito: 210000, prazo: 220, r50: 761.87, r50SemSeguro: 696.77, r100: 1239.27, txLinear: 22, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    
     // Grupo 6043 - Promocional Agosto/26
-    { grupo: "6043", credito: 110000, prazo: 217, r50: 398.80, r100: 636.44, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6043", credito: 120000, prazo: 217, r50: 435.05, r100: 694.30, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6043", credito: 130000, prazo: 217, r50: 471.30, r100: 752.16, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6043", credito: 140000, prazo: 217, r50: 507.56, r100: 810.02, txLinear: 18, frLinear: 1, tx5050: 21, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
@@ -681,17 +695,26 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6027", credito: 200000, prazo: 187, r50: 797.78, r100: 1300.64, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 220000, prazo: 187, r50: 877.55, r100: 1430.71, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
     { grupo: "6027", credito: 230000, prazo: 187, r50: 917.44, r100: 1495.74, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "6027", credito: 240000, prazo: 187, r50: 957.33, r100: 1560.77, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "6027", credito: 250000, prazo: 187, r50: 997.22, r100: 1625.80, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "6027", credito: 260000, prazo: 187, r50: 1037.11, r100: 1690.83, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "6027", credito: 270000, prazo: 187, r50: 1077.00, r100: 1755.87, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
-    { grupo: "6027", credito: 280000, prazo: 187, r50: 1116.89, r100: 1820.90, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true },
+    { grupo: "6027", credito: 240000, prazo: 186, r50: 962.13, r50SemSeguro: 890.13, r100: 1560.77, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6027", credito: 250000, prazo: 186, r50: 1002.22, r50SemSeguro: 927.22, r100: 1625.80, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6027", credito: 260000, prazo: 186, r50: 1042.31, r50SemSeguro: 964.31, r100: 1690.83, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6027", credito: 270000, prazo: 186, r50: 1082.40, r50SemSeguro: 1001.40, r100: 1755.87, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6027", credito: 280000, prazo: 186, r50: 1122.49, r50SemSeguro: 1038.49, r100: 1820.90, txLinear: 15, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
 
-    // Grupo 6041 - Promocional Agosto/26
-    { grupo: "6041", credito: 150000, prazo: 210, r50: 537.73, r100: 895.00, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6041", credito: 200000, prazo: 210, r50: 716.98, r100: 1193.33, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6041", credito: 230000, prazo: 211, r50: 878.48, r100: 1419.17, txLinear: 18, frLinear: 1, tx5050: 23, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
-    { grupo: "6041", credito: 230000, prazo: 211, r50: 912.88, r100: 1474.65, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
+    // Grupo 6041 - Promocional (120k, 130k, 140k, 150k, 160k, 170k, 180k, 190k, 200k, 220k)
+    { grupo: "6041", credito: 120000, prazo: 209, r50: 431.99, r50SemSeguro: 395.99, r100: 715.99, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 130000, prazo: 209, r50: 467.98, r50SemSeguro: 428.98, r100: 775.64, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 140000, prazo: 209, r50: 503.98, r50SemSeguro: 461.98, r100: 835.31, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 150000, prazo: 209, r50: 539.98, r50SemSeguro: 494.98, r100: 895.00, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 160000, prazo: 209, r50: 575.98, r50SemSeguro: 527.98, r100: 954.98, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 170000, prazo: 209, r50: 611.98, r50SemSeguro: 560.98, r100: 1014.65, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 180000, prazo: 209, r50: 647.98, r50SemSeguro: 593.98, r100: 1074.31, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 190000, prazo: 209, r50: 683.98, r50SemSeguro: 626.98, r100: 1133.98, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 200000, prazo: 209, r50: 719.98, r50SemSeguro: 659.98, r100: 1193.33, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6041", credito: 220000, prazo: 209, r50: 791.97, r50SemSeguro: 725.97, r100: 1312.65, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+
+    // Grupo 6038 - Promocional (230k - 199m)
+    { grupo: "6038", credito: 230000, prazo: 199, r50: 891.00, r50SemSeguro: 820.85, r100: 1474.65, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
 
     // Grupo 6030 - Promocional e Plano Golden Agosto/26
     { grupo: "6030", credito: 240000, prazo: 194, r50: 1016.28, r100: 1618.35, txLinear: 25, frLinear: 1, tx5050: 25, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
@@ -699,27 +722,32 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6030", credito: 260000, prazo: 194, r50: 1100.98, r100: 1753.21, txLinear: 25, frLinear: 1, tx5050: 25, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
     { grupo: "6030", credito: 270000, prazo: 194, r50: 1143.32, r100: 1820.64, txLinear: 25, frLinear: 1, tx5050: 25, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
     { grupo: "6030", credito: 280000, prazo: 194, r50: 1185.67, r100: 1888.07, txLinear: 25, frLinear: 1, tx5050: 25, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6030", credito: 300000, prazo: 194, r50: 1221.59, r100: 1962.58, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6030", credito: 300000, prazo: 192, r50: 1233.59, r50SemSeguro: 1140.59, r100: 1962.58, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6030", credito: 300000, prazo: 194, r50: 1270.36, r100: 2023.07, txLinear: 25, frLinear: 1, tx5050: 25, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6030", credito: 320000, prazo: 194, r50: 1303.03, r100: 2093.41, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6030", credito: 320000, prazo: 192, r50: 1315.83, r50SemSeguro: 1216.63, r100: 2093.41, txLinear: 20, frLinear: 1, tx5050: 22, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6030", credito: 320000, prazo: 194, r50: 1355.05, r100: 2157.94, txLinear: 25, frLinear: 1, tx5050: 25, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
 
+    // Grupo 6035 - Promocional (340k, 360k)
+    { grupo: "6035", credito: 340000, prazo: 220, r50: 1249.66, r50SemSeguro: 1143.58, r100: 2011.66, txLinear: 23, frLinear: 1, tx5050: 23, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6035", credito: 360000, prazo: 222, r50: 1329.48, r50SemSeguro: 1216.08, r100: 2145.48, txLinear: 24, frLinear: 1, tx5050: 24, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+
     // Grupo 6042 - Promocional e Plano Golden Agosto/26
-    { grupo: "6042", credito: 350000, prazo: 237, r50: 1155.32, r100: 1893.67, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 350000, prazo: 236, r50: 1159.52, r50SemSeguro: 1052.77, r100: 1893.67, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 350000, prazo: 237, r50: 1249.52, r100: 1980.53, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 400000, prazo: 237, r50: 1320.37, r100: 2164.20, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 380000, prazo: 236, r50: 1258.91, r50SemSeguro: 1143.01, r100: 2055.99, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 400000, prazo: 236, r50: 1325.17, r50SemSeguro: 1203.17, r100: 2164.20, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 400000, prazo: 237, r50: 1428.02, r100: 2263.46, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
     { grupo: "6042", credito: 450000, prazo: 237, r50: 1485.38, r100: 2434.72, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 450000, prazo: 237, r50: 1606.52, r100: 2546.39, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 500000, prazo: 237, r50: 1650.42, r100: 2705.25, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 500000, prazo: 236, r50: 1656.46, r50SemSeguro: 1503.96, r100: 2705.25, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 500000, prazo: 237, r50: 1785.02, r100: 2829.32, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
     { grupo: "6042", credito: 550000, prazo: 237, r50: 1815.46, r100: 2975.77, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 550000, prazo: 237, r50: 1963.52, r100: 3112.26, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 600000, prazo: 237, r50: 1980.50, r100: 3246.30, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 600000, prazo: 236, r50: 1987.75, r50SemSeguro: 1804.75, r100: 3246.30, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 600000, prazo: 237, r50: 2142.03, r100: 3395.19, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
     { grupo: "6042", credito: 650000, prazo: 237, r50: 2145.54, r100: 3516.82, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 650000, prazo: 237, r50: 2320.53, r100: 3678.12, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
-    { grupo: "6042", credito: 700000, prazo: 237, r50: 2310.58, r100: 3787.35, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
+    { grupo: "6042", credito: 700000, prazo: 236, r50: 2319.04, r50SemSeguro: 2105.54, r100: 3787.35, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "50/50 NEGOCIADO" },
     { grupo: "6042", credito: 700000, prazo: 237, r50: 2499.03, r100: 3961.05, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN 50/50" },
 
     // Composições de Crédito Multi-Cotas (810k, 900k, 1M, 2M)
@@ -729,12 +757,12 @@ export const GRUPOS: Record<string, GrupoItem[]> = {
     { grupo: "6042", credito: 900000, prazo: 237, r50: 2953.30, r100: 4881.94, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "700 MIL + 200 MIL" },
     { grupo: "6042", credito: 900000, prazo: 237, r50: 3307.62, r100: 5253.35, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN (700k + 200k)" },
 
-    { grupo: "6042", credito: 1000000, prazo: 237, r50: 3210.88, r100: 5321.10, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "2 COTAS DE 500 MIL" },
+    { grupo: "6042", credito: 1000000, prazo: 236, r50: 3312.92, r50SemSeguro: 3007.92, r100: 5410.50, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "2 COTAS DE 500 MIL" },
     { grupo: "6042", credito: 1000000, prazo: 237, r50: 3570.04, r100: 5658.65, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN (2 COTAS DE 500 MIL)" },
 
-    { grupo: "6042", credito: 1500000, prazo: 237, r50: 4816.32, r100: 7981.65, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "3 COTAS DE 500 MIL" },
+    { grupo: "6042", credito: 1500000, prazo: 236, r50: 4969.38, r50SemSeguro: 4511.88, r100: 8115.75, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "3 COTAS DE 500 MIL" },
 
-    { grupo: "6042", credito: 2000000, prazo: 237, r50: 6421.76, r100: 10642.20, txLinear: 18, frLinear: 1, tx5050: 18, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "4 COTAS DE 500 MIL" },
+    { grupo: "6042", credito: 2000000, prazo: 236, r50: 6625.84, r50SemSeguro: 6015.84, r100: 10821.00, txLinear: 20, frLinear: 1, tx5050: 20, fr5050: 1, seguro: 0.0252, isPromo: true, tipoVenda: "4 COTAS DE 500 MIL" },
     { grupo: "6042", credito: 2000000, prazo: 237, r50: 7140.08, r100: 11317.30, txLinear: 26, frLinear: 1, tx5050: 26, fr5050: 1, seguro: 0.0252, isPlanoGold: true, tipoVenda: "PLANO GOLDEN (4 COTAS DE 500 MIL)" },
   ],
   veiculo: [
@@ -800,6 +828,7 @@ export const CATEGORIAS: Category[] = [
 
 export const ESTATISTICAS_LANCES: Record<string, { lanceMaior: number, lanceMenor: number, lanceMedia: number, qtdLances: number }> = {
   "5292": { lanceMaior: 85.00, lanceMenor: 64.00, lanceMedia: 71.31, qtdLances: 17 },
+  "6044": { lanceMaior: 52.27, lanceMenor: 52.27, lanceMedia: 52.27, qtdLances: 1 },
   "6043": { lanceMaior: 52.27, lanceMenor: 52.27, lanceMedia: 52.27, qtdLances: 1 },
   "6030": { lanceMaior: 100.00, lanceMenor: 75.00, lanceMedia: 87.50, qtdLances: 2 },
 };
@@ -893,6 +922,7 @@ export const MEDIA_LANCES_GRUPOS: Record<string, number> = {
   "6041": 95.90,
   "6042": 98.97,
   "6043": 98.98,
+  "6044": 98.98,
 
   // SERVIÇOS
   "7116": 12.22,

@@ -233,7 +233,7 @@ export default function Simulador() {
     ..._g,
     prazo: isLinear && _g.prazoLinear ? _g.prazoLinear : _g.prazo,
     grupo: isLinear && _g.grupoLinear ? _g.grupoLinear : _g.grupo,
-    r50: incluirSeguro ? _g.r50 : _g.r50 - valorSeguroMensal,
+    r50: incluirSeguro ? _g.r50 : (_g.r50SemSeguro ?? (_g.r50 - valorSeguroMensal)),
     r100: _g.r100 !== undefined ? (incluirSeguro ? _g.r100 : _g.r100 - valorSeguroMensal) : undefined,
     seguro: incluirSeguro ? _g.seguro : 0,
   };
@@ -563,7 +563,7 @@ export default function Simulador() {
               </label>
               <p className="text-[10px] text-slate-400 mt-1 font-semibold">
                 {incluirSeguro 
-                  ? `(Sem seguro: ${(_g.r50 - valorSeguroMensal).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})` 
+                  ? `(Sem seguro: ${(_g.r50SemSeguro ?? (_g.r50 - valorSeguroMensal)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})` 
                   : `(Com seguro: ${_g.r50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})`
                 }
               </p>

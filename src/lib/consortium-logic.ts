@@ -8,6 +8,7 @@ export const groupQuotaMap: Record<string, number> = {
   "6041": 3100,
   "6042": 4300,
   "6043": 4300,
+  "6044": 4300,
   // Veículo
   "5297": 2500,
   "5295": 2500,
