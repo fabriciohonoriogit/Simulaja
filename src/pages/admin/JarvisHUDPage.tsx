@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { JarvisOrb, OrbState } from "@/components/admin/JarvisOrb";
 import {
   Sparkles,
@@ -15,7 +15,13 @@ import {
   Layers,
   Terminal,
   Sun,
-  Trophy
+  Trophy,
+  Copy,
+  Check,
+  FileText,
+  ExternalLink,
+  MessageSquare,
+  Mail
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -25,6 +31,16 @@ interface LogEntry {
   tag: string;
   text: string;
   color: string;
+  isBoletoCard?: boolean;
+  boletoInfo?: {
+    cliente: string;
+    grupo: string;
+    cota: string;
+    valor: string;
+    vencimento: string;
+    linhaDigitavel: string;
+    pdfUrl: string;
+  };
 }
 
 export default function JarvisHUDPage() {
@@ -32,8 +48,26 @@ export default function JarvisHUDPage() {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [command, setCommand] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [logs, setLogs] = useState<LogEntry[]>([
+    {
+      id: "boleto_fabricio_init",
+      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      tag: "2ª VIA MAGALU",
+      color: "text-emerald-400 font-bold",
+      text: "Boleto de Fabrício Rodrigues Honório gerado com sucesso via Atendimento > Posição do Consorciado > Emissão de Cobrança!",
+      isBoletoCard: true,
+      boletoInfo: {
+        cliente: "Fabrício Rodrigues Honório",
+        grupo: "006042",
+        cota: "0782-00",
+        valor: "R$ 1.443,00",
+        vencimento: "20/10/2026",
+        linhaDigitavel: "23793.38128 60000.123456 7 8900000014430",
+        pdfUrl: "https://storage.simulaja.com.br/boletos/2via_cota_006042_0782.pdf"
+      }
+    },
     {
       id: "1",
       time: "15:00",
@@ -57,11 +91,17 @@ export default function JarvisHUDPage() {
     }
   ]);
 
+  const handleCopyLinha = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   const speakResponse = (text: string) => {
     if (!audioEnabled) return;
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(text.replace(/[*#]/g, ''));
       utterance.lang = "pt-BR";
       utterance.rate = 1.05;
       utterance.pitch = 1.0;
@@ -72,31 +112,49 @@ export default function JarvisHUDPage() {
     }
   };
 
-  const processSmartCommand = (lowerPrompt: string): { tag: string; responseText: string; color: string } | null => {
+  const processSmartCommand = (lowerPrompt: string, originalText: string): LogEntry | null => {
+    const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
     // 1. Comando de 2ª via / Boleto / Fabrício / Magalu
     if (lowerPrompt.includes("segunda via") || lowerPrompt.includes("2ª via") || lowerPrompt.includes("boleto") || lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício")) {
       return {
-        tag: "ADMINISTRADORA MAGALU",
+        id: Date.now().toString(),
+        time: timeStr,
+        tag: "2ª VIA MAGALU",
         color: "text-emerald-400 font-bold",
-        responseText: "✅ Boleto de Fabrício Rodrigues Honório (Grupo 006042 / Cota 0782-00) gerado com sucesso via Atendimento > Posição do Consorciado > Emissão de Cobrança!\n\n📄 Linha Digitável: 23793.38128 60000.123456 7 8900000014430\n💰 Valor: R$ 1.443,00 (Vencimento: 20/10/2026)\n📲 Status de Envio: Disparado via WhatsApp API e e-mail com PDF anexado."
+        text: "Boleto emitido via Atendimento > Posição do Consorciado > Emissão de Cobrança!",
+        isBoletoCard: true,
+        boletoInfo: {
+          cliente: lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício") ? "Fabrício Rodrigues Honório" : "Consorciado Magalu",
+          grupo: "006042",
+          cota: "0782-00",
+          valor: "R$ 1.443,00",
+          vencimento: "20/10/2026",
+          linhaDigitavel: "23793.38128 60000.123456 7 8900000014430",
+          pdfUrl: "https://storage.simulaja.com.br/boletos/2via_cota_006042_0782.pdf"
+        }
       };
     }
 
     // 2. Comando de Gmail / E-mail
     if (lowerPrompt.includes("gmail") || lowerPrompt.includes("e-mail") || lowerPrompt.includes("email")) {
       return {
+        id: Date.now().toString(),
+        time: timeStr,
         tag: "GMAIL BRIEFING",
         color: "text-amber-400 font-bold",
-        responseText: "📬 Conexão Gmail Ativa (gn_prosperaplan@consorciomagalu.com.br):\n1. Marcos Silva: Comprovante de Pagamento referente a Outubro/2026.\n2. Consórcio Magalu: Resultado da Assembleia do Grupo 4050.\n3. Juliana Costa: Dúvida sobre simulação de imóvel 500k."
+        text: "📬 Conexão Gmail Ativa (gn_prosperaplan@consorciomagalu.com.br):\n1. Marcos Silva: Comprovante de Pagamento Outubro/2026\n2. Consórcio Magalu: Resultado da Assembleia Grupo 4050\n3. Juliana Costa: Dúvida sobre simulação imóvel 500k"
       };
     }
 
     // 3. English Coach
     if (lowerPrompt.includes("inglês") || lowerPrompt.includes("ingles") || lowerPrompt.includes("english")) {
       return {
+        id: Date.now().toString(),
+        time: timeStr,
         tag: "ENGLISH COACH",
         color: "text-cyan-300 font-bold",
-        responseText: "🇬🇧 Hi there! I'm your English Coach tutor. How are you feeling today? Are you ready to practice some conversational English?"
+        text: "🇬🇧 Hi there! I'm your English Coach tutor. How are you feeling today? Are you ready to practice some conversational English?"
       };
     }
 
@@ -118,19 +176,15 @@ export default function JarvisHUDPage() {
 
     if (!customCommand) setCommand("");
 
-    // Verificação inteligente de comandos pré-programados do Jarvis
     const lowerPrompt = textToRun.toLowerCase();
-    const smartResponse = processSmartCommand(lowerPrompt);
+    const smartResponse = processSmartCommand(lowerPrompt, textToRun);
 
     if (smartResponse) {
       setTimeout(() => {
-        setLogs(prev => [
-          { id: (Date.now() + 1).toString(), time: timeStr, tag: smartResponse.tag, text: smartResponse.responseText, color: smartResponse.color },
-          ...prev
-        ]);
-        speakResponse(smartResponse.responseText);
+        setLogs(prev => [smartResponse, ...prev]);
+        speakResponse(smartResponse.text);
         setIsProcessing(false);
-      }, 800);
+      }, 700);
       return;
     }
 
@@ -308,10 +362,10 @@ export default function JarvisHUDPage() {
                 <Sun className="h-3.5 w-3.5 text-amber-400" /> Briefing
               </button>
               <button 
-                onClick={() => handleSendCommand("Auditar sorteio da Loteria Federal número 25812 no grupo 6042")}
-                className="p-2.5 bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/40 text-amber-300 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+                onClick={() => handleSendCommand("Baixar a segunda via do boleto do cliente Fabricio Rodrigues Honório do portal consorcio magalu")}
+                className="p-2.5 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all shadow-[0_0_10px_rgba(16,185,129,0.2)]"
               >
-                <Trophy className="h-3.5 w-3.5 text-amber-400" /> Sorteio 6042
+                <FileText className="h-3.5 w-3.5 text-emerald-400" /> 2ª Via Fabrício
               </button>
             </div>
           </div>
@@ -364,7 +418,7 @@ export default function JarvisHUDPage() {
           </div>
         </div>
 
-        {/* Right Column */}
+        {/* Right Column: Feed do Cofre */}
         <div className="col-span-12 lg:col-span-3 bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4 backdrop-blur-md max-h-[620px] shadow-2xl relative overflow-hidden">
           
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
@@ -376,14 +430,64 @@ export default function JarvisHUDPage() {
             </span>
           </div>
 
-          <div className="flex-1 space-y-2.5 overflow-y-auto text-xs pr-1 custom-scrollbar">
+          {/* Feed Stream */}
+          <div className="flex-1 space-y-3 overflow-y-auto text-xs pr-1 custom-scrollbar">
             {logs.map((log) => (
-              <div key={log.id} className="bg-slate-950/80 p-3 rounded-xl border border-cyan-900/30 space-y-1 animate-in fade-in transition-all">
+              <div 
+                key={log.id} 
+                className={`p-3 rounded-xl border space-y-2 animate-in fade-in transition-all ${
+                  log.isBoletoCard 
+                    ? 'bg-slate-950/95 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
+                    : 'bg-slate-950/80 border-cyan-900/30'
+                }`}
+              >
                 <div className="flex items-center justify-between text-[10px]">
                   <span className={`font-black uppercase tracking-wider ${log.color}`}>{log.tag}</span>
                   <span className="text-slate-500">{log.time}</span>
                 </div>
-                <p className="text-slate-300 text-[11px] leading-relaxed font-sans whitespace-pre-line">{log.text}</p>
+
+                {log.isBoletoCard && log.boletoInfo ? (
+                  <div className="space-y-2 text-[11px] font-sans">
+                    <div className="bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-500/30 space-y-1">
+                      <p className="font-bold text-emerald-300 text-xs">👤 {log.boletoInfo.cliente}</p>
+                      <p className="text-slate-300">Grupo: <strong className="text-white">{log.boletoInfo.grupo}</strong> | Cota: <strong className="text-white">{log.boletoInfo.cota}</strong></p>
+                      <p className="text-slate-300">Valor: <strong className="text-emerald-400 font-bold">{log.boletoInfo.valor}</strong> | Vencimento: <strong className="text-amber-400">{log.boletoInfo.vencimento}</strong></p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-400 font-bold block">Linha Digitável:</span>
+                      <div className="bg-slate-900 p-2 rounded border border-slate-800 text-[10px] font-mono text-cyan-300 break-all flex items-center justify-between">
+                        <span>{log.boletoInfo.linhaDigitavel}</span>
+                        <button 
+                          onClick={() => handleCopyLinha(log.boletoInfo!.linhaDigitavel, log.id)}
+                          className="ml-2 p-1 text-slate-400 hover:text-cyan-300 transition-colors"
+                          title="Copiar Linha Digitável"
+                        >
+                          {copiedId === log.id ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pt-1 flex flex-wrap gap-1.5">
+                      <a 
+                        href={log.boletoInfo.pdfUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="px-2 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 rounded text-[9px] font-bold flex items-center gap-1 transition-colors"
+                      >
+                        <FileText className="h-3 w-3" /> PDF Boleto <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                      <span className="px-2 py-1 bg-emerald-950 text-emerald-400 border border-emerald-500/30 rounded text-[9px] font-bold flex items-center gap-1">
+                        <MessageSquare className="h-3 w-3 text-emerald-400" /> WhatsApp Enviado
+                      </span>
+                      <span className="px-2 py-1 bg-amber-950 text-amber-400 border border-amber-500/30 rounded text-[9px] font-bold flex items-center gap-1">
+                        <Mail className="h-3 w-3 text-amber-400" /> E-mail Enviado
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-slate-300 text-[11px] leading-relaxed font-sans whitespace-pre-line">{log.text}</p>
+                )}
               </div>
             ))}
           </div>
