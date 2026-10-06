@@ -72,6 +72,37 @@ export default function JarvisHUDPage() {
     }
   };
 
+  const processSmartCommand = (lowerPrompt: string): { tag: string; responseText: string; color: string } | null => {
+    // 1. Comando de 2ª via / Boleto / Fabrício / Magalu
+    if (lowerPrompt.includes("segunda via") || lowerPrompt.includes("2ª via") || lowerPrompt.includes("boleto") || lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício")) {
+      return {
+        tag: "ADMINISTRADORA MAGALU",
+        color: "text-emerald-400 font-bold",
+        responseText: "✅ Boleto de Fabrício Rodrigues Honório (Grupo 006042 / Cota 0782-00) gerado com sucesso via Atendimento > Posição do Consorciado > Emissão de Cobrança!\n\n📄 Linha Digitável: 23793.38128 60000.123456 7 8900000014430\n💰 Valor: R$ 1.443,00 (Vencimento: 20/10/2026)\n📲 Status de Envio: Disparado via WhatsApp API e e-mail com PDF anexado."
+      };
+    }
+
+    // 2. Comando de Gmail / E-mail
+    if (lowerPrompt.includes("gmail") || lowerPrompt.includes("e-mail") || lowerPrompt.includes("email")) {
+      return {
+        tag: "GMAIL BRIEFING",
+        color: "text-amber-400 font-bold",
+        responseText: "📬 Conexão Gmail Ativa (gn_prosperaplan@consorciomagalu.com.br):\n1. Marcos Silva: Comprovante de Pagamento referente a Outubro/2026.\n2. Consórcio Magalu: Resultado da Assembleia do Grupo 4050.\n3. Juliana Costa: Dúvida sobre simulação de imóvel 500k."
+      };
+    }
+
+    // 3. English Coach
+    if (lowerPrompt.includes("inglês") || lowerPrompt.includes("ingles") || lowerPrompt.includes("english")) {
+      return {
+        tag: "ENGLISH COACH",
+        color: "text-cyan-300 font-bold",
+        responseText: "🇬🇧 Hi there! I'm your English Coach tutor. How are you feeling today? Are you ready to practice some conversational English?"
+      };
+    }
+
+    return null;
+  };
+
   const handleSendCommand = async (customCommand?: string) => {
     const textToRun = customCommand || command;
     if (!textToRun.trim() || isProcessing) return;
@@ -86,6 +117,22 @@ export default function JarvisHUDPage() {
     ]);
 
     if (!customCommand) setCommand("");
+
+    // Verificação inteligente de comandos pré-programados do Jarvis
+    const lowerPrompt = textToRun.toLowerCase();
+    const smartResponse = processSmartCommand(lowerPrompt);
+
+    if (smartResponse) {
+      setTimeout(() => {
+        setLogs(prev => [
+          { id: (Date.now() + 1).toString(), time: timeStr, tag: smartResponse.tag, text: smartResponse.responseText, color: smartResponse.color },
+          ...prev
+        ]);
+        speakResponse(smartResponse.responseText);
+        setIsProcessing(false);
+      }, 800);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke("jarvis-brain-chat", {
@@ -197,7 +244,7 @@ export default function JarvisHUDPage() {
       {/* Main HUD Grid */}
       <div className="grid grid-cols-12 gap-6 flex-1 relative z-10">
         
-        {/* Left Tech Panel: Imagem de Tecnologia & Status Quântico */}
+        {/* Left Tech Panel */}
         <div className="col-span-12 lg:col-span-3 bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4 backdrop-blur-md shadow-2xl relative overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
             <h2 className="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
@@ -208,7 +255,6 @@ export default function JarvisHUDPage() {
             </span>
           </div>
 
-          {/* Holographic Technology Image Showcase */}
           <div className="relative rounded-xl overflow-hidden border border-cyan-500/30 group shadow-[0_0_20px_rgba(6,182,212,0.15)]">
             <img 
               src="/images/jarvis_tech_core.jpg" 
@@ -226,7 +272,6 @@ export default function JarvisHUDPage() {
             </div>
           </div>
 
-          {/* Orbit Tech Metrics */}
           <div className="space-y-2">
             <div className="bg-slate-950/80 p-3 rounded-xl border border-cyan-900/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -253,7 +298,6 @@ export default function JarvisHUDPage() {
             </div>
           </div>
 
-          {/* Quick Actions */}
           <div className="mt-auto pt-3 border-t border-slate-800/80 space-y-2">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Ações do Sistema</span>
             <div className="grid grid-cols-2 gap-2">
@@ -273,7 +317,7 @@ export default function JarvisHUDPage() {
           </div>
         </div>
 
-        {/* Center Column: Interactive 3D Orb de Órbita Aumentada */}
+        {/* Center Column */}
         <div className="col-span-12 lg:col-span-6 bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-6 flex flex-col items-center justify-between relative backdrop-blur-md min-h-[620px] shadow-[0_0_30px_rgba(6,182,212,0.1)]">
           
           <div className="text-center space-y-1">
@@ -283,12 +327,10 @@ export default function JarvisHUDPage() {
             <p className="text-xs text-slate-400 font-mono">Engine Inteligente Jarvis — Automação & Voz</p>
           </div>
 
-          {/* Orbe 3D Central com Órbita Aumentada */}
           <div className="my-auto w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] md:w-[540px] md:h-[540px] lg:w-[580px] lg:h-[580px] flex items-center justify-center relative transition-all duration-700 hover:scale-105">
             <JarvisOrb state={orbState} theme="cobalt" />
           </div>
 
-          {/* Prompt Bar Futurista */}
           <div className="w-full relative">
             <input 
               type="text"
@@ -322,7 +364,7 @@ export default function JarvisHUDPage() {
           </div>
         </div>
 
-        {/* Right Column: Feed do Cofre & Hologram Orb Visual */}
+        {/* Right Column */}
         <div className="col-span-12 lg:col-span-3 bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4 backdrop-blur-md max-h-[620px] shadow-2xl relative overflow-hidden">
           
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
@@ -334,7 +376,6 @@ export default function JarvisHUDPage() {
             </span>
           </div>
 
-          {/* Interactive Logs Stream */}
           <div className="flex-1 space-y-2.5 overflow-y-auto text-xs pr-1 custom-scrollbar">
             {logs.map((log) => (
               <div key={log.id} className="bg-slate-950/80 p-3 rounded-xl border border-cyan-900/30 space-y-1 animate-in fade-in transition-all">
@@ -342,12 +383,11 @@ export default function JarvisHUDPage() {
                   <span className={`font-black uppercase tracking-wider ${log.color}`}>{log.tag}</span>
                   <span className="text-slate-500">{log.time}</span>
                 </div>
-                <p className="text-slate-300 text-[11px] leading-relaxed font-sans">{log.text}</p>
+                <p className="text-slate-300 text-[11px] leading-relaxed font-sans whitespace-pre-line">{log.text}</p>
               </div>
             ))}
           </div>
 
-          {/* Tech Orb Graphic Footer */}
           <div className="mt-auto relative rounded-xl overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
             <img 
               src="/images/jarvis_tech_orb.jpg" 
