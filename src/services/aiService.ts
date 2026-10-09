@@ -183,8 +183,8 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
       const r50ComSeguro = closest.r50 || 0;
       const r100ComSeguro = closest.r100 || (r50ComSeguro * 2);
 
-      const r50SemSeguro = Math.max(0, r50ComSeguro - valSeguro);
-      const r100SemSeguro = Math.max(0, r100ComSeguro - valSeguro);
+      const r50SemSeguro = closest.r50SemSeguro ?? Math.max(0, r50ComSeguro - valSeguro);
+      const r100SemSeguro = closest.r100SemSeguro ?? Math.max(0, r100ComSeguro - valSeguro);
 
       const p50ComSeguro = r50ComSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
       const p50SemSeguro = r50SemSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

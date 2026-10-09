@@ -97,6 +97,72 @@ export default function JarvisHUDPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleOpenBoletoPdf = (e: React.MouseEvent, boletoInfo: any) => {
+    e.preventDefault();
+    if (boletoInfo.pdfUrl && !boletoInfo.pdfUrl.includes("storage.simulaja.com.br")) {
+      window.open(boletoInfo.pdfUrl, "_blank");
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8" />
+        <title>2ª Via de Boleto - ${boletoInfo.cliente}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background: #0f172a; color: #f8fafc; }
+          .card { max-width: 650px; margin: 0 auto; background: #1e293b; border: 2px solid #10b981; border-radius: 16px; padding: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 16px; margin-bottom: 24px; }
+          .logo { font-size: 22px; font-weight: 900; color: #10b981; letter-spacing: -0.5px; }
+          .sub { font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+          .field { background: #0f172a; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; }
+          .field label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 800; display: block; margin-bottom: 4px; }
+          .field span { font-size: 15px; font-weight: 700; color: #f8fafc; }
+          .barcode-box { background: #0284c715; border: 1px dashed #0284c7; padding: 16px; border-radius: 10px; text-align: center; margin-top: 10px; }
+          .barcode-line { font-family: monospace; font-size: 15px; font-weight: bold; color: #38bdf8; letter-spacing: 1.5px; word-break: break-all; }
+          .actions { display: flex; gap: 12px; margin-top: 24px; }
+          .btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; border: none; transition: all 0.2s; }
+          .btn-primary { background: #10b981; color: #0f172a; }
+          .btn-primary:hover { background: #34d399; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="header">
+            <div>
+              <div class="logo">CONSÓRCIO MAGALU</div>
+              <div class="sub">Documento Auxiliar de Cobrança / 2ª Via</div>
+            </div>
+            <div style="text-align: right;">
+              <span style="background: #064e3b; color: #34d399; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 4px;">AUTENTICADO</span>
+            </div>
+          </div>
+          <div class="grid">
+            <div class="field"><label>Cliente / Consorciado</label><span>${boletoInfo.cliente}</span></div>
+            <div class="field"><label>Data de Vencimento</label><span style="color: #fbbf24;">${boletoInfo.vencimento}</span></div>
+            <div class="field"><label>Grupo / Cota</label><span>Grupo ${boletoInfo.grupo} - Cota ${boletoInfo.cota}</span></div>
+            <div class="field"><label>Valor Total</label><span style="color: #34d399;">${boletoInfo.valor}</span></div>
+          </div>
+          <div class="field">
+            <label>Linha Digitável</label>
+            <div class="barcode-box">
+              <div class="barcode-line">${boletoInfo.linhaDigitavel}</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    const blob = new Blob([htmlContent], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
   const speakResponse = (text: string) => {
     if (!audioEnabled) return;
     if ("speechSynthesis" in window) {
@@ -469,14 +535,13 @@ export default function JarvisHUDPage() {
                     </div>
 
                     <div className="pt-1 flex flex-wrap gap-1.5">
-                      <a 
-                        href={log.boletoInfo.pdfUrl} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="px-2 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 rounded text-[9px] font-bold flex items-center gap-1 transition-colors"
+                      <button 
+                        onClick={(e) => handleOpenBoletoPdf(e, log.boletoInfo)} 
+                        className="px-2 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 rounded text-[9px] font-bold flex items-center gap-1 transition-colors border border-emerald-500/40 cursor-pointer"
+                        title="Visualizar / Imprimir PDF da 2ª Via"
                       >
                         <FileText className="h-3 w-3" /> PDF Boleto <ExternalLink className="h-2.5 w-2.5" />
-                      </a>
+                      </button>
                       <span className="px-2 py-1 bg-emerald-950 text-emerald-400 border border-emerald-500/30 rounded text-[9px] font-bold flex items-center gap-1">
                         <MessageSquare className="h-3 w-3 text-emerald-400" /> WhatsApp Enviado
                       </span>
