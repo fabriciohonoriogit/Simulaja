@@ -59,13 +59,27 @@ export default function JarvisHUDPage() {
       text: "Boleto de Fabrício Rodrigues Honório gerado com sucesso via Atendimento > Posição do Consorciado > Emissão de Cobrança!",
       isBoletoCard: true,
       boletoInfo: {
-        cliente: "Fabrício Rodrigues Honório",
+        cliente: "FABRICIO RODRIGUES HONÓRIO",
+        cpf: "018.605.149-28",
         grupo: "006042",
         cota: "0782-00",
-        valor: "R$ 1.443,00",
+        valor: "1.443,00",
         vencimento: "20/10/2026",
-        linhaDigitavel: "23793.38128 60000.123456 7 8900000014430",
-        pdfUrl: "https://storage.simulaja.com.br/boletos/2via_cota_006042_0782.pdf"
+        linhaDigitavel: "03399.75989 99800.002570 12480.201016 8 16050000144300",
+        beneficiario: "LUIZA ADMINISTRADORA DE CONSORCIOS LTDA",
+        cnpjBeneficiario: "60.250.776/0001-91",
+        enderecoBeneficiario: "RUA DO COMERCIO, 1924 CENTRO CEP: 14400-660 FRANCA - SP",
+        agenciaCodigo: "7598998",
+        nossoNumero: "0000257124802",
+        dataDocumento: "09/10/2026",
+        dataProcessamento: "09/10/2026",
+        carteira: "101",
+        especieDoc: "01",
+        aceite: "N",
+        pclPrazo: "004/239",
+        assembl: "28/10/26",
+        codigoDebitoConta: "928698000001860514928",
+        enderecoPagador: "ELISIO PEREIRA, CONDOMINIO PEIXES, 65 APTO 03-PRAIA DE LESTE CEP: 83255-000 - PONTAL DO PARANA - PR"
       }
     },
     {
@@ -111,49 +125,175 @@ export default function JarvisHUDPage() {
         <meta charset="UTF-8" />
         <title>2ª Via de Boleto - ${boletoInfo.cliente}</title>
         <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background: #0f172a; color: #f8fafc; }
-          .card { max-width: 650px; margin: 0 auto; background: #1e293b; border: 2px solid #10b981; border-radius: 16px; padding: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 16px; margin-bottom: 24px; }
-          .logo { font-size: 22px; font-weight: 900; color: #10b981; letter-spacing: -0.5px; }
-          .sub { font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-          .field { background: #0f172a; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; }
-          .field label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 800; display: block; margin-bottom: 4px; }
-          .field span { font-size: 15px; font-weight: 700; color: #f8fafc; }
-          .barcode-box { background: #0284c715; border: 1px dashed #0284c7; padding: 16px; border-radius: 10px; text-align: center; margin-top: 10px; }
-          .barcode-line { font-family: monospace; font-size: 15px; font-weight: bold; color: #38bdf8; letter-spacing: 1.5px; word-break: break-all; }
-          .actions { display: flex; gap: 12px; margin-top: 24px; }
-          .btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; border: none; transition: all 0.2s; }
-          .btn-primary { background: #10b981; color: #0f172a; }
-          .btn-primary:hover { background: #34d399; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: Arial, Helvetica, sans-serif; background: #525659; padding: 20px; color: #000; }
+          .page { max-width: 850px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+          .logo-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+          .logo-text { font-size: 22px; font-weight: bold; color: #0080ff; font-family: 'Arial Black', sans-serif; }
+          .bank-code { font-size: 20px; font-weight: bold; padding: 0 15px; border-left: 2px solid #000; border-right: 2px solid #000; }
+          .linha-dig { font-size: 15px; font-weight: bold; font-family: monospace; letter-spacing: 0.5px; }
+          
+          table.boleto-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px; }
+          table.boleto-table td, table.boleto-table th { border: 1px solid #000; padding: 3px 6px; vertical-align: top; text-align: left; }
+          .label { font-size: 9px; text-transform: uppercase; color: #333; display: block; font-weight: normal; margin-bottom: 2px; }
+          .val { font-size: 11px; font-weight: bold; color: #000; }
+          .val-lg { font-size: 13px; font-weight: bold; color: #000; }
+
+          .instrucoes { min-height: 140px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; }
+          .recibo-footer { text-align: center; font-size: 11px; font-weight: bold; margin-top: 15px; border-top: 1px dashed #000; padding-top: 8px; display: flex; justify-content: space-between; }
+          
+          .btn-print { display: block; width: 100%; max-width: 250px; margin: 20px auto 0 auto; padding: 12px; background: #0080ff; color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; text-align: center; }
+          .btn-print:hover { background: #0066cc; }
+          
+          @media print {
+            body { background: #fff; padding: 0; }
+            .page { box-shadow: none; border-radius: 0; padding: 0; max-width: 100%; }
+            .btn-print { display: none; }
+          }
         </style>
       </head>
       <body>
-        <div class="card">
-          <div class="header">
-            <div>
-              <div class="logo">CONSÓRCIO MAGALU</div>
-              <div class="sub">Documento Auxiliar de Cobrança / 2ª Via</div>
-            </div>
-            <div style="text-align: right;">
-              <span style="background: #064e3b; color: #34d399; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 4px;">AUTENTICADO</span>
-            </div>
+        <div class="page">
+          <div class="logo-bar">
+            <div class="logo-text">CONSÓRCIO Magalu</div>
+            <div class="bank-code">033-7</div>
+            <div class="linha-dig">${boletoInfo.linhaDigitavel || "03399.75989 99800.002570 12480.201016 8 16050000144300"}</div>
           </div>
-          <div class="grid">
-            <div class="field"><label>Cliente / Consorciado</label><span>${boletoInfo.cliente}</span></div>
-            <div class="field"><label>Data de Vencimento</label><span style="color: #fbbf24;">${boletoInfo.vencimento}</span></div>
-            <div class="field"><label>Grupo / Cota</label><span>Grupo ${boletoInfo.grupo} - Cota ${boletoInfo.cota}</span></div>
-            <div class="field"><label>Valor Total</label><span style="color: #34d399;">${boletoInfo.valor}</span></div>
+
+          <table class="boleto-table">
+            <tr>
+              <td colspan="4">
+                <span class="label">Local de Pagamento</span>
+                <span class="val">Qualquer agência bancária até o vencimento.</span>
+              </td>
+              <td style="width: 25%;">
+                <span class="label">Vencimento</span>
+                <span class="val-lg" style="text-align: right; display: block;">${boletoInfo.vencimento || "20/10/2026"}</span>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="4">
+                <span class="label">Beneficiário</span>
+                <span class="val">${boletoInfo.beneficiario || "LUIZA ADMINISTRADORA DE CONSORCIOS LTDA"} &nbsp;&nbsp;&nbsp; CNPJ: ${boletoInfo.cnpjBeneficiario || "60.250.776/0001-91"}</span><br/>
+                <span class="val" style="font-size: 9px; color: #444;">${boletoInfo.enderecoBeneficiario || "RUA DO COMERCIO, 1924 CENTRO CEP: 14400-660 FRANCA - SP"}</span>
+              </td>
+              <td>
+                <span class="label">Agência/Código Beneficiário</span>
+                <span class="val" style="text-align: right; display: block;">${boletoInfo.agenciaCodigo || "7598998"}</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="label">Data do documento</span>
+                <span class="val">${boletoInfo.dataDocumento || "09/10/2026"}</span>
+              </td>
+              <td>
+                <span class="label">No. do documento</span>
+                <span class="val">${boletoInfo.nossoNumero || "0000257124802"}</span>
+              </td>
+              <td>
+                <span class="label">Espécie doc</span>
+                <span class="val">01</span>
+              </td>
+              <td>
+                <span class="label">Aceite</span>
+                <span class="val">N</span>
+              </td>
+              <td>
+                <span class="label">Data Processamento</span>
+                <span class="val">${boletoInfo.dataProcessamento || "09/10/2026"}</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="label">Uso do Banco</span>
+                <span class="val">&nbsp;</span>
+              </td>
+              <td>
+                <span class="label">Carteira</span>
+                <span class="val">101</span>
+              </td>
+              <td>
+                <span class="label">Moeda</span>
+                <span class="val">R$</span>
+              </td>
+              <td>
+                <span class="label">Quantidade</span>
+                <span class="val">0</span>
+              </td>
+              <td>
+                <span class="label">(=) Valor do Documento</span>
+                <span class="val-lg" style="text-align: right; display: block;">${boletoInfo.valor || "1.443,00"}</span>
+              </td>
+            </tr>
+          </table>
+
+          <table class="boleto-table">
+            <tr>
+              <td style="width: 75%;" rowspan="6">
+                <span class="label">Instruções de Responsabilidade do Beneficiário</span>
+                <div class="instrucoes">
+Grupo/Cota/Versão: ${boletoInfo.grupo || "006042"}-${boletoInfo.cota || "0782-00"}
+Detalhes do recebimento:
+Histórico                     Valor     Multa     Juros    Devido   Receber  Pcl/Prazo Assembl. Vencto.
+001-0 RECBTO. PARCELA      ${boletoInfo.valor || "1.443,00"}      0,00      0,00  1.443,00  1.443,00  004/239  28/10/26 20/10/26
+
+Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "928698000001860514928"}
+                </div>
+              </td>
+              <td>
+                <span class="label">(-) Descontos/Abatimento</span>
+                <span class="val">&nbsp;</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="label">(-) Outras Deduções</span>
+                <span class="val">&nbsp;</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="label">(+) Multa</span>
+                <span class="val">&nbsp;</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="label">(+) Mora</span>
+                <span class="val">&nbsp;</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="label">(+) Outros Acréscimos</span>
+                <span class="val">&nbsp;</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="label">(=) Valor Cobrado</span>
+                <span class="val-lg" style="text-align: right; display: block;">${boletoInfo.valor || "1.443,00"}</span>
+              </td>
+            </tr>
+          </table>
+
+          <table class="boleto-table">
+            <tr>
+              <td colspan="5">
+                <span class="label">Pagador</span>
+                <span class="val">${boletoInfo.cliente || "FABRICIO RODRIGUES HONÓRIO"} &nbsp;&nbsp;&nbsp; CPF: ${boletoInfo.cpf || "018.605.149-28"}</span><br/>
+                <span class="val" style="font-size: 10px; color: #222;">${boletoInfo.enderecoPagador || "ELISIO PEREIRA, CONDOMINIO PEIXES, 65 APTO 03-PRAIA DE LESTE - 83255-000 - PONTAL DO PARANA - PR"}</span>
+              </td>
+            </tr>
+          </table>
+
+          <div class="recibo-footer">
+            <span>RECIBO DO PAGADOR</span>
+            <span>Autenticação Mecânica</span>
           </div>
-          <div class="field">
-            <label>Linha Digitável</label>
-            <div class="barcode-box">
-              <div class="barcode-line">${boletoInfo.linhaDigitavel}</div>
-            </div>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button>
-          </div>
+
+          <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
         </div>
       </body>
       </html>
@@ -191,13 +331,27 @@ export default function JarvisHUDPage() {
         text: "Boleto emitido via Atendimento > Posição do Consorciado > Emissão de Cobrança!",
         isBoletoCard: true,
         boletoInfo: {
-          cliente: lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício") ? "Fabrício Rodrigues Honório" : "Consorciado Magalu",
+          cliente: lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício") ? "FABRICIO RODRIGUES HONÓRIO" : "CONSORCIADO MAGALU",
+          cpf: "018.605.149-28",
           grupo: "006042",
           cota: "0782-00",
-          valor: "R$ 1.443,00",
+          valor: "1.443,00",
           vencimento: "20/10/2026",
-          linhaDigitavel: "23793.38128 60000.123456 7 8900000014430",
-          pdfUrl: "https://storage.simulaja.com.br/boletos/2via_cota_006042_0782.pdf"
+          linhaDigitavel: "03399.75989 99800.002570 12480.201016 8 16050000144300",
+          beneficiario: "LUIZA ADMINISTRADORA DE CONSORCIOS LTDA",
+          cnpjBeneficiario: "60.250.776/0001-91",
+          enderecoBeneficiario: "RUA DO COMERCIO, 1924 CENTRO CEP: 14400-660 FRANCA - SP",
+          agenciaCodigo: "7598998",
+          nossoNumero: "0000257124802",
+          dataDocumento: "09/10/2026",
+          dataProcessamento: "09/10/2026",
+          carteira: "101",
+          especieDoc: "01",
+          aceite: "N",
+          pclPrazo: "004/239",
+          assembl: "28/10/26",
+          codigoDebitoConta: "928698000001860514928",
+          enderecoPagador: "ELISIO PEREIRA, CONDOMINIO PEIXES, 65 APTO 03-PRAIA DE LESTE CEP: 83255-000 - PONTAL DO PARANA - PR"
         }
       };
     }
