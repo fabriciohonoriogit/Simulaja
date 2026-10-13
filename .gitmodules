@@ -1,3 +1,15 @@
 [submodule "3cerebros"]
 	path = 3cerebros
 	url = https://github.com/inematds/3cerebros
+[submodule "agency-agents"]
+	path = agency-agents
+	url = https://github.com/msitarzewski/agency-agents
+[submodule "evolution-api"]
+	path = evolution-api
+	url = https://github.com/evolution-foundation/evolution-api.git
+[submodule "hermes-agent"]
+	path = hermes-agent
+	url = https://github.com/NousResearch/hermes-agent.git
+[submodule "omniroute-gateway"]
+	path = omniroute-gateway
+	url = https://github.com/diegosouzapw/OmniRoute.git
