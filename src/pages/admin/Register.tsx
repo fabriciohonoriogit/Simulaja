@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowRight, Loader2, CheckCircle2, Eye, EyeOff, MessageCircle, Lock, Sparkles } from "lucide-react";
+import { checkLeakedPassword } from "@/lib/passwordSecurity";
 
 const WHATSAPP_URL = "https://wa.me/5541997925357?text=Quero%20um%20convite%20para%20testar%20o%20Contemplar%20CRM";
 
@@ -58,8 +59,25 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 6) {
+      toast({ title: "Senha muito curta", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
+      // Validação ativa contra senhas vazadas (HaveIBeenPwned k-anonymity)
+      const leakCheck = await checkLeakedPassword(password);
+      if (leakCheck.isLeaked) {
+        toast({
+          title: "Senha vulnerável / vazada",
+          description: `Esta senha já apareceu em vazamentos públicos de dados conhecidos (${leakCheck.breachCount.toLocaleString("pt-BR")} vezes). Por segurança, escolha uma senha mais forte e única.`,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,

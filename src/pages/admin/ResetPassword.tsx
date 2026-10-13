@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Lock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+import { checkLeakedPassword } from "@/lib/passwordSecurity";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -23,7 +24,25 @@ export default function ResetPassword() {
       return;
     }
 
+    if (password.length < 6) {
+      toast({ title: "Senha muito curta", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
+
+    // Validação ativa contra senhas vazadas (HaveIBeenPwned k-anonymity)
+    const leakCheck = await checkLeakedPassword(password);
+    if (leakCheck.isLeaked) {
+      setLoading(false);
+      toast({
+        title: "Senha vulnerável / vazada",
+        description: `Esta senha já apareceu em vazamentos públicos conhecidos (${leakCheck.breachCount.toLocaleString("pt-BR")} vezes). Por segurança, escolha uma senha diferente e mais forte.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
 
