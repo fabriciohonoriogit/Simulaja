@@ -40,7 +40,8 @@ export const useProfile = (): UseProfileReturn => {
 
         const { data: newOrg, error: orgError } = await supabase.from("organizacoes").insert({
           nome: orgName,
-          slug: orgSlug
+          slug: orgSlug,
+          owner_id: user.id
         }).select().single();
 
         if (orgError) throw orgError;
