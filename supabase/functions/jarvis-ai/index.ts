@@ -269,6 +269,9 @@ async function executeTool(supabase: any, name: string, args: any) {
       }
     }
 
+    const dbClient = client;
+    const useAdmin = !!adminClient && !!orgId;
+
     if (name === "auditar_sorteio_loteria") {
       const { numero_loteria, administradora = "TODAS" } = args;
       const lotId = parseInt(numero_loteria.replace(/\D/g, ''));
@@ -876,7 +879,7 @@ Ao concluir tarefas de boleto, responda apenas com:
               `[Jarvis API] Modelo ${modelName} falhou. status=${res.status} statusText=${res.statusText} error=${JSON.stringify(resData?.error) ?? "sem detalhe"}`
             );
           }
-        } catch (mErr) {
+        } catch (mErr: any) {
           console.error(`[Jarvis API] Exceção de rede ao chamar ${modelName}:`, mErr?.message || mErr);
         }
       }
@@ -942,7 +945,7 @@ Ao concluir tarefas de boleto, responda apenas com:
               const oaiErrBody = await openaiRes.text().catch(() => "");
               console.error(`[Jarvis API] Fallback OpenAI falhou. status=${openaiRes.status} body=${oaiErrBody}`);
             }
-          } catch (oaiErr) {
+          } catch (oaiErr: any) {
             console.error("[Jarvis API] Exceção no fallback OpenAI:", oaiErr?.message || oaiErr);
           }
         }
