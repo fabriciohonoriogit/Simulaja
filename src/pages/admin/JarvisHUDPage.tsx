@@ -35,6 +35,7 @@ interface LogEntry {
   boletoInfo?: {
     cliente: string;
     cpf?: string;
+    [key: string]: any;
     grupo: string;
     cota: string;
     valor: string;
