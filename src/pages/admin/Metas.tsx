@@ -103,6 +103,7 @@ export interface MetricaSegmento {
 }
 
 interface Lead {
+  responsavel_id?: string | null;
     id: string;
     status: string | null;
     valor_credito: number;

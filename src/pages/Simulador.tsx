@@ -492,7 +492,7 @@ export default function Simulador() {
             value={idx}
             onChange={(e) => setIdx(Number(e.target.value))}
             className="custom-slider w-full h-1.5 rounded-full appearance-none mb-6 bg-slate-100"
-            style={{ background: `linear-gradient(to right, #0057a8 ${pct}%, #e2e8f0 ${pct}%)` }}
+            style={{ background: `linear-gradient(to right, #0057a8 ${lista.length > 1 ? (idx / (lista.length - 1)) * 100 : 0}%, #e2e8f0 ${lista.length > 1 ? (idx / (lista.length - 1)) * 100 : 0}%)` }}
           />
 
           <div className="flex flex-wrap gap-1.5 justify-center mb-4">
@@ -659,7 +659,7 @@ export default function Simulador() {
               <Input 
                 placeholder="Seu WhatsApp *" 
                 value={wpp} 
-                onChange={e => mascaraWpp(e.target.value)}
+                onChange={e => setWpp(e.target.value.replace(/\D/g, "").slice(0, 11).replace(/^(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d{1,4})$/, "$1-$2"))}
                 className={`h-12 pl-10 rounded-xl bg-slate-50 border-slate-200 text-sm focus-visible:ring-[#0D214F] shadow-sm ${errWpp ? "border-red-400 focus-visible:ring-red-400" : ""}`}
               />
             </div>

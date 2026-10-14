@@ -34,12 +34,14 @@ interface LogEntry {
   isBoletoCard?: boolean;
   boletoInfo?: {
     cliente: string;
+    cpf?: string;
+    [key: string]: any;
     grupo: string;
     cota: string;
     valor: string;
     vencimento: string;
     linhaDigitavel: string;
-    pdfUrl: string;
+    pdfUrl?: string;
   };
 }
 
