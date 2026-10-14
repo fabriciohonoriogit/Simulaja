@@ -897,17 +897,10 @@ export default function Dashboard() {
 
 
 
-        {/* Relatório Diário JARVIS */}
-        <JarvisReport 
-          leads={leads} 
-          carteira={carteira} 
-          inadimplentes={inadimplentes} 
-          realizadoMes={realizadoMes} 
-          metaMensal={metaMensal} 
-        />
-
         {/* Calendário de Vencimentos */}
-        <DashboardCalendar leads={leads} />
+        <div className="lg:col-span-3">
+          <DashboardCalendar leads={leads} />
+        </div>
       </div>
 
       {/* Últimos Leads e Agendas */}
