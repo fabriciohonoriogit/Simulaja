@@ -41,7 +41,7 @@ interface LogEntry {
     valor: string;
     vencimento: string;
     linhaDigitavel: string;
-    pdfUrl: string;
+    pdfUrl?: string;
   };
 }
 
