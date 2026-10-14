@@ -34,4 +34,8 @@ eslint*.txt
 .env.local
 .vercel
 evolution-api/
+3cerebros/
+agency-agents/
+hermes-agent/
+omniroute-gateway/
 vite.config.ts.timestamp-*

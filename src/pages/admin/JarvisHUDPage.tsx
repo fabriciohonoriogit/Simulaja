@@ -24,6 +24,7 @@ import {
   Mail
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { aiService } from "@/services/aiService";
 
 interface LogEntry {
   id: string;
@@ -323,8 +324,31 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
   const processSmartCommand = (lowerPrompt: string, originalText: string): LogEntry | null => {
     const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-    // 1. Comando de 2ª via / Boleto / Fabrício / Magalu
-    if (lowerPrompt.includes("segunda via") || lowerPrompt.includes("2ª via") || lowerPrompt.includes("boleto") || lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício")) {
+    // 1. Saudações Humanizadas e Naturais (Persona Jarvis)
+    const normalized = lowerPrompt.trim().replace(/[.,!?;:]/g, "");
+    if (
+      normalized === "boa tarde" ||
+      normalized === "bom dia" ||
+      normalized === "boa noite" ||
+      normalized === "ola" ||
+      normalized === "olá" ||
+      normalized === "oi" ||
+      normalized === "oi jarvis" ||
+      normalized === "ola jarvis" ||
+      normalized === "olá jarvis"
+    ) {
+      const periodo = normalized.includes("dia") ? "Bom dia" : normalized.includes("noite") ? "Boa noite" : "Boa tarde";
+      return {
+        id: Date.now().toString(),
+        time: timeStr,
+        tag: "JARVIS AI",
+        color: "text-emerald-400 font-bold",
+        text: `Oi Fabrício, ${periodo.toLowerCase()}! Tudo excelente por aqui. Como posso acelerar o seu dia hoje? Posso realizar simulações de consórcio, checar clientes no funil ou emitir 2ª via de boletos.`
+      };
+    }
+
+    // 2. Comando de 2ª via / Boleto / Fabrício / Magalu
+    if (lowerPrompt.includes("segunda via") || lowerPrompt.includes("2ª via") || lowerPrompt.includes("boleto") || ((lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício")) && (lowerPrompt.includes("cota") || lowerPrompt.includes("parcela") || lowerPrompt.includes("valor")))) {
       return {
         id: Date.now().toString(),
         time: timeStr,
@@ -358,7 +382,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
       };
     }
 
-    // 2. Comando de Gmail / E-mail
+    // 3. Comando de Gmail / E-mail
     if (lowerPrompt.includes("gmail") || lowerPrompt.includes("e-mail") || lowerPrompt.includes("email")) {
       return {
         id: Date.now().toString(),
@@ -369,7 +393,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
       };
     }
 
-    // 3. English Coach
+    // 4. English Coach
     if (lowerPrompt.includes("inglês") || lowerPrompt.includes("ingles") || lowerPrompt.includes("english")) {
       return {
         id: Date.now().toString(),
@@ -406,20 +430,24 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         setLogs(prev => [smartResponse, ...prev]);
         speakResponse(smartResponse.text);
         setIsProcessing(false);
-      }, 700);
+      }, 600);
       return;
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke("jarvis-brain-chat", {
-        body: { prompt: textToRun },
-      });
+      // Integração com o assistente inteligente Jarvis AI
+      const aiResult = await aiService.askAssistant(
+        textToRun,
+        "Painel Jarvis HUD Executivo - Assistente de Vendas e Consórcios",
+        "Fabrício"
+      );
 
-      let responseText = "";
-      if (error || !data) {
-        responseText = `Entendido. Processando '${textToRun}' na esteira Jarvis e sincronizando administradoras.`;
-      } else {
-        responseText = data.reply || data.response || "Comando executado com sucesso.";
+      let responseText = aiResult?.answer;
+      if (!responseText || responseText.trim() === "") {
+        // Fallback humanizado em caso de ausência de resposta
+        const isTarde = new Date().getHours() >= 12 && new Date().getHours() < 18;
+        const saudacao = isTarde ? "Boa tarde" : new Date().getHours() < 12 ? "Bom dia" : "Boa noite";
+        responseText = `Olá, Fabrício! ${saudacao}! Estou à sua total disposição. Posso te ajudar a simular uma cota, checar status de leads no funil ou emitir a 2ª via de um boleto. Como prefere seguir?`;
       }
 
       setLogs(prev => [
@@ -429,10 +457,12 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
 
       speakResponse(responseText);
     } catch (e: any) {
+      const fallbackMsg = `Olá, Fabrício! Tive uma oscilação pontual de conexão, mas continuo operacional. Me informe o que você precisa (ex: "simulação de 200 mil", "ver funil" ou "segunda via do boleto") que resolvo para você na hora!`;
       setLogs(prev => [
-        { id: (Date.now() + 1).toString(), time: timeStr, tag: "ERRO", text: e.message || "Erro ao processar instrução.", color: "text-rose-400" },
+        { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: fallbackMsg, color: "text-amber-400 font-semibold" },
         ...prev
       ]);
+      speakResponse(fallbackMsg);
       setOrbState("idle");
     } finally {
       setIsProcessing(false);
