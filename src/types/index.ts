@@ -36,6 +36,7 @@ export interface Profile {
 export interface Lead {
   id: string;
   nome: string;
+  responsavel_id?: string | null;
   dados_cadastro?: any;
   atendimento_ia?: boolean;
   score_final?: string | null;

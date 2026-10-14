@@ -34,6 +34,7 @@ interface LogEntry {
   isBoletoCard?: boolean;
   boletoInfo?: {
     cliente: string;
+    cpf?: string;
     grupo: string;
     cota: string;
     valor: string;

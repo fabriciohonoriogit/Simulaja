@@ -83,7 +83,7 @@ export function getSimulatorAuthoritativeContext(): string {
     return `• GRUPO ${gId} (${info.reajuste}): ${info.caracteristicas} | Ordem Contemplação: ${info.ordemContemplacao}`;
   }).join("\n");
 
-  const sampleRates = GRUPOS.slice(0, 15).map(g => {
+  const sampleRates = Object.values(GRUPOS).flat().slice(0, 15).map(g => {
     const credStr = (g.credito || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     const r50Str = g.r50 ? g.r50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "N/A";
     return `• Grupo ${g.grupo} | Crédito: ${credStr} | Prazo: ${g.prazo}m | Parcela 50/50: ${r50Str} | Tx Linear: ${g.txLinear || g.tx || 'N/A'}%`;
@@ -260,7 +260,7 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
   }
 
   // Extração e busca de CPF ou Pedido de Boleto / Segunda Via
-  const cpfMatch = prompt.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/) || prompt.match(/\b\d{11}\b/);
+  const cpfMatch = fullInput.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/) || fullInput.match(/\b\d{11}\b/);
   const isBoletoReq = lower.includes("boleto") || lower.includes("segunda via") || lower.includes("2 via") || lower.includes("extrato") || lower.includes("cota") || lower.includes("portal");
 
   if (cpfMatch || isBoletoReq) {
@@ -275,7 +275,7 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
         const { data: lead } = await supabase.from("leads").select("*").or(`cpf.eq.${rawCpf},cpf.eq.${formattedCpf}`).maybeSingle();
         if (lead) {
           leadData = lead;
-          const { data: cart } = await supabase.from("carteira_consorcios").select("*").eq("lead_id", lead.id).maybeSingle();
+          const { data: cart } = await (supabase as any).from("carteira_consorcios").select("*").eq("lead_id", lead.id).maybeSingle();
           if (cart) carteiraData = cart;
         }
       } catch (e) {}
