@@ -189,7 +189,7 @@ export default function Comissoes() {
                   administradora: item.administradora,
                   status: "ativo",
                   data_adesao: item.data_venda
-                }).then(() => {}).catch(() => {});
+                }).then(() => {}, () => {});
               }
             }
           }

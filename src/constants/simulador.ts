@@ -6,6 +6,7 @@ export type GrupoItem = {
   prazoLinear?: number;
   r50: number; 
   r50SemSeguro?: number;
+  r100SemSeguro?: number;
   r100?: number; 
   tx5050?: number; 
   txLinear?: number; 

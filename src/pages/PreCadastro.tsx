@@ -97,7 +97,7 @@ export default function PreCadastro() {
           nome: lead.nome || prev.nome,
           celular: lead.celular || prev.celular,
           email: dc.email || prev.email,
-          cpfCnpj: dc.cpfCnpj || dc.cpf || dc.cnpj || prev.cpfCnpj,
+          cpf: dc.cpfCnpj || dc.cpf || dc.cnpj || prev.cpf,
           rg: dc.rg || prev.rg,
           dataNascimento: dc.dataNascimento || prev.dataNascimento,
           estadoCivil: dc.estadoCivil || prev.estadoCivil,
