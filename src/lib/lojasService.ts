@@ -47,7 +47,9 @@ export function getLojasConfig(organizacaoId?: string | null): LojaConfig[] {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        // Garantir que a filial Campo Largo esteja desativada
+        const filtered = parsed.filter(l => l.id !== "filial-909" && l.codigo !== "909" && !normalizeStr(l.cidade).includes("campo largo"));
+        return filtered.length > 0 ? filtered : INITIAL_LOJAS;
       }
     }
   } catch (err) {
@@ -538,7 +540,6 @@ export function calculateLojasPerformance(
 
     const isParanagua = codeStr === "952" || loja.id === "filial-952" || cidadeNorm.includes("paranagua");
     const isSaoMateus = codeStr === "927" || loja.id === "filial-927" || cidadeNorm.includes("sao mateus");
-    const isCampoLargo = codeStr === "909" || loja.id === "filial-909" || cidadeNorm.includes("campo largo");
     const isCanoinhas = codeStr === "646" || loja.id === "filial-646" || cidadeNorm.includes("canoinhas");
     const isIrati = codeStr === "929" || loja.id === "filial-929" || cidadeNorm.includes("irati");
 
@@ -585,7 +586,7 @@ export function calculateLojasPerformance(
     const totalIndicacoes = indicacoesLeadsList.length;
 
     // Vendas oriundas de INDICAÇÃO que foram fechadas no período
-    const isOfficialStore = isParanagua || isSaoMateus || isCampoLargo || isCanoinhas || isIrati;
+    const isOfficialStore = isParanagua || isSaoMateus || isCanoinhas || isIrati;
     if (!isOfficialStore) {
       const closedIndicacoesLeadsList = leadsFechadosUsados.filter(isLeadIndicacao);
       closedIndicacoesCount = closedIndicacoesLeadsList.length;
@@ -752,13 +753,13 @@ ${item.faltanteMensal > 0 ? `🔻 *Faltante para Meta:* ${formatCurrency(item.fa
 ⚡ *Taxa de Conversão Geral da Loja:* *${item.taxaConversaoGeral.toFixed(1)}%*
 💡 *Ticket Médio da Loja:* ${formatCurrency(item.ticketMedio)}
 🔮 *Projeção de Fechamento Mês:* ${formatCurrency(item.projecaoMes)}
-🥇 *Posição no Ranking Geral:* ${item.posicao}º lugar das 5 Lojas
+🥇 *Posição no Ranking Geral:* ${item.posicao}º lugar das ${lojasMetrics.length} Lojas
 
 💪 _"Venda realizada no funil é resultado de acompanhamento e alta conversão. Vamos pra cima!"_
 📱 *Gerado via SimulaJá CRM Magalu*`;
   }
 
-  // Visão Geral Consolidada das 5 Lojas
+  // Visão Geral Consolidada das Lojas
   const atingimentoGlobal = metaGlobal > 0 ? (realizadoGlobal / metaGlobal) * 100 : 0;
   const faltanteGlobal = Math.max(0, metaGlobal - realizadoGlobal);
   const sortedByRank = [...lojasMetrics].sort((a, b) => a.posicao - b.posicao);
@@ -782,7 +783,7 @@ ${trophy} *${item.loja.nome}*
 
   return `📊 *RELATÓRIO CONSOLIDADO MULTI-LOJAS & INDICAÇÕES MAGALU* 🚀
 📅 *Período de Análise:* ${timeLabel} (${dateFormatted})
-🏢 *Total de Unidades Acompanhadas:* 5 Lojas
+🏢 *Total de Unidades Acompanhadas:* ${lojasMetrics.length} Lojas
 
 ========================================
 🎯 *META GLOBAL CONSOLIDADA:* ${formatCurrency(metaGlobal)}
@@ -851,7 +852,7 @@ ${trophy} *${m.loja.nome}*
   return `👔 *RELATÓRIO REGIONAL DE FECHAMENTO - CONSÓRCIO MAGALU* 🚀
 👤 *Coordenador Regional:* ${COORDENADOR_REGIONAL.nome} (${COORDENADOR_REGIONAL.regional})
 📅 *Data do Fechamento:* ${dateFormatted} (${timeLabel})
-🏬 *Unidades da Regional Curitiba:* 5 Lojas (Paranaguá, São Mateus, Irati, Canoinhas, Campo Largo)
+🏬 *Unidades da Regional Curitiba:* ${lojasMetrics.length} Lojas (Paranaguá, São Mateus, Irati, Canoinhas)
 
 ========================================
 🎯 *META GLOBAL CONSOLIDADA:* ${formatCurrency(metaGlobal)}

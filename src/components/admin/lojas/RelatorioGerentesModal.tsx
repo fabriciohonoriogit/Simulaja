@@ -199,7 +199,7 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
                 </DialogTitle>
                 <p className="text-xs text-slate-500 font-medium">
                   {isCoordenador 
-                    ? `Relatório consolidado de fechamento das 5 lojas para envio ao Coordenador ${COORDENADOR_REGIONAL.nome}.`
+                    ? `Relatório consolidado de fechamento das ${lojas.length} lojas para envio ao Coordenador ${COORDENADOR_REGIONAL.nome}.`
                     : `Selecione o período (Dia, Semana, Quinzena, Mês) e a unidade para envio aos gerentes.`}
                 </p>
               </div>
@@ -291,7 +291,7 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
               </Label>
               {isCoordenador ? (
                 <div className="h-10 px-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs font-black text-slate-800">
-                  <span>🌐 VISÃO CONSOLIDADA REGIONAL (5 Lojas)</span>
+                  <span>🌐 VISÃO CONSOLIDADA REGIONAL ({lojas.length} Lojas)</span>
                   <Badge className="bg-purple-100 text-purple-800 text-[9px] border-none">Regional</Badge>
                 </div>
               ) : (
@@ -301,7 +301,7 @@ export const RelatorioGerentesModal: React.FC<RelatorioGerentesModalProps> = ({
                   </SelectTrigger>
                   <SelectContent className="bg-white border-slate-200 text-slate-900">
                     <SelectItem value="all" className="font-bold text-amber-700">
-                      🌐 TODAS AS 5 LOJAS (Relatório Consolidado)
+                      🌐 TODAS AS {lojas.length} LOJAS (Relatório Consolidado)
                     </SelectItem>
                     {lojas.map(l => (
                       <SelectItem key={l.id} value={l.id} className="font-medium">

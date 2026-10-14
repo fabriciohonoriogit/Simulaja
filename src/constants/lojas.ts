@@ -50,16 +50,6 @@ export const INITIAL_LOJAS: LojaConfig[] = [
     gerente: "Gerente Canoinhas",
     qtdFuncionarios: 8,
     corHex: "#f59e0b" // amber
-  },
-  {
-    id: "filial-909",
-    codigo: "909",
-    cidade: "CAMPO LARGO",
-    nome: "CAMPO LARGO - MAGALU FILIAL 909",
-    metaMensal: 70071,
-    gerente: "Gerente Campo Largo",
-    qtdFuncionarios: 9,
-    corHex: "#ec4899" // pink
   }
 ];
 

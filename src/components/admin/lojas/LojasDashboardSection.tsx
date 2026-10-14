@@ -198,7 +198,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
                 Acompanhamento Multi-Loja Magalu
               </h2>
               <Badge className="bg-blue-100 text-blue-800 border-blue-200 font-black text-[10px] tracking-wider uppercase px-2.5 py-0.5 shadow-none">
-                5 Unidades Ativas
+                {lojas.length} Unidades Ativas
               </Badge>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
@@ -296,7 +296,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
         <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/90 text-slate-900 shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
-              Meta Global 5 Lojas
+              Meta Global {lojas.length} Lojas
             </p>
             <div className="p-2 rounded-xl bg-blue-100 text-blue-600">
               <Target className="h-4 w-4" />
@@ -307,7 +307,7 @@ export const LojasDashboardSection: React.FC<LojasDashboardSectionProps> = ({
           </p>
           <div className="mt-2 flex items-center gap-2">
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[9px] font-bold">
-              5 Lojas Magalu
+              {lojas.length} Lojas Magalu
             </Badge>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Trophy, Target, ShieldAlert, Sparkles, DollarSign, Calculator, CheckCir
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Badge } from "../../ui/badge";
 import { useState } from "react";
+import { MarketNewsFeed } from "../news/MarketNewsFeed";
 
 interface EliteRewardsPanelProps {
   leads: any[];
@@ -434,146 +435,8 @@ export function EliteRewardsPanel({ leads, totalClientes, percentRetencao, perce
         </CardContent>
       </Card>
 
-      {/* SEÇÃO 3: RELATÓRIO DE DESEMPENHO E ESTRATÉGIAS JARVIS */}
-      <Card className="border border-slate-200 dark:border-zinc-800 shadow-lg overflow-hidden bg-slate-950 text-slate-100">
-        <div className="h-1.5 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600" />
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base sm:text-lg flex items-center gap-2 uppercase tracking-tighter font-black text-slate-200">
-            🤖 Jarvis Report & Estratégias de Fomento
-          </CardTitle>
-          <p className="text-xs text-zinc-400">
-            Plano de aceleração personalizado baseado nos KPIs de Varejo de Elite
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-6 pt-4">
-          
-          {/* Relatório Jarvis */}
-          <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-3">
-            <h4 className="text-xs font-black uppercase text-indigo-400 tracking-wider flex items-center gap-1.5">
-              <Info className="w-4 h-4 shrink-0" /> Diagnóstico de Performance
-            </h4>
-            <div className="text-xs leading-relaxed text-zinc-300 space-y-2">
-              <p>
-                Olá! Analisei seus resultados de vendas e KPIs do mês atual. Você acumula <strong className="text-white font-bold">{fmt(producaoMes)}</strong> em vendas realizadas, o que o qualifica para a patente <strong className="text-indigo-400 uppercase font-black">{patenteExibicao}</strong>.
-              </p>
-              <p>
-                {(patenteEfetiva === 'STONE' || patenteEfetiva === 'GOLD') ? (
-                  <span>
-                    🚨 <strong className="text-white">Atenção à ativação da patente:</strong> Seu volume de vendas de {fmt(producaoMes)} está na categoria {patenteEfetiva === 'STONE' ? 'STONE (PEDRA)' : 'GOLD (OURO)'} (abaixo do limite de Cromo de 1.5M) ou seus KPIs (RPC/EP/NPS) estão abaixo dos limites. Melhore seus KPIs e atinja 1,5M em vendas para destravar a patente Cromo e seu prêmio base de R$ 1.500.
-                  </span>
-                ) : (
-                  <span>
-                    ✅ <strong className="text-emerald-400">Parabéns!</strong> Sua patente <strong className="text-white">{patenteEfetiva}</strong> está devidamente homologada. Seus indicadores RPC ({rpcRealizado}%), EP ({epRealizado}%) e NPS ({npsRealizado}) estão alinhados com o patamar de excelência exigido.
-                  </span>
-                )}
-              </p>
-              <p>
-                Abaixo, montei um plano de ação estratégico detalhado focado em alavancar suas comissões e garantir o prêmio máximo de até <strong className="text-emerald-400 font-bold">{fmt(config.premioBase > 0 ? config.premioBase + config.bonusLinear + config.bonusSeguro + config.bonusAlianca : 14000)}</strong> {config.premioBase > 0 ? 'da sua patente ativa' : 'no nível Diamante'}.
-              </p>
-            </div>
-          </div>
-
-          {/* Plano Estratégico de Fomento */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* Lado Esquerdo: RPC e Volume */}
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50 space-y-3">
-              <h5 className="text-xs font-black uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
-                🎯 Como Alavancar Vendas e RPC
-              </h5>
-              <ul className="text-xs text-zinc-300 space-y-2.5 list-disc list-inside">
-                <li>
-                  <strong className="text-white">Funil de Propostas Agressivo:</strong> Identifique no simulador os leads em estágio de proposta/simulação enviada. Entre em contato nas próximas 24h para renegociar lances em aberto.
-                </li>
-                <li>
-                  <strong className="text-white">Gatilho de Conversão RPC:</strong> A meta de RPC é de 42%. Isso significa que para cada 10 novos leads que entram, pelo menos 4 devem avançar no funil com simulações enviadas e propostas formalizadas.
-                </li>
-                <li>
-                  <strong className="text-white">Uso das Lojas Parceiras:</strong> Peça aos gerentes locais indicações diretas e de alto valor (Leads Premium) para impulsionar o volume bruto rapidamente.
-                </li>
-              </ul>
-            </div>
-
-            {/* Lado Direito: Plano Linear, Seguros e Aliança */}
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50 space-y-3">
-              <h5 className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                🛡️ Como Garantir os Bônus Extras (Linear, Seguro, Aliança)
-              </h5>
-              <ul className="text-xs text-zinc-300 space-y-2.5 list-disc list-inside">
-                <li>
-                  <strong className="text-white">Conversão do Bônus Linear (Automóvel/Imóvel):</strong> Ao vender cotas de carro ou imóveis, direcione pelo menos 20% no plano linear. Destaque que o linear oferece estabilidade e menor valor total pago.
-                </li>
-                <li>
-                  <strong className="text-white">Seling Seguro Prestamista (Meta 70%):</strong> Venda no mínimo 70% das cotas com seguro. Apresente o seguro como uma proteção obrigatória de proteção patrimonial para a família, garantindo a quitação do saldo devedor.
-                </li>
-                <li>
-                  <strong className="text-white">Meta Aliança Global:</strong> Participe das reuniões de alinhamento com as lojas. O bônus Aliança de +{fmt(config.bonusAlianca)} só é liberado ao bater 100% da meta global da loja atendida.
-                </li>
-              </ul>
-            </div>
-
-          </div>
-
-          {/* Estratégia de Elite para Nível Máximo (DIAMANTE) */}
-          <div className="p-5 rounded-xl border border-amber-500/30 bg-gradient-to-br from-zinc-900 to-amber-950/20 space-y-4">
-            <h4 className="text-sm font-black uppercase text-amber-400 tracking-wider flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
-              Planejamento Estratégico Q4 (Out/Nov/Dez): Rumo ao Nível Máximo (DIAMANTE)
-            </h4>
-            <p className="text-xs text-zinc-300">
-              Para atingir a patente máxima de <strong className="text-amber-400">DIAMANTE (R$ 6.000.000,00+)</strong> e desbloquear o prêmio base de <strong className="text-emerald-400">R$ 9.000,00</strong> (+ bônus adicionais de até R$ 5.000,00, totalizando <strong className="text-emerald-400">R$ 14.000,00</strong>), você deve seguir o seguinte planejamento prático:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-              <div className="p-3.5 rounded-lg bg-black/40 border border-zinc-800 space-y-2">
-                <h5 className="font-bold text-white uppercase flex items-center gap-1.5 text-amber-400">
-                  📅 1. Divisão Semanal da Meta
-                </h5>
-                <p className="text-[11px] text-zinc-300 font-semibold mb-1">Passo 2: Transforme em semanas</p>
-                <ul className="text-zinc-400 space-y-1 list-disc list-inside">
-                  <li>Meta Mensal: <strong className="text-white">R$ 6.000.000,00</strong></li>
-                  <li>Meta Semanal: <strong className="text-emerald-400">R$ 1.500.000,00 / semana</strong></li>
-                  <li>Dividir a meta torna o plano claro e fácil de corrigir rotas ao longo do mês.</li>
-                </ul>
-              </div>
-              <div className="p-3.5 rounded-lg bg-black/40 border border-zinc-800 space-y-2">
-                <h5 className="font-bold text-white uppercase flex items-center gap-1.5 text-amber-400">
-                  ⏰ 2. Horários de Foco
-                </h5>
-                <p className="text-[11px] text-zinc-300 font-semibold mb-1">Passo 9: Reserve blocos</p>
-                <ul className="text-zinc-400 space-y-1 list-disc list-inside">
-                  <li><strong>09:00 às 10:30</strong> — Prospecção e primeiro contato com novos leads quentes.</li>
-                  <li><strong>15:00 às 16:00</strong> — Follow-up ativo de propostas pendentes de lances.</li>
-                  <li>Horários marcados reduzem distrações e aumentam taxas de fechamento.</li>
-                </ul>
-              </div>
-              <div className="p-3.5 rounded-lg bg-black/40 border border-zinc-800 space-y-2">
-                <h5 className="font-bold text-white uppercase flex items-center gap-1.5 text-amber-400">
-                  🛡️ 3. Plano para Dias Fracos
-                </h5>
-                <p className="text-[11px] text-zinc-300 font-semibold mb-1">Passo 11: Contingência às 15h</p>
-                <ul className="text-zinc-400 space-y-1 list-disc list-inside">
-                  <li>Se até as <strong className="text-white">15:00</strong> nenhuma venda acontecer:</li>
-                  <li>Entrar em contato com <strong>15 clientes antigos</strong> de consórcio.</li>
-                  <li>Pedir indicação de consórcio para <strong>5 clientes satisfeitos</strong>.</li>
-                  <li>Enviar follow-up rápido para <strong>todas as propostas</strong> abertas.</li>
-                </ul>
-              </div>
-              <div className="p-3.5 rounded-lg bg-black/40 border border-zinc-800 space-y-2">
-                <h5 className="font-bold text-white uppercase flex items-center gap-1.5 text-amber-400">
-                  💬 4. Conversão e Argumentação
-                </h5>
-                <p className="text-[11px] text-zinc-300 font-semibold mb-1">Passo 5: Scripts de Impacto</p>
-                <ul className="text-zinc-400 space-y-1 list-disc list-inside">
-                  <li>Foque em consórcios de alto padrão (imobiliário e frotas).</li>
-                  <li>Destaque que o linear oferece menor valor pago e segurança para a família.</li>
-                  <li>Garanta KPIs de Elite: <strong>RPC &ge; 42%</strong>, <strong>EP &ge; 84%</strong> e <strong>NPS &ge; 70</strong>.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-        </CardContent>
-      </Card>
+      {/* SEÇÃO 3: RADAR DE NOTÍCIAS DE MERCADO (IMÓVEIS, VEÍCULOS & CONSÓRCIO) */}
+      <MarketNewsFeed />
     </div>
   );
 }

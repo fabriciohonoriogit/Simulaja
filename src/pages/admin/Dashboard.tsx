@@ -21,7 +21,6 @@ import { DashboardHero } from "@/components/admin/gamification/DashboardHero";
 import { AICoachMessage } from "@/components/admin/gamification/AICoachMessage";
 import { BossOfTheWeek } from "@/components/admin/gamification/BossOfTheWeek";
 import { HallOfFame } from "@/components/admin/gamification/HallOfFame";
-import { JarvisReport } from "@/components/admin/gamification/JarvisReport";
 import { EliteRewardsPanel } from "@/components/admin/gamification/EliteRewardsPanel";
 import { useGamificationStore } from "@/stores/gamificationStore";
 import { calcularComissaoRecorrenteLead } from "@/lib/gamificationUtils";
