@@ -13,7 +13,7 @@ export interface LeadContext {
 }
 
 async function callDirectGemini(prompt: string, apiKey: string): Promise<string | null> {
-  const models = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro"];
+  const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro"];
   for (const m of models) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
@@ -120,6 +120,71 @@ export function getSystemAuthoritativeContext(): string {
 
 ${simContext}
 `;
+}
+
+export async function getRealtimeFunnelSnapshot(): Promise<string> {
+  try {
+    const { data: leads, error } = await supabase
+      .from("leads")
+      .select("id, nome, status, valor_credito, lead_temperatura, score_final, created_at, administradora, cidade, uf")
+      .order("created_at", { ascending: false })
+      .limit(60);
+
+    if (error || !leads || leads.length === 0) {
+      return "Nenhum lead encontrado no CRM no momento.";
+    }
+
+    const totalLeads = leads.length;
+    let totalCredito = 0;
+    const stagesCount: Record<string, { count: number; totalCredito: number }> = {};
+    const tempCount: Record<string, number> = { quente: 0, morno: 0, frio: 0, outros: 0 };
+    const quentesList: Array<{ nome: string; valor: number; etapa: string }> = [];
+
+    leads.forEach((l: any) => {
+      const cred = Number(l.valor_credito) || 0;
+      totalCredito += cred;
+      const status = l.status || "novo_lead";
+      if (!stagesCount[status]) {
+        stagesCount[status] = { count: 0, totalCredito: 0 };
+      }
+      stagesCount[status].count += 1;
+      stagesCount[status].totalCredito += cred;
+
+      const temp = (l.lead_temperatura || "").toLowerCase();
+      if (temp === "quente") {
+        tempCount.quente += 1;
+        quentesList.push({ nome: l.nome, valor: cred, etapa: status });
+      } else if (temp === "morno") {
+        tempCount.morno += 1;
+      } else if (temp === "frio") {
+        tempCount.frio += 1;
+      } else {
+        tempCount.outros += 1;
+      }
+    });
+
+    const stagesBreakdown = Object.entries(stagesCount)
+      .map(([stg, info]) => `  • ${stg}: ${info.count} lead(s) - Volume: ${info.totalCredito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`)
+      .join("\n");
+
+    const topQuentes = quentesList
+      .slice(0, 5)
+      .map(q => `  🔥 ${q.nome} - ${q.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} [Fase: ${q.etapa}]`)
+      .join("\n");
+
+    return `
+--- DADOS REAIS DO FUNIL DE CLIENTES DO CRM (CONSOLIDADOS EM TEMPO REAL) ---
+• Total de Leads Ativos: ${totalLeads}
+• Pipeline Total em Negociação: ${totalCredito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+• Temperatura da Base: 🔥 Quentes: ${tempCount.quente} | 🌤️ Mornos: ${tempCount.morno} | ❄️ Frios: ${tempCount.frio}
+• Distribuição por Etapas do Funil:
+${stagesBreakdown}
+• Destaques de Leads com Alta Propensão (Quentes):
+${topQuentes || "  (Nenhum lead com tag quente no momento)"}
+---------------------------------------------------------------------------`;
+  } catch (e) {
+    return "Não foi possível consolidar os dados do funil em tempo real.";
+  }
 }
 
 async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabrício"): Promise<string> {
@@ -247,16 +312,32 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
     }
   }
 
-  // 2. FUNIL DE VENDAS & CRM
-  if (lower.includes("funil") || lower.includes("pipeline") || lower.includes("lead")) {
+  // 2. FUNIL DE VENDAS & CRM (Análise Executiva Realtime)
+  if (
+    lower.includes("funil") ||
+    lower.includes("pipeline") ||
+    lower.includes("lead") ||
+    lower.includes("cliente") ||
+    lower.includes("negociacao") ||
+    lower.includes("negociação") ||
+    lower.includes("quente") ||
+    lower.includes("conversao") ||
+    lower.includes("conversão") ||
+    lower.includes("oportunidade")
+  ) {
     try {
-      const { data: leads } = await supabase.from("leads").select("nome, status, valor_credito").limit(3);
-      if (leads && leads.length > 0) {
-        const leadSummary = leads.map(l => `${l.nome} (${(l.valor_credito || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})`).join(", ");
-        return `Oportunidades Recentes no Funil: ${leadSummary}. Acesse o Kanban para gerenciar a evolução das propostas.`;
-      }
-    } catch (e) {}
-    return "Funil de Vendas ativo. Cadastre e converta novas oportunidades no pipeline comercial.";
+      const snapshot = await getRealtimeFunnelSnapshot();
+      return `📊 DIAGNÓSTICO EXECUTIVO DO SEU FUNIL:
+
+${snapshot}
+
+💡 Recomendações Estratégicas do Jarvis:
+1. Priorize contato imediato com os leads classificados como 🔥 Quentes.
+2. Clientes em "simulação enviada" ou "negociação" convertem mais rápido com estratégia de Parcela 50/50 (meia parcela) e lance embutido.
+3. Se desejar uma abordagem personalizada, me diga o nome do lead que crio um script de WhatsApp com a metodologia SRV!`;
+    } catch (e) {
+      return "Funil de Vendas ativo. Oportunidades sincronizadas no Kanban comercial.";
+    }
   }
 
   // Extração e busca de CPF ou Pedido de Boleto / Segunda Via
@@ -338,10 +419,10 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
   },
 
   async askJarvis(context: string, question: string, history?: Array<{ role: string; text: string }>, imageBase64?: string, userName = "Fabrício") {
-    // 1. Tenta comunicar com o Hermes Agent via Jarvis Brain Server na porta 8008 (usando 127.0.0.1 para evitar problemas de IPv6/localhost no Windows)
+    // 1. Tenta comunicar com o Hermes Agent via Jarvis Brain Server na porta 8008 (timeout ultrarrápido para não bloquear a UI)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 300);
       const res = await fetch("http://127.0.0.1:8008/hermes/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -356,13 +437,13 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
         }
       }
     } catch (e) {
-      // Fallback para servidor local / contexto legados se o Hermes Server não responder a tempo
+      // Fallback para servidor local / Edge Function na nuvem
     }
 
     let localContext = "";
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 400);
+      const timeoutId = setTimeout(() => controller.abort(), 200);
       const res = await fetch(`http://127.0.0.1:8008/context?query=${encodeURIComponent(question)}&who=vendedor`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (res.ok) {
@@ -372,19 +453,21 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
     } catch (e) {}
 
     const authContext = getSystemAuthoritativeContext();
-
+    const funnelSnapshot = await getRealtimeFunnelSnapshot();
     const firstName = userName.split(" ")[0] || "Fabrício";
 
-    const prompt = `Você é a Bella IA, assistente virtual de atendimento e automação do CRM.
+    const prompt = `Você é o Jarvis, assistente executivo e consultor de alta performance comercial e inteligência em consórcios e vendas da Prospera Planejamento / SimulaJá.
 NOME DO INTERLOCUTOR: "${userName}"
 
-# PRIVACIDADE E ISOLAMENTO DE DADOS (CRÍTICO)
-- Todas as conversas, mensagens e dados do CRM são isolados por usuário e organização.
-- NUNCA exiba conversas ou dados de Fabrício Honório para Anderson Coppati ou vice-versa.
-
-# REGRAS ANTI-REPETIÇÃO E SAUDAÇÃO
-- Em saudações simples ("boa tarde", "bom dia", "olá"), responda de forma simples e direta: "Oi ${firstName}, boa tarde! Como posso lhe ajudar?" sem se apresentar.
+# PERSONA E REGRAS DE OURO (JARVIS)
+- Responda como uma LLM analítica de nível mundial (estilo Claude 3.5 Sonnet / ChatGPT 4o), altamente articulada, estratégica, empática e orientada a conversão.
+- Chame o usuário pelo primeiro nome (${firstName}) de modo cortês e executivo.
+- Quando o usuário pedir análises do funil de clientes, leads, conversões ou métricas, analise os dados fornecidos em tempo real abaixo, aponte gargalos, prioridades e estratégias práticas de fechamento.
+- Organize suas respostas com formatação limpa (tópicos, divisões claras, valores monetários em R$ e negritos).
+- Em saudações simples ("boa tarde", "bom dia", "olá"), responda de forma simples, amigável e direta: "Oi ${firstName}, boa tarde! Como posso acelerar seus resultados comerciais hoje?".
 - NUNCA repita a pergunta do usuário de volta para ele.
+
+${funnelSnapshot}
 
 ${authContext}
 
@@ -392,12 +475,22 @@ CONTEXTO ADICIONAL DO SISTEMA: ${context}
 PERGUNTA DO USUÁRIO / ESTRATEGISTA: "${question}"
 ${localContext ? `INSIGHTS ADICIONAIS: ${localContext}` : ""}`;
 
-    const { text, error } = await callAI(prompt, 700, history, imageBase64);
+    const { text, error } = await callAI(prompt, 950, history, imageBase64);
 
     return {
       answer: text || (await generateSmartLocalResponse(prompt, userName)),
       error: null,
     };
+  },
+
+  async askAssistant(
+    question: string,
+    context = "Painel Jarvis HUD Executivo - Assistente de Vendas e Consórcios",
+    userName = "Fabrício",
+    history?: Array<{ role: string; text: string }>,
+    imageBase64?: string
+  ) {
+    return this.askJarvis(context, question, history, imageBase64, userName);
   },
 
   async qualifyLeads(leadsContext: string) {

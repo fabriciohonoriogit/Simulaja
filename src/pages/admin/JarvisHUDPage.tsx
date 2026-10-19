@@ -52,6 +52,7 @@ export default function JarvisHUDPage() {
   const [command, setCommand] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [chatHistory, setChatHistory] = useState<Array<{ role: string; text: string }>>([]);
 
   const [logs, setLogs] = useState<LogEntry[]>([
     {
@@ -323,20 +324,11 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
 
   const processSmartCommand = (lowerPrompt: string, originalText: string): LogEntry | null => {
     const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-
-    // 1. Saudações Humanizadas e Naturais (Persona Jarvis)
     const normalized = lowerPrompt.trim().replace(/[.,!?;:]/g, "");
-    if (
-      normalized === "boa tarde" ||
-      normalized === "bom dia" ||
-      normalized === "boa noite" ||
-      normalized === "ola" ||
-      normalized === "olá" ||
-      normalized === "oi" ||
-      normalized === "oi jarvis" ||
-      normalized === "ola jarvis" ||
-      normalized === "olá jarvis"
-    ) {
+
+    // 1. Saudações Simples e Isoladas (somente se não contiver pergunta ou comando adjacente)
+    const exactGreetings = ["boa tarde", "bom dia", "boa noite", "ola", "olá", "oi", "oi jarvis", "ola jarvis", "olá jarvis"];
+    if (exactGreetings.includes(normalized)) {
       const periodo = normalized.includes("dia") ? "Bom dia" : normalized.includes("noite") ? "Boa noite" : "Boa tarde";
       return {
         id: Date.now().toString(),
@@ -347,8 +339,11 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
       };
     }
 
-    // 2. Comando de 2ª via / Boleto / Fabrício / Magalu
-    if (lowerPrompt.includes("segunda via") || lowerPrompt.includes("2ª via") || lowerPrompt.includes("boleto") || ((lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício")) && (lowerPrompt.includes("cota") || lowerPrompt.includes("parcela") || lowerPrompt.includes("valor")))) {
+    // 2. Ação Determinística de 2ª via rápida (apenas se pedir expressamente o documento do Fabrício sem pedir análise)
+    if (
+      (lowerPrompt.includes("baixar 2") || lowerPrompt.includes("emitir 2") || lowerPrompt.includes("segunda via fabricio") || lowerPrompt.includes("2ª via fabricio") || lowerPrompt.includes("boleto fabricio") || lowerPrompt.includes("boleto do fabricio")) &&
+      !lowerPrompt.includes("como") && !lowerPrompt.includes("analis") && !lowerPrompt.includes("funil")
+    ) {
       return {
         id: Date.now().toString(),
         time: timeStr,
@@ -357,7 +352,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         text: "Boleto emitido via Atendimento > Posição do Consorciado > Emissão de Cobrança!",
         isBoletoCard: true,
         boletoInfo: {
-          cliente: lowerPrompt.includes("fabricio") || lowerPrompt.includes("fabrício") ? "FABRICIO RODRIGUES HONÓRIO" : "CONSORCIADO MAGALU",
+          cliente: "FABRICIO RODRIGUES HONÓRIO",
           cpf: "018.605.149-28",
           grupo: "006042",
           cota: "0782-00",
@@ -382,8 +377,8 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
       };
     }
 
-    // 3. Comando de Gmail / E-mail
-    if (lowerPrompt.includes("gmail") || lowerPrompt.includes("e-mail") || lowerPrompt.includes("email")) {
+    // 3. Comando de Gmail Briefing
+    if (lowerPrompt === "gmail" || lowerPrompt === "checar gmail" || lowerPrompt === "ver emails" || lowerPrompt === "ver e-mails") {
       return {
         id: Date.now().toString(),
         time: timeStr,
@@ -394,7 +389,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
     }
 
     // 4. English Coach
-    if (lowerPrompt.includes("inglês") || lowerPrompt.includes("ingles") || lowerPrompt.includes("english")) {
+    if (lowerPrompt === "ingles" || lowerPrompt === "inglês" || lowerPrompt === "treinar ingles" || lowerPrompt === "praticar ingles") {
       return {
         id: Date.now().toString(),
         time: timeStr,
@@ -430,25 +425,35 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         setLogs(prev => [smartResponse, ...prev]);
         speakResponse(smartResponse.text);
         setIsProcessing(false);
-      }, 600);
+      }, 500);
       return;
     }
 
+    const currentHistory = [
+      ...chatHistory,
+      { role: "user", text: textToRun }
+    ];
+
     try {
-      // Integração com o assistente inteligente Jarvis AI
+      // Integração com o assistente inteligente Jarvis AI via LLM
       const aiResult = await aiService.askAssistant(
         textToRun,
         "Painel Jarvis HUD Executivo - Assistente de Vendas e Consórcios",
-        "Fabrício"
+        "Fabrício",
+        chatHistory
       );
 
       let responseText = aiResult?.answer;
       if (!responseText || responseText.trim() === "") {
-        // Fallback humanizado em caso de ausência de resposta
         const isTarde = new Date().getHours() >= 12 && new Date().getHours() < 18;
         const saudacao = isTarde ? "Boa tarde" : new Date().getHours() < 12 ? "Bom dia" : "Boa noite";
-        responseText = `Olá, Fabrício! ${saudacao}! Estou à sua total disposição. Posso te ajudar a simular uma cota, checar status de leads no funil ou emitir a 2ª via de um boleto. Como prefere seguir?`;
+        responseText = `Olá, Fabrício! ${saudacao}! Estou à sua total disposição. Analisei seus dados. Como prefere avançar na gestão dos clientes e no funil hoje?`;
       }
+
+      setChatHistory([
+        ...currentHistory,
+        { role: "assistant", text: responseText }
+      ]);
 
       setLogs(prev => [
         { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: responseText, color: "text-cyan-400 font-semibold" },
@@ -457,7 +462,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
 
       speakResponse(responseText);
     } catch (e: any) {
-      const fallbackMsg = `Olá, Fabrício! Tive uma oscilação pontual de conexão, mas continuo operacional. Me informe o que você precisa (ex: "simulação de 200 mil", "ver funil" ou "segunda via do boleto") que resolvo para você na hora!`;
+      const fallbackMsg = `Olá, Fabrício! Tive uma oscilação na resposta do servidor, mas meus subagentes locais estão ativos. Pode me perguntar sobre simulações, métricas do funil ou leads que consulto imediatamente para você!`;
       setLogs(prev => [
         { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: fallbackMsg, color: "text-amber-400 font-semibold" },
         ...prev
@@ -637,35 +642,66 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
             <JarvisOrb state={orbState} theme="cobalt" />
           </div>
 
-          <div className="w-full relative">
-            <input 
-              type="text"
-              placeholder="Digite um comando ou solicite a 2ª via: 'Baixar 2 via Magalu', 'Checar Gmail'..."
-              value={command}
-              onChange={(e) => setCommand(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendCommand()}
-              className="w-full bg-slate-950/95 border border-cyan-500/40 text-cyan-200 placeholder:text-slate-500 rounded-xl px-4 py-4 text-sm focus:outline-none focus:border-cyan-400 pr-28 font-mono shadow-[0_0_20px_rgba(6,182,212,0.15)]"
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-              <button 
-                onClick={toggleMic}
-                className={`p-2.5 rounded-lg transition-all ${
-                  orbState === 'listening' 
-                    ? 'bg-cyan-400 text-slate-950 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.8)]' 
-                    : 'bg-slate-800/90 text-slate-400 hover:text-cyan-300 border border-slate-700'
-                }`}
-                title="Ativar Voz"
-              >
-                <Mic className="h-4 w-4" />
-              </button>
-              <button 
-                onClick={() => handleSendCommand()}
-                disabled={isProcessing || !command.trim()}
-                className="p-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold rounded-lg transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"
-                title="Enviar Comando"
-              >
-                {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </button>
+          {/* Status de Processamento da IA */}
+          {isProcessing && (
+            <div className="my-2 text-xs text-cyan-300 font-mono flex items-center gap-2 animate-pulse bg-cyan-950/70 px-4 py-1.5 rounded-full border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+              <RefreshCw className="h-3.5 w-3.5 animate-spin text-cyan-400" /> 
+              Jarvis está analisando o CRM e formulando a estratégia...
+            </div>
+          )}
+
+          {/* Quick Prompt Chips & Input Bar */}
+          <div className="w-full space-y-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px] font-mono">
+              {[
+                { label: "📊 Analisar Funil", query: "Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM." },
+                { label: "🔥 Leads Quentes", query: "Quais são os leads mais quentes no funil e quais ações imediatas devo tomar?" },
+                { label: "🤝 Em Negociação", query: "Quais clientes estão na etapa de negociação e proposta enviada?" },
+                { label: "💰 Simular 50/50", query: "Simular consórcio imobiliário de R$ 200.000 no plano 50/50 com e sem seguro." },
+                { label: "🎯 Próximos Passos", query: "Quais são os 3 próximos passos prioritários para aumentar meu fechamento de vendas hoje?" },
+              ].map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSendCommand(chip.query)}
+                  disabled={isProcessing}
+                  className="whitespace-nowrap px-3 py-1.5 rounded-lg bg-slate-950/90 hover:bg-cyan-950/80 text-slate-300 hover:text-cyan-300 border border-slate-800 hover:border-cyan-500/50 transition-all active:scale-95 text-[10px] font-semibold cursor-pointer shadow-sm"
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-full relative">
+              <input 
+                type="text"
+                placeholder="Pergunte ao Jarvis sobre o funil, leads, estratégias ou simulações..."
+                value={command}
+                onChange={(e) => setCommand(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendCommand()}
+                className="w-full bg-slate-950/95 border border-cyan-500/40 text-cyan-200 placeholder:text-slate-500 rounded-xl px-4 py-4 text-sm focus:outline-none focus:border-cyan-400 pr-28 font-mono shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                <button 
+                  onClick={toggleMic}
+                  className={`p-2.5 rounded-lg transition-all ${
+                    orbState === 'listening' 
+                      ? 'bg-cyan-400 text-slate-950 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.8)]' 
+                      : 'bg-slate-800/90 text-slate-400 hover:text-cyan-300 border border-slate-700'
+                  }`}
+                  title="Ativar Voz"
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={() => handleSendCommand()}
+                  disabled={isProcessing || !command.trim()}
+                  className="p-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold rounded-lg transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer"
+                  title="Enviar Comando"
+                >
+                  {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -737,7 +773,23 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
                     </div>
                   </div>
                 ) : (
-                  <p className="text-slate-300 text-[11px] leading-relaxed font-sans whitespace-pre-line">{log.text}</p>
+                  <div className="text-slate-300 text-[11px] leading-relaxed font-sans whitespace-pre-line space-y-1">
+                    {log.text.split("\n").map((line, lIdx) => {
+                      if (!line.trim()) return <div key={lIdx} className="h-1.5" />;
+                      const isHeader = line.startsWith("📊") || line.startsWith("💡") || line.startsWith("---") || line.startsWith("📄") || line.startsWith("•");
+                      const isBullet = line.trim().startsWith("•") || line.trim().startsWith("🔥") || line.trim().startsWith("-");
+                      return (
+                        <p 
+                          key={lIdx} 
+                          className={`${
+                            isHeader ? "font-semibold text-cyan-200" : isBullet ? "text-slate-200 pl-1" : "text-slate-300"
+                          }`}
+                        >
+                          {line}
+                        </p>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             ))}
