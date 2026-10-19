@@ -19,9 +19,11 @@ import {
   RefreshCw,
   ChevronUp,
   ChevronDown,
-  FileUp
+  FileUp,
+  Mail
 } from "lucide-react";
 import { LeadImportModal } from "@/components/admin/LeadImportModal";
+import { ProspeccaoEmailModal } from "@/components/admin/ProspeccaoEmailModal";
 import { LeadEnrichmentWidget } from "@/components/admin/LeadEnrichmentWidget";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { sendWhatsAppMessage, getWhatsAppMode } from "@/services/evolutionApiService";
@@ -67,6 +69,7 @@ export default function Leads() {
   const [historyLead, setHistoryLead] = useState<Lead | null>(null);
   const [viewingFichaLead, setViewingFichaLead] = useState<Lead | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isOutreachOpen, setIsOutreachOpen] = useState(false);
   const [showEnrichment, setShowEnrichment] = useState(false);
 
   const { mutateAsync: deleteLead } = useDelete();
@@ -278,6 +281,14 @@ export default function Leads() {
             title="Enriquecimento via Public APIs (BrasilAPI, Receita, BCB)"
           >
             Enriquecer Dados (Public APIs)
+          </button>
+          <button
+            onClick={() => setIsOutreachOpen(true)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors border border-indigo-200 text-[11px] font-black uppercase tracking-wide shadow-sm"
+            title="Máquina de Prospecção Diária por E-mail (3 passos automáticos)"
+          >
+            <Mail className="h-3.5 w-3.5 text-indigo-600" />
+            Prospecção E-mail
           </button>
           <button
             onClick={() => setIsImportOpen(true)}
@@ -728,6 +739,19 @@ export default function Leads() {
           />
         </DialogContent>
       </Dialog>
+
+      <LeadImportModal
+        open={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        organizacaoId={profile?.organizacao_id}
+        onImportDone={refetchLeads}
+      />
+
+      <ProspeccaoEmailModal
+        open={isOutreachOpen}
+        onClose={() => setIsOutreachOpen(false)}
+        leads={leads}
+      />
       </div>
 
       {/* Vertical Scroll Controls - Facilitated Methodology (Desktop Only) */}

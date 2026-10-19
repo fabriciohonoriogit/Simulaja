@@ -1,0 +1,29 @@
+[
+  {
+    "id": "lead-exemplo-1",
+    "nome": "Carlos Eduardo Mendes",
+    "email": "carlos.mendes.exemplo@gmail.com",
+    "cidade": "São Paulo",
+    "valor_credito": 450000,
+    "tipo_consorcio": "IMOBILIARIO",
+    "status": "novo"
+  },
+  {
+    "id": "lead-exemplo-2",
+    "nome": "Dra. Mariana Vasconcelos",
+    "email": "mariana.vasconcelos.exemplo@outlook.com",
+    "cidade": "Campinas",
+    "valor_credito": 750000,
+    "tipo_consorcio": "IMOBILIARIO",
+    "status": "novo"
+  },
+  {
+    "id": "lead-exemplo-3",
+    "nome": "Roberto Silveira Frota",
+    "email": "roberto.frota.exemplo@empresa.com.br",
+    "cidade": "Ribeirão Preto",
+    "valor_credito": 320000,
+    "tipo_consorcio": "PESADOS",
+    "status": "novo"
+  }
+]

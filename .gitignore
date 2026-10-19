@@ -38,5 +38,7 @@ evolution-api/
 agency-agents/
 hermes-agent/
 omniroute-gateway/
+scripts/logs/
+scripts/run_background.bat
 wa-akg/
 vite.config.ts.timestamp-*
