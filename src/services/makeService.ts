@@ -108,11 +108,14 @@ export const makeService = {
    * Dispara mensagem de WhatsApp via webhook do Make.com (Conexão direta com Evolution API no Make)
    */
   async dispararWhatsAppViaMake(payload: WhatsAppMessagePayload): Promise<boolean> {
-    const url = WEBHOOK_WHATSAPP_DISPARO || WEBHOOK_LEADS;
-    if (!url) return false;
+    const hasDedicatedWebhook = WEBHOOK_WHATSAPP_DISPARO && !WEBHOOK_WHATSAPP_DISPARO.includes("whatsapp_webhook_id");
+    if (!hasDedicatedWebhook) {
+      // NÃO utilizar WEBHOOK_LEADS como fallback para mensagens de chat, pois WEBHOOK_LEADS é a esteira interna de alertas no Telegram!
+      return false;
+    }
 
     try {
-      const res = await fetch(url, {
+      const res = await fetch(WEBHOOK_WHATSAPP_DISPARO, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
