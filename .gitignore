@@ -38,4 +38,5 @@ evolution-api/
 agency-agents/
 hermes-agent/
 omniroute-gateway/
+wa-akg/
 vite.config.ts.timestamp-*

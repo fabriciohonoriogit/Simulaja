@@ -31,6 +31,22 @@ const EVOLUTION_GLOBAL_API_KEY = Deno.env.get("EVOLUTION_GLOBAL_API_KEY");
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper to process Spintax {opcao1|opcao2|opcao3} for unique message hashing
+function processSpintax(text: string): string {
+  if (!text) return "";
+  let result = text;
+  const regex = /\{([^{}]+)\}/;
+  let match;
+  let iterations = 0;
+  while ((match = regex.exec(result)) !== null && iterations < 30) {
+    iterations++;
+    const options = match[1].split("|");
+    const chosen = options[Math.floor(Math.random() * options.length)];
+    result = result.replace(match[0], chosen);
+  }
+  return result;
+}
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
@@ -75,17 +91,18 @@ serve(async (req) => {
       }
     }
 
-    // We start processing asynchronously to not block the Edge Function if there are many clients.
-    // However, Deno Deploy edge functions terminate shortly after the response is sent.
-    // So if the list is huge, this might fail. For now, we process them synchronously in the request,
-    // assuming it's a manageable batch (e.g. 10-50).
-    
-    // In a production scenario for thousands of messages, we would insert into a queue table 
-    // and process via pg_cron or a separate worker.
+    // Configurações Anti-Ban (Safe Broadcast)
+    const safeMode = reqBody.safeMode !== false; // Padrão: ativado
+    const minDelaySec = typeof reqBody.minDelaySeconds === "number" ? Math.max(3, reqBody.minDelaySeconds) : 8;
+    const maxDelaySec = typeof reqBody.maxDelaySeconds === "number" ? Math.max(minDelaySec, reqBody.maxDelaySeconds) : 18;
+    const batchSize = typeof reqBody.batchSize === "number" ? Math.max(3, reqBody.batchSize) : 10;
+    const batchCooldownSec = typeof reqBody.batchCooldownSeconds === "number" ? Math.max(10, reqBody.batchCooldownSeconds) : 35;
 
     const results = [];
     
-    for (const client of clients) {
+    for (let i = 0; i < clients.length; i++) {
+      const client = clients[i];
+
       if (!client.celular) {
         results.push({ id: client.id, status: 'failed', reason: 'No phone number' });
         continue;
@@ -99,19 +116,41 @@ serve(async (req) => {
 
       const formattedPhone = digits.startsWith("55") ? digits : `55${digits}`;
 
-      // Replace variables
-      const message = (template || "")
+      // 1. Inter-message Cadence (Proteção Anti-Ban com Jitter e Pausa de Respiro)
+      if (i > 0) {
+        if (safeMode) {
+          if (i % batchSize === 0) {
+            console.log(`[Anti-Ban] Pausa de respiro após ${i} envios: pausando ${batchCooldownSec}s...`);
+            await delay(batchCooldownSec * 1000);
+          } else {
+            const jitterMs = Math.floor(Math.random() * ((maxDelaySec - minDelaySec) * 1000)) + (minDelaySec * 1000);
+            console.log(`[Anti-Ban] Intervalo seguro para contato ${i + 1}/${clients.length}: ${(jitterMs / 1000).toFixed(1)}s`);
+            await delay(jitterMs);
+          }
+        } else {
+          // Fallback mínimo de 2s para evitar overload
+          await delay(2000);
+        }
+      }
+
+      // 2. Personalização com variáveis e Spintax (Gera hash de texto diferente por cliente)
+      const rawText = (template || "")
         .replace(/{{nome}}/gi, client.nome.split(" ")[0] || "")
         .replace(/{{grupo}}/gi, client.grupo || "")
         .replace(/{{cota}}/gi, client.cota || "")
         .replace(/{{administradora}}/gi, client.administradora || "");
+      
+      const message = processSpintax(rawText);
+
+      // Simulação realista de tempo de digitação (typing delay proporcional)
+      const typingDelay = Math.min(4000, Math.max(1500, Math.floor(message.length * 30) + Math.floor(Math.random() * 800)));
 
       try {
         let endpoint = `${EVOLUTION_API_URL}/message/sendText/${instanceName}`;
         let payload: any = {
           number: formattedPhone,
           text: message,
-          delay: 1200
+          delay: typingDelay,
         };
 
         if (media && media.base64) {
@@ -129,7 +168,7 @@ serve(async (req) => {
             caption: message, // Envia o texto como legenda
             media: media.base64,
             fileName: media.fileName || "arquivo",
-            delay: 1200
+            delay: typingDelay,
           };
         }
 
@@ -148,9 +187,6 @@ serve(async (req) => {
         }
 
         results.push({ id: client.id, status: 'success' });
-        
-        // Wait 1 second between requests to avoid hitting rate limits on our end
-        await delay(1000);
       } catch (err: any) {
         console.error(`Failed to send to ${formattedPhone}`, err);
         results.push({ id: client.id, status: 'failed', reason: err.message });
