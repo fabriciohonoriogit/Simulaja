@@ -27,7 +27,8 @@ import { ProspeccaoEmailModal } from "@/components/admin/ProspeccaoEmailModal";
 import { LeadEnrichmentWidget } from "@/components/admin/LeadEnrichmentWidget";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { sendWhatsAppMessage, getWhatsAppMode } from "@/services/evolutionApiService";
-import { WhatsAppIcon } from "@/components/SocialIcons";
+import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
+import { telegramService } from "@/services/telegramService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -460,6 +461,23 @@ export default function Leads() {
                           <WhatsAppIcon className="h-3.5 w-3.5" />
                         </button>
                         <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!l.celular) {
+                              toast.error("Lead sem telefone cadastrado");
+                              return;
+                            }
+                            telegramService.abrirChatTelegram({
+                              destinatario: l.celular,
+                              mensagem: `Olá ${l.nome}! Tudo bem? Sou da equipe do consórcio, vi seu interesse e gostaria de tirar suas dúvidas sobre o planejamento.`
+                            });
+                          }}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600 transition-colors"
+                          title="Enviar via Telegram (Sem Risco de Ban)"
+                        >
+                          <TelegramIcon className="h-3.5 w-3.5" />
+                        </button>
+                        <button
                           onTouchStart={(e) => e.stopPropagation()}
                           onClick={() => setHistoryLead(l as Lead)}
                           className="w-7 h-7 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
@@ -650,6 +668,26 @@ export default function Leads() {
                         <div className="flex items-center justify-between">
                           <p className="text-lg font-black text-emerald-800">{viewingFichaLead.celular || "—"}</p>
                           <WhatsAppIcon className="h-6 w-6 text-emerald-500" />
+                        </div>
+                      </div>
+                      <div className="bg-sky-50 p-4 rounded-2xl border border-sky-100/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[9px] font-black text-sky-600 uppercase tracking-wider mb-1">Telegram Direto</p>
+                            <p className="text-xs font-black text-sky-950">Comunicação Rápida &amp; Segura</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              telegramService.abrirChatTelegram({
+                                destinatario: viewingFichaLead.celular || "",
+                                mensagem: `Olá, ${viewingFichaLead.nome}! Tudo bem? Aqui é o Fabrício do Consórcio.`
+                              });
+                            }}
+                            className="p-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white transition-colors shadow-sm"
+                            title="Abrir Telegram"
+                          >
+                            <TelegramIcon className="h-5 w-5" />
+                          </button>
                         </div>
                       </div>
                       <div className="space-y-3">

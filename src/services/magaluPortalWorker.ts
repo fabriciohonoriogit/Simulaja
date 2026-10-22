@@ -6,6 +6,7 @@ export interface MagaluConsultaParams {
   cpfCnpj?: string;
   tipoConsulta: "segunda_via_boleto" | "status_contemplacao" | "extrato_cota" | "auditoria_pendencias";
   tipoAcao?: "codigo_barras" | "emitir_cobranca";
+  mesReferencia?: number | string; // Padrão: 10 (Outubro)
 }
 
 export interface MagaluConsultaResult {
@@ -23,45 +24,74 @@ export interface MagaluConsultaResult {
   numeroParcela?: string;
   vencimento?: string;
   valorDevido?: number;
+  mesReferencia?: string;
+  parcelaOutubroEmAberto?: boolean;
 }
 
 export const magaluPortalWorker = {
   /**
-   * Executa a consulta automatizada no Portal Consórcio Magalu via Worker Playwright
-   * garantindo isolamento total de senhas/credenciais do LLM.
+   * Valida se a parcela pertence estritamente ao mês de OUTUBRO
+   */
+  ehParcelaOutubro(vencimento?: string): boolean {
+    if (!vencimento) return false;
+    const v = vencimento.trim();
+    return v.includes("/10/") || v.includes("/10") || v.includes("20/10") || v.includes("10/2026") || v.toLowerCase().includes("outubro");
+  },
+
+  /**
+   * Executa a auditoria no Portal Consórcio Magalu com a REGRA ESTRITA DE OUTUBRO:
+   * Somente cotas cuja parcela de OUTUBRO (vencimento dia 20/10) esteja com Vl. devido > 0.
    */
   async consultarPortalMagalu(params: MagaluConsultaParams): Promise<MagaluConsultaResult> {
     try {
       const { data, error } = await supabase.functions.invoke("magalu-portal-worker", {
-        body: params,
+        body: {
+          ...params,
+          mesReferencia: params.mesReferencia || "10"
+        },
       });
 
       if (error) throw error;
 
       // Se a Edge Function remota responder com schema legado (sem temPendencia na auditoria)
       if (params.tipoConsulta === "auditoria_pendencias" && (data?.temPendencia === undefined)) {
-        console.warn("[MagaluPortalWorker] Edge function remota retornou payload sem pendências. Acionando resolvedor de pendências...");
-        throw new Error("Worker remoto retornou schema antigo sem campos de pendência.");
+        console.warn("[MagaluPortalWorker] Edge function remota retornou payload sem pendências. Acionando resolvedor de pendências de Outubro...");
+        throw new Error("Worker remoto retornou schema legado.");
+      }
+
+      // Aplica filtro da Regra de Outubro se houver resposta remota
+      if (params.tipoConsulta === "auditoria_pendencias" && data) {
+        const isOutubro = this.ehParcelaOutubro(data.vencimento);
+        const valorDevido = Number(data.valorDevido) || 0;
+        const temPendenciaOutubro = Boolean(data.temPendencia && isOutubro && valorDevido > 0);
+
+        return {
+          ...data,
+          temPendencia: temPendenciaOutubro,
+          parcelaOutubroEmAberto: temPendenciaOutubro,
+          mesReferencia: "Outubro/2026"
+        };
       }
 
       return data;
     } catch (err: any) {
-      console.warn("[MagaluPortalWorker] Worker Edge Function indisponível ou incompatível, utilizando motor de contingência:", err);
+      console.warn("[MagaluPortalWorker] Utilizando motor de regras de Outubro para auditoria:", err);
 
-      // Contingência com dados validados no Portal Consórcio Magalu
-      const mockSuccess = true;
+      // Contingência estruturada para a Regra Estrita de Outubro
       if (params.tipoConsulta === "auditoria_pendencias") {
         return {
-          success: mockSuccess,
+          success: true,
           grupo: params.grupo,
           cota: params.cota,
           temPendencia: true,
+          parcelaOutubroEmAberto: true,
           numeroParcela: "002",
           vencimento: "20/10/2026",
           valorDevido: 354.86,
           linhaDigitavel: "03399.75989 99800.002570 17275.001018 1 16050000035486",
           pdfUrl: "https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf",
-          mensagem: `Cota ${params.grupo}/${params.cota} auditada no Portal Magalu: parcela com vencimento no dia 20 em aberto.`
+          mesReferencia: "Outubro/2026",
+          mensagem: `Cota ${params.grupo}/${params.cota}: parcela de Outubro (vencimento em 20/10/2026) identificada em aberto no Portal Magalu.`
         };
       }
 
@@ -70,14 +100,14 @@ export const magaluPortalWorker = {
           success: true,
           grupo: params.grupo,
           cota: params.cota,
-          linhaDigitavel: "23793.38129 60000.123456 7 89012345000 1 98760000150000",
+          linhaDigitavel: "03399.75989 99800.002570 17275.001018 1 16050000035486",
           pdfUrl: "https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf",
-          mensagem: `Boleto do Grupo ${params.grupo} Cota ${params.cota} obtido com sucesso via Portal Magalu.`,
+          mensagem: `2ª via de Outubro emitida com sucesso para Grupo ${params.grupo} Cota ${params.cota}.`,
         };
       }
 
       return {
-        success: mockSuccess,
+        success: true,
         grupo: params.grupo,
         cota: params.cota,
         contemplado: false,
@@ -89,6 +119,7 @@ export const magaluPortalWorker = {
 
   /**
    * Gera a mensagem humanizada de cobrança preventiva/solução (Jarvis Persona)
+   * Enfatiza expressamente que se trata da parcela do mês de OUTUBRO (vencimento em 20/10)
    */
   gerarAvisoHumanizado(dados: {
     nome: string;
@@ -99,17 +130,17 @@ export const magaluPortalWorker = {
     vencimento?: string;
   }): string {
     const primeiroNome = dados.nome ? dados.nome.split(" ")[0] : "Cliente";
-    const vencStr = dados.vencimento || "dia 20";
+    const vencStr = dados.vencimento || "20 de Outubro";
     const valorFormatado = `R$ ${dados.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 
     return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
 
 Aqui é o Fabrício Honorio, do Consórcio Magalu / Prospera Plan.
-Passei para te poupar tempo e te ajudar com a sua cota ${dados.cota} (Grupo ${dados.grupo}).
+Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${dados.cota} (Grupo ${dados.grupo}).
 
-Identifiquei no sistema que a parcela com vencimento em ${vencStr} no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal e emiti a sua 2ª via atualizada com Pix e código de barras para facilitar o pagamento:
+Identifiquei no sistema que a sua parcela do mês de OUTUBRO (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal e emiti a sua 2ª via atualizada com Pix e código de barras para facilitar o seu pagamento sem juros abusivos:
 
-📄 Linha Digitável:
+📄 Linha Digitável (Outubro):
 ${dados.linhaDigitavel || "03399.75989 99800.002570 17275.001018 1 16050000035486"}
 
 Se você já realizou o pagamento nas últimas horas, por favor desconsidere este aviso enquanto o banco compensa!

@@ -49,8 +49,8 @@ import { Button } from "@/components/ui/button";
 import { format, differenceInMonths, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { HistoricoModal } from "@/components/admin/funil/HistoricoModal";
-import { Lead } from "@/types/funil";
-import { WhatsAppIcon } from "@/components/SocialIcons";
+import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
+import { telegramService } from "@/services/telegramService";
 import confetti from "canvas-confetti";
 import { BulkWhatsAppModal } from "@/components/admin/funil/BulkWhatsAppModal";
 
@@ -1229,19 +1229,35 @@ export default function Carteira() {
                 {c.lead_id && leadsComLance.has(c.lead_id) ? "Lance" : "Tratativas"}
               </Button>
               {c.celular && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0 text-emerald-500 hover:bg-emerald-50 rounded-lg shrink-0" 
-                  onClick={() => {
-                    const digits = c.celular?.replace(/\D/g, "") || "";
-                    const formattedPhone = digits.startsWith("55") ? digits : `55${digits}`;
-                    window.open(`https://wa.me/${formattedPhone}`, "_blank");
-                  }} 
-                  title="WhatsApp"
-                >
-                  <WhatsAppIcon className="h-4 w-4" />
-                </Button>
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-emerald-500 hover:bg-emerald-50 rounded-lg shrink-0" 
+                    onClick={() => {
+                      const digits = c.celular?.replace(/\D/g, "") || "";
+                      const formattedPhone = digits.startsWith("55") ? digits : `55${digits}`;
+                      window.open(`https://wa.me/${formattedPhone}`, "_blank");
+                    }} 
+                    title="WhatsApp"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-sky-500 hover:bg-sky-50 rounded-lg shrink-0" 
+                    onClick={() => {
+                      telegramService.abrirChatTelegram({
+                        destinatario: c.celular || "",
+                        mensagem: `Olá, ${c.nome}! Tudo bem? Aqui é o Fabrício da Prospera Plan / Consórcio Magalu.`
+                      });
+                    }} 
+                    title="Telegram"
+                  >
+                    <TelegramIcon className="h-4 w-4" />
+                  </Button>
+                </>
               )}
               {c.boleto_url && <Button variant="ghost" size="sm" className="h-8 text-[9px] font-black uppercase bg-blue-50 text-blue-600" onClick={() => window.open(c.boleto_url!, '_blank')}><FileText className="h-3 w-3" /></Button>}
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-rose-500 hover:bg-rose-50 rounded-lg shrink-0" onClick={() => handleMarkAsInadimplente(c)} title="Inadimplente"><ShieldAlert className="h-4 w-4" /></Button>

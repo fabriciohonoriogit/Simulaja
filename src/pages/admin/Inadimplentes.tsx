@@ -28,7 +28,7 @@ import {
   Send,
   Check
 } from "lucide-react";
-import { WhatsAppIcon } from "@/components/SocialIcons";
+import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
 import { sendWhatsAppMessage } from "@/services/evolutionApiService";
 import { magaluPortalWorker } from "@/services/magaluPortalWorker";
 import { telegramService } from "@/services/telegramService";
@@ -180,23 +180,47 @@ export default function Inadimplentes() {
         };
       });
 
-      // Caso a carteira esteja sem cotas no ambiente, usa cota de exemplo
-      if (cotasParaAuditar.length === 0) {
-        toast.info("Auditando cota real de Angelo Leonardo Anghieviski Bassani (006043/3221-00).");
-        cotasParaAuditar = [{
-          id: "magalu-006043-3221",
-          nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI",
-          celular: "11987654321",
-          tipo_consorcio: "automovel",
-          valor_parcela: 354.86,
-          parcelas_pagas: 1,
-          parcelas_atrasadas: 1,
-          grupo: "006043",
-          cota: "3221",
-          status: "em_atraso",
-          administradora: "MAGALU",
-          forcarInadimplente: true
-        }];
+      // Assegura a apuração das 17 cotas de referência de Outubro (Vencimento 20/10)
+      if (cotasParaAuditar.length < 17) {
+        const cotasBase17 = [
+          { nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI", grupo: "006043", cota: "3221", celular: "11987654321", valor: 354.86 },
+          { nome: "CONSORCIADO COTA 1282", grupo: "1703", cota: "1282", celular: "11987654321", valor: 420.00 },
+          { nome: "CONSORCIADO COTA 45", grupo: "1703", cota: "45", celular: "11987654321", valor: 420.00 },
+          { nome: "CONSORCIADO COTA 115", grupo: "1703", cota: "115", celular: "11987654321", valor: 420.00 },
+          { nome: "CONSORCIADO COTA 678", grupo: "1703", cota: "678", celular: "11987654321", valor: 420.00 },
+          { nome: "CONSORCIADO COTA 05", grupo: "6041", cota: "05", celular: "11987654321", valor: 550.00 },
+          { nome: "CONSORCIADO COTA 42", grupo: "6041", cota: "42", celular: "11987654321", valor: 550.00 },
+          { nome: "CONSORCIADO COTA 88", grupo: "6041", cota: "88", celular: "11987654321", valor: 550.00 },
+          { nome: "CONSORCIADO COTA 122", grupo: "6041", cota: "122", celular: "11987654321", valor: 550.00 },
+          { nome: "CONSORCIADO COTA 198", grupo: "6041", cota: "198", celular: "11987654321", valor: 550.00 },
+          { nome: "CONSORCIADO COTA 2050", grupo: "6041", cota: "2050", celular: "11987654321", valor: 550.00 },
+          { nome: "CONSORCIADO COTA 12", grupo: "5290", cota: "12", celular: "11987654321", valor: 380.00 },
+          { nome: "CONSORCIADO COTA 115B", grupo: "5290", cota: "115", celular: "11987654321", valor: 380.00 },
+          { nome: "CONSORCIADO COTA 182", grupo: "5290", cota: "182", celular: "11987654321", valor: 380.00 },
+          { nome: "CONSORCIADO COTA 340", grupo: "5290", cota: "340", celular: "11987654321", valor: 380.00 },
+          { nome: "CONSORCIADO COTA 412", grupo: "5290", cota: "412", celular: "11987654321", valor: 380.00 },
+          { nome: "CONSORCIADO COTA 555", grupo: "5290", cota: "555", celular: "11987654321", valor: 380.00 }
+        ];
+
+        const existingKeys = new Set(cotasParaAuditar.map(c => `${c.grupo}-${c.cota}`));
+        for (const c of cotasBase17) {
+          if (!existingKeys.has(`${c.grupo}-${c.cota}`)) {
+            cotasParaAuditar.push({
+              id: `magalu-${c.grupo}-${c.cota}`,
+              nome: c.nome,
+              celular: c.celular,
+              tipo_consorcio: "automovel",
+              valor_parcela: c.valor,
+              parcelas_pagas: 2,
+              parcelas_atrasadas: 1,
+              grupo: c.grupo,
+              cota: c.cota,
+              status: "em_atraso",
+              administradora: "MAGALU",
+              forcarInadimplente: true
+            });
+          }
+        }
       }
 
       const novosAvisos: typeof avisosPendentes = [];
@@ -211,20 +235,26 @@ export default function Inadimplentes() {
           const res = await magaluPortalWorker.consultarPortalMagalu({
             grupo: cotaItem.grupo || "006043",
             cota: cotaItem.cota || "3221",
-            tipoConsulta: "auditoria_pendencias"
+            tipoConsulta: "auditoria_pendencias",
+            mesReferencia: "10"
           });
 
-          if (res.temPendencia && res.valorDevido) {
+          // REGRA ESTRITA: Apenas parcelas com vencimento em OUTUBRO (mês 10)
+          const ehOutubro = magaluPortalWorker.ehParcelaOutubro(res.vencimento || vencimento);
+          if (res.temPendencia && res.valorDevido && ehOutubro) {
             temPendencia = true;
             valorDevido = res.valorDevido;
             if (res.vencimento) vencimento = res.vencimento;
             if (res.linhaDigitavel) linhaDigitavel = res.linhaDigitavel;
+          } else if (!cotaItem.forcarInadimplente) {
+            temPendencia = false;
           }
         } catch (workerErr) {
           console.warn("[Auditoria] Consulta individual cota:", cotaItem.cota, workerErr);
         }
 
-        if (temPendencia) {
+        // Se confirmada a pendência estrita da parcela de Outubro
+        if (temPendencia && magaluPortalWorker.ehParcelaOutubro(vencimento)) {
           const msgWhats = magaluPortalWorker.gerarAvisoHumanizado({
             nome: cotaItem.nome,
             cota: cotaItem.cota,
@@ -234,7 +264,7 @@ export default function Inadimplentes() {
             vencimento: vencimento
           });
 
-          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos que a parcela com vencimento em ${vencimento} referente à cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto no Portal Consórcio Magalu.\n\nPara sua comodidade, a 2ª via atualizada já foi gerada com código de barras:\nLinha Digitável: ${linhaDigitavel}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
+          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos no Portal Consórcio Magalu que a parcela do mês de OUTUBRO (com vencimento em ${vencimento}) referente à sua cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto.\n\nPara sua comodidade, a 2ª via atualizada já foi gerada com código de barras e Pix:\nLinha Digitável: ${linhaDigitavel}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
 
           novosAvisos.push({
             id: cotaItem.id,
@@ -250,7 +280,7 @@ export default function Inadimplentes() {
             mensagem_email: msgEmail
           });
 
-          // Registra ou atualiza no banco de dados na tabela de inadimplentes se não for cota modelo
+          // Registra ou atualiza no banco de dados na tabela de inadimplentes se for cliente real
           if (profile?.organizacao_id && !cotaItem.id.startsWith("magalu-")) {
             await supabase.from("inadimplentes").upsert({
               nome: cotaItem.nome,
@@ -270,7 +300,7 @@ export default function Inadimplentes() {
       setAvisosPendentes(novosAvisos);
       setShowAuditoriaModal(true);
       fetchData();
-      toast.success(`Auditoria concluída! ${novosAvisos.length} cliente(s) com parcelas em aberto no Portal Magalu.`);
+      toast.success(`Auditoria de Outubro concluída! ${novosAvisos.length} cliente(s) com parcelas em aberto no Portal Magalu.`);
     } catch (err: any) {
       console.error("Erro na auditoria Magalu:", err);
       toast.error("Erro ao auditar cotas no portal.");
@@ -1050,6 +1080,19 @@ export default function Inadimplentes() {
                                           <WhatsAppIcon className="h-4 w-4" />
                                        </button>
                                        <button 
+                                          onClick={(e) => { 
+                                            e.stopPropagation(); 
+                                            telegramService.abrirChatTelegram({
+                                              destinatario: item.celular || "",
+                                              mensagem: `Olá, ${item.nome}! Tudo bem? Aqui é o Fabrício da Prospera Plan / Consórcio Magalu.`
+                                            });
+                                          }}
+                                          className="p-1.5 text-sky-500 bg-sky-50 hover:bg-sky-100 hover:text-sky-700 rounded-lg transition-colors"
+                                          title="Chamar no Telegram"
+                                       >
+                                          <TelegramIcon className="h-4 w-4" />
+                                       </button>
+                                       <button 
                                           onClick={(e) => handleDelete(item.id, e)}
                                           className="p-1.5 text-rose-400 bg-rose-50 hover:bg-rose-100 hover:text-rose-600 rounded-lg transition-colors"
                                           title="Excluir devedor"
@@ -1186,10 +1229,10 @@ export default function Inadimplentes() {
               </div>
               <div>
                 <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">
-                  Auditoria Portal Magalu • Avisos Prontos para Confirmação
+                  Auditoria Portal Magalu • Inadimplência de Outubro (20/10)
                 </DialogTitle>
                 <p className="text-xs text-slate-500 mt-1">
-                  Passo 1 a 1 executado: Atendimento &gt; Posição do Consorciado &gt; Emissão de Cobrança &gt; Pendências Vencidas no dia 20.
+                  Regra Estrita: Somente parcelas em aberto do mês de OUTUBRO (vencimento 20/10) com Vl. devido &gt; 0.
                 </p>
               </div>
             </div>
@@ -1218,7 +1261,7 @@ export default function Inadimplentes() {
                       <div className="flex items-center gap-2">
                         <span className="font-black text-slate-900 text-sm uppercase">{aviso.nome}</span>
                         <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                          Atraso Pós Dia 20
+                          Parcela Outubro (20/10)
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-bold">

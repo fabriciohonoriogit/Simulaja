@@ -2,7 +2,8 @@ import React from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Bell, RefreshCw, ClipboardList, Share2, Copy } from "lucide-react";
-import { WhatsAppIcon } from "@/components/SocialIcons";
+import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
+import { telegramService } from "@/services/telegramService";
 import { toast } from "sonner";
 
 import {
@@ -394,6 +395,26 @@ export function FunilModals({ state }: { state: any }) {
                         <div className="flex items-center justify-between">
                           <p className="text-lg font-black text-emerald-800">{viewingFichaLead.celular || "—"}</p>
                           <WhatsAppIcon className="h-6 w-6 text-emerald-500" />
+                        </div>
+                      </div>
+                      <div className="bg-sky-50 p-4 rounded-2xl border border-sky-100/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[9px] font-black text-sky-600 uppercase tracking-wider mb-1">Telegram Direto</p>
+                            <p className="text-xs font-black text-sky-950">Comunicação Rápida &amp; Segura</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              telegramService.abrirChatTelegram({
+                                destinatario: viewingFichaLead.celular || "",
+                                mensagem: `Olá, ${viewingFichaLead.nome}! Tudo bem? Aqui é o Fabrício do Consórcio.`
+                              });
+                            }}
+                            className="p-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white transition-colors shadow-sm"
+                            title="Abrir Telegram"
+                          >
+                            <TelegramIcon className="h-5 w-5" />
+                          </button>
                         </div>
                       </div>
                       <div className="space-y-3">

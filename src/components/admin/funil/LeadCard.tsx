@@ -5,7 +5,7 @@ import { format, parseISO, differenceInDays, isValid } from "date-fns";
 import { formatLeadValue } from "@/lib/utils";
 import { formatToUpper, formatToFourDigits, parseUTCDate } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
-import { WhatsAppIcon } from "@/components/SocialIcons";
+import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
 import { Lead, HistoricoContato, Membro } from "@/types/funil";
 import { TEMP_EMOJIS, TEMP_LABELS, normalizeStatus, COLUMNS, COLUMN_DOT_COLORS } from "./constants";
 import { cn } from "@/lib/utils";
@@ -429,6 +429,18 @@ export function LeadCard({
                 <button 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    const msg = `Olá, ${lead.nome}! Tudo bem? Fabrício Honorio da Prospera Plan / Consórcio. Como posso te ajudar hoje?`;
+                    window.open(`https://t.me/share/url?url=${encodeURIComponent(msg)}`, "_blank");
+                  }}
+                  className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-sky-50 hover:bg-sky-100 text-sky-500 transition-colors"
+                  title="Enviar mensagem via Telegram">
+                  <TelegramIcon className="h-4 w-4" />
+                </button>
+                <button 
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onToggleAI?.(lead.id, lead.atendimento_ia ?? true); }}
                   className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center transition-colors ${lead.atendimento_ia !== false ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-600" : "bg-slate-100 hover:bg-slate-200 text-slate-400"}`}
                   title={lead.atendimento_ia !== false ? "IA Jarvis Ativada - Clique para desativar" : "IA Jarvis Desativada - Clique para ativar"}>
@@ -515,6 +527,18 @@ export function LeadCard({
               className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-[#25D366] transition-colors"
               title="Abrir Chat WhatsApp no CRM">
               <WhatsAppIcon className="h-4 w-4" />
+            </button>
+            <button 
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                const msg = `Olá, ${lead.nome}! Tudo bem? Fabrício Honorio da Prospera Plan / Consórcio. Como posso te ajudar hoje?`;
+                window.open(`https://t.me/share/url?url=${encodeURIComponent(msg)}`, "_blank");
+              }}
+              className="w-7 h-7 shrink-0 rounded-md flex items-center justify-center bg-sky-50 hover:bg-sky-100 text-sky-500 transition-colors"
+              title="Enviar mensagem via Telegram">
+              <TelegramIcon className="h-4 w-4" />
             </button>
             <button 
               onMouseDown={(e) => e.stopPropagation()}

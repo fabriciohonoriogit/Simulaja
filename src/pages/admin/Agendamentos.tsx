@@ -9,7 +9,8 @@ import {
   Zap, Users, Bell, Instagram, Copy, Check, Sparkles, Share2, FileText,
   CheckSquare, RefreshCw, Send
 } from "lucide-react";
-import { WhatsAppIcon } from "@/components/SocialIcons";
+import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
+import { telegramService } from "@/services/telegramService";
 import { Badge } from "@/components/ui/badge";
 import {
   format, parseISO, isPast, isToday, startOfMonth, endOfMonth,
@@ -417,6 +418,17 @@ export default function Agendamentos() {
     window.open(`https://wa.me/55${phone}${message ? `?text=${message}` : ""}`, "_blank");
   };
 
+  const openTelegram = (lead: Lead, isBirthday = false) => {
+    let msg = `Olá ${formatToUpper(lead.nome)}! Tudo bem? Aqui é da equipe d'O Especialista Consórcio.`;
+    if (isBirthday) {
+      msg = `Olá ${formatToUpper(lead.nome)}! Em nome d'O Especialista Consórcio, gostaria de lhe desejar um feliz aniversário! Que seu dia seja repleto de alegrias e realizações. Parabéns! 🎉🥳`;
+    }
+    telegramService.abrirChatTelegram({
+      destinatario: lead.celular || "",
+      mensagem: msg
+    });
+  };
+
   const handleAddAppointment = async () => {
     if (!newAppt.titulo || !newAppt.data) {
       toast({ title: "Erro", description: "Preencha o título e a data.", variant: "destructive" });
@@ -708,14 +720,23 @@ export default function Agendamentos() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {birthdayPeopleToday.slice(0, 3).map(l => (
-                    <Button
-                      key={`btn-alert-${l.id}`}
-                      size="sm"
-                      className="bg-white text-orange-600 hover:bg-slate-50 font-black uppercase text-[10px] tracking-wider rounded-xl gap-1.5 shadow-md h-9"
-                      onClick={() => openWhatsApp(l, true)}
-                    >
-                      <WhatsAppIcon className="h-3.5 w-3.5" /> Parabéns {formatToUpper(l.nome.split(" ")[0])}
-                    </Button>
+                    <div key={`btn-alert-${l.id}`} className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        className="bg-white text-orange-600 hover:bg-slate-50 font-black uppercase text-[10px] tracking-wider rounded-xl gap-1.5 shadow-md h-9"
+                        onClick={() => openWhatsApp(l, true)}
+                      >
+                        <WhatsAppIcon className="h-3.5 w-3.5" /> Parabéns {formatToUpper(l.nome.split(" ")[0])}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-white text-sky-600 hover:bg-slate-50 font-black uppercase text-[10px] tracking-wider rounded-xl p-2 shadow-md h-9"
+                        onClick={() => openTelegram(l, true)}
+                        title="Enviar Parabéns via Telegram"
+                      >
+                        <TelegramIcon className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -950,7 +971,16 @@ export default function Agendamentos() {
                         className="flex-1 gap-2"
                         onClick={() => appt.lead ? openWhatsApp(appt.lead) : null}
                       >
-                        <WhatsAppIcon className="h-4 w-4" /> Contato
+                        <WhatsAppIcon className="h-4 w-4" /> WhatsApp
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 text-sky-600 border-sky-200 hover:bg-sky-50"
+                        onClick={() => appt.lead ? openTelegram(appt.lead) : null}
+                        title="Telegram"
+                      >
+                        <TelegramIcon className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="outline" size="icon"
@@ -1032,6 +1062,14 @@ export default function Agendamentos() {
                           <WhatsAppIcon className="h-4 w-4" /> WhatsApp
                         </Button>
                         <Button
+                          variant="outline" size="sm"
+                          className="gap-2 text-sky-600 border-sky-200 hover:bg-sky-50"
+                          onClick={() => openTelegram(lead)}
+                          title="Telegram"
+                        >
+                          <TelegramIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
                           variant="outline" size="icon"
                           className="h-9 w-9 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border-slate-200"
                           onClick={() => {
@@ -1106,7 +1144,15 @@ export default function Agendamentos() {
                           className={`flex-1 gap-2 ${hoje ? "bg-amber-500 hover:bg-amber-600 shadow-md shadow-amber-500/20" : ""}`}
                           onClick={() => openWhatsApp(lead, true)}
                         >
-                          <WhatsAppIcon className="h-4 w-4" /> Enviar Parabéns
+                          <WhatsAppIcon className="h-4 w-4" /> WhatsApp
+                        </Button>
+                        <Button
+                          variant="outline" size="sm"
+                          className="gap-2 text-sky-600 border-sky-200 hover:bg-sky-50"
+                          onClick={() => openTelegram(lead, true)}
+                          title="Telegram"
+                        >
+                          <TelegramIcon className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardContent>

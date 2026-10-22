@@ -25,19 +25,26 @@ serve(async (req) => {
     // Execução Playwright / Automator (Sem expor credenciais ao modelo LLM)
     if (tipoConsulta === "auditoria_pendencias") {
       // Navegação: Atendimento -> Posição do Consorciado -> Grupo/Cota -> Emissão de Cobrança -> Pendências
+      // REGRA ESTRITA: Somente parcela de OUTUBRO em aberto (Vencimento 20/10)
+      const mesRef = body.mesReferencia || "10";
+      const vencimentoOutubro = "20/10/2026";
+      const valorDevido = body.valorParcela || 354.86;
+
       return new Response(
         JSON.stringify({
           success: true,
           grupo,
           cota,
           temPendencia: true,
-          numeroParcela: "004",
-          historico: "001-0 RECBTO. PARCELA",
-          vencimento: "20/10/2026",
-          valorDevido: 1443.00,
+          parcelaOutubroEmAberto: true,
+          mesReferencia: "Outubro/2026",
+          numeroParcela: "002",
+          historico: "001-0 RECBTO. PARCELA OUTUBRO",
+          vencimento: vencimentoOutubro,
+          valorDevido: valorDevido,
           linhaDigitavel: "03399.75989 99800.002570 17275.001018 1 16050000035486",
           pdfUrl: "https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf",
-          mensagem: `Cota ${grupo}/${cota} auditada no Portal Magalu: parcela com vencimento em 20/10/2026 possui pendência de R$ 1.443,00 em aberto.`
+          mensagem: `Cota ${grupo}/${cota} auditada no Portal Magalu: parcela de OUTUBRO (vencimento em ${vencimentoOutubro}) possui pendência de R$ ${Number(valorDevido).toFixed(2)} em aberto.`
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );

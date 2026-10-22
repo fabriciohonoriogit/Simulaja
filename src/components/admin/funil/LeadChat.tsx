@@ -28,7 +28,7 @@ import {
   HelpCircle,
   X
 } from "lucide-react";
-import { WhatsAppIcon } from "@/components/SocialIcons";
+import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
 import { format, isValid, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { parseUTCDate } from "@/lib/formatters";
@@ -352,9 +352,25 @@ export function LeadChat({ lead }: { lead: Lead }) {
               title="Abrir conversa direta no WhatsApp Web / Celular"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Abrir WhatsApp
+              WhatsApp
             </Button>
           )}
+
+          {/* Botão de Disparo Direto no Telegram */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const msg = encodeURIComponent(`Olá, ${lead.nome}! Como posso ajudar com a sua cota de consórcio hoje?`);
+              window.open(`https://t.me/share/url?url=${msg}`, "_blank");
+            }}
+            className="h-7 px-2.5 text-[11px] font-bold text-sky-700 dark:text-sky-400 border-sky-300 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/30 hover:bg-sky-100 gap-1 rounded-lg"
+            title="Abrir no Telegram"
+          >
+            <TelegramIcon className="h-3.5 w-3.5" />
+            Telegram
+          </Button>
 
           {/* Toggle de IA */}
           <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-zinc-800 pl-2">

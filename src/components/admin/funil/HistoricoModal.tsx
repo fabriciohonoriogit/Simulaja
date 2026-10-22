@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
 import { parseUTCDate } from "@/lib/formatters";
-import { WhatsAppIcon } from "@/components/SocialIcons";
+import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
 import { atualizarStreak } from "@/lib/streakService";
 
 import {
@@ -25,6 +25,7 @@ import { LeadChat } from "./LeadChat";
 
 export const TIPO_CONTATO_OPTIONS = [
   { value: "whatsapp", label: "WhatsApp", icon: WhatsAppIcon },
+  { value: "telegram", label: "Telegram", icon: TelegramIcon },
   { value: "ligacao", label: "Ligação", icon: PhoneCall },
   { value: "email", label: "E-mail", icon: Mail },
   { value: "presencial", label: "Presencial", icon: MessageSquare },
