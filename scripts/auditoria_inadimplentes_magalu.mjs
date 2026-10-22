@@ -335,8 +335,8 @@ async function consultarPendenciaPortalMagalu(cliente) {
     historico: `001-0 RECBTO. PARCELA ${mesInfo.nomeMesUpper}`,
     vencimento: mesInfo.vencimentoEfetivo,
     valorDevido: cliente.valor_parcela || 354.86,
-    linhaDigitavel: '03399.75989 99800.002570 17275.001018 1 16050000035486',
-    pdfUrl: 'https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf',
+    linhaDigitavel: null, // NUNCA usar código fake! Apenas linha digitável real gerada em Atendimento > Emissão de Cobrança
+    pdfUrl: null,
     mesReferencia: mesInfo.rotuloMesAno
   };
 }

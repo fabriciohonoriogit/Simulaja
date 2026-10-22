@@ -94,7 +94,7 @@ export default function Inadimplentes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [administradoraFilter, setAdministradoraFilter] = useState("todos");
   const [copyTemplate, setCopyTemplate] = useState(
-    "Olá, {nome}! Tudo bem por aí? Espero que sim! 😊\n\nPassando para te poupar tempo e te ajudar com a sua cota {cota} (Grupo {grupo}) do Consórcio Magalu. Identifiquei no sistema que a parcela com vencimento no dia 20 ({valor_parcela}) consta em aberto.\n\nJá emiti sua 2ª via atualizada com Pix e código de barras para facilitar o seu pagamento:\n📄 Linha Digitável:\n03399.75989 99800.002570 17275.001018 1 16050000035486\n\nSe já realizou o pagamento nas últimas horas, por favor desconsidere enquanto o banco compensa. Qualquer dúvida, estou à disposição!"
+    "Olá, {nome}! Tudo bem por aí? Espero que sim! 😊\n\nPassando para te poupar tempo e te ajudar com a sua cota {cota} (Grupo {grupo}) do Consórcio Magalu. Identifiquei no sistema que a parcela com vencimento no dia 20 ({valor_parcela}) consta em aberto.\n\nJá acessei o portal da administradora para facilitar o seu pagamento:\n{linha_digitavel}\n\nSe já realizou o pagamento nas últimas horas, por favor desconsidere enquanto o banco compensa. Qualquer dúvida, estou à disposição!"
   );
   const [showAuditoriaModal, setShowAuditoriaModal] = useState(false);
   const [auditandoMagalu, setAuditandoMagalu] = useState(false);
@@ -238,7 +238,7 @@ export default function Inadimplentes() {
         let temPendencia = false;
         let valorDevido = cotaItem.valor_parcela;
         let vencimento = mesInfo.vencimentoEfetivo;
-        let linhaDigitavel = "03399.75989 99800.002570 17275.001018 1 16050000035486";
+        let linhaDigitavel = ""; // NUNCA usar código fake! Apenas código real emitido no Portal Magalu
 
         try {
           const res = await magaluPortalWorker.consultarPortalMagalu({
@@ -257,7 +257,9 @@ export default function Inadimplentes() {
             temPendencia = true;
             valorDevido = res.valorDevido;
             if (res.vencimento) vencimento = res.vencimento;
-            if (res.linhaDigitavel) linhaDigitavel = res.linhaDigitavel;
+            if (res.linhaDigitavel && !res.linhaDigitavel.startsWith("03399.75989") && res.linhaDigitavel.length >= 20) {
+              linhaDigitavel = res.linhaDigitavel.trim();
+            }
           } else {
             temPendencia = false;
           }
@@ -272,11 +274,15 @@ export default function Inadimplentes() {
             cota: cotaItem.cota,
             grupo: cotaItem.grupo,
             valorParcela: valorDevido,
-            linhaDigitavel: linhaDigitavel,
+            linhaDigitavel: linhaDigitavel || undefined,
             vencimento: vencimento
           });
 
-          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos no Portal Consórcio Magalu que a parcela do mês vigente (${mesInfo.nomeMesUpper} - com vencimento em ${vencimento}) referente à sua cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto.\n\nPara sua comodidade, a 2ª via atualizada já foi gerada com código de barras e Pix:\nLinha Digitável: ${linhaDigitavel}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
+          const secaoLinhaEmail = linhaDigitavel 
+            ? `Linha Digitável: ${linhaDigitavel}` 
+            : `Já localizamos a sua cota no sistema em Atendimento. Caso deseje receber o código de barras ou Pix, basta responder a este e-mail.`;
+
+          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos no Portal Consórcio Magalu que a parcela do mês vigente (${mesInfo.nomeMesUpper} - com vencimento em ${vencimento}) referente à sua cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto.\n\n${secaoLinhaEmail}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
 
           novosAvisos.push({
             id: cotaItem.id,
@@ -325,6 +331,11 @@ export default function Inadimplentes() {
   const handleAprovarAvisoIndividual = async (avisoId: string, canal: "whatsapp" | "email" | "telegram") => {
     const aviso = avisosPendentes.find(a => a.id === avisoId);
     if (!aviso) return;
+
+    if (!aviso.linha_digitavel || aviso.linha_digitavel.length < 20) {
+      const confirma = confirm(`Atenção: A cota ${aviso.cota} (Grupo ${aviso.grupo}) ainda não possui a Linha Digitável do Portal Magalu preenchida.\nA mensagem será enviada convidando o cliente a solicitar a 2ª via sem o código de barras. Deseja prosseguir com o envio?`);
+      if (!confirma) return;
+    }
 
     if (canal === "whatsapp") {
       if (aviso.celular) {
@@ -380,7 +391,12 @@ export default function Inadimplentes() {
   // Aprovar todos os avisos em lote
   const handleAprovarTodosAvisos = async () => {
     if (avisosPendentes.length === 0) return;
-    if (!confirm(`Confirmar disparo dos avisos para todos os ${avisosPendentes.length} cliente(s) pendentes?`)) return;
+    const semLinha = avisosPendentes.filter(a => !a.linha_digitavel || a.linha_digitavel.length < 20).length;
+    let textoAviso = `Confirmar disparo dos avisos para todos os ${avisosPendentes.length} cliente(s) pendentes?`;
+    if (semLinha > 0) {
+      textoAviso += `\n\n⚠️ Atenção: ${semLinha} cota(s) estão sem a linha digitável do Portal Magalu preenchida. Elas receberão mensagem humanizada convidando para solicitar a 2ª via.`;
+    }
+    if (!confirm(textoAviso)) return;
 
     setDisparando(true);
     let ok = 0;
@@ -1301,6 +1317,56 @@ export default function Inadimplentes() {
                         <Mail className="h-3.5 w-3.5" />
                         E-mail
                       </Button>
+                    </div>
+                  </div>
+
+                  {/* Linha Digitável Oficial Portal Magalu */}
+                  <div className="p-3 bg-white rounded-xl border border-slate-200/90 shadow-sm space-y-1.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-[10px] font-black uppercase tracking-wider text-slate-700">
+                          Linha Digitável Oficial (Portal Magalu):
+                        </Label>
+                        {aviso.linha_digitavel && aviso.linha_digitavel.length >= 20 ? (
+                          <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                            ✔ Código Real Magalu
+                          </span>
+                        ) : (
+                          <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                            ⚠ Pendente de Emissão (Atendimento &gt; Emissão de Cobrança)
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-bold">
+                        Atendimento &gt; Posição do Consorciado &gt; Emissão de Cobrança &gt; Gerar Cód. de barras
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Cole aqui a linha digitável oficial gerada no Portal Magalu"
+                        value={aviso.linha_digitavel || ""}
+                        onChange={(e) => {
+                          const novaLinha = e.target.value.trim();
+                          setAvisosPendentes(prev => prev.map(a => {
+                            if (a.id !== aviso.id) return a;
+                            const novaMsg = magaluPortalWorker.gerarAvisoHumanizado({
+                              nome: a.nome,
+                              cota: a.cota,
+                              grupo: a.grupo,
+                              valorParcela: a.valor_parcela,
+                              linhaDigitavel: novaLinha || undefined,
+                              vencimento: a.vencimento
+                            });
+                            return {
+                              ...a,
+                              linha_digitavel: novaLinha,
+                              mensagem_whatsapp: novaMsg
+                            };
+                          }));
+                        }}
+                        className="h-9 text-xs font-mono bg-slate-50 border-slate-200 focus:bg-white"
+                      />
                     </div>
                   </div>
 

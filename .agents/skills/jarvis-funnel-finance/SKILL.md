@@ -13,7 +13,7 @@ This skill provides step-by-step UI instructions for Jarvis to navigate the Cons
 ## Exact Portal Navigation Flow (Emissão de 2ª Via & Auditoria Dia 21)
 
 1. **Login**:
-   - Access `MAGALU_PORTAL_URL` with `MAGALU_FILIAL` (10826), `MAGALU_CHAPA` (918260), and `MAGALU_SENHA` (`Magalu5177%`).
+   - Access `MAGALU_PORTAL_URL` with `MAGALU_FILIAL` (10826), `MAGALU_CHAPA` (918260), and `MAGALU_SENHA` (`Magalu5177*`).
 
 2. **Navigation (Acesso ao Consorciado & Checagem da Tarja de Alerta)**:
    - Click top menu or sidebar: **Atendimento** -> **Atendimento a Clientes**

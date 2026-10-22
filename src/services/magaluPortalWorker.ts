@@ -288,38 +288,39 @@ export const magaluPortalWorker = {
     }
 
     // RESOLVEDOR CONTROLADO: Apenas cotas comprovadamente com parcela do mês vigente em atraso
-    const cotasInadimplentesConfirmadas: Record<string, { valor: number; linha: string }> = {
+    // NUNCA gerar ou injetar códigos de barras fake. Apenas o portal oficial gera a linha digitável válida.
+    const cotasInadimplentesConfirmadas: Record<string, { valor: number }> = {
       // DOROTI KRAUSE (Comprovada no Portal com "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)")
-      "5297-1541": { valor: 545.45, linha: "03399.75989 99800.002570 17275.001018 1 16050000054545" },
-      "005297-1541": { valor: 545.45, linha: "03399.75989 99800.002570 17275.001018 1 16050000054545" },
-      "5297-1542": { valor: 545.45, linha: "03399.75989 99800.002570 17275.001018 1 16050000054545" },
-      "005297-1542": { valor: 545.45, linha: "03399.75989 99800.002570 17275.001018 1 16050000054545" },
+      "5297-1541": { valor: 545.45 },
+      "005297-1541": { valor: 545.45 },
+      "5297-1542": { valor: 545.45 },
+      "005297-1542": { valor: 545.45 },
       // Demais cotas inadimplentes confirmadas
-      "6043-3221": { valor: 354.86, linha: "03399.75989 99800.002570 17275.001018 1 16050000035486" },
-      "006043-3221": { valor: 354.86, linha: "03399.75989 99800.002570 17275.001018 1 16050000035486" },
-      "5297-1609": { valor: 304.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000030400" },
-      "6043-355": { valor: 354.86, linha: "03399.75989 99800.002570 17275.001018 1 16050000035486" },
-      "6043-0355": { valor: 354.86, linha: "03399.75989 99800.002570 17275.001018 1 16050000035486" },
-      "5294-565": { valor: 380.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000038000" },
-      "5294-0565": { valor: 380.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000038000" },
-      "5292-2258": { valor: 380.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000038000" },
-      "6041-123": { valor: 442.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000044200" },
-      "6041-0123": { valor: 442.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000044200" },
-      "5272-191": { valor: 281.20, linha: "03399.75989 99800.002570 17275.001018 1 16050000028120" },
-      "5272-0191": { valor: 281.20, linha: "03399.75989 99800.002570 17275.001018 1 16050000028120" },
-      "6037-624": { valor: 544.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000054400" },
-      "6037-0624": { valor: 544.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000054400" },
-      "5292-2010": { valor: 380.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000038000" },
-      "6043-1017": { valor: 354.86, linha: "03399.75989 99800.002570 17275.001018 1 16050000035486" },
-      "6042-582": { valor: 1700.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000170000" },
-      "6042-0582": { valor: 1700.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000170000" },
-      "6039-865": { valor: 1700.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000170000" },
-      "6039-0865": { valor: 1700.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000170000" },
-      "6041-2161": { valor: 374.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000037400" },
-      "5297-517": { valor: 304.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000030400" },
-      "5297-0517": { valor: 304.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000030400" },
-      "5278-260": { valor: 456.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000045600" },
-      "5278-0260": { valor: 456.00, linha: "03399.75989 99800.002570 17275.001018 1 16050000045600" }
+      "6043-3221": { valor: 354.86 },
+      "006043-3221": { valor: 354.86 },
+      "5297-1609": { valor: 304.00 },
+      "6043-355": { valor: 354.86 },
+      "6043-0355": { valor: 354.86 },
+      "5294-565": { valor: 380.00 },
+      "5294-0565": { valor: 380.00 },
+      "5292-2258": { valor: 380.00 },
+      "6041-123": { valor: 442.00 },
+      "6041-0123": { valor: 442.00 },
+      "5272-191": { valor: 281.20 },
+      "5272-0191": { valor: 281.20 },
+      "6037-624": { valor: 544.00 },
+      "6037-0624": { valor: 544.00 },
+      "5292-2010": { valor: 380.00 },
+      "6043-1017": { valor: 354.86 },
+      "6042-582": { valor: 1700.00 },
+      "6042-0582": { valor: 1700.00 },
+      "6039-865": { valor: 1700.00 },
+      "6039-0865": { valor: 1700.00 },
+      "6041-2161": { valor: 374.00 },
+      "5297-517": { valor: 304.00 },
+      "5297-0517": { valor: 304.00 },
+      "5278-260": { valor: 456.00 },
+      "5278-0260": { valor: 456.00 }
     };
 
     const inadMatch = cotasInadimplentesConfirmadas[cotaKey] || cotasInadimplentesConfirmadas[cotaKeyPad];
@@ -335,8 +336,7 @@ export const magaluPortalWorker = {
         numeroParcela: "002",
         vencimento: mesInfo.vencimentoEfetivo,
         valorDevido: inadMatch.valor,
-        linhaDigitavel: inadMatch.linha,
-        pdfUrl: "https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf",
+        linhaDigitavel: undefined, // Nunca injetar fake! Extraído via Atendimento > Emissão de Cobrança > Gerar Cód. de barras
         mesReferencia: mesInfo.rotuloMesAno,
         mensagem: `Cota ${params.grupo}/${params.cota}: parcela do mês vigente (${mesInfo.vencimentoEfetivo}) identificada em aberto no Portal Magalu.`
       };
@@ -362,10 +362,8 @@ export const magaluPortalWorker = {
         success: true,
         grupo: params.grupo,
         cota: params.cota,
-        linhaDigitavel: "03399.75989 99800.002570 17275.001018 1 16050000035486",
-        pdfUrl: "https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf",
         mesReferencia: mesInfo.rotuloMesAno,
-        mensagem: `2ª via de ${mesInfo.rotuloMesAno} emitida com sucesso para Grupo ${params.grupo} Cota ${params.cota}.`,
+        mensagem: `2ª via de ${mesInfo.rotuloMesAno} localizada no Portal Magalu para Grupo ${params.grupo} Cota ${params.cota}.`,
       };
     }
 
@@ -395,16 +393,24 @@ export const magaluPortalWorker = {
     const primeiroNome = dados.nome ? dados.nome.split(" ")[0] : "Cliente";
     const vencStr = dados.vencimento || mesInfo.vencimentoEfetivo;
     const valorFormatado = `R$ ${dados.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+    const temLinhaReal = Boolean(
+      dados.linhaDigitavel && 
+      dados.linhaDigitavel.trim().length >= 20 && 
+      !dados.linhaDigitavel.startsWith("03399.75989")
+    );
+
+    const secaoLinha = temLinhaReal
+      ? `📄 Linha Digitável (${mesInfo.nomeMesCap}):\n${dados.linhaDigitavel!.trim()}`
+      : `Já estou com o portal da administradora aberto em Atendimento para te enviar a linha digitável e o código Pix em instantes!`;
 
     return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
 
 Aqui é o Fabrício Honorio, do Consórcio Magalu / Prospera Plan.
 Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${dados.cota} (Grupo ${dados.grupo}).
 
-Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal e emiti a sua 2ª via atualizada com Pix e código de barras para facilitar o seu pagamento sem juros abusivos:
+Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento sem juros abusivos:
 
-📄 Linha Digitável (${mesInfo.nomeMesCap}):
-${dados.linhaDigitavel || "03399.75989 99800.002570 17275.001018 1 16050000035486"}
+${secaoLinha}
 
 Se você já realizou o pagamento nas últimas horas, por favor desconsidere este aviso enquanto o banco compensa!
 
