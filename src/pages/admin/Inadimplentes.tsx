@@ -182,6 +182,13 @@ export default function Inadimplentes() {
 
       const mesInfo = magaluPortalWorker.getMesVigenteInfo();
 
+      if (!mesInfo.podeExecutarRaspagem) {
+        toast.warning(
+          `Aviso de Janela: O vencimento de ${mesInfo.rotuloMesAno} é em ${mesInfo.vencimentoEfetivo}. Conforme a regra de dias úteis, a raspagem oficial inicia a partir de ${mesInfo.dataInicioRaspagem}.`,
+          { duration: 6000 }
+        );
+      }
+
       // Assegura a apuração das 17 cotas de referência do mês vigente
       if (cotasParaAuditar.length < 17) {
         const cotasBase17 = [
@@ -230,7 +237,7 @@ export default function Inadimplentes() {
       for (const cotaItem of cotasParaAuditar) {
         let temPendencia = cotaItem.forcarInadimplente;
         let valorDevido = cotaItem.valor_parcela;
-        let vencimento = mesInfo.vencimentoEsperado;
+        let vencimento = mesInfo.vencimentoEfetivo;
         let linhaDigitavel = "03399.75989 99800.002570 17275.001018 1 16050000035486";
 
         try {
@@ -1234,7 +1241,7 @@ export default function Inadimplentes() {
                   {`Auditoria Portal Magalu • Inadimplência do Mês Vigente (${magaluPortalWorker.getMesVigenteInfo().rotuloMesAno})`}
                 </DialogTitle>
                 <p className="text-xs text-slate-500 mt-1">
-                  {`Regra Estrita: Somente parcelas em aberto do mês vigente (${magaluPortalWorker.getMesVigenteInfo().rotuloMesAno} - vencimento dia 20) com Vl. devido > 0.`}
+                  {`Regra: Vencimento dia 20 (ou próximo dia útil: ${magaluPortalWorker.getMesVigenteInfo().vencimentoEfetivo}). Raspagem oficial a partir de ${magaluPortalWorker.getMesVigenteInfo().dataInicioRaspagem}.`}
                 </p>
               </div>
             </div>
@@ -1263,7 +1270,7 @@ export default function Inadimplentes() {
                       <div className="flex items-center gap-2">
                         <span className="font-black text-slate-900 text-sm uppercase">{aviso.nome}</span>
                         <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                          {`Parcela Mês Vigente (${magaluPortalWorker.getMesVigenteInfo().rotuloMesAno})`}
+                          {`Parcela ${magaluPortalWorker.getMesVigenteInfo().rotuloMesAno} (Venc: ${magaluPortalWorker.getMesVigenteInfo().vencimentoEfetivo})`}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-bold">
