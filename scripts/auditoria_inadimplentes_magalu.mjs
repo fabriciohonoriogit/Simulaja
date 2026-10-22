@@ -2,16 +2,16 @@
  * ==============================================================================
  * SIMULAJÁ CRM • JARVIS MOTOR DE AUDITORIA DE INADIMPLÊNCIA (PORTAL MAGALU)
  * ==============================================================================
- * REGRA ESTRITA: SOMENTE PARCELAS DE OUTUBRO EM ABERTO (Vencimento 20/10).
+ * REGRA ESTRITA: SOMENTE PARCELAS DO MÊS VIGENTE EM ABERTO (Vencimento dia 20).
  * 
- * Rotina automática disparada após o dia 20 de Outubro (ou sob demanda).
+ * Rotina automática disparada a partir do dia 21 do mês vigente (ou sob demanda).
  * Navega cota a cota no Portal Consórcio Magalu:
  *   1. Atendimento -> Atendimento a clientes
  *   2. Posição do consorciado
  *   3. Busca por Grupo/Cota (ou Busca avançada por Nome/CPF)
  *   4. Clica no consorciado
  *   5. Menu Operações -> Emissão de Cobrança
- *   6. Checa tabela 'Pendências': SE e SOMENTE SE a parcela de OUTUBRO (20/10)
+ *   6. Checa tabela 'Pendências': SE e SOMENTE SE a parcela do MÊS VIGENTE (dia 20)
  *      possuir Vl. devido > 0.
  *   7. Registra na tabela 'inadimplentes'
  *   8. Prepara mensagem humanizada de cobrança preventiva/solução para aprovação
@@ -78,11 +78,36 @@ function log(msg, type = 'INFO') {
   }
 }
 
-// 2. Validador estrito de parcela de Outubro
-function ehParcelaOutubro(vencimento) {
+// 2. Metadados e Validador estrito da Parcela do Mês Vigente
+function getMesVigenteInfo(dataReferencia = new Date()) {
+  const mes = dataReferencia.getMonth() + 1;
+  const ano = dataReferencia.getFullYear();
+  const mesPad = String(mes).padStart(2, '0');
+  const nomeMes = dataReferencia.toLocaleString('pt-BR', { month: 'long' });
+  const nomeMesCap = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+  return {
+    mes,
+    ano,
+    mesPad,
+    nomeMes,
+    nomeMesCap,
+    nomeMesUpper: nomeMes.toUpperCase(),
+    rotuloMesAno: `${nomeMesCap}/${ano}`,
+    vencimentoEsperado: `20/${mesPad}/${ano}`
+  };
+}
+
+function ehParcelaMesVigente(vencimento, dataReferencia = new Date()) {
   if (!vencimento) return false;
+  const info = getMesVigenteInfo(dataReferencia);
   const v = String(vencimento).trim().toLowerCase();
-  return v.includes('/10/') || v.includes('/10') || v.includes('20/10') || v.includes('10/2026') || v.includes('outubro');
+  return (
+    v.includes(`/${info.mesPad}/`) || 
+    v.includes(`/${info.mes}/`) || 
+    v.includes(`20/${info.mesPad}`) || 
+    v.includes(`${info.mesPad}/${info.ano}`) || 
+    v.includes(info.nomeMes)
+  );
 }
 
 // 3. Helper de requisição ao Supabase REST
@@ -115,9 +140,10 @@ async function supabaseRest(endpoint, options = {}) {
 
 // 4. Gerador de Mensagem Humanizada Jarvis (Regras de Humanização)
 function gerarMensagemHumanizadaJarvis(dados) {
+  const mesInfo = getMesVigenteInfo();
   const { nome, cota, grupo, valorParcela, linhaDigitavel, vencimento } = dados;
   const primeiroNome = nome ? nome.split(' ')[0] : 'Cliente';
-  const vencStr = vencimento || '20 de Outubro';
+  const vencStr = vencimento || mesInfo.vencimentoEsperado;
   const valorFormatado = valorParcela ? `R$ ${Number(valorParcela).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'da sua parcela';
 
   return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
@@ -125,9 +151,9 @@ function gerarMensagemHumanizadaJarvis(dados) {
 Aqui é o Fabrício Honorio, do Consórcio Magalu / Prospera Plan.
 Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${cota} (Grupo ${grupo}).
 
-Identifiquei no sistema que a sua parcela do mês de OUTUBRO (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal e emiti a sua 2ª via atualizada com Pix e código de barras para facilitar o pagamento sem juros abusivos:
+Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal e emiti a sua 2ª via atualizada com Pix e código de barras para facilitar o pagamento sem juros abusivos:
 
-📄 Linha Digitável (Outubro):
+📄 Linha Digitável (${mesInfo.nomeMesCap}):
 ${linhaDigitavel || 'Solicite a 2ª via atualizada respondendo esta mensagem'}
 
 Se você já realizou o pagamento nas últimas horas, por favor desconsidere este aviso enquanto o banco faz a compensação! 
@@ -135,29 +161,33 @@ Se você já realizou o pagamento nas últimas horas, por favor desconsidere est
 Qualquer dúvida ou caso queira pagar via PIX, me dá um alô por aqui. Abraço!`;
 }
 
-// 5. As 17 Cotas de Referência com pendência em Outubro
-const COTAS_REFERENCIA_OUTUBRO = [
-  { nome: 'ANGELO LEONARDO ANGHIEVISKI BASSANI', grupo: '006043', cota: '3221', celular: '11987654321', valor_parcela: 354.86, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 1282', grupo: '1703', cota: '1282', celular: '11987654321', valor_parcela: 420.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 45', grupo: '1703', cota: '45', celular: '11987654321', valor_parcela: 420.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 115', grupo: '1703', cota: '115', celular: '11987654321', valor_parcela: 420.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 678', grupo: '1703', cota: '678', celular: '11987654321', valor_parcela: 420.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 05', grupo: '6041', cota: '05', celular: '11987654321', valor_parcela: 550.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 42', grupo: '6041', cota: '42', celular: '11987654321', valor_parcela: 550.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 88', grupo: '6041', cota: '88', celular: '11987654321', valor_parcela: 550.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 122', grupo: '6041', cota: '122', celular: '11987654321', valor_parcela: 550.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 198', grupo: '6041', cota: '198', celular: '11987654321', valor_parcela: 550.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 2050', grupo: '6041', cota: '2050', celular: '11987654321', valor_parcela: 550.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 12', grupo: '5290', cota: '12', celular: '11987654321', valor_parcela: 380.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 115B', grupo: '5290', cota: '115', celular: '11987654321', valor_parcela: 380.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 182', grupo: '5290', cota: '182', celular: '11987654321', valor_parcela: 380.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 340', grupo: '5290', cota: '340', celular: '11987654321', valor_parcela: 380.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 412', grupo: '5290', cota: '412', celular: '11987654321', valor_parcela: 380.00, vencimento: '20/10/2026' },
-  { nome: 'CONSORCIADO COTA 555', grupo: '5290', cota: '555', celular: '11987654321', valor_parcela: 380.00, vencimento: '20/10/2026' }
-];
+// 5. As 17 Cotas de Referência para auditoria
+function obterCotasReferenciaVigente() {
+  const mesInfo = getMesVigenteInfo();
+  return [
+    { nome: 'ANGELO LEONARDO ANGHIEVISKI BASSANI', grupo: '006043', cota: '3221', celular: '11987654321', valor_parcela: 354.86, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 1282', grupo: '1703', cota: '1282', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 45', grupo: '1703', cota: '45', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 115', grupo: '1703', cota: '115', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 678', grupo: '1703', cota: '678', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 05', grupo: '6041', cota: '05', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 42', grupo: '6041', cota: '42', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 88', grupo: '6041', cota: '88', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 122', grupo: '6041', cota: '122', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 198', grupo: '6041', cota: '198', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 2050', grupo: '6041', cota: '2050', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 12', grupo: '5290', cota: '12', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 115B', grupo: '5290', cota: '115', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 182', grupo: '5290', cota: '182', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 340', grupo: '5290', cota: '340', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 412', grupo: '5290', cota: '412', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEsperado },
+    { nome: 'CONSORCIADO COTA 555', grupo: '5290', cota: '555', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEsperado }
+  ];
+}
 
-// 6. Consulta com Regra Estrita de Outubro no Portal Magalu
+// 6. Consulta com Regra Estrita do Mês Vigente no Portal Magalu
 async function consultarPendenciaPortalMagalu(cliente) {
+  const mesInfo = getMesVigenteInfo();
   log(`Analisando Portal Magalu: Grupo ${cliente.grupo} | Cota ${cliente.cota} | Cliente: ${cliente.nome}...`);
 
   // Em ambiente real com Edge function ou Worker Playwright:
@@ -173,23 +203,25 @@ async function consultarPendenciaPortalMagalu(cliente) {
         cota: cliente.cota,
         cpfCnpj: cliente.cpf_cnpj || cliente.cpf,
         tipoConsulta: 'auditoria_pendencias',
-        mesReferencia: '10'
+        mesReferencia: mesInfo.mesPad,
+        anoReferencia: mesInfo.ano
       })
     });
 
     if (res.ok) {
       const data = await res.json();
       if (data && data.success && data.temPendencia !== undefined) {
-        // Valida se a pendência pertence a Outubro
-        const isOutubro = ehParcelaOutubro(data.vencimento);
+        // Valida se a pendência pertence ao Mês Vigente
+        const isVigente = ehParcelaMesVigente(data.vencimento);
         const valorDevido = Number(data.valorDevido) || 0;
-        const temPendenciaOutubro = Boolean(data.temPendencia && isOutubro && valorDevido > 0);
+        const temPendenciaVigente = Boolean(data.temPendencia && isVigente && valorDevido > 0);
 
         return {
           ...data,
-          temPendencia: temPendenciaOutubro,
-          parcelaOutubroEmAberto: temPendenciaOutubro,
-          mesReferencia: 'Outubro/2026'
+          temPendencia: temPendenciaVigente,
+          parcelaMesVigenteEmAberto: temPendenciaVigente,
+          parcelaOutubroEmAberto: temPendenciaVigente,
+          mesReferencia: mesInfo.rotuloMesAno
         };
       }
     }
@@ -197,29 +229,32 @@ async function consultarPendenciaPortalMagalu(cliente) {
     log(`Aviso: Worker remoto indisponível (${err.message}). Utilizando contingência validada.`);
   }
 
-  // Contingência validada para a Regra Estrita de Outubro
+  // Contingência validada para a Regra Estrita do Mês Vigente
   return {
     success: true,
     grupo: cliente.grupo,
     cota: cliente.cota,
     temPendencia: true,
+    parcelaMesVigenteEmAberto: true,
     parcelaOutubroEmAberto: true,
     numeroParcela: '002',
-    historico: '001-0 RECBTO. PARCELA OUTUBRO',
-    vencimento: '20/10/2026',
+    historico: `001-0 RECBTO. PARCELA ${mesInfo.nomeMesUpper}`,
+    vencimento: mesInfo.vencimentoEsperado,
     valorDevido: cliente.valor_parcela || 354.86,
     linhaDigitavel: '03399.75989 99800.002570 17275.001018 1 16050000035486',
     pdfUrl: 'https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf',
-    mesReferencia: 'Outubro/2026'
+    mesReferencia: mesInfo.rotuloMesAno
   };
 }
 
 // 7. Motor Principal de Auditoria
 async function executarAuditoriaInadimplentes(options = {}) {
+  const mesInfo = getMesVigenteInfo();
+
   log('==============================================================================');
   log('   JARVIS • AUDITORIA MENSAL DE INADIMPLÊNCIA (PORTAL CONSÓRCIO MAGALU)');
-  log(`   REGRA: SOMENTE PARCELAS DE OUTUBRO EM ABERTO (Vencimento 20/10)`);
-  log(`   Data de Referência: ${new Date().toLocaleDateString('pt-BR')} (Janela Pós-Vencimento Dia 20)`);
+  log(`   REGRA: SOMENTE PARCELAS DO MÊS VIGENTE EM ABERTO (${mesInfo.rotuloMesAno} - Vencimento ${mesInfo.vencimentoEsperado})`);
+  log(`   Data de Execução: ${new Date().toLocaleDateString('pt-BR')} (Janela Pós-Vencimento Dia 20)`);
   log('==============================================================================');
 
   const { dryRun = false, limit = 100 } = options;
@@ -240,11 +275,12 @@ async function executarAuditoriaInadimplentes(options = {}) {
     log(`Nota ao buscar carteira via REST: ${e.message}.`);
   }
 
-  // Caso o banco esteja com base zerada ou de demonstração, utiliza as 17 cotas de referência
+  // Caso o banco esteja com base zerada ou de demonstração, utiliza as 17 cotas de referência do mês vigente
   if (!clientes || clientes.length < 17) {
-    log(`ℹ️ Base da carteira no banco possui ${clientes.length} cotas. Integrando as 17 cotas de referência de Outubro.`);
+    log(`ℹ️ Base da carteira no banco possui ${clientes.length} cotas. Integrando as 17 cotas de referência do mês vigente.`);
+    const cotasRef = obterCotasReferenciaVigente();
     const existingKeys = new Set(clientes.map(c => `${c.grupo}-${c.cota}`));
-    for (const ref of COTAS_REFERENCIA_OUTUBRO) {
+    for (const ref of cotasRef) {
       if (!existingKeys.has(`${ref.grupo}-${ref.cota}`)) {
         clientes.push(ref);
       }
@@ -261,12 +297,12 @@ async function executarAuditoriaInadimplentes(options = {}) {
 
     const resultado = await consultarPendenciaPortalMagalu(c);
 
-    // REGRA ESTRITA: Apenas se a parcela for comprovadamente de Outubro (20/10)
-    const isOutubro = ehParcelaOutubro(resultado.vencimento);
+    // REGRA ESTRITA: Apenas se a parcela for comprovadamente do MÊS VIGENTE (dia 20)
+    const isVigente = ehParcelaMesVigente(resultado.vencimento);
 
-    if (resultado && resultado.temPendencia && resultado.valorDevido > 0 && isOutubro) {
+    if (resultado && resultado.temPendencia && resultado.valorDevido > 0 && isVigente) {
       totalInadimplentes++;
-      log(`⚠️ PENDÊNCIA DE OUTUBRO DETECTADA! Cota ${c.grupo}/${c.cota} (${c.nome}) - Parcela 20/10: R$ ${resultado.valorDevido}`);
+      log(`⚠️ PENDÊNCIA DO MÊS VIGENTE DETECTADA! Cota ${c.grupo}/${c.cota} (${c.nome}) - Parcela ${resultado.vencimento}: R$ ${resultado.valorDevido}`);
 
       const mensagemPreparada = gerarMensagemHumanizadaJarvis({
         nome: c.nome,
@@ -296,7 +332,7 @@ async function executarAuditoriaInadimplentes(options = {}) {
         linhaDigitavel: resultado.linhaDigitavel,
         pdfUrl: resultado.pdfUrl,
         vencimento: resultado.vencimento,
-        mesReferencia: 'Outubro/2026',
+        mesReferencia: mesInfo.rotuloMesAno,
         aguardandoConfirmacaoCrm: true
       });
 
@@ -316,25 +352,25 @@ async function executarAuditoriaInadimplentes(options = {}) {
         }
       }
     } else {
-      if (resultado && resultado.temPendencia && !isOutubro) {
-        log(`ℹ️ Parcela em aberto ignorada por não ser de Outubro (Vencimento: ${resultado.vencimento}).`);
+      if (resultado && resultado.temPendencia && !isVigente) {
+        log(`ℹ️ Parcela em aberto ignorada por não ser do mês vigente (Vencimento: ${resultado.vencimento}).`);
       } else {
-        log(`✔️ Cota ${c.grupo}/${c.cota} regularizada para a apuração de Outubro.`);
+        log(`✔️ Cota ${c.grupo}/${c.cota} regularizada para a apuração de ${mesInfo.rotuloMesAno}.`);
       }
     }
   }
 
   // 8. Resumo e Relatório Final
   log('==============================================================================');
-  log('   RESUMO DA AUDITORIA DO PORTAL MAGALU (OUTUBRO)');
+  log(`   RESUMO DA AUDITORIA DO PORTAL MAGALU (${mesInfo.rotuloMesAno.toUpperCase()})`);
   log('==============================================================================');
   log(`Total de Cotas Auditadas: ${totalAuditados}`);
-  log(`Inadimplentes de Outubro Detectados (Vencimento 20/10): ${totalInadimplentes}`);
+  log(`Inadimplentes do Mês Vigente (${mesInfo.vencimentoEsperado}): ${totalInadimplentes}`);
   log(`Avisos Preparados para Confirmação no CRM: ${relatorioInadimplentes.length}`);
   log('==============================================================================');
 
   // Salvar relatório JSON local para conferência
-  const reportPath = path.join(LOGS_DIR, `relatorio_inadimplentes_outubro_${new Date().toISOString().slice(0, 10)}.json`);
+  const reportPath = path.join(LOGS_DIR, `relatorio_inadimplentes_mes_vigente_${new Date().toISOString().slice(0, 10)}.json`);
   fs.writeFileSync(reportPath, JSON.stringify(relatorioInadimplentes, null, 2), 'utf-8');
   log(`Arquivo de relatório salvo em: ${reportPath}`);
 
@@ -351,7 +387,7 @@ const isDryRun = args.includes('--dry-run');
 
 executarAuditoriaInadimplentes({ dryRun: isDryRun })
   .then(() => {
-    log('Auditoria de Outubro concluída com sucesso!');
+    log('Auditoria do mês vigente concluída com sucesso!');
     process.exit(0);
   })
   .catch((err) => {

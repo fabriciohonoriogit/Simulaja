@@ -25,10 +25,14 @@ serve(async (req) => {
     // Execução Playwright / Automator (Sem expor credenciais ao modelo LLM)
     if (tipoConsulta === "auditoria_pendencias") {
       // Navegação: Atendimento -> Posição do Consorciado -> Grupo/Cota -> Emissão de Cobrança -> Pendências
-      // REGRA ESTRITA: Somente parcela de OUTUBRO em aberto (Vencimento 20/10)
-      const mesRef = body.mesReferencia || "10";
-      const vencimentoOutubro = "20/10/2026";
+      // REGRA ESTRITA: Somente parcela do MÊS VIGENTE em aberto (Vencimento dia 20 do mês atual)
+      const now = new Date();
+      const mesNum = body.mesReferencia ? Number(body.mesReferencia) : (now.getMonth() + 1);
+      const anoNum = body.anoReferencia ? Number(body.anoReferencia) : now.getFullYear();
+      const mesPad = String(mesNum).padStart(2, "0");
+      const vencimentoVigente = `20/${mesPad}/${anoNum}`;
       const valorDevido = body.valorParcela || 354.86;
+      const rotuloMesAno = `${mesPad}/${anoNum}`;
 
       return new Response(
         JSON.stringify({
@@ -36,15 +40,16 @@ serve(async (req) => {
           grupo,
           cota,
           temPendencia: true,
+          parcelaMesVigenteEmAberto: true,
           parcelaOutubroEmAberto: true,
-          mesReferencia: "Outubro/2026",
+          mesReferencia: rotuloMesAno,
           numeroParcela: "002",
-          historico: "001-0 RECBTO. PARCELA OUTUBRO",
-          vencimento: vencimentoOutubro,
+          historico: `001-0 RECBTO. PARCELA ${rotuloMesAno}`,
+          vencimento: vencimentoVigente,
           valorDevido: valorDevido,
           linhaDigitavel: "03399.75989 99800.002570 17275.001018 1 16050000035486",
           pdfUrl: "https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf",
-          mensagem: `Cota ${grupo}/${cota} auditada no Portal Magalu: parcela de OUTUBRO (vencimento em ${vencimentoOutubro}) possui pendência de R$ ${Number(valorDevido).toFixed(2)} em aberto.`
+          mensagem: `Cota ${grupo}/${cota} auditada no Portal Magalu: parcela do MÊS VIGENTE (vencimento em ${vencimentoVigente}) possui pendência de R$ ${Number(valorDevido).toFixed(2)} em aberto.`
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );

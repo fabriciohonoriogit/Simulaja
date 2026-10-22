@@ -180,7 +180,9 @@ export default function Inadimplentes() {
         };
       });
 
-      // Assegura a apuração das 17 cotas de referência de Outubro (Vencimento 20/10)
+      const mesInfo = magaluPortalWorker.getMesVigenteInfo();
+
+      // Assegura a apuração das 17 cotas de referência do mês vigente
       if (cotasParaAuditar.length < 17) {
         const cotasBase17 = [
           { nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI", grupo: "006043", cota: "3221", celular: "11987654321", valor: 354.86 },
@@ -228,7 +230,7 @@ export default function Inadimplentes() {
       for (const cotaItem of cotasParaAuditar) {
         let temPendencia = cotaItem.forcarInadimplente;
         let valorDevido = cotaItem.valor_parcela;
-        let vencimento = "20/10/2026";
+        let vencimento = mesInfo.vencimentoEsperado;
         let linhaDigitavel = "03399.75989 99800.002570 17275.001018 1 16050000035486";
 
         try {
@@ -236,12 +238,12 @@ export default function Inadimplentes() {
             grupo: cotaItem.grupo || "006043",
             cota: cotaItem.cota || "3221",
             tipoConsulta: "auditoria_pendencias",
-            mesReferencia: "10"
+            mesReferencia: mesInfo.mesPad
           });
 
-          // REGRA ESTRITA: Apenas parcelas com vencimento em OUTUBRO (mês 10)
-          const ehOutubro = magaluPortalWorker.ehParcelaOutubro(res.vencimento || vencimento);
-          if (res.temPendencia && res.valorDevido && ehOutubro) {
+          // REGRA ESTRITA: Apenas parcelas com vencimento no MÊS VIGENTE (dia 20)
+          const ehVigente = magaluPortalWorker.ehParcelaMesVigente(res.vencimento || vencimento);
+          if (res.temPendencia && res.valorDevido && ehVigente) {
             temPendencia = true;
             valorDevido = res.valorDevido;
             if (res.vencimento) vencimento = res.vencimento;
@@ -253,8 +255,8 @@ export default function Inadimplentes() {
           console.warn("[Auditoria] Consulta individual cota:", cotaItem.cota, workerErr);
         }
 
-        // Se confirmada a pendência estrita da parcela de Outubro
-        if (temPendencia && magaluPortalWorker.ehParcelaOutubro(vencimento)) {
+        // Se confirmada a pendência estrita da parcela do mês vigente
+        if (temPendencia && magaluPortalWorker.ehParcelaMesVigente(vencimento)) {
           const msgWhats = magaluPortalWorker.gerarAvisoHumanizado({
             nome: cotaItem.nome,
             cota: cotaItem.cota,
@@ -264,7 +266,7 @@ export default function Inadimplentes() {
             vencimento: vencimento
           });
 
-          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos no Portal Consórcio Magalu que a parcela do mês de OUTUBRO (com vencimento em ${vencimento}) referente à sua cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto.\n\nPara sua comodidade, a 2ª via atualizada já foi gerada com código de barras e Pix:\nLinha Digitável: ${linhaDigitavel}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
+          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos no Portal Consórcio Magalu que a parcela do mês vigente (${mesInfo.nomeMesUpper} - com vencimento em ${vencimento}) referente à sua cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto.\n\nPara sua comodidade, a 2ª via atualizada já foi gerada com código de barras e Pix:\nLinha Digitável: ${linhaDigitavel}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
 
           novosAvisos.push({
             id: cotaItem.id,
@@ -300,7 +302,7 @@ export default function Inadimplentes() {
       setAvisosPendentes(novosAvisos);
       setShowAuditoriaModal(true);
       fetchData();
-      toast.success(`Auditoria de Outubro concluída! ${novosAvisos.length} cliente(s) com parcelas em aberto no Portal Magalu.`);
+      toast.success(`Auditoria do mês vigente (${mesInfo.rotuloMesAno}) concluída! ${novosAvisos.length} cliente(s) com parcelas em aberto no Portal Magalu.`);
     } catch (err: any) {
       console.error("Erro na auditoria Magalu:", err);
       toast.error("Erro ao auditar cotas no portal.");
@@ -1229,10 +1231,10 @@ export default function Inadimplentes() {
               </div>
               <div>
                 <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">
-                  Auditoria Portal Magalu • Inadimplência de Outubro (20/10)
+                  {`Auditoria Portal Magalu • Inadimplência do Mês Vigente (${magaluPortalWorker.getMesVigenteInfo().rotuloMesAno})`}
                 </DialogTitle>
                 <p className="text-xs text-slate-500 mt-1">
-                  Regra Estrita: Somente parcelas em aberto do mês de OUTUBRO (vencimento 20/10) com Vl. devido &gt; 0.
+                  {`Regra Estrita: Somente parcelas em aberto do mês vigente (${magaluPortalWorker.getMesVigenteInfo().rotuloMesAno} - vencimento dia 20) com Vl. devido > 0.`}
                 </p>
               </div>
             </div>
@@ -1261,7 +1263,7 @@ export default function Inadimplentes() {
                       <div className="flex items-center gap-2">
                         <span className="font-black text-slate-900 text-sm uppercase">{aviso.nome}</span>
                         <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                          Parcela Outubro (20/10)
+                          {`Parcela Mês Vigente (${magaluPortalWorker.getMesVigenteInfo().rotuloMesAno})`}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-bold">
