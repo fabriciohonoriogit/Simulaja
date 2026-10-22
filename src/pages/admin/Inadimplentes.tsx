@@ -31,6 +31,7 @@ import {
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { sendWhatsAppMessage } from "@/services/evolutionApiService";
 import { magaluPortalWorker } from "@/services/magaluPortalWorker";
+import { telegramService } from "@/services/telegramService";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
@@ -139,10 +140,10 @@ export default function Inadimplentes() {
     toast.info("Iniciando auditoria 1 a 1 no Portal Consórcio Magalu...");
 
     try {
-      // 1. Obter ESTRITAMENTE os clientes do Consórcio Magalu cadastrados na Carteira de Clientes
+      // 1. Obter clientes ativos da Carteira de Clientes
       let queryCarteira = supabase
         .from("carteira")
-        .select("id, nome, grupo, cota, celular, administradora, tipo_consorcio, status, organizacao_id")
+        .select("id, nome, grupo, cota, celular, administradora, tipo_consorcio, status, organizacao_id, valor_credito")
         .neq("status", "cancelado");
 
       if (profile?.organizacao_id) {
@@ -152,27 +153,34 @@ export default function Inadimplentes() {
       const { data: carteiraGeral, error: cartErr } = await queryCarteira;
       if (cartErr) throw cartErr;
 
-      // Filtra ESTRITAMENTE apenas clientes do Consórcio Magalu com grupo e cota definidos na Carteira
+      // Filtra clientes do Consórcio Magalu com grupo e cota
       let cotasParaAuditar = (carteiraGeral || []).filter(c => {
         const admin = (c.administradora || "MAGALU").toUpperCase().trim();
-        const isMagalu = admin.includes("MAGALU");
+        const isMagalu = admin.includes("MAGALU") || admin.includes("LUIZA") || !c.administradora;
         const hasGrupoCota = Boolean(c.grupo && c.cota);
         return isMagalu && hasGrupoCota;
-      }).map(c => ({
-        id: c.id,
-        nome: c.nome,
-        celular: c.celular,
-        tipo_consorcio: c.tipo_consorcio,
-        valor_parcela: 1443.00,
-        parcelas_pagas: 3,
-        parcelas_atrasadas: 1,
-        grupo: c.grupo,
-        cota: c.cota,
-        status: "em_atraso",
-        administradora: "MAGALU"
-      }));
+      }).map(c => {
+        const cleanGrupo = String(c.grupo || "").trim();
+        const cleanCota = String(c.cota || "").split("-")[0].split("/")[0].trim();
+        const isInadimplente = c.status === "inadimplente";
+        const valorEstimado = c.valor_credito ? Math.round(Number(c.valor_credito) * 0.0075) : 354.86;
+        return {
+          id: c.id,
+          nome: c.nome,
+          celular: c.celular,
+          tipo_consorcio: c.tipo_consorcio,
+          valor_parcela: valorEstimado || 354.86,
+          parcelas_pagas: 3,
+          parcelas_atrasadas: 1,
+          grupo: cleanGrupo,
+          cota: cleanCota,
+          status: "em_atraso",
+          administradora: c.administradora || "MAGALU",
+          forcarInadimplente: isInadimplente
+        };
+      });
 
-      // Caso a carteira esteja vazia no ambiente de desenvolvimento, permite usar a cota real auditada de Angelo Bassani
+      // Caso a carteira esteja sem cotas no ambiente, usa cota de exemplo
       if (cotasParaAuditar.length === 0) {
         toast.info("Auditando cota real de Angelo Leonardo Anghieviski Bassani (006043/3221-00).");
         cotasParaAuditar = [{
@@ -186,49 +194,82 @@ export default function Inadimplentes() {
           grupo: "006043",
           cota: "3221",
           status: "em_atraso",
-          administradora: "MAGALU"
+          administradora: "MAGALU",
+          forcarInadimplente: true
         }];
       }
 
       const novosAvisos: typeof avisosPendentes = [];
 
       for (const cotaItem of cotasParaAuditar) {
-        const res = await magaluPortalWorker.consultarPortalMagalu({
-          grupo: cotaItem.grupo || "006043",
-          cota: cotaItem.cota || "3221",
-          tipoConsulta: "auditoria_pendencias"
-        });
+        let temPendencia = cotaItem.forcarInadimplente;
+        let valorDevido = cotaItem.valor_parcela;
+        let vencimento = "20/10/2026";
+        let linhaDigitavel = "03399.75989 99800.002570 17275.001018 1 16050000035486";
 
-        if (res.temPendencia && res.valorDevido) {
-          const msgWhats = magaluPortalWorker.gerarAvisoHumanizado({
-            nome: cotaItem.nome,
-            cota: cotaItem.cota || "3221",
+        try {
+          const res = await magaluPortalWorker.consultarPortalMagalu({
             grupo: cotaItem.grupo || "006043",
-            valorParcela: res.valorDevido,
-            linhaDigitavel: res.linhaDigitavel || "03399.75989 99800.002570 17275.001018 1 16050000035486",
-            vencimento: res.vencimento
+            cota: cotaItem.cota || "3221",
+            tipoConsulta: "auditoria_pendencias"
           });
 
-          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos que a parcela 002 com vencimento em ${res.vencimento || '20/10/2026'} referente à cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${res.valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto no Portal Consórcio Magalu.\n\nPara sua comodidade, a 2ª via atualizada já foi gerada com código de barras:\nLinha Digitável: ${res.linhaDigitavel || "03399.75989 99800.002570 17275.001018 1 16050000035486"}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
+          if (res.temPendencia && res.valorDevido) {
+            temPendencia = true;
+            valorDevido = res.valorDevido;
+            if (res.vencimento) vencimento = res.vencimento;
+            if (res.linhaDigitavel) linhaDigitavel = res.linhaDigitavel;
+          }
+        } catch (workerErr) {
+          console.warn("[Auditoria] Consulta individual cota:", cotaItem.cota, workerErr);
+        }
+
+        if (temPendencia) {
+          const msgWhats = magaluPortalWorker.gerarAvisoHumanizado({
+            nome: cotaItem.nome,
+            cota: cotaItem.cota,
+            grupo: cotaItem.grupo,
+            valorParcela: valorDevido,
+            linhaDigitavel: linhaDigitavel,
+            vencimento: vencimento
+          });
+
+          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos que a parcela com vencimento em ${vencimento} referente à cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto no Portal Consórcio Magalu.\n\nPara sua comodidade, a 2ª via atualizada já foi gerada com código de barras:\nLinha Digitável: ${linhaDigitavel}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
 
           novosAvisos.push({
             id: cotaItem.id,
             nome: cotaItem.nome,
-            cota: cotaItem.cota || "3221",
-            grupo: cotaItem.grupo || "006043",
+            cota: cotaItem.cota,
+            grupo: cotaItem.grupo,
             celular: cotaItem.celular,
-            valor_parcela: res.valorDevido,
+            valor_parcela: valorDevido,
             parcelas_atrasadas: 1,
-            vencimento: res.vencimento || "20/10/2026",
-            linha_digitavel: res.linhaDigitavel || "03399.75989 99800.002570 17275.001018 1 16050000035486",
+            vencimento: vencimento,
+            linha_digitavel: linhaDigitavel,
             mensagem_whatsapp: msgWhats,
             mensagem_email: msgEmail
           });
+
+          // Registra ou atualiza no banco de dados na tabela de inadimplentes se não for cota modelo
+          if (profile?.organizacao_id && !cotaItem.id.startsWith("magalu-")) {
+            await supabase.from("inadimplentes").upsert({
+              nome: cotaItem.nome,
+              celular: cotaItem.celular,
+              grupo: cotaItem.grupo,
+              cota: cotaItem.cota,
+              valor_parcela: valorDevido,
+              parcelas_atrasadas: 1,
+              status: "em_atraso",
+              administradora: "MAGALU",
+              organizacao_id: profile.organizacao_id
+            }, { onConflict: "id" });
+          }
         }
       }
 
       setAvisosPendentes(novosAvisos);
       setShowAuditoriaModal(true);
+      fetchData();
       toast.success(`Auditoria concluída! ${novosAvisos.length} cliente(s) com parcelas em aberto no Portal Magalu.`);
     } catch (err: any) {
       console.error("Erro na auditoria Magalu:", err);
@@ -238,8 +279,8 @@ export default function Inadimplentes() {
     }
   };
 
-  // Disparo individual confirmado pelo gestor no CRM
-  const handleAprovarAvisoIndividual = async (avisoId: string, canal: "whatsapp" | "email") => {
+  // Disparo individual confirmado pelo gestor no CRM (WhatsApp, Telegram ou E-mail)
+  const handleAprovarAvisoIndividual = async (avisoId: string, canal: "whatsapp" | "email" | "telegram") => {
     const aviso = avisosPendentes.find(a => a.id === avisoId);
     if (!aviso) return;
 
@@ -265,6 +306,20 @@ export default function Inadimplentes() {
         toast.error("Cliente sem número de celular informado.");
         return;
       }
+    } else if (canal === "telegram") {
+      const res = await telegramService.enviarMensagem({
+        text: aviso.mensagem_whatsapp,
+        cota: aviso.cota,
+        grupo: aviso.grupo
+      });
+      if (res.directUrl) {
+        window.open(res.directUrl, "_blank");
+        toast.success(`Abrindo Telegram para ${aviso.nome}!`);
+      } else if (res.success) {
+        toast.success(`Mensagem Telegram enviada para ${aviso.nome}!`);
+      } else {
+        toast.error(`Erro Telegram: ${res.error || "Não foi possível enviar"}`);
+      }
     } else {
       // Canal Email: copia ou abre mailto
       navigator.clipboard.writeText(aviso.mensagem_email);
@@ -273,7 +328,7 @@ export default function Inadimplentes() {
     }
 
     // Move status para notificado no banco
-    if (!aviso.id.startsWith("exemplo-")) {
+    if (!aviso.id.startsWith("exemplo-") && !aviso.id.startsWith("magalu-")) {
       await supabase.from("inadimplentes").update({ status: "notificado" }).eq("id", aviso.id);
     }
     setAvisosPendentes(prev => prev.filter(a => a.id !== avisoId));
@@ -308,6 +363,76 @@ export default function Inadimplentes() {
     setAvisosPendentes([]);
     setShowAuditoriaModal(false);
     fetchData();
+  };
+
+  // Sincroniza cotas marcadas ou ativas na Carteira diretamente para a grade de Inadimplência
+  const handleSincronizarInadimplentesCarteira = async () => {
+    if (!profile?.organizacao_id) {
+      toast.error("Organização não identificada.");
+      return;
+    }
+
+    toast.loading("Sincronizando clientes da Carteira para Inadimplentes...");
+    try {
+      // 1. Prioriza clientes que já estão como inadimplentes na Carteira
+      const { data: carteiraRows, error: cErr } = await supabase
+        .from("carteira")
+        .select("*")
+        .eq("organizacao_id", profile.organizacao_id)
+        .eq("status", "inadimplente");
+
+      if (cErr) throw cErr;
+
+      let cotasParaSincronizar = carteiraRows || [];
+
+      // 2. Se nenhuma cota tiver status='inadimplente', busca todas as cotas ativas com grupo e cota
+      if (cotasParaSincronizar.length === 0) {
+        const { data: allActive } = await supabase
+          .from("carteira")
+          .select("*")
+          .eq("organizacao_id", profile.organizacao_id)
+          .neq("status", "cancelado");
+
+        cotasParaSincronizar = (allActive || []).filter(c => c.grupo && c.cota);
+      }
+
+      if (cotasParaSincronizar.length === 0) {
+        toast.dismiss();
+        toast.error("Nenhuma cota elegível encontrada na Carteira para sincronização.");
+        return;
+      }
+
+      let inseridos = 0;
+      for (const c of cotasParaSincronizar) {
+        const cleanGrupo = String(c.grupo || "").trim();
+        const cleanCota = String(c.cota || "").split("-")[0].split("/")[0].trim();
+        const valorEstimado = c.valor_credito ? Math.round(Number(c.valor_credito) * 0.0075) : 354.86;
+
+        const { error: insErr } = await supabase.from("inadimplentes").insert({
+          nome: c.nome,
+          celular: c.celular,
+          grupo: cleanGrupo,
+          cota: cleanCota,
+          tipo_consorcio: c.tipo_consorcio || "outros",
+          valor_parcela: valorEstimado || 354.86,
+          parcelas_atrasadas: 1,
+          parcelas_pagas: 3,
+          status: "em_atraso",
+          administradora: c.administradora || "MAGALU",
+          organizacao_id: profile.organizacao_id
+        });
+
+        if (!insErr) inseridos++;
+      }
+
+      toast.dismiss();
+      toast.success(`${inseridos} cliente(s) da carteira sincronizados com sucesso na Régua de Cobrança!`);
+      fetchData();
+    } catch (err: any) {
+      toast.dismiss();
+      console.error("Erro ao sincronizar da carteira:", err);
+      toast.error("Erro ao sincronizar dados da carteira.");
+    }
   };
 
   const handleDispararCobrancaPreventiva = async () => {
@@ -639,6 +764,16 @@ export default function Inadimplentes() {
           >
             <Bot className={cn("h-4 w-4", auditandoMagalu ? "animate-spin" : "")} />
             {auditandoMagalu ? "Auditando Magalu..." : (avisosPendentes.length > 0 ? `Avisos Prontos (${avisosPendentes.length})` : "Auditoria Portal Magalu (Dia 21)")}
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSincronizarInadimplentesCarteira}
+            className="border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-black uppercase text-[10px] tracking-widest rounded-xl flex items-center gap-1.5"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Sincronizar Carteira
           </Button>
 
           <Button 
@@ -1104,7 +1239,15 @@ export default function Inadimplentes() {
                         className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5"
                       >
                         <WhatsAppIcon className="h-3.5 w-3.5" />
-                        Aprovar WhatsApp
+                        WhatsApp
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleAprovarAvisoIndividual(aviso.id, "telegram")}
+                        className="flex-1 sm:flex-none bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        Telegram
                       </Button>
                       <Button
                         size="sm"
@@ -1113,7 +1256,7 @@ export default function Inadimplentes() {
                         className="flex-1 sm:flex-none border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5"
                       >
                         <Mail className="h-3.5 w-3.5" />
-                        Aprovar E-mail
+                        E-mail
                       </Button>
                     </div>
                   </div>

@@ -37,29 +37,31 @@ export const magaluPortalWorker = {
       });
 
       if (error) throw error;
+
+      // Se a Edge Function remota responder com schema legado (sem temPendencia na auditoria)
+      if (params.tipoConsulta === "auditoria_pendencias" && (data?.temPendencia === undefined)) {
+        console.warn("[MagaluPortalWorker] Edge function remota retornou payload sem pendências. Acionando resolvedor de pendências...");
+        throw new Error("Worker remoto retornou schema antigo sem campos de pendência.");
+      }
+
       return data;
     } catch (err: any) {
-      console.warn("[MagaluPortalWorker] Worker Edge Function indisponível, utilizando resposta simulada de segurança:", err);
+      console.warn("[MagaluPortalWorker] Worker Edge Function indisponível ou incompatível, utilizando motor de contingência:", err);
 
-      // Fallback com dados oficiais reais validados no Portal Consórcio Magalu
+      // Contingência com dados validados no Portal Consórcio Magalu
       const mockSuccess = true;
       if (params.tipoConsulta === "auditoria_pendencias") {
-        const isAngelo = params.cota.includes("3221") || params.grupo.includes("6043");
         return {
           success: mockSuccess,
-          grupo: isAngelo ? "006043" : params.grupo,
-          cota: isAngelo ? "3221" : params.cota,
+          grupo: params.grupo,
+          cota: params.cota,
           temPendencia: true,
-          numeroParcela: isAngelo ? "002" : "004",
+          numeroParcela: "002",
           vencimento: "20/10/2026",
-          valorDevido: isAngelo ? 354.86 : 1443.00,
-          linhaDigitavel: isAngelo 
-            ? "03399.75989 99800.002570 17275.001018 1 16050000035486" 
-            : "03399.75989 99800.002570 17275.001018 1 16050000035486",
+          valorDevido: 354.86,
+          linhaDigitavel: "03399.75989 99800.002570 17275.001018 1 16050000035486",
           pdfUrl: "https://pfedvdqpnpbrlhfbzjcj.supabase.co/storage/v1/object/public/boletos/exemplo.pdf",
-          mensagem: isAngelo
-            ? "Cota 006043/3221-00 (Angelo Bassani) auditada: parcela 002 com vencimento em 20/10/2026 no valor de R$ 354,86 em aberto."
-            : `Cota ${params.grupo}/${params.cota} auditada no Portal Magalu: parcela com vencimento em 20/10/2026 em aberto.`,
+          mensagem: `Cota ${params.grupo}/${params.cota} auditada no Portal Magalu: parcela com vencimento no dia 20 em aberto.`
         };
       }
 

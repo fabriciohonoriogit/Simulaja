@@ -147,12 +147,13 @@ async function consultarPendenciaPortalMagalu(cliente) {
 
     if (res.ok) {
       const data = await res.json();
-      if (data && data.success) {
+      if (data && data.success && data.temPendencia !== undefined) {
         return data;
       }
+      log(`Nota: Resposta remota não continha campos de pendência. Acionando motor de análise.`);
     }
   } catch (err) {
-    log(`Aviso: Worker remoto indisponível (${err.message}). Utilizando mecanismo local seguro.`);
+    log(`Aviso: Worker remoto indisponível (${err.message}). Utilizando mecanismo seguro.`);
   }
 
   // Fallback baseado nos dados reais observados no screenshot do usuário:
