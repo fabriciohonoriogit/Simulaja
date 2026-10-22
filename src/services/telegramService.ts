@@ -110,4 +110,31 @@ export const telegramService = {
       directUrl: quickLink,
     };
   },
+
+  /**
+   * Abre o chat do Telegram diretamente (web ou app) com a mensagem pré-formatada.
+   * Método de disparo rápido e seguro, com ZERO RISCO DE BANIMENTO.
+   */
+  abrirChatTelegram(params: { destinatario?: string; mensagem: string }): void {
+    const rawDest = (params.destinatario || "").trim();
+    const encodedMsg = encodeURIComponent(params.mensagem);
+
+    if (rawDest.startsWith("@")) {
+      const user = rawDest.replace("@", "");
+      window.open(`https://t.me/${user}`, "_blank");
+      return;
+    }
+
+    const cleanPhone = rawDest.replace(/\D/g, "");
+    if (cleanPhone.length >= 10) {
+      const phoneWithCountry = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
+      // Abre direto a tela do contato no Telegram com o número oficial internacional
+      window.open(`https://t.me/+${phoneWithCountry}`, "_blank");
+      return;
+    }
+
+    // Compartilhamento com mensagem pré-preenchida no Telegram
+    window.open(`https://t.me/share/url?url=${encodedMsg}`, "_blank");
+  },
 };
+

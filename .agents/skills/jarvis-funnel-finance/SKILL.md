@@ -15,11 +15,17 @@ This skill provides step-by-step UI instructions for Jarvis to navigate the Cons
 1. **Login**:
    - Access `MAGALU_PORTAL_URL` with `MAGALU_FILIAL` (10826), `MAGALU_CHAPA` (918260), and `MAGALU_SENHA` (`Magalu5177%`).
 
-2. **Navigation (Acesso ao Consorciado)**:
+2. **Navigation (Acesso ao Consorciado & Checagem da Tarja de Alerta)**:
    - Click top menu or sidebar: **Atendimento** -> **Atendimento a Clientes**
    - Click submenu under Operações: **Posição do Consorciado**
-   - Input **Grupo** (ex: 006043) and **Cota** (ex: 3221-00), or click **Busca avançada...** to search by Name/CPF.
+   - Input **Grupo** (ex: 005297) and **Cota** (ex: 1541-00), or click **Busca avançada...** to search by Name/CPF.
    - Click **Localizar** and click on the client's name.
+   - **REGRA DE OURO - Tarja de Alerta de Inadimplência**:
+     - No topo da Posição do Consorciado, clientes inadimplentes exibem a tarja amarela com exclamação:
+       `! Avisos: XX *Consorciado possui cota(s) inadimplente(s)`
+     - Campo **Atraso(s)**: Exibe a quantidade de parcelas vencidas e o valor total (ex: `002  R$ 1.118,72`).
+     - Campo **Sit. Cobrança**: Exibe destaque em laranja/vermelho (ex: `NÃO CONTEMPLADA COM 1 PARCELA`).
+     - Se `Sit. Cobrança == "NORMAL"` e `Atraso(s) == 000 R$ 0,00` e NÃO houver a tarja de aviso, o cliente está **100% em dia (Adimplente)**!
 
 3. **Operações Menu (Left Sidebar) -> Emissão de Cobrança**:
    - On the left sidebar under **Operações**, click on **Emissão de Cobrança**.
@@ -28,7 +34,8 @@ This skill provides step-by-step UI instructions for Jarvis to navigate the Cons
 4. **Auditoria de Pendências (Regra do Dia 21)**:
    - Check the **"Pendências"** table:
      - Columns: `# Cota | Pcl | Histórico | Vencimento | Valor | Multa | Juros | Vl. devido | Vl. receber`.
-     - Se o vencimento do dia 20 possuir `Vl. devido > 0` (ex: `002 001-0 RECBTO. PARCELA - Vencimento 20/XX - Vl. devido: R$ 354,86`), a parcela está **em aberto / inadimplente**.
+     - **Regra do Mês Vigente**: Somente faturas com vencimento no dia 20 do mês corrente são atrasos reais. Faturas com vencimento em mês futuro (ex: novembro) **NÃO** configuram inadimplência!
+     - Se o vencimento do dia 20 possuir `Vl. devido > 0` (ex: `002 001-0 RECBTO. PARCELA - Vencimento 20/XX - Vl. devido: R$ 545,45`), a parcela está **em aberto / inadimplente**.
      - Se `Vl. devido == 0`, a cota está em dia.
 
 5. **Opções de Geração no Portal (Seleção do Checkbox da Parcela)**:

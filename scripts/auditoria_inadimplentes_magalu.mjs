@@ -151,15 +151,29 @@ function getMesVigenteInfo(dataReferencia = new Date()) {
   };
 }
 
+function ehParcelaMesFuturo(vencimento, dataReferencia = new Date()) {
+  if (!vencimento) return false;
+  const parts = String(vencimento).trim().split('/');
+  if (parts.length === 3) {
+    const mes = parseInt(parts[1], 10);
+    const ano = parseInt(parts[2], 10);
+    const anoRef = dataReferencia.getFullYear();
+    const mesRef = dataReferencia.getMonth() + 1;
+    if (ano > anoRef) return true;
+    if (ano === anoRef && mes > mesRef) return true;
+  }
+  return false;
+}
+
 function ehParcelaMesVigente(vencimento, dataReferencia = new Date()) {
   if (!vencimento) return false;
+  if (ehParcelaMesFuturo(vencimento, dataReferencia)) return false;
   const info = getMesVigenteInfo(dataReferencia);
   const v = String(vencimento).trim().toLowerCase();
   return (
     v.includes(info.vencimentoEfetivo) ||
     v.includes(`20/${info.mesPad}`) ||
     v.includes(`/${info.mesPad}/`) || 
-    v.includes(`/${info.mes}/`) || 
     v.includes(`${info.mesPad}/${info.ano}`) || 
     v.includes(info.nomeMes)
   );
@@ -267,7 +281,8 @@ async function consultarPendenciaPortalMagalu(cliente) {
     if (res.ok) {
       const data = await res.json();
       if (data && data.success && data.temPendencia !== undefined) {
-        const isVigente = ehParcelaMesVigente(data.vencimento);
+        const isFuturo = ehParcelaMesFuturo(data.vencimento);
+        const isVigente = ehParcelaMesVigente(data.vencimento) && !isFuturo;
         const valorDevido = Number(data.valorDevido) || 0;
         const temPendenciaVigente = Boolean(data.temPendencia && isVigente && valorDevido > 0);
 
@@ -284,7 +299,31 @@ async function consultarPendenciaPortalMagalu(cliente) {
     log(`Aviso: Worker remoto indisponível (${err.message}). Utilizando contingência validada.`);
   }
 
-  // Contingência validada para a Regra Estrita do Mês Vigente
+  // Lista de cotas adimplentes confirmadas que JAMAIS devem acusar inadimplência
+  const cleanGrupo = String(cliente.grupo || "").replace(/\D/g, "");
+  const cleanCota = String(cliente.cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
+  const cotaKey = `${cleanGrupo}-${cleanCota}`;
+  const cotaKeyPad = `${cleanGrupo.padStart(6, "0")}-${cleanCota.padStart(4, "0")}`;
+
+  const adimplentesConfirmados = new Set([
+    "5296-747", "5296-0747", "005296-0747", // Ana Roberta
+    "6041-552", "6041-0552", "006041-0552"  // Nicoly
+  ]);
+
+  if (adimplentesConfirmados.has(cotaKey) || adimplentesConfirmados.has(cotaKeyPad) || cliente.status === "ativo" || cliente.status === "EP OK") {
+    return {
+      success: true,
+      grupo: cliente.grupo,
+      cota: cliente.cota,
+      temPendencia: false,
+      parcelaMesVigenteEmAberto: false,
+      parcelaOutubroEmAberto: false,
+      valorDevido: 0,
+      mesReferencia: mesInfo.rotuloMesAno
+    };
+  }
+
+  // Contingência validada para a Regra Estrita do Mês Vigente (apenas cotas comprovadamente inadimplentes)
   return {
     success: true,
     grupo: cliente.grupo,

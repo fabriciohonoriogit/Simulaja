@@ -235,7 +235,7 @@ export default function Inadimplentes() {
       const novosAvisos: typeof avisosPendentes = [];
 
       for (const cotaItem of cotasParaAuditar) {
-        let temPendencia = cotaItem.forcarInadimplente;
+        let temPendencia = false;
         let valorDevido = cotaItem.valor_parcela;
         let vencimento = mesInfo.vencimentoEfetivo;
         let linhaDigitavel = "03399.75989 99800.002570 17275.001018 1 16050000035486";
@@ -249,13 +249,16 @@ export default function Inadimplentes() {
           });
 
           // REGRA ESTRITA: Apenas parcelas com vencimento no MÊS VIGENTE (dia 20)
-          const ehVigente = magaluPortalWorker.ehParcelaMesVigente(res.vencimento || vencimento);
-          if (res.temPendencia && res.valorDevido && ehVigente) {
+          // Se for parcela futura (ex: novembro 23/11/2026), ou se o portal indicar sem pendência, descarta!
+          const ehVigente = magaluPortalWorker.ehParcelaMesVigente(res.vencimento);
+          const ehFuturo = magaluPortalWorker.ehParcelaMesFuturo(res.vencimento);
+
+          if (res.temPendencia && ehVigente && !ehFuturo && Number(res.valorDevido) > 0) {
             temPendencia = true;
             valorDevido = res.valorDevido;
             if (res.vencimento) vencimento = res.vencimento;
             if (res.linhaDigitavel) linhaDigitavel = res.linhaDigitavel;
-          } else if (!cotaItem.forcarInadimplente) {
+          } else {
             temPendencia = false;
           }
         } catch (workerErr) {
@@ -422,22 +425,10 @@ export default function Inadimplentes() {
 
       if (cErr) throw cErr;
 
-      let cotasParaSincronizar = carteiraRows || [];
-
-      // 2. Se nenhuma cota tiver status='inadimplente', busca todas as cotas ativas com grupo e cota
-      if (cotasParaSincronizar.length === 0) {
-        const { data: allActive } = await supabase
-          .from("carteira")
-          .select("*")
-          .eq("organizacao_id", profile.organizacao_id)
-          .neq("status", "cancelado");
-
-        cotasParaSincronizar = (allActive || []).filter(c => c.grupo && c.cota);
-      }
-
+      // 2. Se nenhuma cota tiver status='inadimplente', não insere cotas ativas
       if (cotasParaSincronizar.length === 0) {
         toast.dismiss();
-        toast.error("Nenhuma cota elegível encontrada na Carteira para sincronização.");
+        toast.info("Nenhuma cota com inadimplência na Carteira. Clientes estão regulares!");
         return;
       }
 
