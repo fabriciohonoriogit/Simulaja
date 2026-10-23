@@ -117,6 +117,8 @@ export const COTAS_INADIMPLENTES_CONFIRMADAS: Record<string, { valor: number; li
     linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
     parcela: "009", 
     vencimento: "20/10/2026", 
+    nome: "LETICIA MULLER DA VEIGA" 
+  },
   // MARLLON CORREA DA SILVA BELLO (Cota 005292 2010-00 - Raspado e Comprovado no Portal Magalu em 23/10/2026)
   "5292-2010": {
     valor: 417.11,
@@ -205,7 +207,6 @@ export const COTAS_INADIMPLENTES_CONFIRMADAS: Record<string, { valor: number; li
   "5272-0191": { valor: 281.20, vencimento: "20/10/2026" },
   "6037-624": { valor: 544.00, vencimento: "20/10/2026" },
   "6037-0624": { valor: 544.00, vencimento: "20/10/2026" },
-  "5292-2010": { valor: 380.00, vencimento: "20/10/2026" },
   "6043-1017": { valor: 354.86, vencimento: "20/10/2026" },
   "6042-582": { valor: 1700.00, vencimento: "20/10/2026" },
   "6042-0582": { valor: 1700.00, vencimento: "20/10/2026" },
