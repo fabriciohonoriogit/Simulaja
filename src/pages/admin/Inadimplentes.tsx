@@ -94,7 +94,7 @@ export default function Inadimplentes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [administradoraFilter, setAdministradoraFilter] = useState("todos");
   const [copyTemplate, setCopyTemplate] = useState(
-    "Olá, {nome}! Tudo bem por aí? Espero que sim! 😊\n\nPassando para te poupar tempo e te ajudar com a sua cota {cota} (Grupo {grupo}) do Consórcio Magalu. Identifiquei no sistema que a parcela com vencimento no dia 20 ({valor_parcela}) consta em aberto.\n\nJá acessei o portal da administradora para facilitar o seu pagamento:\n{linha_digitavel}\n\nSe já realizou o pagamento nas últimas horas, por favor desconsidere enquanto o banco compensa. Qualquer dúvida, estou à disposição!"
+    "Olá, {nome}! Tudo bem por aí? Espero que sim! 😊\n\nAqui é o Fabrício Honorio, do Consórcio Magalu\nPassei rapidamente para te poupar tempo e te ajudar com a sua cota {cota} (Grupo {grupo}).\n\nIdentifiquei no sistema que a sua parcela do mês de {mes} (com vencimento em {vencimento}) no valor de {valor_parcela} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento.: {linha_digitavel}\n\nSegue o código de barras para pagamento. Qualquer dúvida , só me chamar por aqui. Tenha um ótimo dia!"
   );
   const [showAuditoriaModal, setShowAuditoriaModal] = useState(false);
   const [auditandoMagalu, setAuditandoMagalu] = useState(false);
@@ -192,6 +192,8 @@ export default function Inadimplentes() {
       // Assegura a apuração das 17 cotas de referência do mês vigente
       if (cotasParaAuditar.length < 17) {
         const cotasBase17 = [
+          { nome: "LETICIA MULLER DA VEIGA", grupo: "005292", cota: "2258", celular: "41999999999", valor: 409.79 },
+          { nome: "SUELI", grupo: "005294", cota: "0565", celular: "11987654321", valor: 380.00 },
           { nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI", grupo: "006043", cota: "3221", celular: "11987654321", valor: 354.86 },
           { nome: "CONSORCIADO COTA 1282", grupo: "1703", cota: "1282", celular: "11987654321", valor: 420.00 },
           { nome: "CONSORCIADO COTA 45", grupo: "1703", cota: "45", celular: "11987654321", valor: 420.00 },
@@ -206,9 +208,7 @@ export default function Inadimplentes() {
           { nome: "CONSORCIADO COTA 12", grupo: "5290", cota: "12", celular: "11987654321", valor: 380.00 },
           { nome: "CONSORCIADO COTA 115B", grupo: "5290", cota: "115", celular: "11987654321", valor: 380.00 },
           { nome: "CONSORCIADO COTA 182", grupo: "5290", cota: "182", celular: "11987654321", valor: 380.00 },
-          { nome: "CONSORCIADO COTA 340", grupo: "5290", cota: "340", celular: "11987654321", valor: 380.00 },
-          { nome: "CONSORCIADO COTA 412", grupo: "5290", cota: "412", celular: "11987654321", valor: 380.00 },
-          { nome: "CONSORCIADO COTA 555", grupo: "5290", cota: "555", celular: "11987654321", valor: 380.00 }
+          { nome: "CONSORCIADO COTA 340", grupo: "5290", cota: "340", celular: "11987654321", valor: 380.00 }
         ];
 
         const existingKeys = new Set(cotasParaAuditar.map(c => `${c.grupo}-${c.cota}`));
@@ -257,7 +257,7 @@ export default function Inadimplentes() {
             temPendencia = true;
             valorDevido = res.valorDevido;
             if (res.vencimento) vencimento = res.vencimento;
-            if (res.linhaDigitavel && !res.linhaDigitavel.startsWith("03399.75989") && res.linhaDigitavel.length >= 20) {
+            if (res.linhaDigitavel && !res.linhaDigitavel.includes("17275.001018 1 16050000035486") && res.linhaDigitavel.trim().length >= 20) {
               linhaDigitavel = res.linhaDigitavel.trim();
             }
           } else {
@@ -440,6 +440,8 @@ export default function Inadimplentes() {
         .eq("status", "inadimplente");
 
       if (cErr) throw cErr;
+
+      const cotasParaSincronizar = carteiraRows || [];
 
       // 2. Se nenhuma cota tiver status='inadimplente', não insere cotas ativas
       if (cotasParaSincronizar.length === 0) {
@@ -1211,15 +1213,27 @@ export default function Inadimplentes() {
                 <button onClick={() => {
                   const msgs = data.filter(d => d.status !== 'regularizado').map(d => {
                     let msg = copyTemplate;
-                    msg = msg.replace(/{nome}/g, d.nome || "");
-                    msg = msg.replace(/{cota}/g, d.cota || "");
-                    msg = msg.replace(/{grupo}/g, d.grupo || "");
-                    msg = msg.replace(/{parcelas_atrasadas}/g, String(d.parcelas_atrasadas || 0));
-                    msg = msg.replace(/{valor_parcela}/g, formatCurrency(d.valor_parcela || 0));
+                    const mesInfo = magaluPortalWorker.getMesVigenteInfo();
+                    const primeiroNome = (d.nome || "").split(" ")[0].toUpperCase() || "CLIENTE";
+                    const valorFormatado = formatCurrency(d.valor_parcela || 0);
+                    const linhaDigitavel = (d as any).linha_digitavel && (d as any).linha_digitavel.length >= 20
+                      ? (d as any).linha_digitavel
+                      : "(inserir o código de barra raspado no site)";
+
+                    msg = msg.replace(/{nome}/gi, primeiroNome);
+                    msg = msg.replace(/{cota}/gi, d.cota || "");
+                    msg = msg.replace(/{grupo}/gi, d.grupo || "");
+                    msg = msg.replace(/{mes}/gi, mesInfo.nomeMesUpper);
+                    msg = msg.replace(/{vencimento}/gi, mesInfo.vencimentoEfetivo);
+                    msg = msg.replace(/{valor_parcela}/gi, valorFormatado);
+                    msg = msg.replace(/{valor}/gi, valorFormatado);
+                    msg = msg.replace(/{parcelas_atrasadas}/gi, String(d.parcelas_atrasadas || 0));
+                    msg = msg.replace(/{linha_digitavel}/gi, linhaDigitavel);
+                    msg = msg.replace(/{codigo_de_barras}/gi, linhaDigitavel);
                     return msg;
                   }).join('\n\n---\n\n');
                   navigator.clipboard.writeText(msgs);
-                  toast.success('Mensagens copiadas!');
+                  toast.success('Mensagens copiadas com sucesso!');
                 }} className="h-14 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all">Copiar Texto</button>
 
                 <button 

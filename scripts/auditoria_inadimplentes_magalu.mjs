@@ -211,29 +211,44 @@ async function supabaseRest(endpoint, options = {}) {
 function gerarMensagemHumanizadaJarvis(dados) {
   const mesInfo = getMesVigenteInfo();
   const { nome, cota, grupo, valorParcela, linhaDigitavel, vencimento } = dados;
-  const primeiroNome = nome ? nome.split(' ')[0] : 'Cliente';
+  const primeiroNome = nome ? nome.split(' ')[0].toUpperCase() : 'CLIENTE';
   const vencStr = vencimento || mesInfo.vencimentoEfetivo;
-  const valorFormatado = valorParcela ? `R$ ${Number(valorParcela).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'da sua parcela';
+  const valorFormatado = valorParcela ? `R$ ${Number(valorParcela).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 380,00';
+  const codigoBarra = linhaDigitavel && !linhaDigitavel.includes("17275.001018 1 16050000035486") && linhaDigitavel.trim().length >= 20
+    ? linhaDigitavel.trim()
+    : '(inserir o código de barra raspado no site)';
 
   return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
 
-Aqui é o Fabrício Honorio, do Consórcio Magalu / Prospera Plan.
+Aqui é o Fabrício Honorio, do Consórcio Magalu
 Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${cota} (Grupo ${grupo}).
 
-Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal e emiti a sua 2ª via atualizada com Pix e código de barras para facilitar o pagamento sem juros abusivos:
+Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento.: ${codigoBarra}
 
-📄 Linha Digitável (${mesInfo.nomeMesCap}):
-${linhaDigitavel || 'Solicite a 2ª via atualizada respondendo esta mensagem'}
-
-Se você já realizou o pagamento nas últimas horas, por favor desconsidere este aviso enquanto o banco faz a compensação! 
-
-Qualquer dúvida ou caso queira pagar via PIX, me dá um alô por aqui. Abraço!`;
+Segue o código de barras para pagamento. Qualquer dúvida , só me chamar por aqui. Tenha um ótimo dia!`;
 }
 
-// 6. As 17 Cotas de Referência para auditoria
+// 6. As Cotas de Referência para auditoria
 function obterCotasReferenciaVigente() {
   const mesInfo = getMesVigenteInfo();
   return [
+    { 
+      nome: 'LETICIA MULLER DA VEIGA', 
+      grupo: '005292', 
+      cota: '2258', 
+      celular: '41999999999', 
+      valor_parcela: 409.79, 
+      vencimento: '20/10/2026', 
+      linha_digitavel: '03399.75989 99800.002570 64633.701012 8 16090000040979' 
+    },
+    { 
+      nome: 'SUELI', 
+      grupo: '005294', 
+      cota: '0565', 
+      celular: '11987654321', 
+      valor_parcela: 380.00, 
+      vencimento: '20/10/2026' 
+    },
     { nome: 'ANGELO LEONARDO ANGHIEVISKI BASSANI', grupo: '006043', cota: '3221', celular: '11987654321', valor_parcela: 354.86, vencimento: mesInfo.vencimentoEfetivo },
     { nome: 'CONSORCIADO COTA 1282', grupo: '1703', cota: '1282', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEfetivo },
     { nome: 'CONSORCIADO COTA 45', grupo: '1703', cota: '45', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEfetivo },

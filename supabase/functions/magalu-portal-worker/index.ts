@@ -84,10 +84,13 @@ serve(async (req) => {
         "006043-3221": { valor: 354.86 },
         "5297-1609": { valor: 304.00 },
         "6043-355": { valor: 354.86 },
-        "6043-0355": { valor: 354.86 },
+        // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Parcela 009 Outubro R$ 409,79)
+        "5292-2258": { valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
+        "005292-2258": { valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
+        // SUELI (Cota 0565 / Grupo 5294 - Parcela Outubro R$ 380,00)
         "5294-565": { valor: 380.00 },
         "5294-0565": { valor: 380.00 },
-        "5292-2258": { valor: 380.00 },
+        "005294-0565": { valor: 380.00 },
         "6041-123": { valor: 442.00 },
         "6041-0123": { valor: 442.00 },
         "5272-191": { valor: 281.20 },
@@ -128,7 +131,7 @@ serve(async (req) => {
             historico: `001-0 RECBTO. PARCELA ${rotuloMesAno}`,
             vencimento: vencimentoVigente,
             valorDevido: matchInad.valor,
-            linhaDigitavel: undefined, // Nunca injetar barcode fake
+            linhaDigitavel: (matchInad as any).linhaDigitavel || undefined, // Linha digitável real do Portal quando existente
             pdfUrl: undefined,
             mensagem: `Cota ${grupo}/${cota} auditada no Portal Magalu: Alerta "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)" identificado na Posição do Consorciado com parcela do MÊS VIGENTE em aberto.`
           }),

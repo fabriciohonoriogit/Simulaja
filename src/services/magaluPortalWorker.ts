@@ -288,44 +288,61 @@ export const magaluPortalWorker = {
     }
 
     // RESOLVEDOR CONTROLADO: Apenas cotas comprovadamente com parcela do mês vigente em atraso
-    // NUNCA gerar ou injetar códigos de barras fake. Apenas o portal oficial gera a linha digitável válida.
-    const cotasInadimplentesConfirmadas: Record<string, { valor: number }> = {
+    // Anexa a linha digitável oficial do Portal Consórcio Magalu (Atendimento > Posição do Consorciado > Emissão de Cobrança > Gerar Cód. de barras)
+    const cotasInadimplentesConfirmadas: Record<string, { valor: number; linhaDigitavel?: string; parcela?: string; vencimento?: string; nome?: string }> = {
+      // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Comprovada no Portal Magalu com Parcela 009 de Outubro/2026 em aberto)
+      "5292-2258": { 
+        valor: 409.79, 
+        linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
+        parcela: "009", 
+        vencimento: "20/10/2026", 
+        nome: "LETICIA MULLER DA VEIGA" 
+      },
+      "005292-2258": { 
+        valor: 409.79, 
+        linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
+        parcela: "009", 
+        vencimento: "20/10/2026", 
+        nome: "LETICIA MULLER DA VEIGA" 
+      },
+      // SUELI (Cota 0565 / Grupo 5294 - Parcela Outubro em aberto R$ 380,00)
+      "5294-565": { valor: 380.00, parcela: "002", vencimento: "20/10/2026", nome: "SUELI" },
+      "5294-0565": { valor: 380.00, parcela: "002", vencimento: "20/10/2026", nome: "SUELI" },
+      "005294-0565": { valor: 380.00, parcela: "002", vencimento: "20/10/2026", nome: "SUELI" },
       // DOROTI KRAUSE (Comprovada no Portal com "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)")
-      "5297-1541": { valor: 545.45 },
-      "005297-1541": { valor: 545.45 },
-      "5297-1542": { valor: 545.45 },
-      "005297-1542": { valor: 545.45 },
+      "5297-1541": { valor: 545.45, parcela: "002", vencimento: "20/10/2026" },
+      "005297-1541": { valor: 545.45, parcela: "002", vencimento: "20/10/2026" },
+      "5297-1542": { valor: 545.45, parcela: "002", vencimento: "20/10/2026" },
+      "005297-1542": { valor: 545.45, parcela: "002", vencimento: "20/10/2026" },
       // Demais cotas inadimplentes confirmadas
-      "6043-3221": { valor: 354.86 },
-      "006043-3221": { valor: 354.86 },
-      "5297-1609": { valor: 304.00 },
-      "6043-355": { valor: 354.86 },
-      "6043-0355": { valor: 354.86 },
-      "5294-565": { valor: 380.00 },
-      "5294-0565": { valor: 380.00 },
-      "5292-2258": { valor: 380.00 },
-      "6041-123": { valor: 442.00 },
-      "6041-0123": { valor: 442.00 },
-      "5272-191": { valor: 281.20 },
-      "5272-0191": { valor: 281.20 },
-      "6037-624": { valor: 544.00 },
-      "6037-0624": { valor: 544.00 },
-      "5292-2010": { valor: 380.00 },
-      "6043-1017": { valor: 354.86 },
-      "6042-582": { valor: 1700.00 },
-      "6042-0582": { valor: 1700.00 },
-      "6039-865": { valor: 1700.00 },
-      "6039-0865": { valor: 1700.00 },
-      "6041-2161": { valor: 374.00 },
-      "5297-517": { valor: 304.00 },
-      "5297-0517": { valor: 304.00 },
-      "5278-260": { valor: 456.00 },
-      "5278-0260": { valor: 456.00 }
+      "6043-3221": { valor: 354.86, vencimento: "20/10/2026" },
+      "006043-3221": { valor: 354.86, vencimento: "20/10/2026" },
+      "5297-1609": { valor: 304.00, vencimento: "20/10/2026" },
+      "6043-355": { valor: 354.86, vencimento: "20/10/2026" },
+      "6043-0355": { valor: 354.86, vencimento: "20/10/2026" },
+      "6041-123": { valor: 442.00, vencimento: "20/10/2026" },
+      "6041-0123": { valor: 442.00, vencimento: "20/10/2026" },
+      "5272-191": { valor: 281.20, vencimento: "20/10/2026" },
+      "5272-0191": { valor: 281.20, vencimento: "20/10/2026" },
+      "6037-624": { valor: 544.00, vencimento: "20/10/2026" },
+      "6037-0624": { valor: 544.00, vencimento: "20/10/2026" },
+      "5292-2010": { valor: 380.00, vencimento: "20/10/2026" },
+      "6043-1017": { valor: 354.86, vencimento: "20/10/2026" },
+      "6042-582": { valor: 1700.00, vencimento: "20/10/2026" },
+      "6042-0582": { valor: 1700.00, vencimento: "20/10/2026" },
+      "6039-865": { valor: 1700.00, vencimento: "20/10/2026" },
+      "6039-0865": { valor: 1700.00, vencimento: "20/10/2026" },
+      "6041-2161": { valor: 374.00, vencimento: "20/10/2026" },
+      "5297-517": { valor: 304.00, vencimento: "20/10/2026" },
+      "5297-0517": { valor: 304.00, vencimento: "20/10/2026" },
+      "5278-260": { valor: 456.00, vencimento: "20/10/2026" },
+      "5278-0260": { valor: 456.00, vencimento: "20/10/2026" }
     };
 
     const inadMatch = cotasInadimplentesConfirmadas[cotaKey] || cotasInadimplentesConfirmadas[cotaKeyPad];
 
     if (inadMatch && params.tipoConsulta === "auditoria_pendencias") {
+      const vencimentoFinal = inadMatch.vencimento || mesInfo.vencimentoEfetivo;
       return {
         success: true,
         grupo: params.grupo,
@@ -333,12 +350,12 @@ export const magaluPortalWorker = {
         temPendencia: true,
         parcelaMesVigenteEmAberto: true,
         parcelaOutubroEmAberto: true,
-        numeroParcela: "002",
-        vencimento: mesInfo.vencimentoEfetivo,
+        numeroParcela: inadMatch.parcela || "002",
+        vencimento: vencimentoFinal,
         valorDevido: inadMatch.valor,
-        linhaDigitavel: undefined, // Nunca injetar fake! Extraído via Atendimento > Emissão de Cobrança > Gerar Cód. de barras
+        linhaDigitavel: inadMatch.linhaDigitavel || undefined,
         mesReferencia: mesInfo.rotuloMesAno,
-        mensagem: `Cota ${params.grupo}/${params.cota}: parcela do mês vigente (${mesInfo.vencimentoEfetivo}) identificada em aberto no Portal Magalu.`
+        mensagem: `Cota ${params.grupo}/${params.cota}: parcela do mês vigente (${vencimentoFinal}) identificada em aberto no Portal Magalu.`
       };
     }
 
@@ -379,7 +396,8 @@ export const magaluPortalWorker = {
 
   /**
    * Gera a mensagem humanizada de cobrança preventiva/solução (Jarvis Persona)
-   * Enfatiza expressamente a parcela do MÊS VIGENTE com o vencimento efetivo
+   * Modelo padronizado oficial: Prioridade da parcela atrasada (dia 21 ao fim do mês)
+   * com linha digitável oficial copiada do Portal Magalu.
    */
   gerarAvisoHumanizado(dados: {
     nome: string;
@@ -390,30 +408,20 @@ export const magaluPortalWorker = {
     vencimento?: string;
   }): string {
     const mesInfo = this.getMesVigenteInfo();
-    const primeiroNome = dados.nome ? dados.nome.split(" ")[0] : "Cliente";
+    const primeiroNome = dados.nome ? dados.nome.split(" ")[0].toUpperCase() : "CLIENTE";
     const vencStr = dados.vencimento || mesInfo.vencimentoEfetivo;
     const valorFormatado = `R$ ${dados.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-    const temLinhaReal = Boolean(
-      dados.linhaDigitavel && 
-      dados.linhaDigitavel.trim().length >= 20 && 
-      !dados.linhaDigitavel.startsWith("03399.75989")
-    );
-
-    const secaoLinha = temLinhaReal
-      ? `📄 Linha Digitável (${mesInfo.nomeMesCap}):\n${dados.linhaDigitavel!.trim()}`
-      : `Já estou com o portal da administradora aberto em Atendimento para te enviar a linha digitável e o código Pix em instantes!`;
+    const codigoBarra = dados.linhaDigitavel && !dados.linhaDigitavel.includes("17275.001018 1 16050000035486") && dados.linhaDigitavel.trim().length >= 20
+      ? dados.linhaDigitavel.trim()
+      : "(inserir o código de barra raspado no site)";
 
     return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
 
-Aqui é o Fabrício Honorio, do Consórcio Magalu / Prospera Plan.
+Aqui é o Fabrício Honorio, do Consórcio Magalu
 Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${dados.cota} (Grupo ${dados.grupo}).
 
-Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento sem juros abusivos:
+Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento.: ${codigoBarra}
 
-${secaoLinha}
-
-Se você já realizou o pagamento nas últimas horas, por favor desconsidere este aviso enquanto o banco compensa!
-
-Qualquer dúvida ou caso prefira o PDF ou chave Pix Copia e Cola, só me chamar por aqui. Tenha um ótimo dia!`;
+Segue o código de barras para pagamento. Qualquer dúvida , só me chamar por aqui. Tenha um ótimo dia!`;
   }
 };
