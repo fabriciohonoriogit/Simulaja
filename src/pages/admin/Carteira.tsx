@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { Lead } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
