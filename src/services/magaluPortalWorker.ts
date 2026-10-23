@@ -310,10 +310,34 @@ export const magaluPortalWorker = {
       "5294-0565": { valor: 380.00, parcela: "002", vencimento: "20/10/2026", nome: "SUELI" },
       "005294-0565": { valor: 380.00, parcela: "002", vencimento: "20/10/2026", nome: "SUELI" },
       // DOROTI KRAUSE (Comprovada no Portal com "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)")
-      "5297-1541": { valor: 545.45, parcela: "002", vencimento: "20/10/2026" },
-      "005297-1541": { valor: 545.45, parcela: "002", vencimento: "20/10/2026" },
-      "5297-1542": { valor: 545.45, parcela: "002", vencimento: "20/10/2026" },
-      "005297-1542": { valor: 545.45, parcela: "002", vencimento: "20/10/2026" },
+      "5297-1542": { 
+        valor: 545.45, 
+        linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545", 
+        parcela: "002", 
+        vencimento: "20/10/2026", 
+        nome: "DOROTI KRAUSE" 
+      },
+      "005297-1542": { 
+        valor: 545.45, 
+        linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545", 
+        parcela: "002", 
+        vencimento: "20/10/2026", 
+        nome: "DOROTI KRAUSE" 
+      },
+      "5297-1541": { 
+        valor: 545.45, 
+        linhaDigitavel: "03399.75989 99800.002570 72971.541016 4 16090000054545", 
+        parcela: "002", 
+        vencimento: "20/10/2026", 
+        nome: "DOROTI KRAUSE" 
+      },
+      "005297-1541": { 
+        valor: 545.45, 
+        linhaDigitavel: "03399.75989 99800.002570 72971.541016 4 16090000054545", 
+        parcela: "002", 
+        vencimento: "20/10/2026", 
+        nome: "DOROTI KRAUSE" 
+      },
       // Demais cotas inadimplentes confirmadas
       "6043-3221": { valor: 354.86, vencimento: "20/10/2026" },
       "006043-3221": { valor: 354.86, vencimento: "20/10/2026" },
@@ -411,11 +435,15 @@ export const magaluPortalWorker = {
     const primeiroNome = dados.nome ? dados.nome.split(" ")[0].toUpperCase() : "CLIENTE";
     const vencStr = dados.vencimento || mesInfo.vencimentoEfetivo;
     const valorFormatado = `R$ ${dados.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-    const codigoBarra = dados.linhaDigitavel && !dados.linhaDigitavel.includes("17275.001018 1 16050000035486") && dados.linhaDigitavel.trim().length >= 20
-      ? dados.linhaDigitavel.trim()
-      : "(inserir o código de barra raspado no site)";
+    const temCodigo = Boolean(
+      dados.linhaDigitavel && 
+      !dados.linhaDigitavel.includes("17275.001018 1 16050000035486") && 
+      dados.linhaDigitavel.trim().length >= 20
+    );
 
-    return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
+    if (temCodigo) {
+      const codigoBarra = dados.linhaDigitavel!.trim();
+      return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
 
 Aqui é o Fabrício Honorio, do Consórcio Magalu
 Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${dados.cota} (Grupo ${dados.grupo}).
@@ -423,5 +451,15 @@ Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${dados.cota}
 Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento.: ${codigoBarra}
 
 Segue o código de barras para pagamento. Qualquer dúvida , só me chamar por aqui. Tenha um ótimo dia!`;
+    }
+
+    return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
+
+Aqui é o Fabrício Honorio, do Consórcio Magalu
+Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${dados.cota} (Grupo ${dados.grupo}).
+
+Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento.
+
+Qualquer dúvida ou caso queira o código de barras para pagamento, só me chamar por aqui. Tenha um ótimo dia!`;
   }
 };

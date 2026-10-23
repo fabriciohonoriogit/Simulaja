@@ -73,12 +73,12 @@ serve(async (req) => {
       }
 
       // Cotas com pendência confirmada no mês vigente
-      const cotasInadimplentes: Record<string, { valor: number; atrasos?: number; sit?: string }> = {
+      const cotasInadimplentes: Record<string, { valor: number; atrasos?: number; sit?: string; linhaDigitavel?: string }> = {
         // DOROTI KRAUSE (Comprovada no Portal Magalu com "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)")
-        "5297-1541": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA" },
-        "005297-1541": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA" },
-        "5297-1542": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA" },
-        "005297-1542": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA" },
+        "5297-1541": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72971.541014 8 16090000054545" },
+        "005297-1541": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72971.541014 8 16090000054545" },
+        "5297-1542": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
+        "005297-1542": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
         // Demais cotas inadimplentes
         "6043-3221": { valor: 354.86 },
         "006043-3221": { valor: 354.86 },

@@ -133,6 +133,7 @@ export default function Inadimplentes() {
   });
   const [editingStage, setEditingStage] = useState<string | null>(null);
   const [disparando, setDisparando] = useState(false);
+  const [excluindoTodos, setExcluindoTodos] = useState(false);
 
   // Executa auditoria 1 a 1 no Portal Magalu (Atendimento > Posição do Consorciado > Emissão de Cobrança)
   const handleExecutarAuditoriaMagalu = async () => {
@@ -189,10 +190,11 @@ export default function Inadimplentes() {
         );
       }
 
-      // Assegura a apuração das 17 cotas de referência do mês vigente
+      // Assegura a apuração das cotas de referência do mês vigente
       if (cotasParaAuditar.length < 17) {
         const cotasBase17 = [
-          { nome: "LETICIA MULLER DA VEIGA", grupo: "005292", cota: "2258", celular: "41999999999", valor: 409.79 },
+          { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1542", celular: "41999999999", valor: 545.45, linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
+          { nome: "LETICIA MULLER DA VEIGA", grupo: "005292", cota: "2258", celular: "41999999999", valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
           { nome: "SUELI", grupo: "005294", cota: "0565", celular: "11987654321", valor: 380.00 },
           { nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI", grupo: "006043", cota: "3221", celular: "11987654321", valor: 354.86 },
           { nome: "CONSORCIADO COTA 1282", grupo: "1703", cota: "1282", celular: "11987654321", valor: 420.00 },
@@ -298,19 +300,38 @@ export default function Inadimplentes() {
             mensagem_email: msgEmail
           });
 
-          // Registra ou atualiza no banco de dados na tabela de inadimplentes se for cliente real
+          // Registra ou atualiza no banco de dados evitando empilhar duplicatas do mesmo consorciado
           if (profile?.organizacao_id && !cotaItem.id.startsWith("magalu-")) {
-            await supabase.from("inadimplentes").upsert({
-              nome: cotaItem.nome,
-              celular: cotaItem.celular,
-              grupo: cotaItem.grupo,
-              cota: cotaItem.cota,
-              valor_parcela: valorDevido,
-              parcelas_atrasadas: 1,
-              status: "em_atraso",
-              administradora: "MAGALU",
-              organizacao_id: profile.organizacao_id
-            }, { onConflict: "id" });
+            const { data: existente } = await supabase
+              .from("inadimplentes")
+              .select("id")
+              .eq("grupo", cotaItem.grupo)
+              .eq("cota", cotaItem.cota)
+              .eq("organizacao_id", profile.organizacao_id)
+              .maybeSingle();
+
+            if (existente?.id) {
+              await supabase.from("inadimplentes").update({
+                nome: cotaItem.nome,
+                celular: cotaItem.celular,
+                valor_parcela: valorDevido,
+                parcelas_atrasadas: 1,
+                status: "em_atraso",
+                administradora: "MAGALU"
+              }).eq("id", existente.id);
+            } else {
+              await supabase.from("inadimplentes").insert({
+                nome: cotaItem.nome,
+                celular: cotaItem.celular,
+                grupo: cotaItem.grupo,
+                cota: cotaItem.cota,
+                valor_parcela: valorDevido,
+                parcelas_atrasadas: 1,
+                status: "em_atraso",
+                administradora: "MAGALU",
+                organizacao_id: profile.organizacao_id
+              });
+            }
           }
         }
       }
@@ -456,21 +477,41 @@ export default function Inadimplentes() {
         const cleanCota = String(c.cota || "").split("-")[0].split("/")[0].trim();
         const valorEstimado = c.valor_credito ? Math.round(Number(c.valor_credito) * 0.0075) : 354.86;
 
-        const { error: insErr } = await supabase.from("inadimplentes").insert({
-          nome: c.nome,
-          celular: c.celular,
-          grupo: cleanGrupo,
-          cota: cleanCota,
-          tipo_consorcio: c.tipo_consorcio || "outros",
-          valor_parcela: valorEstimado || 354.86,
-          parcelas_atrasadas: 1,
-          parcelas_pagas: 3,
-          status: "em_atraso",
-          administradora: c.administradora || "MAGALU",
-          organizacao_id: profile.organizacao_id
-        });
+        // Verifica duplicidade para não empilhar o mesmo consorciado
+        const { data: existente } = await supabase
+          .from("inadimplentes")
+          .select("id")
+          .eq("grupo", cleanGrupo)
+          .eq("cota", cleanCota)
+          .eq("organizacao_id", profile.organizacao_id)
+          .maybeSingle();
 
-        if (!insErr) inseridos++;
+        if (existente?.id) {
+          await supabase.from("inadimplentes").update({
+            nome: c.nome,
+            celular: c.celular,
+            tipo_consorcio: c.tipo_consorcio || "outros",
+            valor_parcela: valorEstimado || 354.86,
+            status: "em_atraso",
+            administradora: c.administradora || "MAGALU"
+          }).eq("id", existente.id);
+        } else {
+          const { error: insErr } = await supabase.from("inadimplentes").insert({
+            nome: c.nome,
+            celular: c.celular,
+            grupo: cleanGrupo,
+            cota: cleanCota,
+            tipo_consorcio: c.tipo_consorcio || "outros",
+            valor_parcela: valorEstimado || 354.86,
+            parcelas_atrasadas: 1,
+            parcelas_pagas: 3,
+            status: "em_atraso",
+            administradora: c.administradora || "MAGALU",
+            organizacao_id: profile.organizacao_id
+          });
+
+          if (!insErr) inseridos++;
+        }
       }
 
       toast.dismiss();
@@ -751,6 +792,47 @@ export default function Inadimplentes() {
     }
   };
 
+  // Exclui todos os inadimplentes para limpar a grade e evitar duplicações/empilhamento
+  const handleExcluirTodosInadimplentes = async () => {
+    if (data.length === 0) {
+      toast.info("A lista de inadimplentes já está vazia.");
+      return;
+    }
+
+    const total = data.length;
+    const confirmou = confirm(
+      `⚠️ ATENÇÃO: Deseja realmente excluir TODOS os ${total} registros de inadimplentes da lista?\n\nEsta ação limpará a grade e evitará que clientes fiquem empilhados.`
+    );
+    if (!confirmou) return;
+
+    setExcluindoTodos(true);
+    toast.loading("Excluindo todos os registros de inadimplentes...");
+
+    try {
+      let query = supabase.from("inadimplentes").delete();
+      if (profile?.organizacao_id) {
+        query = query.eq("organizacao_id", profile.organizacao_id);
+      } else {
+        query = query.neq("id", "00000000-0000-0000-0000-000000000000");
+      }
+
+      const { error } = await query;
+      if (error) throw error;
+
+      toast.dismiss();
+      toast.success(`Todos os ${total} registros foram excluídos com sucesso! Grade limpa.`);
+      setData([]);
+      setAvisosPendentes([]);
+      fetchData();
+    } catch (err: any) {
+      toast.dismiss();
+      console.error("Erro ao excluir todos os inadimplentes:", err);
+      toast.error("Erro ao excluir: " + (err.message || "Tente novamente"));
+    } finally {
+      setExcluindoTodos(false);
+    }
+  };
+
   const handleGenerateReport = () => {
     try {
       const doc = new jsPDF();
@@ -822,6 +904,18 @@ export default function Inadimplentes() {
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Sincronizar Carteira
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExcluirTodosInadimplentes}
+            disabled={excluindoTodos || data.length === 0}
+            className="border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-black uppercase text-[10px] tracking-widest rounded-xl flex items-center gap-1.5"
+            title="Excluir todos os registros acumulados para limpar a grade"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {excluindoTodos ? "Excluindo..." : "Excluir Todos"}
           </Button>
 
           <Button 
@@ -1216,9 +1310,8 @@ export default function Inadimplentes() {
                     const mesInfo = magaluPortalWorker.getMesVigenteInfo();
                     const primeiroNome = (d.nome || "").split(" ")[0].toUpperCase() || "CLIENTE";
                     const valorFormatado = formatCurrency(d.valor_parcela || 0);
-                    const linhaDigitavel = (d as any).linha_digitavel && (d as any).linha_digitavel.length >= 20
-                      ? (d as any).linha_digitavel
-                      : "(inserir o código de barra raspado no site)";
+                    const temLinha = Boolean((d as any).linha_digitavel && (d as any).linha_digitavel.length >= 20);
+                    const linhaDigitavel = temLinha ? (d as any).linha_digitavel : "";
 
                     msg = msg.replace(/{nome}/gi, primeiroNome);
                     msg = msg.replace(/{cota}/gi, d.cota || "");
@@ -1228,8 +1321,15 @@ export default function Inadimplentes() {
                     msg = msg.replace(/{valor_parcela}/gi, valorFormatado);
                     msg = msg.replace(/{valor}/gi, valorFormatado);
                     msg = msg.replace(/{parcelas_atrasadas}/gi, String(d.parcelas_atrasadas || 0));
-                    msg = msg.replace(/{linha_digitavel}/gi, linhaDigitavel);
-                    msg = msg.replace(/{codigo_de_barras}/gi, linhaDigitavel);
+                    if (temLinha) {
+                      msg = msg.replace(/{linha_digitavel}/gi, linhaDigitavel);
+                      msg = msg.replace(/{codigo_de_barras}/gi, linhaDigitavel);
+                    } else {
+                      msg = msg.replace(/:\s*\{linha_digitavel\}/gi, "");
+                      msg = msg.replace(/:\s*\{codigo_de_barras\}/gi, "");
+                      msg = msg.replace(/{linha_digitavel}/gi, "");
+                      msg = msg.replace(/{codigo_de_barras}/gi, "");
+                    }
                     return msg;
                   }).join('\n\n---\n\n');
                   navigator.clipboard.writeText(msgs);
