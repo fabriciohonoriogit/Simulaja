@@ -543,9 +543,11 @@ export default function Inadimplentes() {
 
     for (const d of devedores) {
       const mesInfo = magaluPortalWorker.getMesVigenteInfo();
-      const primeiroNome = (d.nome || "").split(" ")[0].toUpperCase() || "CLIENTE";
-      const valorFormatado = formatCurrency(d.valor_parcela || 0);
-      const linhaDigitavel = (d as any).linha_digitavel || magaluPortalWorker.obterLinhaDigitavel(d.grupo, d.cota, d.valor_parcela, mesInfo.vencimentoEfetivo);
+      const match = magaluPortalWorker.obterDadosConfirmados(d.grupo, d.cota);
+      const primeiroNome = (d.nome || "").split(" ")[0].toUpperCase() || (match?.nome ? match.nome.split(" ")[0].toUpperCase() : "CLIENTE");
+      const valorEfetivo = match?.valor || d.valor_parcela || 0;
+      const valorFormatado = formatCurrency(valorEfetivo);
+      const linhaDigitavel = (d as any).linha_digitavel || match?.linhaDigitavel || magaluPortalWorker.obterLinhaDigitavel(d.grupo, d.cota, valorEfetivo, mesInfo.vencimentoEfetivo);
 
       let texto = copyTemplate
         .replace(/{nome}/gi, primeiroNome)
@@ -1255,7 +1257,7 @@ export default function Inadimplentes() {
                                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
                                      <div className="flex flex-col">
                                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest leading-none">Dívida Total</p>
-                                        <p className={cn("font-black text-slate-900 mt-1", isWideView ? "text-xs" : "text-sm")}>{formatCurrency(item.valor_parcela * item.parcelas_atrasadas)}</p>
+                                        <p className={cn("font-black text-slate-900 mt-1", isWideView ? "text-xs" : "text-sm")}>{formatCurrency((magaluPortalWorker.obterDadosConfirmados(item.grupo, item.cota)?.valor || item.valor_parcela) * item.parcelas_atrasadas)}</p>
                                      </div>
                                      <div className={cn(
                                        "p-2 rounded-xl flex items-center gap-1.5",
@@ -1346,9 +1348,11 @@ export default function Inadimplentes() {
                   const msgs = data.filter(d => d.status !== 'regularizado').map(d => {
                     let msg = copyTemplate;
                     const mesInfo = magaluPortalWorker.getMesVigenteInfo();
-                    const primeiroNome = (d.nome || "").split(" ")[0].toUpperCase() || "CLIENTE";
-                    const valorFormatado = formatCurrency(d.valor_parcela || 0);
-                    const linhaDigitavel = (d as any).linha_digitavel || magaluPortalWorker.obterLinhaDigitavel(d.grupo, d.cota, d.valor_parcela, mesInfo.vencimentoEfetivo);
+                    const match = magaluPortalWorker.obterDadosConfirmados(d.grupo, d.cota);
+                    const primeiroNome = (d.nome || "").split(" ")[0].toUpperCase() || (match?.nome ? match.nome.split(" ")[0].toUpperCase() : "CLIENTE");
+                    const valorEfetivo = match?.valor || d.valor_parcela || 0;
+                    const valorFormatado = formatCurrency(valorEfetivo);
+                    const linhaDigitavel = (d as any).linha_digitavel || match?.linhaDigitavel || magaluPortalWorker.obterLinhaDigitavel(d.grupo, d.cota, valorEfetivo, mesInfo.vencimentoEfetivo);
 
                     msg = msg.replace(/{nome}/gi, primeiroNome);
                     msg = msg.replace(/{cota}/gi, d.cota || "");

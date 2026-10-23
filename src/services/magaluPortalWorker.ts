@@ -415,7 +415,7 @@ export const magaluPortalWorker = {
 
     // RESOLVEDOR CONTROLADO: Apenas cotas comprovadamente com parcela do mês vigente em atraso
     // Anexa a linha digitável oficial do Portal Consórcio Magalu (Atendimento > Posição do Consorciado > Emissão de Cobrança > Gerar Cód. de barras)
-    const inadMatch = COTAS_INADIMPLENTES_CONFIRMADAS[cotaKey] || COTAS_INADIMPLENTES_CONFIRMADAS[cotaKeyPad];
+    const inadMatch = this.obterDadosConfirmados(params.grupo, params.cota);
 
     if (inadMatch && params.tipoConsulta === "auditoria_pendencias") {
       const vencimentoFinal = inadMatch.vencimento || mesInfo.vencimentoEfetivo;
@@ -545,6 +545,33 @@ export const magaluPortalWorker = {
   },
 
   /**
+   * Obtém os dados confirmados de uma cota inadimplente, normalizando variações de zeros à esquerda.
+   */
+  obterDadosConfirmados(grupo: string | null | undefined, cota: string | null | undefined) {
+    const cleanGrupo = String(grupo || "").replace(/\D/g, "");
+    const cleanCota = String(cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
+    const grupoTrim = cleanGrupo.replace(/^0+/, "") || "0";
+    const cotaTrim = cleanCota.replace(/^0+/, "") || "0";
+    const grupoPad = cleanGrupo.padStart(6, "0");
+    const cotaPad = cleanCota.padStart(4, "0");
+
+    const possibleKeys = [
+      `${cleanGrupo}-${cleanCota}`,
+      `${grupoTrim}-${cotaTrim}`,
+      `${grupoPad}-${cotaPad}`,
+      `${grupoTrim}-${cotaPad}`,
+      `${grupoPad}-${cotaTrim}`
+    ];
+
+    for (const key of possibleKeys) {
+      if (COTAS_INADIMPLENTES_CONFIRMADAS[key]) {
+        return COTAS_INADIMPLENTES_CONFIRMADAS[key];
+      }
+    }
+    return null;
+  },
+
+  /**
    * Obtém a linha digitável oficial para uma cota, consultando registros confirmados no Portal Magalu.
    * REGRA DE SEGURANÇA BANCÁRIA: NUNCA inventar códigos por cálculo estimado para evitar erros de registro na CIP.
    */
@@ -554,23 +581,17 @@ export const magaluPortalWorker = {
     valor?: number,
     vencimento?: string
   ): string {
-    const cleanGrupo = String(grupo || "").replace(/\D/g, "");
-    const cleanCota = String(cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
-    const key = `${cleanGrupo}-${cleanCota}`;
-    const keyPad = `${cleanGrupo.padStart(6, "0")}-${cleanCota.padStart(4, "0")}`;
-
-    const match = COTAS_INADIMPLENTES_CONFIRMADAS[key] || COTAS_INADIMPLENTES_CONFIRMADAS[keyPad];
+    const match = this.obterDadosConfirmados(grupo, cota);
     if (match?.linhaDigitavel) {
       return match.linhaDigitavel;
     }
-
     return "";
   },
 
   /**
    * Gera a mensagem humanizada de cobrança preventiva/solução (Jarvis Persona)
    * Modelo padronizado oficial: Prioridade da parcela atrasada (dia 21 ao fim do mês)
-   * com linha digitável oficial copiada do Portal Magalu.
+   * com linha digitável oficial copiada do Portal Magalu e valor real exato.
    */
   gerarAvisoHumanizado(dados: {
     nome: string;
@@ -581,12 +602,18 @@ export const magaluPortalWorker = {
     vencimento?: string;
   }): string {
     const mesInfo = this.getMesVigenteInfo();
-    const primeiroNome = dados.nome ? dados.nome.split(" ")[0].toUpperCase() : "CLIENTE";
-    const vencStr = dados.vencimento || mesInfo.vencimentoEfetivo;
-    const valorFormatado = `R$ ${dados.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+    const match = this.obterDadosConfirmados(dados.grupo, dados.cota);
+    const primeiroNome = dados.nome ? dados.nome.split(" ")[0].toUpperCase() : (match?.nome ? match.nome.split(" ")[0].toUpperCase() : "CLIENTE");
+    const vencStr = dados.vencimento || match?.vencimento || mesInfo.vencimentoEfetivo;
+    
+    // Prioriza o valor real comprovado (ex: R$ 467,45 para Emily Oliveira da Luz)
+    const valorEfetivo = match?.valor || dados.valorParcela;
+    const valorFormatado = `R$ ${valorEfetivo.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+
+    // Prioriza a linha digitável oficial Santander registrada
     const codigoBarra = (dados.linhaDigitavel && dados.linhaDigitavel.trim().length >= 20) 
       ? dados.linhaDigitavel.trim() 
-      : this.obterLinhaDigitavel(dados.grupo, dados.cota, dados.valorParcela, vencStr);
+      : (match?.linhaDigitavel || "");
 
     const blocoPagamento = codigoBarra
       ? `Segue o código de barras para pagamento:\n${codigoBarra}`

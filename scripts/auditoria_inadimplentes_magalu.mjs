@@ -439,7 +439,7 @@ async function consultarPendenciaPortalMagalu(cliente) {
   if (cleanGrupo === "5297" && cleanCota === "1542") {
     linhaDigitavelOficial = "03399.75989 99800.002570 72971.542013 9 16090000054545";
   } else if (cleanGrupo === "5297" && cleanCota === "1541") {
-    linhaDigitavelOficial = "03399.75989 99800.002570 72971.541014 8 16090000054545";
+    linhaDigitavelOficial = "03399.75989 99800.002570 72971.541015 2 16090000054545";
   } else if (cleanGrupo === "5292" && cleanCota === "2258") {
     linhaDigitavelOficial = "03399.75989 99800.002570 64633.701012 8 16090000040979";
   } else if (cliente.linha_digitavel) {
