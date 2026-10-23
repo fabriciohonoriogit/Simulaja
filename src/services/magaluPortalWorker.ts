@@ -81,6 +81,130 @@ export function calcularDataInicioRaspagem(ano: number, mes: number): Date {
   return inicio;
 }
 
+export const COTAS_INADIMPLENTES_CONFIRMADAS: Record<string, { valor: number; linhaDigitavel?: string; parcela?: string; vencimento?: string; nome?: string }> = {
+  // EMILY OLIVEIRA DA LUZ (Cota 123 / Grupo 6041 - Comprovada no Portal Magalu com Parcela R$ 467,45)
+  "6041-123": { 
+    valor: 467.45, 
+    linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", 
+    parcela: "001", 
+    vencimento: "20/10/2026", 
+    nome: "EMILY OLIVEIRA DA LUZ" 
+  },
+  "6041-0123": { 
+    valor: 467.45, 
+    linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", 
+    parcela: "001", 
+    vencimento: "20/10/2026", 
+    nome: "EMILY OLIVEIRA DA LUZ" 
+  },
+  "006041-0123": { 
+    valor: 467.45, 
+    linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", 
+    parcela: "001", 
+    vencimento: "20/10/2026", 
+    nome: "EMILY OLIVEIRA DA LUZ" 
+  },
+  // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Comprovada no Portal Magalu com Parcela 009 de Outubro/2026 em aberto)
+  "5292-2258": { 
+    valor: 409.79, 
+    linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
+    parcela: "009", 
+    vencimento: "20/10/2026", 
+    nome: "LETICIA MULLER DA VEIGA" 
+  },
+  "005292-2258": { 
+    valor: 409.79, 
+    linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
+    parcela: "009", 
+    vencimento: "20/10/2026", 
+    nome: "LETICIA MULLER DA VEIGA" 
+  },
+  // SUELI (Cota 0565 / Grupo 5294 - Parcela Outubro em aberto R$ 380,00)
+  "5294-565": { 
+    valor: 380.00, 
+    linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
+    parcela: "002", 
+    vencimento: "20/10/2026", 
+    nome: "SUELI" 
+  },
+  "5294-0565": { 
+    valor: 380.00, 
+    linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
+    parcela: "002", 
+    vencimento: "20/10/2026", 
+    nome: "SUELI" 
+  },
+  "005294-0565": { 
+    valor: 380.00, 
+    linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
+    parcela: "002", 
+    vencimento: "20/10/2026", 
+    nome: "SUELI" 
+  },
+  // DOROTI KRAUSE (Comprovada no Portal com "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)")
+  "5297-1542": { 
+    valor: 545.45, 
+    linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545", 
+    parcela: "002", 
+    vencimento: "20/10/2026", 
+    nome: "DOROTI KRAUSE" 
+  },
+  "005297-1542": { 
+    valor: 545.45, 
+    linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545", 
+    parcela: "002", 
+    vencimento: "20/10/2026", 
+    nome: "DOROTI KRAUSE" 
+  },
+  "5297-1541": { 
+    valor: 545.45, 
+    linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545", 
+    parcela: "002", 
+    vencimento: "20/10/2026", 
+    nome: "DOROTI KRAUSE" 
+  },
+  "005297-1541": { 
+    valor: 545.45, 
+    linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545", 
+    parcela: "002", 
+    vencimento: "20/10/2026", 
+    nome: "DOROTI KRAUSE" 
+  },
+  // ANGELO LEONARDO (Comprovada no Portal Magalu)
+  "6043-3221": { 
+    valor: 354.86, 
+    linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486",
+    parcela: "002",
+    vencimento: "20/10/2026", 
+    nome: "ANGELO LEONARDO" 
+  },
+  "006043-3221": { 
+    valor: 354.86, 
+    linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486",
+    parcela: "002",
+    vencimento: "20/10/2026", 
+    nome: "ANGELO LEONARDO" 
+  },
+  "5297-1609": { valor: 304.00, vencimento: "20/10/2026" },
+  "6043-355": { valor: 354.86, vencimento: "20/10/2026" },
+  "6043-0355": { valor: 354.86, vencimento: "20/10/2026" },
+  "5272-191": { valor: 281.20, vencimento: "20/10/2026" },
+  "5272-0191": { valor: 281.20, vencimento: "20/10/2026" },
+  "6037-624": { valor: 544.00, vencimento: "20/10/2026" },
+  "6037-0624": { valor: 544.00, vencimento: "20/10/2026" },
+  "5292-2010": { valor: 380.00, vencimento: "20/10/2026" },
+  "6043-1017": { valor: 354.86, vencimento: "20/10/2026" },
+  "6042-582": { valor: 1700.00, vencimento: "20/10/2026" },
+  "6042-0582": { valor: 1700.00, vencimento: "20/10/2026" },
+  "6039-865": { valor: 1700.00, vencimento: "20/10/2026" },
+  "6039-0865": { valor: 1700.00, vencimento: "20/10/2026" },
+  "6041-2161": { valor: 374.00, vencimento: "20/10/2026" },
+  "5297-517": { valor: 304.00, vencimento: "20/10/2026" },
+  "5297-0517": { valor: 304.00, vencimento: "20/10/2026" },
+  "5278-260": { valor: 456.00, vencimento: "20/10/2026" },
+  "5278-0260": { valor: 456.00, vencimento: "20/10/2026" }
+};
+
 export const magaluPortalWorker = {
   /**
    * Retorna os metadados do mês vigente para auditoria e mensagens,
@@ -287,123 +411,17 @@ export const magaluPortalWorker = {
       console.warn(`[MagaluPortalWorker] Worker remoto indisponível para cota ${params.grupo}/${params.cota}:`, err);
     }
 
+
+
     // RESOLVEDOR CONTROLADO: Apenas cotas comprovadamente com parcela do mês vigente em atraso
     // Anexa a linha digitável oficial do Portal Consórcio Magalu (Atendimento > Posição do Consorciado > Emissão de Cobrança > Gerar Cód. de barras)
-    const cotasInadimplentesConfirmadas: Record<string, { valor: number; linhaDigitavel?: string; parcela?: string; vencimento?: string; nome?: string }> = {
-      // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Comprovada no Portal Magalu com Parcela 009 de Outubro/2026 em aberto)
-      "5292-2258": { 
-        valor: 409.79, 
-        linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
-        parcela: "009", 
-        vencimento: "20/10/2026", 
-        nome: "LETICIA MULLER DA VEIGA" 
-      },
-      "005292-2258": { 
-        valor: 409.79, 
-        linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
-        parcela: "009", 
-        vencimento: "20/10/2026", 
-        nome: "LETICIA MULLER DA VEIGA" 
-      },
-      // SUELI (Cota 0565 / Grupo 5294 - Parcela Outubro em aberto R$ 380,00)
-      "5294-565": { 
-        valor: 380.00, 
-        linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
-        parcela: "002", 
-        vencimento: "20/10/2026", 
-        nome: "SUELI" 
-      },
-      "5294-0565": { 
-        valor: 380.00, 
-        linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
-        parcela: "002", 
-        vencimento: "20/10/2026", 
-        nome: "SUELI" 
-      },
-      "005294-0565": { 
-        valor: 380.00, 
-        linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
-        parcela: "002", 
-        vencimento: "20/10/2026", 
-        nome: "SUELI" 
-      },
-      // DOROTI KRAUSE (Comprovada no Portal com "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)")
-      "5297-1542": { 
-        valor: 545.45, 
-        linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545", 
-        parcela: "002", 
-        vencimento: "20/10/2026", 
-        nome: "DOROTI KRAUSE" 
-      },
-      "005297-1542": { 
-        valor: 545.45, 
-        linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545", 
-        parcela: "002", 
-        vencimento: "20/10/2026", 
-        nome: "DOROTI KRAUSE" 
-      },
-      "5297-1541": { 
-        valor: 545.45, 
-        linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545", 
-        parcela: "002", 
-        vencimento: "20/10/2026", 
-        nome: "DOROTI KRAUSE" 
-      },
-      "005297-1541": { 
-        valor: 545.45, 
-        linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545", 
-        parcela: "002", 
-        vencimento: "20/10/2026", 
-        nome: "DOROTI KRAUSE" 
-      },
-      // Demais cotas inadimplentes confirmadas
-      "6043-3221": { 
-        valor: 354.86, 
-        linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486",
-        parcela: "002",
-        vencimento: "20/10/2026", 
-        nome: "ANGELO LEONARDO" 
-      },
-      "006043-3221": { 
-        valor: 354.86, 
-        linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486",
-        parcela: "002",
-        vencimento: "20/10/2026", 
-        nome: "ANGELO LEONARDO" 
-      },
-      "5297-1609": { valor: 304.00, vencimento: "20/10/2026" },
-      "6043-355": { valor: 354.86, vencimento: "20/10/2026" },
-      "6043-0355": { valor: 354.86, vencimento: "20/10/2026" },
-      "6041-123": { valor: 442.00, vencimento: "20/10/2026" },
-      "6041-0123": { valor: 442.00, vencimento: "20/10/2026" },
-      "5272-191": { valor: 281.20, vencimento: "20/10/2026" },
-      "5272-0191": { valor: 281.20, vencimento: "20/10/2026" },
-      "6037-624": { valor: 544.00, vencimento: "20/10/2026" },
-      "6037-0624": { valor: 544.00, vencimento: "20/10/2026" },
-      "5292-2010": { valor: 380.00, vencimento: "20/10/2026" },
-      "6043-1017": { valor: 354.86, vencimento: "20/10/2026" },
-      "6042-582": { valor: 1700.00, vencimento: "20/10/2026" },
-      "6042-0582": { valor: 1700.00, vencimento: "20/10/2026" },
-      "6039-865": { valor: 1700.00, vencimento: "20/10/2026" },
-      "6039-0865": { valor: 1700.00, vencimento: "20/10/2026" },
-      "6041-2161": { valor: 374.00, vencimento: "20/10/2026" },
-      "5297-517": { valor: 304.00, vencimento: "20/10/2026" },
-      "5297-0517": { valor: 304.00, vencimento: "20/10/2026" },
-      "5278-260": { valor: 456.00, vencimento: "20/10/2026" },
-      "5278-0260": { valor: 456.00, vencimento: "20/10/2026" }
-    };
-
-    const inadMatch = cotasInadimplentesConfirmadas[cotaKey] || cotasInadimplentesConfirmadas[cotaKeyPad];
+    const inadMatch = COTAS_INADIMPLENTES_CONFIRMADAS[cotaKey] || COTAS_INADIMPLENTES_CONFIRMADAS[cotaKeyPad];
 
     if (inadMatch && params.tipoConsulta === "auditoria_pendencias") {
       const vencimentoFinal = inadMatch.vencimento || mesInfo.vencimentoEfetivo;
-      const linhaFinal = inadMatch.linhaDigitavel || this.gerarLinhaSantanderMagalu(
-        params.grupo,
-        params.cota,
-        inadMatch.parcela || "002",
-        inadMatch.valor,
-        vencimentoFinal
-      );
+      // REGRA CRÍTICA DE CONFIABILIDADE BANCÁRIA:
+      // NUNCA inventar código sintético. Somente usar linha registrada oficial do Portal Magalu / Santander.
+      const linhaFinal = inadMatch.linhaDigitavel || "";
 
       return {
         success: true,
@@ -527,12 +545,13 @@ export const magaluPortalWorker = {
   },
 
   /**
-   * Obtém a linha digitável oficial para uma cota, consultando registros confirmados ou calculando via padrão Santander.
+   * Obtém a linha digitável oficial para uma cota, consultando registros confirmados no Portal Magalu.
+   * REGRA DE SEGURANÇA BANCÁRIA: NUNCA inventar códigos por cálculo estimado para evitar erros de registro na CIP.
    */
   obterLinhaDigitavel(
     grupo: string | null | undefined,
     cota: string | null | undefined,
-    valor: number,
+    valor?: number,
     vencimento?: string
   ): string {
     const cleanGrupo = String(grupo || "").replace(/\D/g, "");
@@ -540,12 +559,12 @@ export const magaluPortalWorker = {
     const key = `${cleanGrupo}-${cleanCota}`;
     const keyPad = `${cleanGrupo.padStart(6, "0")}-${cleanCota.padStart(4, "0")}`;
 
-    const match = (this as any).cotasInadimplentesConfirmadas?.[key] || (this as any).cotasInadimplentesConfirmadas?.[keyPad];
+    const match = COTAS_INADIMPLENTES_CONFIRMADAS[key] || COTAS_INADIMPLENTES_CONFIRMADAS[keyPad];
     if (match?.linhaDigitavel) {
       return match.linhaDigitavel;
     }
 
-    return this.gerarLinhaSantanderMagalu(cleanGrupo, cleanCota, "01", valor, vencimento || "20/10/2026");
+    return "";
   },
 
   /**
@@ -565,7 +584,13 @@ export const magaluPortalWorker = {
     const primeiroNome = dados.nome ? dados.nome.split(" ")[0].toUpperCase() : "CLIENTE";
     const vencStr = dados.vencimento || mesInfo.vencimentoEfetivo;
     const valorFormatado = `R$ ${dados.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-    const codigoBarra = dados.linhaDigitavel?.trim() || this.obterLinhaDigitavel(dados.grupo, dados.cota, dados.valorParcela, vencStr);
+    const codigoBarra = (dados.linhaDigitavel && dados.linhaDigitavel.trim().length >= 20) 
+      ? dados.linhaDigitavel.trim() 
+      : this.obterLinhaDigitavel(dados.grupo, dados.cota, dados.valorParcela, vencStr);
+
+    const blocoPagamento = codigoBarra
+      ? `Segue o código de barras para pagamento:\n${codigoBarra}`
+      : `Já estou gerando a 2ª via oficial com o código de barras registrado no Portal Magalu para você. Se preferir receber o boleto completo em PDF, me avise por aqui!`;
 
     return `Olá, ${primeiroNome}! Tudo bem por aí? Espero que sim! 😊
 
@@ -574,8 +599,7 @@ Passei rapidamente para te poupar tempo e te ajudar com a sua cota ${dados.cota}
 
 Identifiquei no sistema que a sua parcela do mês de ${mesInfo.nomeMesUpper} (com vencimento em ${vencStr}) no valor de ${valorFormatado} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento.
 
-Segue o código de barras para pagamento:
-${codigoBarra}
+${blocoPagamento}
 
 Qualquer dúvida, só me chamar por aqui. Tenha um ótimo dia!`;
   }

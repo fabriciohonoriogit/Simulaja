@@ -193,6 +193,7 @@ export default function Inadimplentes() {
       // Assegura a apuração das cotas de referência do mês vigente
       if (cotasParaAuditar.length < 17) {
         const cotasBase17 = [
+          { nome: "EMILY OLIVEIRA DA LUZ", grupo: "6041", cota: "123", celular: "11987654321", valor: 467.45, linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745" },
           { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1542", celular: "41999999999", valor: 545.45, linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
           { nome: "LETICIA MULLER DA VEIGA", grupo: "005292", cota: "2258", celular: "41999999999", valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
           { nome: "SUELI", grupo: "005294", cota: "0565", celular: "11987654321", valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },

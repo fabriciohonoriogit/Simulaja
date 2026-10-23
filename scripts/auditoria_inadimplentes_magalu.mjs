@@ -293,6 +293,15 @@ function obterCotasReferenciaVigente() {
   const mesInfo = getMesVigenteInfo();
   return [
     { 
+      nome: 'EMILY OLIVEIRA DA LUZ', 
+      grupo: '6041', 
+      cota: '123', 
+      celular: '11987654321', 
+      valor_parcela: 467.45, 
+      vencimento: '20/10/2026', 
+      linha_digitavel: '03399.75989 99800.002570 64567.501016 8 16090000046745' 
+    },
+    { 
       nome: 'DOROTI KRAUSE', 
       grupo: '005297', 
       cota: '1542', 

