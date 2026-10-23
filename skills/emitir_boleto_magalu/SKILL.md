@@ -14,19 +14,25 @@ required_tools:
 ## Objetivo
 Localizar o boleto atualizado do consorciado no portal oficial, efetuar o upload seguro no bucket do CRM e disponibilizar a linha digitável e PDF para o cliente via WhatsApp.
 
-## Passos do Procedimento
+## Passos do Procedimento Oficial (Portal Consórcio Magalu)
 
-1. **Identificar Consorciado:**
-   - Buscar no CRM pelo `nome` ou `cpf_cnpj` do cliente usando a ferramenta `mcp_crm_search_leads`.
-   - Obter o número do `grupo` e `cota`.
+1. **Autenticação**:
+   - Login no Portal Magalu com Filial `10826`, Chapa `918260` e Senha `Magalu5177*`.
 
-2. **Consultar Portal Magalu (Playwright Worker / API):**
-   - Invocação segura do worker com autenticação mútua isolada (sem exposição da senha).
-   - Extrair a `linha_digitavel`, `valor_parcela` e `vencimento`.
+2. **Navegação de Menus**:
+   - Menu: **Atendimento** ➔ **Atendimento** ➔ **Atendimento a clientes** ➔ **Posição do Consorciado**.
 
-3. **Registrar no CRM:**
-   - Adicionar o evento no `historico_contatos` do lead com a data e valor do boleto emitido.
+3. **Localizar Cliente**:
+   - Inserir **Grupo e Cota** ou efetuar **Busca pelo nome**.
+   - Clicar sobre o nome do cliente na grade de resultados.
 
-4. **Enviar ao Cliente via WhatsApp:**
-   - Formatar a mensagem amigável com a linha digitável.
-   - Disparar via `mcp_whatsapp_send_text`.
+4. **Acesso à Cobrança**:
+   - No menu lateral esquerdo sob *Operações*, clicar em **Emissão de Cobrança**.
+
+5. **Geração**:
+   - Marcar o checkbox do mês em atraso.
+   - Clicar em **"Gerar Cód. de barras"** (para linha digitável) e/ou **"Emitir Cobrança"** (para baixar o boleto oficial em PDF).
+
+6. **Envio**:
+   - Ao gerar o código de barras, copiar a linha oficial e colar no texto humanizado e empático para envio ao cliente via WhatsApp/Email.
+   - Nunca calcular ou simular linhas digitáveis sintéticas.
