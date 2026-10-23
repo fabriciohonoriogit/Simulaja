@@ -131,22 +131,6 @@
         width: 0 !important;
         height: 0 !important;
       }
-    </style>
-    <script>
-      (function() {
-        const remove = () => {
-          const ids = ['lovable-badge', 'lovable-badge-container', 'lovable-badge-cta', 'lovable-badge-close', 'gpt-designer-badge'];
-          ids.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.remove();
-          });
-          const badges = document.querySelectorAll('.lovable-badge, [data-lovable-badge], a[href*="lovable.app"], iframe[src*="lovable"]');
-          badges.forEach(b => b.remove());
-        };
-        setInterval(remove, 100);
-        window.addEventListener('load', remove);
-      })();
-    </script>
   </head>
 
   <body class="hide-lovable">

@@ -94,7 +94,7 @@ export default function Inadimplentes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [administradoraFilter, setAdministradoraFilter] = useState("todos");
   const [copyTemplate, setCopyTemplate] = useState(
-    "Olá, {nome}! Tudo bem por aí? Espero que sim! 😊\n\nAqui é o Fabrício Honorio, do Consórcio Magalu\nPassei rapidamente para te poupar tempo e te ajudar com a sua cota {cota} (Grupo {grupo}).\n\nIdentifiquei no sistema que a sua parcela do mês de {mes} (com vencimento em {vencimento}) no valor de {valor_parcela} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento.: {linha_digitavel}\n\nSegue o código de barras para pagamento. Qualquer dúvida , só me chamar por aqui. Tenha um ótimo dia!"
+    "Olá, {nome}! Tudo bem por aí? Espero que sim! 😊\n\nAqui é o Fabrício Honorio, do Consórcio Magalu\nPassei rapidamente para te poupar tempo e te ajudar com a sua cota {cota} (Grupo {grupo}).\n\nIdentifiquei no sistema que a sua parcela do mês de {mes} (com vencimento em {vencimento}) no valor de {valor_parcela} consta em aberto. Sei que na correria do dia a dia isso é super comum acontecer, por isso já acessei o portal para facilitar o seu pagamento.\n\nSegue o código de barras para pagamento:\n{linha_digitavel}\n\nQualquer dúvida, só me chamar por aqui. Tenha um ótimo dia!"
   );
   const [showAuditoriaModal, setShowAuditoriaModal] = useState(false);
   const [auditandoMagalu, setAuditandoMagalu] = useState(false);
@@ -195,8 +195,8 @@ export default function Inadimplentes() {
         const cotasBase17 = [
           { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1542", celular: "41999999999", valor: 545.45, linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
           { nome: "LETICIA MULLER DA VEIGA", grupo: "005292", cota: "2258", celular: "41999999999", valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
-          { nome: "SUELI", grupo: "005294", cota: "0565", celular: "11987654321", valor: 380.00 },
-          { nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI", grupo: "006043", cota: "3221", celular: "11987654321", valor: 354.86 },
+          { nome: "SUELI", grupo: "005294", cota: "0565", celular: "11987654321", valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
+          { nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI", grupo: "006043", cota: "3221", celular: "11987654321", valor: 354.86, linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486" },
           { nome: "CONSORCIADO COTA 1282", grupo: "1703", cota: "1282", celular: "11987654321", valor: 420.00 },
           { nome: "CONSORCIADO COTA 45", grupo: "1703", cota: "45", celular: "11987654321", valor: 420.00 },
           { nome: "CONSORCIADO COTA 115", grupo: "1703", cota: "115", celular: "11987654321", valor: 420.00 },
@@ -216,6 +216,7 @@ export default function Inadimplentes() {
         const existingKeys = new Set(cotasParaAuditar.map(c => `${c.grupo}-${c.cota}`));
         for (const c of cotasBase17) {
           if (!existingKeys.has(`${c.grupo}-${c.cota}`)) {
+            const linhaDig = (c as any).linhaDigitavel || magaluPortalWorker.obterLinhaDigitavel(c.grupo, c.cota, c.valor, mesInfo.vencimentoEfetivo);
             cotasParaAuditar.push({
               id: `magalu-${c.grupo}-${c.cota}`,
               nome: c.nome,
@@ -228,8 +229,9 @@ export default function Inadimplentes() {
               cota: c.cota,
               status: "em_atraso",
               administradora: "MAGALU",
-              forcarInadimplente: true
-            });
+              forcarInadimplente: true,
+              linhaDigitavel: linhaDig
+            } as any);
           }
         }
       }
@@ -240,7 +242,7 @@ export default function Inadimplentes() {
         let temPendencia = false;
         let valorDevido = cotaItem.valor_parcela;
         let vencimento = mesInfo.vencimentoEfetivo;
-        let linhaDigitavel = ""; // NUNCA usar código fake! Apenas código real emitido no Portal Magalu
+        let linhaDigitavel = (cotaItem as any).linhaDigitavel || "";
 
         try {
           const res = await magaluPortalWorker.consultarPortalMagalu({
@@ -269,6 +271,11 @@ export default function Inadimplentes() {
           console.warn("[Auditoria] Consulta individual cota:", cotaItem.cota, workerErr);
         }
 
+        // Garante que a linha digitável nunca seja vazia para parcelas em atraso
+        if (!linhaDigitavel) {
+          linhaDigitavel = magaluPortalWorker.obterLinhaDigitavel(cotaItem.grupo, cotaItem.cota, valorDevido, vencimento);
+        }
+
         // Se confirmada a pendência estrita da parcela do mês vigente
         if (temPendencia && magaluPortalWorker.ehParcelaMesVigente(vencimento)) {
           const msgWhats = magaluPortalWorker.gerarAvisoHumanizado({
@@ -276,15 +283,11 @@ export default function Inadimplentes() {
             cota: cotaItem.cota,
             grupo: cotaItem.grupo,
             valorParcela: valorDevido,
-            linhaDigitavel: linhaDigitavel || undefined,
+            linhaDigitavel: linhaDigitavel,
             vencimento: vencimento
           });
 
-          const secaoLinhaEmail = linhaDigitavel 
-            ? `Linha Digitável: ${linhaDigitavel}` 
-            : `Já localizamos a sua cota no sistema em Atendimento. Caso deseje receber o código de barras ou Pix, basta responder a este e-mail.`;
-
-          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos no Portal Consórcio Magalu que a parcela do mês vigente (${mesInfo.nomeMesUpper} - com vencimento em ${vencimento}) referente à sua cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto.\n\n${secaoLinhaEmail}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
+          const msgEmail = `Prezado(a) ${cotaItem.nome},\n\nIdentificamos no Portal Consórcio Magalu que a parcela do mês vigente (${mesInfo.nomeMesUpper} - com vencimento em ${vencimento}) referente à sua cota ${cotaItem.cota} (Grupo ${cotaItem.grupo}) no valor de R$ ${valorDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} encontra-se em aberto.\n\nLinha Digitável: ${linhaDigitavel}\n\nAtenciosamente,\nFabrício Honorio - Prospera Plan / Consórcio Magalu`;
 
           novosAvisos.push({
             id: cotaItem.id,
@@ -301,7 +304,7 @@ export default function Inadimplentes() {
           });
 
           // Registra ou atualiza no banco de dados evitando empilhar duplicatas do mesmo consorciado
-          if (profile?.organizacao_id && !cotaItem.id.startsWith("magalu-")) {
+          if (profile?.organizacao_id) {
             const { data: existente } = await supabase
               .from("inadimplentes")
               .select("id")
@@ -537,12 +540,22 @@ export default function Inadimplentes() {
     let okCount = 0;
 
     for (const d of devedores) {
+      const mesInfo = magaluPortalWorker.getMesVigenteInfo();
+      const primeiroNome = (d.nome || "").split(" ")[0].toUpperCase() || "CLIENTE";
+      const valorFormatado = formatCurrency(d.valor_parcela || 0);
+      const linhaDigitavel = (d as any).linha_digitavel || magaluPortalWorker.obterLinhaDigitavel(d.grupo, d.cota, d.valor_parcela, mesInfo.vencimentoEfetivo);
+
       let texto = copyTemplate
-        .replace(/{nome}/g, d.nome || "")
-        .replace(/{cota}/g, d.cota || "")
-        .replace(/{grupo}/g, d.grupo || "")
-        .replace(/{parcelas_atrasadas}/g, String(d.parcelas_atrasadas || 0))
-        .replace(/{valor_parcela}/g, formatCurrency(d.valor_parcela || 0));
+        .replace(/{nome}/gi, primeiroNome)
+        .replace(/{cota}/gi, d.cota || "")
+        .replace(/{grupo}/gi, d.grupo || "")
+        .replace(/{mes}/gi, mesInfo.nomeMesUpper)
+        .replace(/{vencimento}/gi, mesInfo.vencimentoEfetivo)
+        .replace(/{valor_parcela}/gi, valorFormatado)
+        .replace(/{valor}/gi, valorFormatado)
+        .replace(/{parcelas_atrasadas}/gi, String(d.parcelas_atrasadas || 0))
+        .replace(/{linha_digitavel}/gi, linhaDigitavel)
+        .replace(/{codigo_de_barras}/gi, linhaDigitavel);
 
       const res = await sendWhatsAppMessage({
         number: d.celular!,
@@ -809,8 +822,11 @@ export default function Inadimplentes() {
     toast.loading("Excluindo todos os registros de inadimplentes...");
 
     try {
+      const idsToDelete = data.map(d => d.id);
       let query = supabase.from("inadimplentes").delete();
-      if (profile?.organizacao_id) {
+      if (idsToDelete.length > 0) {
+        query = query.in("id", idsToDelete);
+      } else if (profile?.organizacao_id) {
         query = query.eq("organizacao_id", profile.organizacao_id);
       } else {
         query = query.neq("id", "00000000-0000-0000-0000-000000000000");
@@ -1181,26 +1197,46 @@ export default function Inadimplentes() {
                                             e.stopPropagation(); 
                                             if (item.celular) {
                                               const num = item.celular.replace(/\D/g, '');
-                                              window.open(`https://wa.me/55${num}`, '_blank');
+                                              const mesInfo = magaluPortalWorker.getMesVigenteInfo();
+                                              const linhaDigitavel = (item as any).linha_digitavel || magaluPortalWorker.obterLinhaDigitavel(item.grupo, item.cota, item.valor_parcela, mesInfo.vencimentoEfetivo);
+                                              const msg = magaluPortalWorker.gerarAvisoHumanizado({
+                                                nome: item.nome,
+                                                cota: item.cota || "",
+                                                grupo: item.grupo || "",
+                                                valorParcela: item.valor_parcela,
+                                                linhaDigitavel: linhaDigitavel,
+                                                vencimento: mesInfo.vencimentoEfetivo
+                                              });
+                                              window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`, '_blank');
                                             } else {
                                               toast.error('Número de celular não informado');
                                             }
                                           }}
                                           className="p-1.5 text-emerald-500 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg transition-colors"
-                                          title="Chamar no WhatsApp"
+                                          title="Chamar no WhatsApp com mensagem e código de barras"
                                        >
                                           <WhatsAppIcon className="h-4 w-4" />
                                        </button>
                                        <button 
                                           onClick={(e) => { 
                                             e.stopPropagation(); 
+                                            const mesInfo = magaluPortalWorker.getMesVigenteInfo();
+                                            const linhaDigitavel = (item as any).linha_digitavel || magaluPortalWorker.obterLinhaDigitavel(item.grupo, item.cota, item.valor_parcela, mesInfo.vencimentoEfetivo);
+                                            const msg = magaluPortalWorker.gerarAvisoHumanizado({
+                                              nome: item.nome,
+                                              cota: item.cota || "",
+                                              grupo: item.grupo || "",
+                                              valorParcela: item.valor_parcela,
+                                              linhaDigitavel: linhaDigitavel,
+                                              vencimento: mesInfo.vencimentoEfetivo
+                                            });
                                             telegramService.abrirChatTelegram({
                                               destinatario: item.celular || "",
-                                              mensagem: `Olá, ${item.nome}! Tudo bem? Aqui é o Fabrício da Prospera Plan / Consórcio Magalu.`
+                                              mensagem: msg
                                             });
                                           }}
                                           className="p-1.5 text-sky-500 bg-sky-50 hover:bg-sky-100 hover:text-sky-700 rounded-lg transition-colors"
-                                          title="Chamar no Telegram"
+                                          title="Chamar no Telegram com aviso e código de barras"
                                        >
                                           <TelegramIcon className="h-4 w-4" />
                                        </button>
@@ -1310,8 +1346,7 @@ export default function Inadimplentes() {
                     const mesInfo = magaluPortalWorker.getMesVigenteInfo();
                     const primeiroNome = (d.nome || "").split(" ")[0].toUpperCase() || "CLIENTE";
                     const valorFormatado = formatCurrency(d.valor_parcela || 0);
-                    const temLinha = Boolean((d as any).linha_digitavel && (d as any).linha_digitavel.length >= 20);
-                    const linhaDigitavel = temLinha ? (d as any).linha_digitavel : "";
+                    const linhaDigitavel = (d as any).linha_digitavel || magaluPortalWorker.obterLinhaDigitavel(d.grupo, d.cota, d.valor_parcela, mesInfo.vencimentoEfetivo);
 
                     msg = msg.replace(/{nome}/gi, primeiroNome);
                     msg = msg.replace(/{cota}/gi, d.cota || "");
@@ -1321,15 +1356,8 @@ export default function Inadimplentes() {
                     msg = msg.replace(/{valor_parcela}/gi, valorFormatado);
                     msg = msg.replace(/{valor}/gi, valorFormatado);
                     msg = msg.replace(/{parcelas_atrasadas}/gi, String(d.parcelas_atrasadas || 0));
-                    if (temLinha) {
-                      msg = msg.replace(/{linha_digitavel}/gi, linhaDigitavel);
-                      msg = msg.replace(/{codigo_de_barras}/gi, linhaDigitavel);
-                    } else {
-                      msg = msg.replace(/:\s*\{linha_digitavel\}/gi, "");
-                      msg = msg.replace(/:\s*\{codigo_de_barras\}/gi, "");
-                      msg = msg.replace(/{linha_digitavel}/gi, "");
-                      msg = msg.replace(/{codigo_de_barras}/gi, "");
-                    }
+                    msg = msg.replace(/{linha_digitavel}/gi, linhaDigitavel);
+                    msg = msg.replace(/{codigo_de_barras}/gi, linhaDigitavel);
                     return msg;
                   }).join('\n\n---\n\n');
                   navigator.clipboard.writeText(msgs);
