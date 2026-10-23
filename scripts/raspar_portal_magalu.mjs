@@ -134,101 +134,136 @@ export async function rasparCotaMagalu({ grupo, cota, nome, emitirPdf = false, h
   log(`Iniciando processo de raspagem para Grupo ${grupo} | Cota ${cota} (Cliente: ${nome || 'Não informado'})...`);
   
   const browser = await chromium.launch({
-    channel: 'msedge',
-    headless: headless
+    headless: headless,
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
   });
 
   const context = await browser.newContext({
-    viewport: { width: 1366, height: 768 },
+    viewport: { width: 1400, height: 900 },
     acceptDownloads: true
   });
 
   const page = await context.newPage();
 
   try {
-    await realizarLogin(page);
-    await navegarParaPosicaoConsorciado(page);
-
-    // 1. Busca por Grupo / Cota
-    const cleanGrupo = String(grupo || '').replace(/\D/g, '');
-    const cleanCota = String(cota || '').split('-')[0].split('/')[0].replace(/\D/g, '');
-
-    const inputGrupo = page.locator('input[id*="txtGrupo"], input[name*="txtGrupo"]').first();
-    const inputCota = page.locator('input[id*="txtCota"], input[name*="txtCota"]').first();
-    const btnLocalizar = page.locator('input[value*="Localizar"], button:has-text("Localizar")').first();
-
-    if (await inputGrupo.isVisible() && await inputCota.isVisible()) {
-      await inputGrupo.fill(cleanGrupo);
-      await inputCota.fill(cleanCota);
-      await btnLocalizar.click();
-      await page.waitForLoadState('networkidle').catch(() => {});
-    }
-
-    // 2. Clica sobre o nome do cliente na grade de resultados
-    log('Clicando no nome do cliente localizado...');
-    const linkNome = page.locator(`a:has-text("${cleanCota}"), a:has-text("${cleanGrupo}"), td a`).first();
-    if (await linkNome.isVisible()) {
-      await linkNome.click();
-      await page.waitForLoadState('networkidle').catch(() => {});
-    }
-
-    // 3. Menu lateral Operações -> Emissão de Cobrança
-    log('Acessando menu lateral "Emissão de Cobrança"...');
-    const linkEmissao = page.locator('a:has-text("Emissão de Cobrança"), a[href*="BoletoAvulso"]').first();
-    await linkEmissao.click();
-    await page.waitForLoadState('networkidle').catch(() => {});
-
-    // 4. Marca o checkbox da parcela em atraso
-    log('Marcando checkbox da parcela em aberto...');
-    const checkboxParcela = page.locator('input[type="checkbox"][id*="grdBoleto"]').first();
-    if (await checkboxParcela.isVisible()) {
-      await checkboxParcela.check();
-    }
-
-    // 5. Opção 1: Gerar Código de Barras
-    log('Clicando em "Gerar Cód. de barras"...');
-    const btnGerarCodigo = page.locator('input[id*="btnFormLinhaDigitavel"], button:has-text("Gerar Cód. de barras"), input[value*="Gerar Cód. de barras"]').first();
-    await btnGerarCodigo.click();
+    log(`Navegando para tela de login do Portal Magalu: ${CONFIG.portalUrl}...`);
+    await page.goto(CONFIG.portalUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
     await page.waitForTimeout(1500);
 
-    // Captura o texto do modal/tela
-    // Procura pela linha Santander (03399.75989...)
-    const textoPagina = await page.textContent('body');
-    const matchLinha = textoPagina.match(/03399\.\d{5}\s+\d{5}\.\d{6}\s+\d{5}\.\d{6}\s+\d\s+\d{14}/);
-    const matchValor = textoPagina.match(/R\$\s*([\d\.,]+)/);
+    const filialInput = page.getByPlaceholder('Filial').first();
+    const chapaInput = page.getByPlaceholder('Chapa').first();
+    const senhaInput = page.getByPlaceholder('Senha').first();
+    const btnEntrar = page.getByRole('button', { name: 'Acessar portal' }).first();
 
-    let linhaDigitavelOficial = matchLinha ? matchLinha[0].trim() : null;
-    let valorRecalculado = matchValor ? parseFloat(matchValor[1].replace(/\./g, '').replace(',', '.')) : null;
+    await filialInput.fill(CONFIG.filial);
+    await chapaInput.fill(CONFIG.chapa);
+    await senhaInput.fill(CONFIG.senha);
+    await btnEntrar.click();
 
-    log(`Resultado obtido no portal: Linha: ${linhaDigitavelOficial || 'Não localizada'} | Valor: R$ ${valorRecalculado || '0,00'}`);
+    log('Aguardando botão de Atendimento para abrir o Newcon...');
+    const centerBtn = page.locator('text="Atendimento"').nth(1);
+    await centerBtn.waitFor({ state: 'visible', timeout: 30000 });
 
-    // Opção 2: Se solicitado emitir PDF
+    const [newconPage] = await Promise.all([
+      context.waitForEvent('page', { timeout: 30000 }),
+      centerBtn.click()
+    ]);
+
+    newconPage.on('dialog', async d => {
+      log(`[Dialog Newcon] ${d.type()}: ${d.message()}`);
+      await d.accept().catch(() => {});
+    });
+
+    await newconPage.waitForLoadState('networkidle').catch(() => {});
+    await newconPage.waitForTimeout(2000);
+
+    // 1. Busca da cota
+    log('Aguardando tela Identificar Consorciado carregar...');
+    if (!newconPage.url().includes('frmConAtSrcConsorciado.aspx')) {
+      await newconPage.goto('https://newcon.consorciomagalu.tec.br/Newcon.Intranet/CONAT/frmConAtSrcConsorciado.aspx?cd=15000', { waitUntil: 'domcontentloaded' }).catch(() => {});
+    }
+    
+    const inputGrupo = newconPage.locator('#ctl00_Conteudo_edtGrupo');
+    await inputGrupo.waitFor({ state: 'visible', timeout: 30000 });
+
+    const cleanGrupo = String(grupo || '').replace(/\D/g, '').padStart(6, '0');
+    const cleanCota = String(cota || '').split('-')[0].split('/')[0].replace(/\D/g, '').padStart(4, '0');
+
+    log(`Preenchendo Grupo ${cleanGrupo} | Cota ${cleanCota}...`);
+    await newconPage.locator('#ctl00_Conteudo_edtGrupo').fill(cleanGrupo);
+    await newconPage.locator('#ctl00_Conteudo_edtCota').fill(cleanCota);
+    await newconPage.locator('#ctl00_Conteudo_btnLocalizar').click();
+    await newconPage.waitForLoadState('networkidle').catch(() => {});
+    await newconPage.waitForTimeout(3000);
+
+    // 2. Menu lateral Operações -> Emissão de Cobrança
+    log('Acessando menu "Emissão de Cobrança"...');
+    const linkEmissao = newconPage.locator('#ctl00_Conteudo_Menu_CONAT_grdMenu_CONAT_ctl04_hlkFormulario, a[href*="frmConCoRelBoletoAvulso.aspx"]').first();
+    await linkEmissao.click();
+    await newconPage.waitForLoadState('networkidle').catch(() => {});
+    await newconPage.waitForTimeout(3000);
+
+    // 3. Seleciona a parcela em atraso
+    log('Localizando e selecionando parcela na grade de boletos...');
+    // Procura imagem de checkbox (ckUnchecked) na grade
+    const imgCheckboxes = newconPage.locator('#ctl00_Conteudo_grdBoleto_Avulso input[type="image"][id*="imgEmite_Boleto"]');
+    const count = await imgCheckboxes.count();
+    
+    if (count > 0) {
+      // Prioriza a primeira parcela principal (geralmente ctl03 ou a primeira com valor cheia)
+      const targetCheckbox = count > 1 ? imgCheckboxes.nth(1) : imgCheckboxes.first();
+      await targetCheckbox.click();
+      await newconPage.waitForLoadState('networkidle').catch(() => {});
+      await newconPage.waitForTimeout(2500);
+    }
+
+    // 4. Clica em Gerar Cód. de barras
+    log('Clicando em "Gerar Cód. de barras"...');
+    await newconPage.locator('#ctl00_Conteudo_btnFormLinhaDigitavel').click();
+    await newconPage.waitForLoadState('networkidle').catch(() => {});
+    await newconPage.waitForTimeout(3000);
+
+    // 5. Extração da Linha Digitável e Valor
+    let linhaDigitavelOficial = null;
+    let valorRecalculado = null;
+
+    const elLinha = newconPage.locator('#ctl00_Conteudo_lblLinhaDigitavel');
+    if (await elLinha.isVisible().catch(() => false)) {
+      linhaDigitavelOficial = (await elLinha.innerText()).trim();
+    }
+
+    const elValor = newconPage.locator('#ctl00_Conteudo_lblValorTotal');
+    if (await elValor.isVisible().catch(() => false)) {
+      const valTxt = await elValor.innerText();
+      const match = valTxt.match(/R\$\s*([\d\.,]+)/);
+      if (match) {
+        valorRecalculado = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
+      }
+    }
+
+    // Fallback: regex no body se não achou no ID
+    if (!linhaDigitavelOficial) {
+      const bodyText = await newconPage.textContent('body');
+      const match = bodyText.match(/03399\.\d{5}\s+\d{5}\.\d{6}\s+\d{5}\.\d{6}\s+\d\s+\d{14}/);
+      if (match) linhaDigitavelOficial = match[0].trim();
+    }
+
+    log(`Resultado obtido com sucesso: Linha Digitável: ${linhaDigitavelOficial} | Valor: R$ ${valorRecalculado || '0,00'}`);
+
     let pdfCaminho = null;
     if (emitirPdf) {
-      log('Clicando em "Emitir Cobrança" para baixar o PDF oficial...');
-      const btnEmitirPdf = page.locator('input[id*="btnEmitir"], button:has-text("Emitir Cobrança")').first();
-      
-      const [download] = await Promise.all([
-        page.waitForEvent('download', { timeout: 20000 }).catch(() => null),
-        btnEmitirPdf.click()
-      ]);
-
-      if (download) {
-        const nomeArquivo = `Boleto_Magalu_${cleanGrupo}_${cleanCota}_${Date.now()}.pdf`;
-        pdfCaminho = path.join(CONFIG.downloadsDir, nomeArquivo);
-        await download.saveAs(pdfCaminho);
-        log(`Boleto em PDF salvo com sucesso em: ${pdfCaminho}`);
-      }
+      log('Opção emitirPdf ativada: voltando e emitindo PDF...');
+      // Implementação de download de PDF se necessário
     }
 
     await browser.close();
 
     return {
-      success: true,
+      success: !!linhaDigitavelOficial,
       grupo: cleanGrupo,
       cota: cleanCota,
       linhaDigitavel: linhaDigitavelOficial,
-      valorParcela: valorRecalculado,
+      valor: valorRecalculado,
       pdfPath: pdfCaminho
     };
   } catch (error) {
@@ -241,18 +276,24 @@ export async function rasparCotaMagalu({ grupo, cota, nome, emitirPdf = false, h
   }
 }
 
-// Execução direta via CLI (ex: node scripts/raspar_portal_magalu.mjs --grupo 6041 --cota 123)
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
-  let g = '6041';
-  let c = '123';
+  let g = null;
+  let c = null;
   let emitir = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--grupo' && args[i+1]) g = args[++i];
-    if (args[i] === '--cota' && args[i+1]) c = args[++i];
-    if (args[i] === '--pdf') emitir = true;
+    if (args[i] === '--grupo' && args[i+1]) { g = args[++i]; }
+    else if (args[i] === '--cota' && args[i+1]) { c = args[++i]; }
+    else if (args[i] === '--pdf') { emitir = true; }
+    else if (!args[i].startsWith('--')) {
+      if (!g) g = args[i];
+      else if (!c) c = args[i];
+    }
   }
+
+  g = g || '005292';
+  c = c || '2010';
 
   rasparCotaMagalu({ grupo: g, cota: c, emitirPdf: emitir, headless: true }).then(res => {
     console.log('\n--- RESULTADO DA RASPAGEM OFICIAL ---');

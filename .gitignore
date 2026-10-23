@@ -26,6 +26,7 @@ dist-ssr
 # Scripts de debug
 *.cjs
 scratch/
+scripts/scratch_*
 temp_git/
 
 # Outputs de ferramentas

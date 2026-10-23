@@ -117,7 +117,20 @@ export const COTAS_INADIMPLENTES_CONFIRMADAS: Record<string, { valor: number; li
     linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
     parcela: "009", 
     vencimento: "20/10/2026", 
-    nome: "LETICIA MULLER DA VEIGA" 
+  // MARLLON CORREA DA SILVA BELLO (Cota 005292 2010-00 - Raspado e Comprovado no Portal Magalu em 23/10/2026)
+  "5292-2010": {
+    valor: 417.11,
+    linhaDigitavel: "03399.75989 99800.002570 67866.201014 1 16110000041711",
+    parcela: "010",
+    vencimento: "21/09/2026",
+    nome: "MARLLON CORREA DA SILVA BELLO"
+  },
+  "005292-2010": {
+    valor: 417.11,
+    linhaDigitavel: "03399.75989 99800.002570 67866.201014 1 16110000041711",
+    parcela: "010",
+    vencimento: "21/09/2026",
+    nome: "MARLLON CORREA DA SILVA BELLO"
   },
   // SUELI (Cota 0565 / Grupo 5294 - Parcela Outubro em aberto R$ 380,00)
   "5294-565": { 

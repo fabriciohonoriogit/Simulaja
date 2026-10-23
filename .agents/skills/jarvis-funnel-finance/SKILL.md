@@ -43,4 +43,13 @@ This skill provides step-by-step UI instructions for Jarvis to navigate the Cons
    - Ao gerar o código de barras, copiar a linha oficial e colar diretamente no texto humanizado e empático da régua de cobrança preventiva do cliente.
    - NUNCA efetuar cálculos sintéticos ou estimativas: o código deve ser 100% fiel ao raspado/gerado diretamente no portal oficial do Consórcio Magalu.
 
+7. **Execução Automatizada via Script**:
+   - Para raspar automaticamente qualquer cota pelo terminal:
+     ```bash
+     node scripts/raspar_portal_magalu.mjs <grupo> <cota>
+     # Exemplo:
+     node scripts/raspar_portal_magalu.mjs 005292 2010
+     ```
+   - O script retorna um JSON estruturado com `{ success: true, grupo, cota, linhaDigitavel, valor }`.
+
 
