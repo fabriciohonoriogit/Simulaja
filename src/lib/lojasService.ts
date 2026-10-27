@@ -184,6 +184,8 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     origemStr.includes("venda do gestor") ||
     canalStr.includes("gestor") ||
     valorCredito === 200000 ||
+    leadName.includes("elizabeth") ||
+    leadName.includes("elisabeth") ||
     (valorCredito === 50000 && (Boolean(lead.is_venda_gestor) || Boolean(dc.is_venda_gestor) || origemStr.includes("gestor") || canalStr.includes("gestor") || (!filialText.includes("sao mateus") && !vendedorStr.includes("valdinei"))));
 
   if (isGestorSale) {
@@ -321,6 +323,11 @@ export function isLeadIndicacao(lead: any): boolean {
   ).toLowerCase();
 
   const valorCredito = parseBRLValue(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
+
+  // Venda direta do gestor (Elizabeth) não é indicação de loja
+  if (leadNameStr.includes("elizabeth") || leadNameStr.includes("elisabeth")) {
+    return false;
+  }
 
   if (
     indStr.includes("karine") || 

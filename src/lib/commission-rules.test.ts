@@ -156,5 +156,22 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
       expect(matchedLoja).not.toBeNull();
       expect(matchedLoja?.id).toBe("filial-952");
     });
+
+    it("deve atribuir a venda de 20mil da cliente Elizabeth como VENDA DO GESTOR e NÃO da Loja Paranaguá", () => {
+      const leadElizabeth = {
+        nome: "Elizabeth",
+        valor_credito: 20000,
+        cidade: "PARANAGUÁ", // Mesmo que a cidade seja Paranaguá, é venda exclusiva do gestor
+        filial_nome: "PARANAGUÁ"
+      };
+
+      // Não deve ser associada à loja Paranaguá (deve ser nulo para pontuar apenas como gestor)
+      const matchedLoja = matchLeadToLoja(leadElizabeth, MOCK_LOJAS);
+      expect(matchedLoja).toBeNull();
+
+      // Comissão recorrente do gestor: (20.000 * 4%) / 10 = R$ 80,00/mês
+      const comissaoElizabeth = calcularComissaoRecorrenteLead(leadElizabeth);
+      expect(comissaoElizabeth).toBe(80);
+    });
   });
 });

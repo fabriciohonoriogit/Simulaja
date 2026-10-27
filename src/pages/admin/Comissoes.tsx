@@ -130,51 +130,87 @@ export default function Comissoes() {
       } else {
         let currentList = data || [];
         
-        // Auto-provisioning: Se o cliente Doroty (50k e 40k) não estiver na lista de comissões da organização, registra automaticamente
+        // Auto-provisioning: Se o cliente Doroty (50k e 40k) ou Elizabeth (20k) não estiverem corretos na lista, provisiona/corrige como VENDA_GESTOR
         const hasDoroty50k = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("doroty") && Number(c.valor_venda) === 50000);
         const hasDoroty40k = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("doroty") && Number(c.valor_venda) === 40000);
+        const hasElizabeth = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("elizabeth") || (c.cliente_nome || "").toLowerCase().includes("elisabeth"));
 
-        if (!hasDoroty50k || !hasDoroty40k) {
-          const newItems = [];
-          const todayStr = new Date().toISOString().split("T")[0];
-
-          if (!hasDoroty50k) {
-            newItems.push({
-              organizacao_id: profile.organizacao_id,
-              usuario_id: profile.id,
-              cliente_nome: "Doroty",
-              valor_venda: 50000,
+        // Se Elizabeth já existir com regra de indicação/filial, corrige para VENDA_GESTOR
+        for (const item of currentList) {
+          const nomeLow = (item.cliente_nome || "").toLowerCase();
+          if ((nomeLow.includes("elizabeth") || nomeLow.includes("elisabeth")) && item.regra_comissao !== "VENDA_GESTOR") {
+            item.regra_comissao = "VENDA_GESTOR";
+            item.taxa_comissao = 4.0;
+            item.comissao_total = 800;
+            item.parcelas_comissao = 10;
+            supabase.from("comissoes").update({
               regra_comissao: "VENDA_GESTOR",
               taxa_comissao: 4.0,
-              tipo_comissionamento: "LINEAR",
-              comissao_total: 2000,
-              parcelas_comissao: 10,
-              pagamentos_retroativos: 0,
-              data_venda: todayStr,
-              administradora: "MAGALU",
-              parcela_atual: 1,
-              status: "ativo"
-            });
+              comissao_total: 800,
+              parcelas_comissao: 10
+            }).eq("id", item.id).then();
           }
+        }
 
-          if (!hasDoroty40k) {
-            newItems.push({
-              organizacao_id: profile.organizacao_id,
-              usuario_id: profile.id,
-              cliente_nome: "Doroty",
-              valor_venda: 40000,
-              regra_comissao: "INDICACAO_MAGALU",
-              taxa_comissao: 0.8,
-              tipo_comissionamento: "LINEAR",
-              comissao_total: 320,
-              parcelas_comissao: 4,
-              pagamentos_retroativos: 0,
-              data_venda: todayStr,
-              administradora: "MAGALU",
-              parcela_atual: 1,
-              status: "ativo"
-            });
-          }
+        const newItems = [];
+        const todayStr = new Date().toISOString().split("T")[0];
+
+        if (!hasDoroty50k) {
+          newItems.push({
+            organizacao_id: profile.organizacao_id,
+            usuario_id: profile.id,
+            cliente_nome: "Doroty",
+            valor_venda: 50000,
+            regra_comissao: "VENDA_GESTOR",
+            taxa_comissao: 4.0,
+            tipo_comissionamento: "LINEAR",
+            comissao_total: 2000,
+            parcelas_comissao: 10,
+            pagamentos_retroativos: 0,
+            data_venda: todayStr,
+            administradora: "MAGALU",
+            parcela_atual: 1,
+            status: "ativo"
+          });
+        }
+
+        if (!hasDoroty40k) {
+          newItems.push({
+            organizacao_id: profile.organizacao_id,
+            usuario_id: profile.id,
+            cliente_nome: "Doroty",
+            valor_venda: 40000,
+            regra_comissao: "INDICACAO_MAGALU",
+            taxa_comissao: 0.8,
+            tipo_comissionamento: "LINEAR",
+            comissao_total: 320,
+            parcelas_comissao: 4,
+            pagamentos_retroativos: 0,
+            data_venda: todayStr,
+            administradora: "MAGALU",
+            parcela_atual: 1,
+            status: "ativo"
+          });
+        }
+
+        if (!hasElizabeth) {
+          newItems.push({
+            organizacao_id: profile.organizacao_id,
+            usuario_id: profile.id,
+            cliente_nome: "Elizabeth",
+            valor_venda: 20000,
+            regra_comissao: "VENDA_GESTOR",
+            taxa_comissao: 4.0,
+            tipo_comissionamento: "LINEAR",
+            comissao_total: 800,
+            parcelas_comissao: 10,
+            pagamentos_retroativos: 0,
+            data_venda: todayStr,
+            administradora: "MAGALU",
+            parcela_atual: 1,
+            status: "ativo"
+          });
+        }
 
           if (newItems.length > 0) {
             const { data: inserted, error: insErr } = await supabase.from("comissoes").insert(newItems).select("*");
@@ -193,16 +229,15 @@ export default function Comissoes() {
               }
             }
           }
-        }
 
-        setComissoes(currentList);
+          setComissoes(currentList);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   useEffect(() => {
     if (!profile?.organizacao_id) return;
