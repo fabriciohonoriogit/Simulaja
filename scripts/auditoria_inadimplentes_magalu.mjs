@@ -293,15 +293,6 @@ function obterCotasReferenciaVigente() {
   const mesInfo = getMesVigenteInfo();
   return [
     { 
-      nome: 'EMILY OLIVEIRA DA LUZ', 
-      grupo: '6041', 
-      cota: '123', 
-      celular: '11987654321', 
-      valor_parcela: 467.45, 
-      vencimento: '20/10/2026', 
-      linha_digitavel: '03399.75989 99800.002570 64567.501016 8 16090000046745' 
-    },
-    { 
       nome: 'DOROTI KRAUSE', 
       grupo: '005297', 
       cota: '1542', 
@@ -418,7 +409,8 @@ async function consultarPendenciaPortalMagalu(cliente) {
 
   const adimplentesConfirmados = new Set([
     "5296-747", "5296-0747", "005296-0747", // Ana Roberta
-    "6041-552", "6041-0552", "006041-0552"  // Nicoly
+    "6041-552", "6041-0552", "006041-0552", // Nicoly
+    "6041-123", "6041-0123", "006041-0123", "006041-123" // Emily Oliveira da Luz (Outubro quitado, próx vencimento 23/11/2026)
   ]);
 
   if (adimplentesConfirmados.has(cotaKey) || adimplentesConfirmados.has(cotaKeyPad) || cliente.status === "ativo" || cliente.status === "EP OK") {
@@ -601,6 +593,28 @@ async function executarAuditoriaInadimplentes(options = {}) {
         log(`ℹ️ Parcela em aberto ignorada por não ser do mês vigente (Vencimento: ${resultado.vencimento}).`);
       } else {
         log(`✔️ Cota ${c.grupo}/${c.cota} regularizada para a apuração de ${mesInfo.rotuloMesAno}.`);
+      }
+
+      if (!dryRun) {
+        try {
+          const cleanG = String(c.grupo).replace(/\D/g, "");
+          const cleanC = String(c.cota).replace(/\D/g, "");
+          const existentes = await supabaseRest(`inadimplentes?select=id,grupo,cota,status&grupo=like.*${cleanG}*`);
+          const duplicata = (existentes || []).find(e => {
+            const eg = String(e.grupo || "").replace(/\D/g, "");
+            const ec = String(e.cota || "").replace(/\D/g, "");
+            return (eg.endsWith(cleanG) || cleanG.endsWith(eg)) && (ec.endsWith(cleanC) || cleanC.endsWith(ec));
+          });
+          if (duplicata && duplicata.status !== 'regularizado') {
+            await supabaseRest(`inadimplentes?id=eq.${duplicata.id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ status: 'regularizado', parcelas_atrasadas: 0 })
+            });
+            log(`🟢 Cota ${c.grupo}/${c.cota} (${c.nome}) atualizada para REGULARIZADO no CRM!`);
+          }
+        } catch (regErr) {
+          // ignore
+        }
       }
     }
   }

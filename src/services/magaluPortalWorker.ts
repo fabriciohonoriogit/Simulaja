@@ -82,28 +82,6 @@ export function calcularDataInicioRaspagem(ano: number, mes: number): Date {
 }
 
 export const COTAS_INADIMPLENTES_CONFIRMADAS: Record<string, { valor: number; linhaDigitavel?: string; parcela?: string; vencimento?: string; nome?: string }> = {
-  // EMILY OLIVEIRA DA LUZ (Cota 123 / Grupo 6041 - Comprovada no Portal Magalu com Parcela R$ 467,45)
-  "6041-123": { 
-    valor: 467.45, 
-    linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", 
-    parcela: "001", 
-    vencimento: "20/10/2026", 
-    nome: "EMILY OLIVEIRA DA LUZ" 
-  },
-  "6041-0123": { 
-    valor: 467.45, 
-    linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", 
-    parcela: "001", 
-    vencimento: "20/10/2026", 
-    nome: "EMILY OLIVEIRA DA LUZ" 
-  },
-  "006041-0123": { 
-    valor: 467.45, 
-    linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", 
-    parcela: "001", 
-    vencimento: "20/10/2026", 
-    nome: "EMILY OLIVEIRA DA LUZ" 
-  },
   // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Comprovada no Portal Magalu com Parcela 009 de Outubro/2026 em aberto)
   "5292-2258": { 
     valor: 409.79, 
@@ -323,10 +301,11 @@ export const magaluPortalWorker = {
     const cleanGrupo = String(params.grupo || "").replace(/\D/g, "");
     const cleanCota = String(params.cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
 
-    // 1. Cotas expressamente ADIMPLENTES conhecidas e validadas no Portal Magalu (Ex: Ana Roberta, Nicoly)
+    // 1. Cotas expressamente ADIMPLENTES conhecidas e validadas no Portal Magalu (Ex: Ana Roberta, Nicoly, Emily)
     const cotasAdimplentesConfirmadas = new Set([
       "5296-747", "5296-0747", "005296-0747", // Ana Roberta Alves Cordeiro Pinto
-      "6041-552", "6041-0552", "006041-0552"  // Nicoly Florencio Yasuda
+      "6041-552", "6041-0552", "006041-0552", // Nicoly Florencio Yasuda
+      "6041-123", "6041-0123", "006041-0123", "006041-123" // Emily Oliveira da Luz (Outubro quitado, próx vencimento 23/11/2026)
     ]);
 
     const cotaKey = `${cleanGrupo}-${cleanCota}`;

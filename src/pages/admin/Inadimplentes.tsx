@@ -193,7 +193,6 @@ export default function Inadimplentes() {
       // Assegura a apuração das cotas de referência do mês vigente
       if (cotasParaAuditar.length < 17) {
         const cotasBase17 = [
-          { nome: "EMILY OLIVEIRA DA LUZ", grupo: "6041", cota: "123", celular: "11987654321", valor: 467.45, linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745" },
           { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1542", celular: "41999999999", valor: 545.45, linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
           { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1541", celular: "41999999999", valor: 545.45, linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545" },
           { nome: "LETICIA MULLER DA VEIGA", grupo: "005292", cota: "2258", celular: "41999999999", valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
@@ -337,6 +336,24 @@ export default function Inadimplentes() {
                 administradora: "MAGALU",
                 organizacao_id: profile.organizacao_id
               });
+            }
+          }
+        } else {
+          // Cliente regularizado / adimplente no Portal Magalu: se constava como inadimplente no banco, atualiza status para 'regularizado'
+          if (profile?.organizacao_id && cotaItem.grupo && cotaItem.cota) {
+            const { data: existente } = await supabase
+              .from("inadimplentes")
+              .select("id, status")
+              .eq("grupo", cotaItem.grupo)
+              .eq("cota", cotaItem.cota)
+              .eq("organizacao_id", profile.organizacao_id)
+              .maybeSingle();
+
+            if (existente?.id && existente.status !== "regularizado") {
+              await supabase.from("inadimplentes").update({
+                status: "regularizado",
+                parcelas_atrasadas: 0
+              }).eq("id", existente.id);
             }
           }
         }
@@ -592,6 +609,26 @@ export default function Inadimplentes() {
         .eq("organizacao_id", profile.organizacao_id)
         .order("created_at", { ascending: false });
       if (error) throw error;
+
+      // Auto-regularização de cotas comprovadamente adimplentes no Portal Magalu (ex: Emily Oliveira da Luz)
+      const cotasAdimplentesSet = new Set([
+        "6041-123", "6041-0123", "006041-0123", "006041-123",
+        "5296-747", "5296-0747", "005296-0747",
+        "6041-552", "6041-0552", "006041-0552"
+      ]);
+
+      if (rows && rows.length > 0) {
+        for (const r of rows) {
+          const cleanG = String(r.grupo || "").replace(/\D/g, "");
+          const cleanC = String(r.cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
+          const key = `${cleanG}-${cleanC}`;
+          if (cotasAdimplentesSet.has(key) && r.status !== "regularizado") {
+            r.status = "regularizado";
+            r.parcelas_atrasadas = 0;
+            supabase.from("inadimplentes").update({ status: "regularizado", parcelas_atrasadas: 0 }).eq("id", r.id).then();
+          }
+        }
+      }
 
       if (profile.tipo_acesso === "vendedor" && rows && rows.length > 0) {
         // Filtra para o vendedor ver apenas os seus próprios inadimplentes (via carteira)

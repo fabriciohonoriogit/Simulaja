@@ -41,7 +41,8 @@ serve(async (req) => {
       // Cotas com situação NORMAL (Adimplentes comprovadas)
       const cotasAdimplentes = new Set([
         "5296-747", "5296-0747", "005296-0747", // Ana Roberta Alves Cordeiro Pinto
-        "6041-552", "6041-0552", "006041-0552"  // Nicoly Florencio Yasuda
+        "6041-552", "6041-0552", "006041-0552", // Nicoly Florencio Yasuda
+        "6041-123", "6041-0123", "006041-0123", "006041-123" // Emily Oliveira da Luz (Outubro quitado, próx vencimento 23/11/2026)
       ]);
 
       if (cotasAdimplentes.has(cotaKey) || cotasAdimplentes.has(cotaKeyPad)) {
@@ -92,10 +93,6 @@ serve(async (req) => {
         "5294-0565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
         "005294-0565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
         "005294-565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
-        // EMILY OLIVEIRA DA LUZ (Cota 123 / Grupo 6041 - Parcela Outubro R$ 467,45 Oficial Portal Magalu)
-        "6041-123": { valor: 467.45, linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", nome: "EMILY OLIVEIRA DA LUZ" },
-        "6041-0123": { valor: 467.45, linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", nome: "EMILY OLIVEIRA DA LUZ" },
-        "006041-0123": { valor: 467.45, linhaDigitavel: "03399.75989 99800.002570 64567.501016 8 16090000046745", nome: "EMILY OLIVEIRA DA LUZ" },
         "5272-191": { valor: 281.20 },
         "5272-0191": { valor: 281.20 },
         "6037-624": { valor: 544.00 },

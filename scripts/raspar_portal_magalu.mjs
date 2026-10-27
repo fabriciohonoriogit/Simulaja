@@ -203,19 +203,97 @@ export async function rasparCotaMagalu({ grupo, cota, nome, emitirPdf = false, h
     await newconPage.waitForLoadState('networkidle').catch(() => {});
     await newconPage.waitForTimeout(3000);
 
-    // 3. Seleciona a parcela em atraso
-    log('Localizando e selecionando parcela na grade de boletos...');
-    // Procura imagem de checkbox (ckUnchecked) na grade
-    const imgCheckboxes = newconPage.locator('#ctl00_Conteudo_grdBoleto_Avulso input[type="image"][id*="imgEmite_Boleto"]');
-    const count = await imgCheckboxes.count();
-    
-    if (count > 0) {
-      // Prioriza a primeira parcela principal (geralmente ctl03 ou a primeira com valor cheia)
-      const targetCheckbox = count > 1 ? imgCheckboxes.nth(1) : imgCheckboxes.first();
-      await targetCheckbox.click();
-      await newconPage.waitForLoadState('networkidle').catch(() => {});
-      await newconPage.waitForTimeout(2500);
+    // 3. Inspeção e Análise Estrita das Pendências na grade
+    log('Inspecionando grade de pendências (#ctl00_Conteudo_grdBoleto_Avulso)...');
+    const parcelas = await newconPage.evaluate(() => {
+      const table = document.querySelector('#ctl00_Conteudo_grdBoleto_Avulso');
+      if (!table) return [];
+      const rows = Array.from(table.querySelectorAll('tr'));
+      return rows.map((tr, index) => {
+        const tds = Array.from(tr.querySelectorAll('td'));
+        if (tds.length < 8) return null;
+        const img = tr.querySelector('input[type="image"][id*="imgEmite_Boleto"], input[type="checkbox"]');
+        const cota = tds[1]?.innerText?.trim() || '';
+        const pcl = tds[2]?.innerText?.trim() || '';
+        const historico = tds[3]?.innerText?.trim() || '';
+        const vencimento = tds[4]?.innerText?.trim() || '';
+        const valStr = tds[5]?.innerText?.trim() || '0,00';
+        const multaStr = tds[6]?.innerText?.trim() || '0,00';
+        const jurosStr = tds[7]?.innerText?.trim() || '0,00';
+        const vlDevidoStr = tds[8]?.innerText?.trim() || '0,00';
+
+        const parseNum = (s) => parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+
+        return {
+          rowIndex: index,
+          checkboxId: img ? img.id : null,
+          cota,
+          pcl,
+          historico,
+          vencimento,
+          valor: parseNum(valStr),
+          multa: parseNum(multaStr),
+          juros: parseNum(jurosStr),
+          vlDevido: parseNum(vlDevidoStr)
+        };
+      }).filter(Boolean);
+    });
+
+    log(`Total de linhas na grade de pendências: ${parcelas.length}`);
+    for (const p of parcelas) {
+      log(` -> Pcl ${p.pcl} | Venc: ${p.vencimento} | Valor: R$ ${p.valor} | Multa: R$ ${p.multa} | Juros: R$ ${p.juros} | Total: R$ ${p.vlDevido}`);
     }
+
+    // Função de validação se a data de vencimento já expirou (em relação a hoje)
+    const agora = new Date();
+    agora.setHours(23, 59, 59, 999);
+
+    function parseDataBR(dataStr) {
+      if (!dataStr) return null;
+      const parts = dataStr.trim().split('/');
+      if (parts.length !== 3) return null;
+      return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10), 23, 59, 59);
+    }
+
+    // Apenas parcelas com data de vencimento expirada (< hoje) ou com encargos (multa/juros > 0) são atrasadas
+    const parcelasAtrasadas = parcelas.filter(p => {
+      const dt = parseDataBR(p.vencimento);
+      const estaVencida = dt && dt.getTime() < Date.now();
+      const temEncargos = p.multa > 0 || p.juros > 0;
+      return estaVencida || temEncargos;
+    });
+
+    // Se NÃO houver nenhuma parcela atrasada, o consorciado está regularizado / adimplente!
+    if (parcelasAtrasadas.length === 0) {
+      const proxVenc = parcelas[0]?.vencimento || 'Mês futuro';
+      log(`✔️ Cota ${cleanGrupo}/${cleanCota} (${nome || 'Consorciado'}) NÃO POSSUI PARCELAS EM ATRASO!`);
+      log(`Todas as pendências listadas no portal são parcelas futuras a vencer (Próximo vencimento: ${proxVenc}). Cliente Adimplente.`);
+      await browser.close();
+      return {
+        success: true,
+        adimplente: true,
+        temPendencia: false,
+        grupo: cleanGrupo,
+        cota: cleanCota,
+        valor: 0,
+        proximoVencimento: proxVenc,
+        linhaDigitavel: null,
+        mensagem: `Cliente adimplente no Portal Magalu. Nenhuma parcela vencida em aberto. Próxima parcela em ${proxVenc}.`
+      };
+    }
+
+    // Se houver parcela atrasada, seleciona a principal (prioriza parcela cheia sobre diferença)
+    const target = parcelasAtrasadas.find(p => p.pcl !== 'DIF') || parcelasAtrasadas[0];
+    log(`⚠️ Parcela em atraso detectada: Pcl ${target.pcl} com vencimento em ${target.vencimento} no valor de R$ ${target.vlDevido}. Selecionando para emissão...`);
+
+    if (target.checkboxId) {
+      await newconPage.locator(`#${target.checkboxId}`).click();
+    } else {
+      const imgCheckboxes = newconPage.locator('#ctl00_Conteudo_grdBoleto_Avulso input[type="image"][id*="imgEmite_Boleto"]');
+      await imgCheckboxes.nth(target.rowIndex).click();
+    }
+    await newconPage.waitForLoadState('networkidle').catch(() => {});
+    await newconPage.waitForTimeout(2500);
 
     // 4. Clica em Gerar Cód. de barras
     log('Clicando em "Gerar Cód. de barras"...');
@@ -248,7 +326,7 @@ export async function rasparCotaMagalu({ grupo, cota, nome, emitirPdf = false, h
       if (match) linhaDigitavelOficial = match[0].trim();
     }
 
-    log(`Resultado obtido com sucesso: Linha Digitável: ${linhaDigitavelOficial} | Valor: R$ ${valorRecalculado || '0,00'}`);
+    log(`Resultado obtido com sucesso: Linha Digitável: ${linhaDigitavelOficial} | Valor: R$ ${valorRecalculado || target.vlDevido}`);
 
     let pdfCaminho = null;
     if (emitirPdf) {
@@ -260,10 +338,14 @@ export async function rasparCotaMagalu({ grupo, cota, nome, emitirPdf = false, h
 
     return {
       success: !!linhaDigitavelOficial,
+      adimplente: false,
+      temPendencia: true,
       grupo: cleanGrupo,
       cota: cleanCota,
       linhaDigitavel: linhaDigitavelOficial,
-      valor: valorRecalculado,
+      valor: valorRecalculado || target.vlDevido,
+      vencimento: target.vencimento,
+      parcela: target.pcl,
       pdfPath: pdfCaminho
     };
   } catch (error) {
@@ -271,6 +353,8 @@ export async function rasparCotaMagalu({ grupo, cota, nome, emitirPdf = false, h
     await browser.close().catch(() => {});
     return {
       success: false,
+      adimplente: null,
+      temPendencia: null,
       error: error.message
     };
   }
