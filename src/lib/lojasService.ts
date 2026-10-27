@@ -202,6 +202,12 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     dc.filial_codigo || dc.codigo_filial || dc.filial_id || dc.loja_id || dc.unidade_id || ""
   ).trim();
 
+  // A Loja Paranaguá (952) não tem nenhuma venda até o momento (venda é única do gestor)
+  const isParanaguaDirect = codDirect === "952" || filialText.includes("paranagua") || filialText.includes("952");
+  if (isParanaguaDirect && isClosedStatus(lead.status, lead)) {
+    return null; // Vendas em Paranaguá pertencem 100% ao gestor, sem participação da loja
+  }
+
   if (codDirect && codDirect !== "none") {
     const matched = lojas.find(l => 
       String(l.codigo) === codDirect || 
@@ -581,19 +587,23 @@ export function calculateLojasPerformance(
     // Cálculo 100% dinâmico do desempenho da loja com base nos leads do mês/período
     const leadsFechadosPeriodo = storeLeads.filter(l => isClosedStatus(l.status, l) && !((l as any).origem === "carteira_shadow") && isLeadInTimeFrame(l, timeFrame, customRange));
     const leadsFechadosMes = storeLeads.filter(l => isClosedStatus(l.status, l) && !((l as any).origem === "carteira_shadow") && isVendaRealizadaNoMes(l, currentMonthStr));
-    const realizadoPeriodo = leadsFechadosPeriodo.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
-    const realizadoMensal = leadsFechadosMes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
-    const closedLeadsCount = leadsFechadosPeriodo.length;
-    const closedIndicacoes = leadsFechadosPeriodo.filter(isLeadIndicacao);
-    let closedIndicacoesCount = closedIndicacoes.length;
-    let realizadoIndicacoes = closedIndicacoes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    
+    // REGRA DE NEGÓCIO: Paranaguá (952) NÃO TEM NENHUMA VENDA até o momento (venda de 20k é única do Gestor)
+    const leadsFechadosPeriodoFinal = isParanagua ? [] : leadsFechadosPeriodo;
+    const leadsFechadosMesFinal = isParanagua ? [] : leadsFechadosMes;
+    const realizadoPeriodo = isParanagua ? 0 : leadsFechadosPeriodoFinal.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    const realizadoMensal = isParanagua ? 0 : leadsFechadosMesFinal.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
+    const closedLeadsCount = isParanagua ? 0 : leadsFechadosPeriodoFinal.length;
+    const closedIndicacoes = isParanagua ? [] : leadsFechadosPeriodoFinal.filter(isLeadIndicacao);
+    let closedIndicacoesCount = isParanagua ? 0 : closedIndicacoes.length;
+    let realizadoIndicacoes = isParanagua ? 0 : closedIndicacoes.reduce((acc, l) => acc + parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0), 0);
 
     const realizadoUsado = realizadoPeriodo;
-    const leadsFechadosUsados = storeLeads.filter(l => isClosedStatus(l.status, l));
+    const leadsFechadosUsados = isParanagua ? [] : storeLeads.filter(l => isClosedStatus(l.status, l));
 
     const metaPeriodo = Math.round(loja.metaMensal * periodFactor);
-    const atingimentoPeriodo = metaPeriodo > 0 ? (realizadoUsado / metaPeriodo) * 100 : 0;
-    const atingimentoMensal = loja.metaMensal > 0 ? (realizadoMensal / loja.metaMensal) * 100 : 0;
+    const atingimentoPeriodo = isParanagua ? 0 : (metaPeriodo > 0 ? (realizadoUsado / metaPeriodo) * 100 : 0);
+    const atingimentoMensal = isParanagua ? 0 : (loja.metaMensal > 0 ? (realizadoMensal / loja.metaMensal) * 100 : 0);
 
     const faltanteMensal = Math.max(0, loja.metaMensal - realizadoMensal);
     const superavitMensal = Math.max(0, realizadoMensal - loja.metaMensal);
@@ -629,12 +639,12 @@ export function calculateLojasPerformance(
     }
 
     const totalLeadsPeriodo = storeLeadsNoPeriodo.length;
-    const taxaConversaoGeral = totalLeadsPeriodo > 0 ? (closedLeadsCount / totalLeadsPeriodo) * 100 : 0;
-    const taxaConversaoIndicacoes = totalIndicacoes > 0 ? (closedIndicacoesCount / totalIndicacoes) * 100 : 0;
+    const taxaConversaoGeral = isParanagua || totalLeadsPeriodo === 0 ? 0 : (closedLeadsCount / totalLeadsPeriodo) * 100;
+    const taxaConversaoIndicacoes = isParanagua || totalIndicacoes === 0 ? 0 : (closedIndicacoesCount / totalIndicacoes) * 100;
     
     const otherLeadsCount = Math.max(0, totalLeadsPeriodo - totalIndicacoes);
     const closedOtherLeadsCount = Math.max(0, closedLeadsCount - closedIndicacoesCount);
-    const taxaConversaoOutros = otherLeadsCount > 0 ? (closedOtherLeadsCount / otherLeadsCount) * 100 : 0;
+    const taxaConversaoOutros = isParanagua || otherLeadsCount === 0 ? 0 : (closedOtherLeadsCount / otherLeadsCount) * 100;
 
     const percentualVolumeIndicacao = realizadoUsado > 0 ? (realizadoIndicacoes / realizadoUsado) * 100 : 0;
 

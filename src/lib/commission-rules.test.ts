@@ -173,12 +173,16 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
       const comissaoElizabeth = calcularComissaoRecorrenteLead(leadElizabeth);
       expect(comissaoElizabeth).toBe(80);
 
-      // No desempenho da loja Paranaguá, as vendas fechadas devem ser 0
+      // No desempenho da loja Paranaguá, as vendas fechadas devem ser 0 e a conversão deve ser 0%
       const { lojasMetrics } = calculateLojasPerformance([
-        { ...leadElizabeth, status: "venda_fechada", created_at: new Date().toISOString() }
+        { ...leadElizabeth, status: "venda_fechada", created_at: new Date().toISOString() },
+        { nome: "Lead Aberto Paranagua", valor_credito: 10000, cidade: "PARANAGUÁ", filial_nome: "PARANAGUÁ", status: "novo", created_at: new Date().toISOString() }
       ], MOCK_LOJAS);
       const paranaguaMetric = lojasMetrics.find(m => m.loja.id === "filial-952");
       expect(paranaguaMetric?.realizado).toBe(0);
+      expect(paranaguaMetric?.closedLeadsCount).toBe(0);
+      expect(paranaguaMetric?.taxaConversaoGeral).toBe(0);
+      expect(paranaguaMetric?.ticketMedio).toBe(0);
     });
   });
 });
