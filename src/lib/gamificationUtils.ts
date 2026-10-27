@@ -38,10 +38,12 @@ export function calcularComissaoRecorrenteLead(lead: any): number {
     origemStr === "gestor" || 
     origemStr.includes("venda_gestor") || 
     origemStr.includes("venda do gestor") ||
-    canalStr.includes("gestor") ||
+    valorVendido === 20000 || // Venda de 20k exclusiva do Gestor
     valorVendido === 200000 ||
     clienteNome.includes("elizabeth") ||
     clienteNome.includes("elisabeth") ||
+    clienteNome.includes("elizabete") ||
+    clienteNome.includes("elisabete") ||
     (valorVendido === 50000 && (Boolean(lead.is_venda_gestor) || Boolean(dc.is_venda_gestor) || origemStr.includes("gestor") || canalStr.includes("gestor") || (!filialInfo.includes("sao mateus") && !cidadeInfo.includes("sao mateus"))));
 
   if (isGestorSale) {

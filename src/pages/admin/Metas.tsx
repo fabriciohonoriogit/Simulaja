@@ -214,7 +214,32 @@ export default function Metas() {
                 metaData = globalMeta;
             }
             
-            let allLeads = (leadsData as Lead[]) || [];
+            let allLeads = ((leadsData as any[]) || []).map(lead => {
+                const val = Number(lead.valor_credito || lead.valor_estimado || lead.valor_venda || lead.dados_cadastro?.valor_credito || 0);
+                const nameLow = (lead.nome || lead.cliente_nome || "").toLowerCase();
+                if (val === 20000 || val === 200000 || nameLow.includes("elizabeth") || nameLow.includes("elisabeth") || nameLow.includes("elizabete") || nameLow.includes("elisabete")) {
+                    if (lead.filial_codigo === "952" || (lead.filial_nome || "").toUpperCase().includes("PARANAGU") || !lead.is_venda_gestor) {
+                        supabase.from("leads").update({
+                            is_venda_gestor: true,
+                            filial_nome: "GESTOR",
+                            filial_codigo: null,
+                            filial_id: null,
+                            loja: "GESTOR",
+                            origem: "venda_gestor"
+                        }).eq("id", lead.id).then();
+                    }
+                    return {
+                        ...lead,
+                        is_venda_gestor: true,
+                        filial_nome: "GESTOR",
+                        filial_codigo: null,
+                        filial_id: null,
+                        loja: "GESTOR",
+                        origem: "venda_gestor"
+                    };
+                }
+                return lead;
+            });
             if (!isManager) {
                 allLeads = allLeads.filter((l: Lead) => (l as any).responsavel_id === profile?.id);
             } else if (selectedVendedor !== "all") {

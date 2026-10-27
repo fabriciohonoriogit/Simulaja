@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calcularComissaoRecorrenteLead } from "./gamificationUtils";
-import { matchLeadToLoja } from "./lojasService";
+import { matchLeadToLoja, calculateLojasPerformance } from "./lojasService";
 import { LojaConfig } from "@/constants/lojas";
 
 const MOCK_LOJAS: LojaConfig[] = [
@@ -172,6 +172,13 @@ describe("Regras de Comissionamento e Vendas de Gestor vs Loja", () => {
       // Comissão recorrente do gestor: (20.000 * 4%) / 10 = R$ 80,00/mês
       const comissaoElizabeth = calcularComissaoRecorrenteLead(leadElizabeth);
       expect(comissaoElizabeth).toBe(80);
+
+      // No desempenho da loja Paranaguá, as vendas fechadas devem ser 0
+      const { lojasMetrics } = calculateLojasPerformance([
+        { ...leadElizabeth, status: "venda_fechada", created_at: new Date().toISOString() }
+      ], MOCK_LOJAS);
+      const paranaguaMetric = lojasMetrics.find(m => m.loja.id === "filial-952");
+      expect(paranaguaMetric?.realizado).toBe(0);
     });
   });
 });

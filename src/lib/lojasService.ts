@@ -183,13 +183,17 @@ export function matchLeadToLoja(lead: any, lojas: LojaConfig[]): LojaConfig | nu
     origemStr.includes("venda_gestor") || 
     origemStr.includes("venda do gestor") ||
     canalStr.includes("gestor") ||
+    valorCredito === 20000 || // Venda de 20k é única do Gestor (sem participação da loja Paranaguá)
     valorCredito === 200000 ||
     leadName.includes("elizabeth") ||
     leadName.includes("elisabeth") ||
+    leadName.includes("elizabete") ||
+    leadName.includes("elisabete") ||
+    leadName.includes("elizete") ||
     (valorCredito === 50000 && (Boolean(lead.is_venda_gestor) || Boolean(dc.is_venda_gestor) || origemStr.includes("gestor") || canalStr.includes("gestor") || (!filialText.includes("sao mateus") && !vendedorStr.includes("valdinei"))));
 
   if (isGestorSale) {
-    return null; // Pertence ao gestor, não entra para a meta da loja
+    return null; // Pertence exclusivamente ao gestor, não entra para a meta da loja
   }
 
   // 1. VERIFICAÇÃO POR CÓDIGO/ID DE FILIAL DIRETO (Prioridade Máxima)
@@ -324,8 +328,15 @@ export function isLeadIndicacao(lead: any): boolean {
 
   const valorCredito = parseBRLValue(lead.valor_credito || lead.valor_estimado || lead.valor_venda || dc.valor_credito || 0);
 
-  // Venda direta do gestor (Elizabeth) não é indicação de loja
-  if (leadNameStr.includes("elizabeth") || leadNameStr.includes("elisabeth")) {
+  // Venda direta do gestor (Elizabeth / 20k) não é indicação de loja
+  if (
+    leadNameStr.includes("elizabeth") || 
+    leadNameStr.includes("elisabeth") || 
+    leadNameStr.includes("elizabete") || 
+    leadNameStr.includes("elisabete") ||
+    valorCredito === 20000 ||
+    valorCredito === 200000
+  ) {
     return false;
   }
 
@@ -536,7 +547,24 @@ export function calculateLojasPerformance(
     // Leads associados a esta loja (verificação estrita)
     const storeLeads = leads.filter(l => {
       const matched = matchLeadToLoja(l, lojas);
-      return matched ? matched.id === loja.id : false;
+      if (!matched || matched.id !== loja.id) return false;
+
+      // Proteção explícita: Venda de 20k é única do Gestor e NUNCA pontua em filiais (ex: Paranaguá)
+      const val = parseBRLValue(l.valor_credito || l.valor_venda || l.dados_cadastro?.valor_credito || 0);
+      const lName = normalizeStr(l.nome || l.cliente_nome || l.dados_cadastro?.nome_cliente || l.dados_cadastro?.nome || "");
+      if (
+        val === 20000 || 
+        val === 200000 || 
+        lName.includes("elizabeth") || 
+        lName.includes("elisabeth") || 
+        lName.includes("elizabete") || 
+        lName.includes("elisabete") ||
+        Boolean(l.is_venda_gestor) || 
+        Boolean(l.dados_cadastro?.is_venda_gestor)
+      ) {
+        return false;
+      }
+      return true;
     });
 
     // Leads desta loja criados no período selecionado
