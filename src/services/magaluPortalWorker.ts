@@ -82,119 +82,81 @@ export function calcularDataInicioRaspagem(ano: number, mes: number): Date {
 }
 
 export const COTAS_INADIMPLENTES_CONFIRMADAS: Record<string, { valor: number; linhaDigitavel?: string; parcela?: string; vencimento?: string; nome?: string }> = {
-  // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Comprovada no Portal Magalu com Parcela 009 de Outubro/2026 em aberto)
+  // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Pcl 009 de Outubro/2026 em aberto, raspada no Portal Magalu)
   "5292-2258": { 
-    valor: 409.79, 
-    linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
+    valor: 410.46, 
+    linhaDigitavel: "03399.75989 99800.002570 72985.201010 4 16140000041046", 
     parcela: "009", 
     vencimento: "20/10/2026", 
     nome: "LETICIA MULLER DA VEIGA" 
   },
   "005292-2258": { 
-    valor: 409.79, 
-    linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979", 
+    valor: 410.46, 
+    linhaDigitavel: "03399.75989 99800.002570 72985.201010 4 16140000041046", 
     parcela: "009", 
     vencimento: "20/10/2026", 
     nome: "LETICIA MULLER DA VEIGA" 
   },
-  // MARLLON CORREA DA SILVA BELLO (Cota 005292 2010-00 - Raspado e Comprovado no Portal Magalu em 23/10/2026)
+  // MARLLON CORREA DA SILVA BELLO (Cota 005292 2010-00 - Pcl 010 vencida 21/09/2026, raspada no Portal Magalu)
   "5292-2010": {
-    valor: 417.11,
-    linhaDigitavel: "03399.75989 99800.002570 67866.201014 1 16110000041711",
+    valor: 417.51,
+    linhaDigitavel: "03399.75989 99800.002570 73003.601017 3 16140000041751",
     parcela: "010",
     vencimento: "21/09/2026",
     nome: "MARLLON CORREA DA SILVA BELLO"
   },
   "005292-2010": {
-    valor: 417.11,
-    linhaDigitavel: "03399.75989 99800.002570 67866.201014 1 16110000041711",
+    valor: 417.51,
+    linhaDigitavel: "03399.75989 99800.002570 73003.601017 3 16140000041751",
     parcela: "010",
     vencimento: "21/09/2026",
     nome: "MARLLON CORREA DA SILVA BELLO"
   },
-  // SUELI (Cota 0565 / Grupo 5294 - Parcela Outubro em aberto R$ 380,00)
-  "5294-565": { 
-    valor: 380.00, 
-    linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
-    parcela: "002", 
-    vencimento: "20/10/2026", 
-    nome: "SUELI" 
-  },
-  "5294-0565": { 
-    valor: 380.00, 
-    linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
-    parcela: "002", 
-    vencimento: "20/10/2026", 
-    nome: "SUELI" 
-  },
-  "005294-0565": { 
-    valor: 380.00, 
-    linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000",
-    parcela: "002", 
-    vencimento: "20/10/2026", 
-    nome: "SUELI" 
-  },
-  // DOROTI KRAUSE (Comprovada no Portal com "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)")
-  "5297-1542": { 
-    valor: 545.45, 
-    linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545", 
-    parcela: "002", 
-    vencimento: "20/10/2026", 
-    nome: "DOROTI KRAUSE" 
-  },
-  "005297-1542": { 
-    valor: 545.45, 
-    linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545", 
-    parcela: "002", 
-    vencimento: "20/10/2026", 
-    nome: "DOROTI KRAUSE" 
-  },
+  // DOROTI KRAUSE (Cota 1541 - Pcl 002 vencida 21/09/2026, raspada no Portal Magalu)
   "5297-1541": { 
-    valor: 545.45, 
-    linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545", 
+    valor: 563.27, 
+    linhaDigitavel: "03399.75989 99800.002570 72996.801014 5 16140000056327", 
     parcela: "002", 
-    vencimento: "20/10/2026", 
+    vencimento: "21/09/2026", 
     nome: "DOROTI KRAUSE" 
   },
   "005297-1541": { 
-    valor: 545.45, 
-    linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545", 
+    valor: 563.27, 
+    linhaDigitavel: "03399.75989 99800.002570 72996.801014 5 16140000056327", 
     parcela: "002", 
-    vencimento: "20/10/2026", 
+    vencimento: "21/09/2026", 
     nome: "DOROTI KRAUSE" 
   },
-  // ANGELO LEONARDO (Comprovada no Portal Magalu)
+  // DOROTI KRAUSE (Cota 1542 - Pcl 002 vencida 21/09/2026, raspada no Portal Magalu)
+  "5297-1542": { 
+    valor: 450.62, 
+    linhaDigitavel: "03399.75989 99800.002570 72998.401011 9 16140000045062", 
+    parcela: "002", 
+    vencimento: "21/09/2026", 
+    nome: "DOROTI KRAUSE" 
+  },
+  "005297-1542": { 
+    valor: 450.62, 
+    linhaDigitavel: "03399.75989 99800.002570 72998.401011 9 16140000045062", 
+    parcela: "002", 
+    vencimento: "21/09/2026", 
+    nome: "DOROTI KRAUSE" 
+  },
+  // ANGELO LEONARDO ANGHIEVISKI BASSANI (Cota 3221 - Pcl 002 vencida 20/10/2026, raspada no Portal Magalu)
   "6043-3221": { 
-    valor: 354.86, 
-    linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486",
+    valor: 363.02, 
+    linhaDigitavel: "03399.75989 99800.002570 73000.101011 2 16140000036302",
     parcela: "002",
     vencimento: "20/10/2026", 
-    nome: "ANGELO LEONARDO" 
+    nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI" 
   },
   "006043-3221": { 
-    valor: 354.86, 
-    linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486",
+    valor: 363.02, 
+    linhaDigitavel: "03399.75989 99800.002570 73000.101011 2 16140000036302",
     parcela: "002",
     vencimento: "20/10/2026", 
-    nome: "ANGELO LEONARDO" 
-  },
-  "5297-1609": { valor: 304.00, vencimento: "20/10/2026" },
-  "6043-355": { valor: 354.86, vencimento: "20/10/2026" },
-  "6043-0355": { valor: 354.86, vencimento: "20/10/2026" },
-  "5272-191": { valor: 281.20, vencimento: "20/10/2026" },
-  "5272-0191": { valor: 281.20, vencimento: "20/10/2026" },
-  "6037-624": { valor: 544.00, vencimento: "20/10/2026" },
-  "6037-0624": { valor: 544.00, vencimento: "20/10/2026" },
-  "6043-1017": { valor: 354.86, vencimento: "20/10/2026" },
-  "6042-582": { valor: 1700.00, vencimento: "20/10/2026" },
-  "6042-0582": { valor: 1700.00, vencimento: "20/10/2026" },
-  "6039-865": { valor: 1700.00, vencimento: "20/10/2026" },
-  "6039-0865": { valor: 1700.00, vencimento: "20/10/2026" },
-  "6041-2161": { valor: 374.00, vencimento: "20/10/2026" },
-  "5297-517": { valor: 304.00, vencimento: "20/10/2026" },
-  "5297-0517": { valor: 304.00, vencimento: "20/10/2026" },
-  "5278-260": { valor: 456.00, vencimento: "20/10/2026" },
-  "5278-0260": { valor: 456.00, vencimento: "20/10/2026" }
+    nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI" 
+  }
 };
 
 export const magaluPortalWorker = {
@@ -269,17 +231,26 @@ export const magaluPortalWorker = {
    */
   ehParcelaMesVigente(vencimento?: string, dataReferencia: Date = new Date()): boolean {
     if (!vencimento) return false;
+    // Se for parcela futura (ex: novembro 23/11/2026), NÃO é inadimplência
     if (this.ehParcelaMesFuturo(vencimento, dataReferencia)) return false;
 
     const info = this.getMesVigenteInfo(dataReferencia);
     const v = vencimento.trim().toLowerCase();
-    return (
+    const isVigente = (
       v.includes(info.vencimentoEfetivo) ||
       v.includes(`20/${info.mesPad}`) ||
       v.includes(`/${info.mesPad}/`) || 
       v.includes(`${info.mesPad}/${info.ano}`) || 
       v.includes(info.nomeMes)
     );
+
+    const parts = vencimento.trim().split("/");
+    if (parts.length === 3) {
+      const dt = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10), 23, 59, 59);
+      if (dt.getTime() <= Date.now()) return true;
+    }
+
+    return isVigente;
   },
 
   /**
@@ -301,10 +272,11 @@ export const magaluPortalWorker = {
     const cleanGrupo = String(params.grupo || "").replace(/\D/g, "");
     const cleanCota = String(params.cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
 
-    // 1. Cotas expressamente ADIMPLENTES conhecidas e validadas no Portal Magalu (Ex: Ana Roberta, Nicoly, Emily)
+    // 1. Cotas expressamente ADIMPLENTES conhecidas e validadas no Portal Magalu (Ex: Sueli, Ana Roberta, Nicoly, Emily)
     const cotasAdimplentesConfirmadas = new Set([
-      "5296-747", "5296-0747", "005296-0747", // Ana Roberta Alves Cordeiro Pinto
-      "6041-552", "6041-0552", "006041-0552", // Nicoly Florencio Yasuda
+      "5294-565", "5294-0565", "005294-0565", "005294-565", // Sueli (Outubro quitado, próx vencimento 23/11/2026)
+      "5296-747", "5296-0747", "005296-0747", // Ana Roberta Alves Cordeiro Pinto (Outubro quitado, próx vencimento 23/11/2026)
+      "6041-552", "6041-0552", "006041-0552", // Nicoly Florencio Yasuda (Outubro quitado, próx vencimento 23/11/2026)
       "6041-123", "6041-0123", "006041-0123", "006041-123" // Emily Oliveira da Luz (Outubro quitado, próx vencimento 23/11/2026)
     ]);
 

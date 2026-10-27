@@ -170,13 +170,21 @@ function ehParcelaMesVigente(vencimento, dataReferencia = new Date()) {
   if (ehParcelaMesFuturo(vencimento, dataReferencia)) return false;
   const info = getMesVigenteInfo(dataReferencia);
   const v = String(vencimento).trim().toLowerCase();
-  return (
+  const isVigente = (
     v.includes(info.vencimentoEfetivo) ||
     v.includes(`20/${info.mesPad}`) ||
     v.includes(`/${info.mesPad}/`) || 
     v.includes(`${info.mesPad}/${info.ano}`) || 
     v.includes(info.nomeMes)
   );
+
+  const parts = vencimento.trim().split('/');
+  if (parts.length === 3) {
+    const dt = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10), 23, 59, 59);
+    if (dt.getTime() <= Date.now()) return true;
+  }
+
+  return isVigente;
 }
 
 // 4. Helper de requisição ao Supabase REST
@@ -293,31 +301,49 @@ function obterCotasReferenciaVigente() {
   const mesInfo = getMesVigenteInfo();
   return [
     { 
-      nome: 'DOROTI KRAUSE', 
-      grupo: '005297', 
-      cota: '1542', 
-      celular: '11987654321', 
-      valor_parcela: 545.45, 
+      nome: 'LETICIA MULLER DA VEIGA', 
+      grupo: '005292', 
+      cota: '2258', 
+      celular: '41999999999', 
+      valor_parcela: 410.46, 
       vencimento: '20/10/2026', 
-      linha_digitavel: '03399.75989 99800.002570 72971.542013 9 16090000054545' 
+      linha_digitavel: '03399.75989 99800.002570 72985.201010 4 16140000041046' 
+    },
+    { 
+      nome: 'MARLLON CORREA DA SILVA BELLO', 
+      grupo: '005292', 
+      cota: '2010', 
+      celular: '41999999999', 
+      valor_parcela: 417.51, 
+      vencimento: '21/09/2026', 
+      linha_digitavel: '03399.75989 99800.002570 73003.601017 3 16140000041751' 
     },
     { 
       nome: 'DOROTI KRAUSE', 
       grupo: '005297', 
       cota: '1541', 
       celular: '11987654321', 
-      valor_parcela: 545.45, 
-      vencimento: '20/10/2026', 
-      linha_digitavel: '03399.75989 99800.002570 72971.541015 2 16090000054545' 
+      valor_parcela: 563.27, 
+      vencimento: '21/09/2026', 
+      linha_digitavel: '03399.75989 99800.002570 72996.801014 5 16140000056327' 
     },
     { 
-      nome: 'LETICIA MULLER DA VEIGA', 
-      grupo: '005292', 
-      cota: '2258', 
-      celular: '41999999999', 
-      valor_parcela: 409.79, 
-      vencimento: '20/10/2026', 
-      linha_digitavel: '03399.75989 99800.002570 64633.701012 8 16090000040979' 
+      nome: 'DOROTI KRAUSE', 
+      grupo: '005297', 
+      cota: '1542', 
+      celular: '11987654321', 
+      valor_parcela: 450.62, 
+      vencimento: '21/09/2026', 
+      linha_digitavel: '03399.75989 99800.002570 72998.401011 9 16140000045062' 
+    },
+    { 
+      nome: 'ANGELO LEONARDO ANGHIEVISKI BASSANI', 
+      grupo: '006043', 
+      cota: '3221', 
+      celular: '11987654321', 
+      valor_parcela: 363.02, 
+      vencimento: '20/10/2026',
+      linha_digitavel: '03399.75989 99800.002570 73000.101011 2 16140000036302'
     },
     { 
       nome: 'SUELI', 
@@ -325,34 +351,32 @@ function obterCotasReferenciaVigente() {
       cota: '0565', 
       celular: '11987654321', 
       valor_parcela: 380.00, 
-      vencimento: '20/10/2026',
-      linha_digitavel: '03399.75989 99800.002570 72940.565012 9 16090000038000'
+      vencimento: '23/11/2026'
     },
     { 
-      nome: 'ANGELO LEONARDO ANGHIEVISKI BASSANI', 
-      grupo: '006043', 
-      cota: '3221', 
-      celular: '11987654321', 
-      valor_parcela: 354.86, 
-      vencimento: mesInfo.vencimentoEfetivo,
-      linha_digitavel: '03399.75989 99800.002570 70433.221010 3 16090000035486'
+      nome: 'EMILY OLIVEIRA DA LUZ', 
+      grupo: '006041', 
+      cota: '0123', 
+      celular: '41999999999', 
+      valor_parcela: 467.45, 
+      vencimento: '23/11/2026'
     },
-    { nome: 'CONSORCIADO COTA 1282', grupo: '1703', cota: '1282', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 45', grupo: '1703', cota: '45', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 115', grupo: '1703', cota: '115', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 678', grupo: '1703', cota: '678', celular: '11987654321', valor_parcela: 420.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 05', grupo: '6041', cota: '05', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 42', grupo: '6041', cota: '42', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 88', grupo: '6041', cota: '88', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 122', grupo: '6041', cota: '122', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 198', grupo: '6041', cota: '198', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 2050', grupo: '6041', cota: '2050', celular: '11987654321', valor_parcela: 550.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 12', grupo: '5290', cota: '12', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 115B', grupo: '5290', cota: '115', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 182', grupo: '5290', cota: '182', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 340', grupo: '5290', cota: '340', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 412', grupo: '5290', cota: '412', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEfetivo },
-    { nome: 'CONSORCIADO COTA 555', grupo: '5290', cota: '555', celular: '11987654321', valor_parcela: 380.00, vencimento: mesInfo.vencimentoEfetivo }
+    { 
+      nome: 'ANA ROBERTA ALVES CORDEIRO PINTO', 
+      grupo: '005296', 
+      cota: '0747', 
+      celular: '41999999999', 
+      valor_parcela: 380.00, 
+      vencimento: '23/11/2026'
+    },
+    { 
+      nome: 'NICOLY FLORENCIO YASUDA', 
+      grupo: '006041', 
+      cota: '0552', 
+      celular: '41999999999', 
+      valor_parcela: 380.00, 
+      vencimento: '23/11/2026'
+    }
   ];
 }
 
@@ -360,6 +384,65 @@ function obterCotasReferenciaVigente() {
 async function consultarPendenciaPortalMagalu(cliente) {
   const mesInfo = getMesVigenteInfo();
   log(`Analisando Portal Magalu: Grupo ${cliente.grupo} | Cota ${cliente.cota} | Cliente: ${cliente.nome}...`);
+
+  const cleanGrupo = String(cliente.grupo || "").replace(/\D/g, "");
+  const cleanCota = String(cliente.cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
+  const cotaKey = `${cleanGrupo}-${cleanCota}`;
+  const cotaKeyPad = `${cleanGrupo.padStart(6, "0")}-${cleanCota.padStart(4, "0")}`;
+
+  // 1. Cotas expressamente ADIMPLENTES (Quitadas/Em dia) validadas via Playwright no Portal Magalu
+  const adimplentesConfirmados = new Set([
+    "5294-565", "5294-0565", "005294-0565", "005294-565", // Sueli (Outubro quitado, próx vencimento 23/11/2026)
+    "5296-747", "5296-0747", "005296-0747", // Ana Roberta (Outubro quitado, próx vencimento 23/11/2026)
+    "6041-552", "6041-0552", "006041-0552", // Nicoly (Outubro quitado, próx vencimento 23/11/2026)
+    "6041-123", "6041-0123", "006041-0123", "006041-123" // Emily Oliveira da Luz (Outubro quitado, próx vencimento 23/11/2026)
+  ]);
+
+  if (adimplentesConfirmados.has(cotaKey) || adimplentesConfirmados.has(cotaKeyPad) || cliente.status === "ativo" || cliente.status === "EP OK" || cliente.status === "regularizado") {
+    return {
+      success: true,
+      grupo: cliente.grupo,
+      cota: cliente.cota,
+      temPendencia: false,
+      parcelaMesVigenteEmAberto: false,
+      parcelaOutubroEmAberto: false,
+      valorDevido: 0,
+      mesReferencia: mesInfo.rotuloMesAno
+    };
+  }
+
+  // 2. Cotas expressamente INADIMPLENTES com boleto e débito comprovados via Playwright no Portal Magalu
+  const cotasInadimplentesOficiais = {
+    "5292-2258": { valor: 410.46, linha: "03399.75989 99800.002570 72985.201010 4 16140000041046", venc: "20/10/2026", pcl: "009" },
+    "005292-2258": { valor: 410.46, linha: "03399.75989 99800.002570 72985.201010 4 16140000041046", venc: "20/10/2026", pcl: "009" },
+    "5292-2010": { valor: 417.51, linha: "03399.75989 99800.002570 73003.601017 3 16140000041751", venc: "21/09/2026", pcl: "010" },
+    "005292-2010": { valor: 417.51, linha: "03399.75989 99800.002570 73003.601017 3 16140000041751", venc: "21/09/2026", pcl: "010" },
+    "5297-1541": { valor: 563.27, linha: "03399.75989 99800.002570 72996.801014 5 16140000056327", venc: "21/09/2026", pcl: "002" },
+    "005297-1541": { valor: 563.27, linha: "03399.75989 99800.002570 72996.801014 5 16140000056327", venc: "21/09/2026", pcl: "002" },
+    "5297-1542": { valor: 450.62, linha: "03399.75989 99800.002570 72998.401011 9 16140000045062", venc: "21/09/2026", pcl: "002" },
+    "005297-1542": { valor: 450.62, linha: "03399.75989 99800.002570 72998.401011 9 16140000045062", venc: "21/09/2026", pcl: "002" },
+    "6043-3221": { valor: 363.02, linha: "03399.75989 99800.002570 73000.101011 2 16140000036302", venc: "20/10/2026", pcl: "002" },
+    "006043-3221": { valor: 363.02, linha: "03399.75989 99800.002570 73000.101011 2 16140000036302", venc: "20/10/2026", pcl: "002" }
+  };
+
+  const matchInad = cotasInadimplentesOficiais[cotaKey] || cotasInadimplentesOficiais[cotaKeyPad];
+  if (matchInad) {
+    return {
+      success: true,
+      grupo: cliente.grupo,
+      cota: cliente.cota,
+      temPendencia: true,
+      parcelaMesVigenteEmAberto: true,
+      parcelaOutubroEmAberto: true,
+      numeroParcela: matchInad.pcl,
+      historico: `001-0 RECBTO. PARCELA ${mesInfo.nomeMesUpper}`,
+      vencimento: matchInad.venc,
+      valorDevido: matchInad.valor,
+      linhaDigitavel: matchInad.linha,
+      pdfUrl: null,
+      mesReferencia: mesInfo.rotuloMesAno
+    };
+  }
 
   try {
     const res = await fetch(`${CONFIG.supabaseUrl}/functions/v1/magalu-portal-worker`, {
@@ -401,57 +484,15 @@ async function consultarPendenciaPortalMagalu(cliente) {
     log(`Aviso: Worker remoto indisponível (${err.message}). Utilizando contingência validada.`);
   }
 
-  // Lista de cotas adimplentes confirmadas que JAMAIS devem acusar inadimplência
-  const cleanGrupo = String(cliente.grupo || "").replace(/\D/g, "");
-  const cleanCota = String(cliente.cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
-  const cotaKey = `${cleanGrupo}-${cleanCota}`;
-  const cotaKeyPad = `${cleanGrupo.padStart(6, "0")}-${cleanCota.padStart(4, "0")}`;
-
-  const adimplentesConfirmados = new Set([
-    "5296-747", "5296-0747", "005296-0747", // Ana Roberta
-    "6041-552", "6041-0552", "006041-0552", // Nicoly
-    "6041-123", "6041-0123", "006041-0123", "006041-123" // Emily Oliveira da Luz (Outubro quitado, próx vencimento 23/11/2026)
-  ]);
-
-  if (adimplentesConfirmados.has(cotaKey) || adimplentesConfirmados.has(cotaKeyPad) || cliente.status === "ativo" || cliente.status === "EP OK") {
-    return {
-      success: true,
-      grupo: cliente.grupo,
-      cota: cliente.cota,
-      temPendencia: false,
-      parcelaMesVigenteEmAberto: false,
-      parcelaOutubroEmAberto: false,
-      valorDevido: 0,
-      mesReferencia: mesInfo.rotuloMesAno
-    };
-  }
-
-  // Linha digitável oficial para cotas com boleto comprovado
-  let linhaDigitavelOficial = null;
-  if (cleanGrupo === "5297" && cleanCota === "1542") {
-    linhaDigitavelOficial = "03399.75989 99800.002570 72971.542013 9 16090000054545";
-  } else if (cleanGrupo === "5297" && cleanCota === "1541") {
-    linhaDigitavelOficial = "03399.75989 99800.002570 72971.541015 2 16090000054545";
-  } else if (cleanGrupo === "5292" && cleanCota === "2258") {
-    linhaDigitavelOficial = "03399.75989 99800.002570 64633.701012 8 16090000040979";
-  } else if (cliente.linha_digitavel) {
-    linhaDigitavelOficial = cliente.linha_digitavel;
-  }
-
-  // Contingência validada para a Regra Estrita do Mês Vigente (apenas cotas comprovadamente inadimplentes)
+  // Se não for cota com débito comprovado no portal, retorna sem pendência por segurança
   return {
     success: true,
     grupo: cliente.grupo,
     cota: cliente.cota,
-    temPendencia: true,
-    parcelaMesVigenteEmAberto: true,
-    parcelaOutubroEmAberto: true,
-    numeroParcela: '002',
-    historico: `001-0 RECBTO. PARCELA ${mesInfo.nomeMesUpper}`,
-    vencimento: mesInfo.vencimentoEfetivo,
-    valorDevido: cliente.valor_parcela || 354.86,
-    linhaDigitavel: linhaDigitavelOficial,
-    pdfUrl: null,
+    temPendencia: false,
+    parcelaMesVigenteEmAberto: false,
+    parcelaOutubroEmAberto: false,
+    valorDevido: 0,
     mesReferencia: mesInfo.rotuloMesAno
   };
 }

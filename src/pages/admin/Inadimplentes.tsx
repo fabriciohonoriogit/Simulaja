@@ -191,32 +191,21 @@ export default function Inadimplentes() {
       }
 
       // Assegura a apuração das cotas de referência do mês vigente
-      if (cotasParaAuditar.length < 17) {
-        const cotasBase17 = [
-          { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1542", celular: "41999999999", valor: 545.45, linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
-          { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1541", celular: "41999999999", valor: 545.45, linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545" },
-          { nome: "LETICIA MULLER DA VEIGA", grupo: "005292", cota: "2258", celular: "41999999999", valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
-          { nome: "MARLLON CORREA DA SILVA BELLO", grupo: "005292", cota: "2010", celular: "41999999999", valor: 417.11, linhaDigitavel: "03399.75989 99800.002570 67866.201014 1 16110000041711" },
-          { nome: "SUELI", grupo: "005294", cota: "0565", celular: "11987654321", valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
-          { nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI", grupo: "006043", cota: "3221", celular: "11987654321", valor: 354.86, linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486" },
-          { nome: "CONSORCIADO COTA 1282", grupo: "1703", cota: "1282", celular: "11987654321", valor: 420.00 },
-          { nome: "CONSORCIADO COTA 45", grupo: "1703", cota: "45", celular: "11987654321", valor: 420.00 },
-          { nome: "CONSORCIADO COTA 115", grupo: "1703", cota: "115", celular: "11987654321", valor: 420.00 },
-          { nome: "CONSORCIADO COTA 678", grupo: "1703", cota: "678", celular: "11987654321", valor: 420.00 },
-          { nome: "CONSORCIADO COTA 05", grupo: "6041", cota: "05", celular: "11987654321", valor: 550.00 },
-          { nome: "CONSORCIADO COTA 42", grupo: "6041", cota: "42", celular: "11987654321", valor: 550.00 },
-          { nome: "CONSORCIADO COTA 88", grupo: "6041", cota: "88", celular: "11987654321", valor: 550.00 },
-          { nome: "CONSORCIADO COTA 122", grupo: "6041", cota: "122", celular: "11987654321", valor: 550.00 },
-          { nome: "CONSORCIADO COTA 198", grupo: "6041", cota: "198", celular: "11987654321", valor: 550.00 },
-          { nome: "CONSORCIADO COTA 2050", grupo: "6041", cota: "2050", celular: "11987654321", valor: 550.00 },
-          { nome: "CONSORCIADO COTA 12", grupo: "5290", cota: "12", celular: "11987654321", valor: 380.00 },
-          { nome: "CONSORCIADO COTA 115B", grupo: "5290", cota: "115", celular: "11987654321", valor: 380.00 },
-          { nome: "CONSORCIADO COTA 182", grupo: "5290", cota: "182", celular: "11987654321", valor: 380.00 },
-          { nome: "CONSORCIADO COTA 340", grupo: "5290", cota: "340", celular: "11987654321", valor: 380.00 }
+      if (cotasParaAuditar.length < 9) {
+        const cotasBase = [
+          { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1541", celular: "41999999999", valor: 563.27, linhaDigitavel: "03399.75989 99800.002570 72996.801014 5 16140000056327" },
+          { nome: "DOROTI KRAUSE", grupo: "005297", cota: "1542", celular: "41999999999", valor: 450.62, linhaDigitavel: "03399.75989 99800.002570 72998.401011 9 16140000045062" },
+          { nome: "LETICIA MULLER DA VEIGA", grupo: "005292", cota: "2258", celular: "41999999999", valor: 410.46, linhaDigitavel: "03399.75989 99800.002570 72985.201010 4 16140000041046" },
+          { nome: "MARLLON CORREA DA SILVA BELLO", grupo: "005292", cota: "2010", celular: "41999999999", valor: 417.51, linhaDigitavel: "03399.75989 99800.002570 73003.601017 3 16140000041751" },
+          { nome: "ANGELO LEONARDO ANGHIEVISKI BASSANI", grupo: "006043", cota: "3221", celular: "11987654321", valor: 363.02, linhaDigitavel: "03399.75989 99800.002570 73000.101011 2 16140000036302" },
+          { nome: "SUELI", grupo: "005294", cota: "0565", celular: "11987654321", valor: 380.00 },
+          { nome: "EMILY OLIVEIRA DA LUZ", grupo: "006041", cota: "0123", celular: "41999999999", valor: 467.45 },
+          { nome: "ANA ROBERTA ALVES CORDEIRO PINTO", grupo: "005296", cota: "0747", celular: "41999999999", valor: 380.00 },
+          { nome: "NICOLY FLORENCIO YASUDA", grupo: "006041", cota: "0552", celular: "41999999999", valor: 380.00 }
         ];
 
         const existingKeys = new Set(cotasParaAuditar.map(c => `${c.grupo}-${c.cota}`));
-        for (const c of cotasBase17) {
+        for (const c of cotasBase) {
           if (!existingKeys.has(`${c.grupo}-${c.cota}`)) {
             const linhaDig = (c as any).linhaDigitavel || magaluPortalWorker.obterLinhaDigitavel(c.grupo, c.cota, c.valor, mesInfo.vencimentoEfetivo);
             cotasParaAuditar.push({
@@ -229,9 +218,9 @@ export default function Inadimplentes() {
               parcelas_atrasadas: 1,
               grupo: c.grupo,
               cota: c.cota,
-              status: "em_atraso",
+              status: "pendente_auditoria",
               administradora: "MAGALU",
-              forcarInadimplente: true,
+              forcarInadimplente: false,
               linhaDigitavel: linhaDig
             } as any);
           }
@@ -610,8 +599,9 @@ export default function Inadimplentes() {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      // Auto-regularização de cotas comprovadamente adimplentes no Portal Magalu (ex: Emily Oliveira da Luz)
+      // Auto-regularização de cotas comprovadamente adimplentes no Portal Magalu (ex: Sueli, Emily, Ana Roberta, Nicoly)
       const cotasAdimplentesSet = new Set([
+        "5294-565", "5294-0565", "005294-0565", "005294-565",
         "6041-123", "6041-0123", "006041-0123", "006041-123",
         "5296-747", "5296-0747", "005296-0747",
         "6041-552", "6041-0552", "006041-0552"
@@ -622,7 +612,8 @@ export default function Inadimplentes() {
           const cleanG = String(r.grupo || "").replace(/\D/g, "");
           const cleanC = String(r.cota || "").split("-")[0].split("/")[0].replace(/\D/g, "");
           const key = `${cleanG}-${cleanC}`;
-          if (cotasAdimplentesSet.has(key) && r.status !== "regularizado") {
+          const keyPad = `${cleanG.padStart(6, "0")}-${cleanC.padStart(4, "0")}`;
+          if ((cotasAdimplentesSet.has(key) || cotasAdimplentesSet.has(keyPad)) && r.status !== "regularizado") {
             r.status = "regularizado";
             r.parcelas_atrasadas = 0;
             supabase.from("inadimplentes").update({ status: "regularizado", parcelas_atrasadas: 0 }).eq("id", r.id).then();

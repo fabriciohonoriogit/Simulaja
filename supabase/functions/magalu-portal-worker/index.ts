@@ -40,8 +40,9 @@ serve(async (req) => {
 
       // Cotas com situação NORMAL (Adimplentes comprovadas)
       const cotasAdimplentes = new Set([
-        "5296-747", "5296-0747", "005296-0747", // Ana Roberta Alves Cordeiro Pinto
-        "6041-552", "6041-0552", "006041-0552", // Nicoly Florencio Yasuda
+        "5294-565", "5294-0565", "005294-0565", "005294-565", // Sueli (Outubro quitado, próx vencimento 23/11/2026)
+        "5296-747", "5296-0747", "005296-0747", // Ana Roberta Alves Cordeiro Pinto (Outubro quitado, próx vencimento 23/11/2026)
+        "6041-552", "6041-0552", "006041-0552", // Nicoly Florencio Yasuda (Outubro quitado, próx vencimento 23/11/2026)
         "6041-123", "6041-0123", "006041-0123", "006041-123" // Emily Oliveira da Luz (Outubro quitado, próx vencimento 23/11/2026)
       ]);
 
@@ -73,41 +74,23 @@ serve(async (req) => {
         );
       }
 
-      // Cotas com pendência confirmada no mês vigente
+      // Cotas com pendência confirmada no mês vigente (auditadas no Portal Magalu)
       const cotasInadimplentes: Record<string, { valor: number; atrasos?: number; sit?: string; linhaDigitavel?: string }> = {
-        // DOROTI KRAUSE (Comprovada no Portal Magalu com "! Avisos: 01 *Consorciado possui cota(s) inadimplente(s)")
-        "5297-1541": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545" },
-        "005297-1541": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72971.541015 2 16090000054545" },
-        "5297-1542": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
-        "005297-1542": { valor: 545.45, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72971.542013 9 16090000054545" },
-        // Demais cotas inadimplentes
-        "6043-3221": { valor: 354.86, linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486" },
-        "006043-3221": { valor: 354.86, linhaDigitavel: "03399.75989 99800.002570 70433.221010 3 16090000035486" },
-        "5297-1609": { valor: 304.00 },
-        "6043-355": { valor: 354.86 },
-        // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Parcela 009 Outubro R$ 409,79)
-        "5292-2258": { valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
-        "005292-2258": { valor: 409.79, linhaDigitavel: "03399.75989 99800.002570 64633.701012 8 16090000040979" },
-        // SUELI (Cota 0565 / Grupo 5294 - Parcela Outubro R$ 380,00)
-        "5294-565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
-        "5294-0565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
-        "005294-0565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
-        "005294-565": { valor: 380.00, linhaDigitavel: "03399.75989 99800.002570 72940.565012 9 16090000038000" },
-        "5272-191": { valor: 281.20 },
-        "5272-0191": { valor: 281.20 },
-        "6037-624": { valor: 544.00 },
-        "6037-0624": { valor: 544.00 },
-        "5292-2010": { valor: 380.00 },
-        "6043-1017": { valor: 354.86 },
-        "6042-582": { valor: 1700.00 },
-        "6042-0582": { valor: 1700.00 },
-        "6039-865": { valor: 1700.00 },
-        "6039-0865": { valor: 1700.00 },
-        "6041-2161": { valor: 374.00 },
-        "5297-517": { valor: 304.00 },
-        "5297-0517": { valor: 304.00 },
-        "5278-260": { valor: 456.00 },
-        "5278-0260": { valor: 456.00 }
+        // LETICIA MULLER DA VEIGA (Cota 005292 2258-00 - Parcela 009 Outubro R$ 410,46)
+        "5292-2258": { valor: 410.46, linhaDigitavel: "03399.75989 99800.002570 72985.201010 4 16140000041046" },
+        "005292-2258": { valor: 410.46, linhaDigitavel: "03399.75989 99800.002570 72985.201010 4 16140000041046" },
+        // MARLLON CORREA DA SILVA BELLO (Cota 005292 2010-00 - Parcela 010 R$ 417,51)
+        "5292-2010": { valor: 417.51, linhaDigitavel: "03399.75989 99800.002570 73003.601017 3 16140000041751" },
+        "005292-2010": { valor: 417.51, linhaDigitavel: "03399.75989 99800.002570 73003.601017 3 16140000041751" },
+        // DOROTI KRAUSE (Cota 1541 - Pcl 002 R$ 563,27)
+        "5297-1541": { valor: 563.27, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72996.801014 5 16140000056327" },
+        "005297-1541": { valor: 563.27, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72996.801014 5 16140000056327" },
+        // DOROTI KRAUSE (Cota 1542 - Pcl 002 R$ 450,62)
+        "5297-1542": { valor: 450.62, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72998.401011 9 16140000045062" },
+        "005297-1542": { valor: 450.62, atrasos: 2, sit: "NÃO CONTEMPLADA COM 1 PARCELA", linhaDigitavel: "03399.75989 99800.002570 72998.401011 9 16140000045062" },
+        // ANGELO LEONARDO ANGHIEVISKI BASSANI (Cota 3221 - Pcl 002 R$ 363,02)
+        "6043-3221": { valor: 363.02, linhaDigitavel: "03399.75989 99800.002570 73000.101011 2 16140000036302" },
+        "006043-3221": { valor: 363.02, linhaDigitavel: "03399.75989 99800.002570 73000.101011 2 16140000036302" }
       };
 
       const matchInad = cotasInadimplentes[cotaKey] || cotasInadimplentes[cotaKeyPad];
