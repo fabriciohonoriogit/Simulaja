@@ -3,13 +3,138 @@
  * Conecta com a Edge Function `jarvis-ai` e possui motor de inteligência local analítico em tempo real
  */
 import { supabase } from "@/integrations/supabase/client";
-import { GRUPOS, GRUPO_CARACTERISTICAS } from "@/constants/simulador";
+import { GRUPOS, GRUPO_CARACTERISTICAS, MEDIA_LANCES_GRUPOS, GrupoItem } from "@/constants/simulador";
 
 export interface LeadContext {
   nome: string;
   tipo_consorcio: string;
   valor_credito: number;
   cidade: string;
+}
+
+/**
+ * Localizador autoritário de cotações do Simulador Oficial SimulaJá / Magalu.
+ * Encontra a cota exata ou as faixas oficiais mais próximas com tolerância zero para alucinações.
+ */
+export function findAuthoritativeSimulatorQuote(query: string): string | null {
+  if (!query) return null;
+  const lower = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // Extrai número do crédito
+  let targetCredit = 0;
+
+  // Trata expressões de milhões: "1 milhao", "1.5 milhão", "2 milhoes", "1mi", "2mi"
+  const millionMatch = lower.match(/(\d+[\d.,]*)\s*(?:milh[aã]o|milh[oõ]es|mi\b)/);
+  if (millionMatch) {
+    const val = parseFloat(millionMatch[1].replace(/\./g, "").replace(",", "."));
+    if (!isNaN(val)) targetCredit = val * 1000000;
+  }
+
+  // Trata expressões de mil: "300 mil", "500k", "80k", "25 mil"
+  if (!targetCredit) {
+    const thousandMatch = lower.match(/(\d+[\d.,]*)\s*(?:mil\b|k\b)/);
+    if (thousandMatch) {
+      const val = parseFloat(thousandMatch[1].replace(/\./g, "").replace(",", "."));
+      if (!isNaN(val)) targetCredit = val * 1000;
+    }
+  }
+
+  // Trata números numéricos puros (ex: "300000", "500.000", "80000", "20000")
+  if (!targetCredit) {
+    const rawNumbers = query.match(/\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b|\b\d{4,7}\b/g);
+    if (rawNumbers && rawNumbers.length > 0) {
+      const parsed = parseFloat(rawNumbers[0].replace(/\./g, "").replace(",", "."));
+      if (!isNaN(parsed) && parsed >= 5000) targetCredit = parsed;
+    }
+  }
+
+  if (!targetCredit) return null;
+
+  // Detecta segmento pretendido
+  const isImovel = lower.includes("imov") || lower.includes("casa") || lower.includes("apto") || lower.includes("apartamento") || lower.includes("terreno") || lower.includes("construcao");
+  const isMoto = lower.includes("moto");
+  const isPesado = lower.includes("pesad") || lower.includes("caminha") || lower.includes("trator") || lower.includes("agricola") || lower.includes("onibus");
+  const isServico = lower.includes("servi") || lower.includes("eletro") || lower.includes("cirurgia") || lower.includes("plastica") || lower.includes("plástica");
+  const isVeiculo = !isImovel && !isPesado && !isServico && (lower.includes("carro") || lower.includes("auto") || lower.includes("veic") || isMoto);
+
+  let targetCat = "imovel";
+  if (isPesado) targetCat = "pesados";
+  else if (isServico) targetCat = "servicos";
+  else if (isVeiculo) targetCat = "veiculo";
+  else {
+    // Inferência inteligente por faixa de valor se segmento não foi explicitado
+    if (targetCredit <= 30000) targetCat = "veiculo"; // faixas de moto / serviços
+    else if (targetCredit >= 180000 && targetCredit <= 400000 && lower.includes("pesad")) targetCat = "pesados";
+    else targetCat = "imovel";
+  }
+
+  const list: GrupoItem[] = (GRUPOS as any)[targetCat] || GRUPOS.imovel;
+
+  // Busca correspondência exata
+  const exactMatches = list.filter(g => Math.abs(g.credito - targetCredit) < 1);
+
+  const formatQuote = (g: GrupoItem, label = "") => {
+    const credFmt = g.credito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const taxaSeguro = g.seguro ?? 0.0252;
+    const taxaSeguroDecimal = taxaSeguro > 0.001 ? taxaSeguro / 100 : taxaSeguro;
+    const valSeguro = g.credito * taxaSeguroDecimal;
+
+    const r50Com = g.r50 || 0;
+    const r50Sem = g.r50SemSeguro ?? Math.max(0, r50Com - valSeguro);
+    const r100Com = g.r100 || (r50Com * 2);
+    const r100Sem = g.r100SemSeguro ?? Math.max(0, r100Com - valSeguro);
+
+    const txAdm = g.txLinear || g.tx5050 || g.tx || 18;
+    const fr = g.frLinear || g.fr5050 || g.fr || 1;
+    const mediaLance = MEDIA_LANCES_GRUPOS[g.grupo] ? `${MEDIA_LANCES_GRUPOS[g.grupo]}%` : "Consulte histórico";
+    const carac = GRUPO_CARACTERISTICAS[g.grupo];
+    const lanceEmbutidoVal = (g.credito * 0.25).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    return `
+• OPÇÃO OFICIAL ${label ? `(${label})` : ""}:
+  - Crédito Oficial: ${credFmt} (Grupo ${g.grupo} - Prazo: ${g.prazo} meses${g.tipoVenda ? ` | ${g.tipoVenda}` : ""})
+  - Parcela 50/50 (Meia Parcela) COM SEGURO: ${r50Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/mês
+  - Parcela 50/50 (Meia Parcela) SEM SEGURO: ${r50Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/mês
+  - Parcela Linear (100%) COM SEGURO: ${r100Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/mês
+  - Parcela Linear (100%) SEM SEGURO: ${r100Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/mês
+  - Taxa de ADM: ${txAdm}% | Fundo de Reserva: ${fr}% | Seguro Prestamista: ${(taxaSeguroDecimal * 100).toFixed(4)}%
+  - Lance Embutido Permitido: 25% (${lanceEmbutidoVal})
+  - Média Histórica de Lance Contemplado do Grupo ${g.grupo}: ${mediaLance}
+  - Reajuste: ${carac?.reajuste || "INCC"} | Ordem: ${carac?.ordemContemplacao || "Sorteio e Lances"}`;
+  };
+
+  if (exactMatches.length > 0) {
+    const formattedList = exactMatches.map((m, idx) => {
+      const typeLabel = m.isPlanoGold ? "Plano Golden" : m.isPromo ? "Promocional 50/50" : `Opção ${idx + 1}`;
+      return formatQuote(m, typeLabel);
+    }).join("\n");
+
+    return `🎯 COTAÇÃO OFICIAL DIRETA DO SIMULADOR (VALORES EXATOS E CRITERIOSOS):
+${formattedList}
+⚠️ REGRA DE OURO: Estes são os valores exatos e oficiais do sistema. É proibido inventar valores diferentes destes.`;
+  }
+
+  // Se não houver correspondência exata, busca as cotas mais próximas (inferior e superior)
+  const sorted = [...list].sort((a, b) => a.credito - b.credito);
+  let lowerItem: GrupoItem | null = null;
+  let upperItem: GrupoItem | null = null;
+
+  for (const item of sorted) {
+    if (item.credito < targetCredit) lowerItem = item;
+    if (item.credito > targetCredit && !upperItem) upperItem = item;
+  }
+
+  const requestedFmt = targetCredit.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  let suggestions = `⚠️ NOTA CRITERIOSA: Não existe cota única de exatamente ${requestedFmt} cadastrada no Simulador Oficial para o segmento selecionado. As opções oficiais mais próximas disponíveis são:\n`;
+
+  if (lowerItem) {
+    suggestions += formatQuote(lowerItem, "Cota Oficial Imediatamente Abaixo");
+  }
+  if (upperItem) {
+    suggestions += "\n" + formatQuote(upperItem, "Cota Oficial Imediatamente Acima");
+  }
+
+  return suggestions;
 }
 
 async function callDirectGemini(prompt: string, apiKey: string): Promise<string | null> {
@@ -80,24 +205,47 @@ async function callAI(
 
 export function getSimulatorAuthoritativeContext(): string {
   const groupsSummary = Object.entries(GRUPO_CARACTERISTICAS).map(([gId, info]) => {
-    return `• GRUPO ${gId} (${info.reajuste}): ${info.caracteristicas} | Ordem Contemplação: ${info.ordemContemplacao}`;
+    const mediaLance = MEDIA_LANCES_GRUPOS[gId] ? ` | Média Lance Histórico: ${MEDIA_LANCES_GRUPOS[gId]}%` : "";
+    return `• GRUPO ${gId} (${info.reajuste}): ${info.caracteristicas} | Ordem: ${info.ordemContemplacao}${mediaLance}`;
   }).join("\n");
 
-  const sampleRates = Object.values(GRUPOS).flat().slice(0, 15).map(g => {
-    const credStr = (g.credito || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    const r50Str = g.r50 ? g.r50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "N/A";
-    return `• Grupo ${g.grupo} | Crédito: ${credStr} | Prazo: ${g.prazo}m | Parcela 50/50: ${r50Str} | Tx Linear: ${g.txLinear || g.tx || 'N/A'}%`;
-  }).join("\n");
+  const buildCategorySection = (catKey: string, catName: string) => {
+    const items: GrupoItem[] = (GRUPOS as any)[catKey] || [];
+    const lines = items.map((g) => {
+      const credStr = (g.credito || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const taxaSeguro = g.seguro ?? 0.000252;
+      const valSeguro = (g.credito || 0) * (taxaSeguro > 1 ? taxaSeguro / 100 : taxaSeguro);
+      const r50Com = g.r50 || 0;
+      const r50Sem = g.r50SemSeguro ?? Math.max(0, r50Com - valSeguro);
+      const r100Com = g.r100 || (r50Com * 2);
+      const r100Sem = g.r100SemSeguro ?? Math.max(0, r100Com - valSeguro);
+      const mediaLance = MEDIA_LANCES_GRUPOS[g.grupo] ? ` | Média Lance: ${MEDIA_LANCES_GRUPOS[g.grupo]}%` : "";
+      const extraTipo = g.tipoVenda ? ` [${g.tipoVenda}]` : g.isPlanoGold ? " [Plano Gold]" : "";
+
+      return `  - Crédito ${credStr} (Grupo ${g.grupo} - ${g.prazo}m${extraTipo}): 50/50 Com Seguro: ${r50Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} | 50/50 Sem Seguro: ${r50Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} | Linear Com Seguro: ${r100Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} | Linear Sem Seguro: ${r100Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} | Tx ADM: ${g.txLinear || g.tx5050 || g.tx || 18}% + FR: ${g.frLinear || g.fr5050 || g.fr || 1}%${mediaLance}`;
+    }).join("\n");
+
+    return `=== TABELA OFICIAL DE ${catName.toUpperCase()} ===\n${lines}`;
+  };
+
+  const imovelTable = buildCategorySection("imovel", "Imóveis");
+  const veiculoTable = buildCategorySection("veiculo", "Veículos / Automóveis e Motos");
+  const pesadosTable = buildCategorySection("pesados", "Pesados / Caminhões / Agrícola");
+  const servicosTable = buildCategorySection("servicos", "Serviços e Eletro");
 
   return `
---- TABELAS E REGRAS DO SIMULADOR INTERNO (ALIMENTADAS NO SISTEMA) ---
-GRUPOS REGISTRADOS E CARACTERÍSTICAS TÉCNICAS:
+--- TABELAS E MATRIZ OFICIAL COMPLETA DO SIMULADOR (FONTE ÚNICA DA VERDADE) ---
+CARACTERÍSTICAS DOS GRUPOS E LANCES EMBUTIDOS:
 ${groupsSummary}
 
-EXEMPLOS DE TABELAS DE VALORES E PARCELAS:
-${sampleRates}
-----------------------------------------------------------------------
-`;
+${imovelTable}
+
+${veiculoTable}
+
+${pesadosTable}
+
+${servicosTable}
+-------------------------------------------------------------------------------`;
 }
 
 export function getSystemAuthoritativeContext(): string {
@@ -117,6 +265,21 @@ export function getSystemAuthoritativeContext(): string {
   - NPS: Mínimo 1 avaliação registrada (Classificação Mensal).
 • Status / Ranking Elite Atual: Patente STONE (Vendas até 500k)
 • Próximo Nível (GOLD): Meta de R$ 500.000,00
+
+--- SITUAÇÃO OFICIAL DE VENDAS E DESEMPENHO NO CRM (FATOS IMUTÁVEIS) ---
+• Total de Vendas Realizadas (Q4 / Mês Atual): R$ 70.000,00
+• Autoria e Distribuição das Vendas:
+  1. Elizabeth: R$ 20.000,00 — Venda 100% exclusiva do Gestor Fabrício. Comissão acordada de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00). 
+     ⚠️ REGRA MANDATÓRIA: A Loja Paranaguá NÃO possui participação nem comissão sobre esta venda.
+  2. Doroty: R$ 50.000,00 — Venda 100% exclusiva do Gestor Fabrício.
+• Performance da Loja Paranaguá:
+  - Vendas Realizadas: R$ 0,00 (ZERO).
+  - Leads Fechados da Loja: 0.
+  - Taxa de Conversão da Loja: 0.0%.
+  - Ticket Médio da Loja: R$ 0,00.
+• Estrutura de Metas da Equipe:
+  - Meta Individual do Gestor: R$ 500.000,00 (Realizado: R$ 70.000,00 | Faltam: R$ 430.000,00).
+  - Meta Geral da Filial/Lojas: R$ 500.000,00.
 
 ${simContext}
 `;
@@ -138,7 +301,7 @@ export async function getRealtimeFunnelSnapshot(): Promise<string> {
     let totalCredito = 0;
     const stagesCount: Record<string, { count: number; totalCredito: number }> = {};
     const tempCount: Record<string, number> = { quente: 0, morno: 0, frio: 0, outros: 0 };
-    const quentesList: Array<{ nome: string; valor: number; etapa: string }> = [];
+    const quentesList: Array<{ nome: string; valor: number; etapa: string; cidade?: string }> = [];
 
     leads.forEach((l: any) => {
       const cred = Number(l.valor_credito) || 0;
@@ -153,7 +316,7 @@ export async function getRealtimeFunnelSnapshot(): Promise<string> {
       const temp = (l.lead_temperatura || "").toLowerCase();
       if (temp === "quente") {
         tempCount.quente += 1;
-        quentesList.push({ nome: l.nome, valor: cred, etapa: status });
+        quentesList.push({ nome: l.nome, valor: cred, etapa: status, cidade: l.cidade });
       } else if (temp === "morno") {
         tempCount.morno += 1;
       } else if (temp === "frio") {
@@ -167,20 +330,31 @@ export async function getRealtimeFunnelSnapshot(): Promise<string> {
       .map(([stg, info]) => `  • ${stg}: ${info.count} lead(s) - Volume: ${info.totalCredito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`)
       .join("\n");
 
-    const topQuentes = quentesList
-      .slice(0, 5)
-      .map(q => `  🔥 ${q.nome} - ${q.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} [Fase: ${q.etapa}]`)
+    const topLeads = leads
+      .slice(0, 8)
+      .map((l: any) => `  - ${l.nome} | Crédito: ${(Number(l.valor_credito) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} | Fase: ${l.status} | Cidade: ${l.cidade || "N/A"}`)
       .join("\n");
+
+    // Consulta carteira e inadimplentes se disponíveis
+    let inadInfo = "";
+    try {
+      const { data: inads } = await supabase.from("inadimplentes").select("valor_parcela, parcelas_atrasadas");
+      if (inads && inads.length > 0) {
+        const totalDivida = inads.reduce((acc, i: any) => acc + ((Number(i.valor_parcela) || 0) * (Number(i.parcelas_atrasadas) || 1)), 0);
+        inadInfo = `• Inadimplência da Carteira: ${inads.length} cliente(s) - Total em atraso: ${totalDivida.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
+      }
+    } catch (e) {}
 
     return `
 --- DADOS REAIS DO FUNIL DE CLIENTES DO CRM (CONSOLIDADOS EM TEMPO REAL) ---
-• Total de Leads Ativos: ${totalLeads}
+• Total de Leads Ativos no CRM: ${totalLeads}
 • Pipeline Total em Negociação: ${totalCredito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
 • Temperatura da Base: 🔥 Quentes: ${tempCount.quente} | 🌤️ Mornos: ${tempCount.morno} | ❄️ Frios: ${tempCount.frio}
-• Distribuição por Etapas do Funil:
+${inadInfo ? inadInfo + "\n" : ""}• Distribuição por Etapas do Funil:
 ${stagesBreakdown}
-• Destaques de Leads com Alta Propensão (Quentes):
-${topQuentes || "  (Nenhum lead com tag quente no momento)"}
+
+• Amostra de Leads Recentes no CRM:
+${topLeads}
 ---------------------------------------------------------------------------`;
   } catch (e) {
     return "Não foi possível consolidar os dados do funil em tempo real.";
@@ -215,83 +389,22 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
     return `Oi ${firstName}, como posso lhe ajudar?`;
   }
 
-  // Extração de valor de crédito citado no prompt do usuário para simulação direta
-  const numbersInPrompt = userQuery.match(/\d+[\d\.,]*/g);
-  if (numbersInPrompt && (lower.includes("credito") || lower.includes("simula") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear") || lower.includes("gold") || lower.includes("mil"))) {
-    const rawVal = parseFloat(numbersInPrompt[0].replace(/\./g, "").replace(",", "."));
-    const creditTarget = rawVal < 1000 ? rawVal * 1000 : rawVal;
-
-    // Detectar segmento
-    const isVeiculo = lower.includes("carro") || lower.includes("veiculo") || lower.includes("auto") || lower.includes("moto") || lower.includes("caminhao") || lower.includes("pesados");
-    const isServico = lower.includes("servico") || lower.includes("eletro");
-    const segmento = isVeiculo ? "Veículos" : isServico ? "Serviços/Eletro" : "Imóveis";
-
-    // Selecionar lista de grupos por segmento (imovel / veiculo)
-    const listKey = isVeiculo ? "veiculo" : "imovel";
-    const groupList: any[] = (GRUPOS as any)[listKey] || (GRUPOS as any).imovel || [];
-
-    // Encontrar grupo com o crédito mais próximo (e menor parcela r50 em caso de empate)
-    const closest = groupList.reduce((prev: any, curr: any) => {
-      const diffPrev = Math.abs(prev.credito - creditTarget);
-      const diffCurr = Math.abs(curr.credito - creditTarget);
-      if (diffCurr < diffPrev) return curr;
-      if (diffCurr === diffPrev) return (curr.r50 || 0) < (prev.r50 || 0) ? curr : prev;
-      return prev;
-    }, groupList[0]);
-
-    if (closest) {
-      const credFmt = closest.credito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const taxaSeguro = closest.seguro ?? 0.000252;
-      const valSeguro = closest.credito * (taxaSeguro > 1 ? taxaSeguro / 100 : taxaSeguro);
-
-      // r50 e r100 no simulador interno já são o valor exato da parcela COM SEGURO
-      const r50ComSeguro = closest.r50 || 0;
-      const r100ComSeguro = closest.r100 || (r50ComSeguro * 2);
-
-      const r50SemSeguro = closest.r50SemSeguro ?? Math.max(0, r50ComSeguro - valSeguro);
-      const r100SemSeguro = closest.r100SemSeguro ?? Math.max(0, r100ComSeguro - valSeguro);
-
-      const p50ComSeguro = r50ComSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const p50SemSeguro = r50SemSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const p100ComSeguro = r100ComSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const p100SemSeguro = r100SemSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const seguroFmt = valSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-      const wantsSemSeguro = lower.includes("sem seguro");
-      const wantsComSeguro = lower.includes("com seguro");
-
-      if (lower.includes("50/50") || lower.includes("cinquenta") || lower.includes("meia")) {
-        if (wantsSemSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 (Meia Parcela) SEM SEGURO: ${p50SemSeguro}/mês.`;
-        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela 50/50 (Meia Parcela) COM SEGURO: ${p50ComSeguro}/mês.`;
-        return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): 50/50 (Meia Parcela) Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
-      }
-
-      if (lower.includes("linear") || lower.includes("100%")) {
-        if (wantsSemSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela Linear SEM SEGURO: ${p100SemSeguro}/mês.`;
-        if (wantsComSeguro) return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Parcela Linear COM SEGURO: ${p100ComSeguro}/mês.`;
-        return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo} - ${closest.prazo}m): Linear Com Seguro: ${p100ComSeguro}/mês | Sem Seguro: ${p100SemSeguro}/mês.`;
-      }
-
-      if (lower.includes("gold")) {
-        return `[Segmento: ${segmento}] Crédito ${credFmt} (Plano Gold - Grupo ${closest.grupo}): Parcela 50/50 (Meia Parcela) Com Seguro: ${p50ComSeguro}/mês | Sem Seguro: ${p50SemSeguro}/mês.`;
-      }
-
-      return `[Segmento: ${segmento}] Crédito ${credFmt} (Grupo ${closest.grupo}): Prazo de ${closest.prazo} meses. Parcela 50/50 (Meia Parcela Sem Seguro): ${p50SemSeguro}/mês. Taxa de Adm: ${closest.txLinear || closest.tx || 16}% | Fundo de Reserva: ${closest.fundoReserva || 2}%.`;
+  // 2. Cotações e Simulações Oficiais do Simulador SimulaJá
+  const isSimulationQuery = lower.includes("credito") || lower.includes("simula") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear") || lower.includes("gold") || lower.includes("mil") || lower.includes("lance");
+  if (isSimulationQuery) {
+    const quote = findAuthoritativeSimulatorQuote(userQuery);
+    if (quote) {
+      return quote;
     }
   }
 
-  // Busca grupo específico citado pelo usuário no simulador interno
-  const matchGroupKey = Object.keys(GRUPO_CARACTERISTICAS).find(k => lower.includes(k));
-  if (matchGroupKey) {
-    const info = GRUPO_CARACTERISTICAS[matchGroupKey];
-  }
-
-  // 1. VENDAS, METAS, PERFORMANCE, RESUMO E PRODUÇÃO
+  // 3. VENDAS, METAS, PERFORMANCE, RESUMO E PRODUÇÃO
   if (
     lower.includes("resumo") ||
     lower.includes("venda") ||
     lower.includes("meta") ||
     lower.includes("producao") ||
+    lower.includes("produção") ||
     lower.includes("realizado") ||
     lower.includes("desempenho") ||
     lower.includes("resultado") ||
@@ -299,20 +412,32 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
     lower.includes("loja") ||
     lower.includes("filial") ||
     lower.includes("comissao") ||
+    lower.includes("comissão") ||
     lower.includes("patente") ||
     lower.includes("ranking") ||
     lower.includes("paranagua") ||
-    lower.includes("gestor")
+    lower.includes("paranaguá") ||
+    lower.includes("gestor") ||
+    lower.includes("elizabeth") ||
+    lower.includes("doroty")
   ) {
-    try {
-      const { count } = await supabase.from("leads").select("id", { count: "exact", head: true });
-      return `Métricas Atuais do CRM: Total de ${count || 0} leads cadastrados no funil de vendas. Metas ativas e acompanhamento em tempo real no Dashboard.`;
-    } catch (e) {
-      return "Painel de Metas ativo: acompanhamento em tempo real das metas e vendas ativas no CRM.";
-    }
+    return `📊 SITUAÇÃO OFICIAL DE VENDAS E METAS NO CRM:
+
+• Total Vendido no Período Atual (Q4): R$ 70.000,00 (100% Produção Direta do Gestor ${firstName})
+• Detalhamento por Cliente:
+  1. Elizabeth: R$ 20.000,00 — Venda exclusiva do Gestor. Comissão de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00). A Loja Paranaguá NÃO tem participação nessa venda.
+  2. Doroty: R$ 50.000,00 — Venda exclusiva do Gestor.
+• Loja Paranaguá:
+  - Vendas Realizadas: R$ 0,00
+  - Leads Fechados: 0
+  - Taxa de Conversão: 0.0%
+• Status Campanha Elite Magalu (Q4):
+  - Patente Atual: STONE (produção até 500k)
+  - Próximo Nível (GOLD): Meta de R$ 500.000,00 (Faltam R$ 430.000,00)
+  - Desafio Cromo: R$ 1,5 Milhão (Prêmio Base R$ 1.500 + Bônus = R$ 3.500)`;
   }
 
-  // 2. FUNIL DE VENDAS & CRM (Análise Executiva Realtime)
+  // 4. FUNIL DE VENDAS & CRM (Análise Executiva Realtime)
   if (
     lower.includes("funil") ||
     lower.includes("pipeline") ||
@@ -333,14 +458,14 @@ ${snapshot}
 
 💡 Recomendações Estratégicas do Jarvis:
 1. Priorize contato imediato com os leads classificados como 🔥 Quentes.
-2. Clientes em "simulação enviada" ou "negociação" convertem mais rápido com estratégia de Parcela 50/50 (meia parcela) e lance embutido.
+2. Clientes em "simulação enviada" ou "negociação" convertem mais rápido com estratégia de Parcela 50/50 (meia parcela) e lance embutido de 25%.
 3. Se desejar uma abordagem personalizada, me diga o nome do lead que crio um script de WhatsApp com a metodologia SRV!`;
     } catch (e) {
       return "Funil de Vendas ativo. Oportunidades sincronizadas no Kanban comercial.";
     }
   }
 
-  // Extração e busca de CPF ou Pedido de Boleto / Segunda Via
+  // 5. Extração e busca de CPF ou Pedido de Boleto / Segunda Via
   const cpfMatch = fullInput.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/) || fullInput.match(/\b\d{11}\b/);
   const isBoletoReq = lower.includes("boleto") || lower.includes("segunda via") || lower.includes("2 via") || lower.includes("extrato") || lower.includes("cota") || lower.includes("portal");
 
@@ -398,13 +523,13 @@ ${snapshot}
 Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
   }
 
-    if (lower.length <= 15 || lower.startsWith("oi") || lower.startsWith("ola") || lower.startsWith("bom dia") || lower.startsWith("boa tarde") || lower.startsWith("boa noite")) {
-      return `Oi ${firstName}, como posso lhe ajudar?`;
-    }
-
-    const safeSnippet = typeof userQuery === "string" ? userQuery.slice(0, 50) : "";
-    return `Entendi sua pergunta sobre "${safeSnippet}...". Estou operando com o motor local do CRM. Posso te ajudar com cotações de consórcio (ex: "simular 200 mil imóveis"), consulta de boleto/CPF, metas de vendas, inadimplência e dados do funil do CRM!`;
+  if (lower.length <= 15 || lower.startsWith("oi") || lower.startsWith("ola") || lower.startsWith("bom dia") || lower.startsWith("boa tarde") || lower.startsWith("boa noite")) {
+    return `Oi ${firstName}, como posso lhe ajudar?`;
   }
+
+  const safeSnippet = typeof userQuery === "string" ? userQuery.slice(0, 50) : "";
+  return `Entendi sua pergunta sobre "${safeSnippet}...". Estou operando com a matriz autoritária do CRM e do Simulador SimulaJá. Posso te apresentar cotações exatas (ex: "simular 300 mil imóvel"), extratos e boletos, status de vendas (Elizabeth/Doroty) ou análise de leads do funil!`;
+}
 
 export const aiService = {
   async generateSalesScript(lead: LeadContext) {
@@ -454,6 +579,7 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
 
     const authContext = getSystemAuthoritativeContext();
     const funnelSnapshot = await getRealtimeFunnelSnapshot();
+    const dynamicQuote = findAuthoritativeSimulatorQuote(question);
     const firstName = userName.split(" ")[0] || "Fabrício";
 
     const prompt = `Você é o Jarvis, assistente executivo e consultor de alta performance comercial e inteligência em consórcios e vendas da Prospera Planejamento / SimulaJá.
@@ -466,6 +592,21 @@ NOME DO INTERLOCUTOR: "${userName}"
 - Organize suas respostas com formatação limpa (tópicos, divisões claras, valores monetários em R$ e negritos).
 - Em saudações simples ("boa tarde", "bom dia", "olá"), responda de forma simples, amigável e direta: "Oi ${firstName}, boa tarde! Como posso acelerar seus resultados comerciais hoje?".
 - NUNCA repita a pergunta do usuário de volta para ele.
+
+# REGRAS CRÍTICAS DE CONFIABILIDADE (ZERO ALUCINAÇÃO - DADOS RÍGIDOS E CRITERIOSOS):
+1. SIMULADOR E CRÉDITOS:
+   - É ESTRITAMENTE PROIBIDO inventar, deduzir ou calcular por estimativa qualquer valor de crédito, parcela, prazo, taxa de administração ou fundo de reserva.
+   - Utilize EXCLUSIVAMENTE os valores da matriz oficial do simulador SimulaJá apresentados abaixo.
+   - Toda vez que o usuário solicitar uma simulação ou valor de parcela, passe POR PADRÃO as informações da Parcela 50/50 (Meia Parcela) indicando COM e SEM seguro. Apresente a parcela linear apenas se solicitado ou em contraste.
+   - Se o usuário solicitar um valor que não existe na tabela (ex: 330k), informe com precisão que não há cota única desse valor e apresente as opções oficiais mais próximas (ex: 320k no Grupo 6030 ou 340k no Grupo 6035).
+   - Para lances médios, utilize EXCLUSIVAMENTE a média histórica cadastrada do grupo (ex: 6042: 98.97%, 6030: 77.60%, 5295: 43.73%, 5296: 88.75%).
+2. DADOS DO CRM E VENDAS:
+   - O faturamento/vendas atual registrado é de R$ 70.000,00 (100% Produção do Gestor Fabrício: Elizabeth R$ 20.000,00 e Doroty R$ 50.000,00).
+   - A comissão de Elizabeth é de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00).
+   - A Loja Paranaguá possui R$ 0,00 em vendas e 0% de taxa de conversão (a venda de Elizabeth é única do Gestor e NÃO da loja).
+   - Nunca invente nomes de leads, vendas fantasiosas ou métricas inexistentes.
+
+${dynamicQuote ? `\n--- COTAÇÃO IDENTIFICADA DO SIMULADOR PARA ESTA CONSULTA ---\n${dynamicQuote}\n------------------------------------------------------------\n` : ""}
 
 ${funnelSnapshot}
 

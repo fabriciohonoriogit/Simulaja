@@ -632,45 +632,151 @@ async function executeTool(supabase: any, name: string, args: any) {
     if (name === "simular_consorcio") {
       const credito = Number(args.credito) || 100000;
       const seg = (args.segmento || "imovel").toLowerCase();
-      
-      let taxaAdm = 0.16;
-      let fundoReserva = 0.02;
-      let prazoPadrao = 200;
 
-      if (seg.includes("veic") || seg.includes("carro")) {
-        taxaAdm = 0.15;
-        prazoPadrao = 80;
-      } else if (seg.includes("moto")) {
-        taxaAdm = 0.18;
-        prazoPadrao = 60;
-      } else if (seg.includes("pesad")) {
-        taxaAdm = 0.14;
-        prazoPadrao = 120;
+      // Categorização autoritária de segmento
+      let targetCat = "imovel";
+      if (seg.includes("pesad") || seg.includes("caminha") || seg.includes("trator") || seg.includes("agricola")) {
+        targetCat = "pesados";
+      } else if (seg.includes("servi") || seg.includes("eletro") || seg.includes("plastica")) {
+        targetCat = "servicos";
+      } else if (seg.includes("veic") || seg.includes("carro") || seg.includes("moto") || seg.includes("auto")) {
+        targetCat = "veiculo";
+      } else {
+        if (credito <= 30000) targetCat = "veiculo";
+        else targetCat = "imovel";
       }
 
-      const prazoFinal = Number(args.prazo) || prazoPadrao;
-      const montanteTotal = credito * (1 + taxaAdm + fundoReserva);
-      const parcelaLinear = montanteTotal / prazoFinal;
+      const SIMULADOR_GRUPOS: Record<string, any[]> = {
+        imovel: [
+          { grupo: "6044", credito: 110000, prazo: 220, r50: 399.08, r50SemSeguro: 395.99, r100: 649.10, txLinear: 22, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6044", credito: 210000, prazo: 220, r50: 761.87, r50SemSeguro: 696.77, r100: 1239.27, txLinear: 22, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 120000, prazo: 217, r50: 435.05, r100: 694.30, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 130000, prazo: 217, r50: 471.30, r100: 752.16, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 140000, prazo: 217, r50: 507.56, r100: 810.02, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 150000, prazo: 217, r50: 543.81, r100: 867.88, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 160000, prazo: 217, r50: 580.07, r100: 925.74, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 170000, prazo: 217, r50: 616.32, r100: 983.60, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 180000, prazo: 217, r50: 652.58, r100: 1041.45, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 190000, prazo: 217, r50: 688.83, r100: 1099.31, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 200000, prazo: 217, r50: 725.09, r100: 1157.17, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 210000, prazo: 217, r50: 761.34, r100: 1215.03, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6043", credito: 220000, prazo: 217, r50: 797.60, r100: 1272.89, txLinear: 18, frLinear: 1, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 140000, prazo: 187, r50: 558.44, r100: 910.45, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 160000, prazo: 187, r50: 638.22, r100: 1040.51, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 180000, prazo: 187, r50: 718.00, r100: 1170.58, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 200000, prazo: 187, r50: 797.78, r100: 1300.64, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 220000, prazo: 187, r50: 877.55, r100: 1430.71, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 230000, prazo: 187, r50: 917.44, r100: 1495.74, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 240000, prazo: 186, r50: 962.13, r50SemSeguro: 890.13, r100: 1560.77, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 250000, prazo: 186, r50: 1002.22, r50SemSeguro: 927.22, r100: 1625.80, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 260000, prazo: 186, r50: 1042.31, r50SemSeguro: 964.31, r100: 1690.83, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 270000, prazo: 186, r50: 1082.40, r50SemSeguro: 1001.40, r100: 1755.87, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6027", credito: 280000, prazo: 186, r50: 1122.49, r50SemSeguro: 1038.49, r100: 1820.90, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "6041", credito: 120000, prazo: 209, r50: 431.99, r50SemSeguro: 395.99, r100: 715.99, txLinear: 18, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6041", credito: 150000, prazo: 209, r50: 539.98, r50SemSeguro: 494.98, r100: 895.00, txLinear: 18, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6041", credito: 200000, prazo: 209, r50: 719.98, r50SemSeguro: 659.98, r100: 1193.33, txLinear: 18, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6038", credito: 230000, prazo: 199, r50: 891.00, r50SemSeguro: 820.85, r100: 1474.65, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6030", credito: 240000, prazo: 194, r50: 1016.28, r100: 1618.35, txLinear: 25, frLinear: 1, seguro: 0.0252, isPlanoGold: true },
+          { grupo: "6030", credito: 280000, prazo: 194, r50: 1185.67, r100: 1888.07, txLinear: 25, frLinear: 1, seguro: 0.0252, isPlanoGold: true },
+          { grupo: "6030", credito: 300000, prazo: 192, r50: 1233.59, r50SemSeguro: 1140.59, r100: 1962.58, txLinear: 20, frLinear: 1, tx5050: 22, seguro: 0.0252, isPromo: true },
+          { grupo: "6030", credito: 320000, prazo: 192, r50: 1315.83, r50SemSeguro: 1216.63, r100: 2093.41, txLinear: 20, frLinear: 1, tx5050: 22, seguro: 0.0252, isPromo: true },
+          { grupo: "6035", credito: 340000, prazo: 220, r50: 1249.66, r50SemSeguro: 1143.58, r100: 2011.66, txLinear: 23, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6035", credito: 360000, prazo: 222, r50: 1329.48, r50SemSeguro: 1216.08, r100: 2145.48, txLinear: 24, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 350000, prazo: 236, r50: 1159.52, r50SemSeguro: 1052.77, r100: 1893.67, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 400000, prazo: 236, r50: 1325.17, r50SemSeguro: 1203.17, r100: 2164.20, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 450000, prazo: 237, r50: 1485.38, r100: 2434.72, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 500000, prazo: 236, r50: 1656.46, r50SemSeguro: 1503.96, r100: 2705.25, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 500000, prazo: 237, r50: 1785.02, r100: 2829.32, txLinear: 26, frLinear: 1, seguro: 0.0252, isPlanoGold: true },
+          { grupo: "6042", credito: 600000, prazo: 236, r50: 1987.75, r50SemSeguro: 1804.75, r100: 3246.30, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 700000, prazo: 236, r50: 2319.04, r50SemSeguro: 2105.54, r100: 3787.35, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 810000, prazo: 237, r50: 2635.74, r100: 4361.21, txLinear: 18, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 900000, prazo: 237, r50: 2953.30, r100: 4881.94, txLinear: 18, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 1000000, prazo: 236, r50: 3312.92, r50SemSeguro: 3007.92, r100: 5410.50, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 1500000, prazo: 236, r50: 4969.38, r50SemSeguro: 4511.88, r100: 8115.75, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "6042", credito: 2000000, prazo: 236, r50: 6625.84, r50SemSeguro: 6015.84, r100: 10821.00, txLinear: 20, frLinear: 1, seguro: 0.0252, isPromo: true }
+        ],
+        veiculo: [
+          { grupo: "5296", credito: 15000, prazo: 80, r50: 229.54, r100: 229.54, txLinear: 18, frLinear: 2, seguro: 0.0252, isPromo: true },
+          { grupo: "5296", credito: 20000, prazo: 80, r50: 188.70, r100: 306.05, txLinear: 18, frLinear: 2, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "5296", credito: 25000, prazo: 80, r50: 235.87, r100: 382.56, txLinear: 18, frLinear: 2, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "5296", credito: 30000, prazo: 80, r50: 283.05, r100: 459.07, txLinear: 18, frLinear: 2, tx5050: 21, seguro: 0.0252, isPromo: true },
+          { grupo: "5297", credito: 40000, prazo: 97, r50: 296.52, r100: 490.35, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "5297", credito: 50000, prazo: 97, r50: 370.67, r100: 612.94, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "5297", credito: 60000, prazo: 97, r50: 444.80, r100: 735.53, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "5297", credito: 70000, prazo: 97, r50: 518.94, r100: 858.11, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "5297", credito: 80000, prazo: 97, r50: 593.07, r100: 980.70, txLinear: 15, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "5295", credito: 90000, prazo: 95, r50: 680.66, r100: 1116.47, txLinear: 14, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "5295", credito: 100000, prazo: 95, r50: 756.29, r100: 1240.53, txLinear: 14, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "5295", credito: 120000, prazo: 95, r50: 907.54, r100: 1488.63, txLinear: 14, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "5295", credito: 140000, prazo: 95, r50: 1058.80, r100: 1736.74, txLinear: 14, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true },
+          { grupo: "2x 5295", credito: 180000, prazo: 95, r50: 1512.58, r100: 2232.95, txLinear: 14, frLinear: 1, tx5050: 18, seguro: 0.0252, isPromo: true }
+        ],
+        pesados: [
+          { grupo: "5996", credito: 180000, prazo: 128, r50: 980.98, r50SemSeguro: 928.42, r100: 1683.96, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "5996", credito: 200000, prazo: 128, r50: 1089.98, r50SemSeguro: 1031.58, r100: 1871.07, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "5996", credito: 250000, prazo: 128, r50: 1362.47, r50SemSeguro: 1289.47, r100: 2338.83, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "5996", credito: 300000, prazo: 128, r50: 1634.97, r50SemSeguro: 1547.37, r100: 2806.60, txLinear: 15, frLinear: 1, seguro: 0.0252, isPromo: true },
+          { grupo: "5997", credito: 350000, prazo: 111, r50: 2182.58, r100: 3727.78, txLinear: 14, frLinear: 1, seguro: 0.029, isPromo: true },
+          { grupo: "5999", credito: 400000, prazo: 58, r50: 8031.83, r100: 8031.83, txLinear: 14, frLinear: 1, seguro: 0.0252, isPromo: true }
+        ],
+        servicos: [
+          { grupo: "4150", credito: 6000, prazo: 47, r50: 165.34, txLinear: 24, frLinear: 4, seguro: 0.0252, isPromo: true },
+          { grupo: "4150", credito: 10000, prazo: 47, r50: 275.57, txLinear: 24, frLinear: 4, seguro: 0.0252, isPromo: true },
+          { grupo: "4150", credito: 12000, prazo: 47, r50: 330.68, txLinear: 24, frLinear: 4, seguro: 0.0252, isPromo: true },
+          { grupo: "7120", credito: 13000, prazo: 59, r50: 275.05, txLinear: 21, frLinear: 2, seguro: 0.0252, isPromo: true },
+          { grupo: "7120", credito: 20000, prazo: 59, r50: 423.15, txLinear: 21, frLinear: 2, seguro: 0.0252, isPromo: true },
+          { grupo: "7120", credito: 26000, prazo: 59, r50: 550.09, txLinear: 21, frLinear: 2, seguro: 0.0252, isPromo: true }
+        ]
+      };
 
-      // Cálculo específico para R$ 500k no Grupo 6042 ou regra geral 50/50 (meia parcela)
-      let p50_50 = parcelaLinear * 0.5;
-      if (credito === 500000 && (seg.includes("imov") || seg.includes("imóv"))) {
-        p50_50 = 1650.42;
-      }
+      const SIMULADOR_MEDIAS: Record<string, number> = {
+        "6044": 98.98, "6043": 98.98, "6042": 98.97, "6041": 95.90, "6040": 93.17, "6039": 93.76,
+        "6038": 91.35, "6037": 89.88, "6035": 89.00, "6030": 77.60, "6027": 73.84, "6021": 56.57,
+        "5296": 88.75, "5297": 99.00, "5295": 43.73, "5282": 75.76, "5281": 72.32, "5278": 68.52,
+        "5996": 68.75, "5997": 67.50, "5999": 66.62, "4150": 97.96, "7120": 95.38
+      };
 
-      const p50Fmt = p50_50.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const pLinearFmt = parcelaLinear.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const list = SIMULADOR_GRUPOS[targetCat] || SIMULADOR_GRUPOS.imovel;
+      const exact = list.find((g: any) => Math.abs(g.credito - credito) < 1);
+
+      const target = exact || list.reduce((prev: any, curr: any) => {
+        const diffPrev = Math.abs(prev.credito - credito);
+        const diffCurr = Math.abs(curr.credito - credito);
+        return diffCurr < diffPrev ? curr : prev;
+      }, list[0]);
+
+      const taxaSeguro = target.seguro ?? 0.000252;
+      const valSeguro = target.credito * (taxaSeguro > 1 ? taxaSeguro / 100 : taxaSeguro);
+      const r50Com = target.r50 || 0;
+      const r50Sem = target.r50SemSeguro ?? Math.max(0, r50Com - valSeguro);
+      const r100Com = target.r100 || (r50Com * 2);
+      const r100Sem = target.r100SemSeguro ?? Math.max(0, r100Com - valSeguro);
+
+      const p50Fmt = r50Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const p50SemFmt = r50Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const pLinearFmt = r100Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const pLinearSemFmt = r100Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+      const txAdm = target.txLinear || target.tx5050 || target.tx || 18;
+      const fr = target.frLinear || target.fr5050 || target.fr || 1;
+      const mediaLance = SIMULADOR_MEDIAS[target.grupo] ? `${SIMULADOR_MEDIAS[target.grupo]}%` : "N/D";
+      const lanceEmbutido = target.credito * 0.25;
 
       return {
-        credito,
-        segmento: seg,
-        prazo: prazoFinal,
-        parcela50_50: p50Fmt,
-        meiaParcela: p50Fmt,
-        parcelaLinear: pLinearFmt,
-        taxaAdministracaoPct: (taxaAdm * 100).toFixed(1) + "%",
-        fundoReservaPct: (fundoReserva * 100).toFixed(1) + "%",
-        mensagem: `Simulação de Consórcio: Crédito de R$ ${credito.toLocaleString("pt-BR")} em ${prazoFinal} meses. Parcela 50/50 (Meia Parcela): ${p50Fmt}/mês. Taxa de Administração: ${(taxaAdm * 100).toFixed(1)}% | Fundo de Reserva: ${(fundoReserva * 100).toFixed(1)}%.`
+        creditoOficial: target.credito,
+        creditoSolicitado: credito,
+        grupo: target.grupo,
+        segmento: targetCat,
+        prazo: target.prazo,
+        parcela50_50ComSeguro: p50Fmt,
+        parcela50_50SemSeguro: p50SemFmt,
+        parcelaLinearComSeguro: pLinearFmt,
+        parcelaLinearSemSeguro: pLinearSemFmt,
+        taxaAdministracaoPct: `${txAdm}%`,
+        fundoReservaPct: `${fr}%`,
+        lanceEmbutido25Pct: lanceEmbutido.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+        mediaLanceHistorico: mediaLance,
+        mensagem: `Simulação Oficial do Sistema: Crédito ${target.credito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} (Grupo ${target.grupo} em ${target.prazo} meses). Parcela 50/50 COM Seguro: ${p50Fmt}/mês | SEM Seguro: ${p50SemFmt}/mês. Parcela Linear: ${pLinearFmt}/mês. Taxa ADM: ${txAdm}% | Fundo de Reserva: ${fr}%. Lance Embutido: 25% (R$ ${lanceEmbutido.toLocaleString("pt-BR")}). Média de Contemplação: ${mediaLance}.`
       };
     }
 
@@ -809,29 +915,37 @@ Deno.serve(async (req) => {
       "gemini-1.5-pro"
     ].filter(Boolean) as string[];
 
-    const systemInstructionText = `# PERSONA
-Você é a Bella IA, assistente virtual de atendimento e automação do CRM da Prospera Planejamento / SimulaJá.
-Seu objetivo é executar comandos com precisão, sem repetir a pergunta do usuário e sem narrar seu próprio raciocínio em voz alta.
+    const systemInstructionText = `# PERSONA: J.A.R.V.I.S OS
+Você é o Jarvis, assistente executivo e consultor de alta performance comercial e inteligência em consórcios e vendas da Prospera Planejamento / SimulaJá.
+Seu objetivo é executar comandos com máxima precisão técnica, inteligência estratégica e estrita fidelidade aos dados reais do sistema.
 
-# REGRAS DE SIMULAÇÃO DE CONSÓRCIO (OBRIGATÓRIO)
-- Toda vez que o usuário solicitar uma simulação de consórcio ou valor de parcela, passe POR PADRÃO APENAS as informações da Parcela 50/50 (meia parcela): valor da parcela 50/50, prazo em meses e taxas (taxa de administração e fundo de reserva). Apresente a parcela linear SOMENTE se o usuário solicitar explicitamente.
+# REGRAS CRÍTICAS DE CONFIABILIDADE (ZERO ALUCINAÇÃO - DADOS RÍGIDOS E CRITERIOSOS):
+1. SIMULAÇÕES E TABELAS DE CONSÓRCIO:
+- É ESTRITAMENTE PROIBIDO inventar, deduzir ou calcular por estimativa qualquer valor de crédito, parcela, taxa administrativa ou prazo.
+- Use SEMPRE a ferramenta 'simular_consorcio' para obter a cotação oficial da matriz cadastrada.
+- Por padrão, apresente sempre a Parcela 50/50 (Meia Parcela), informando os valores COM seguro e SEM seguro. Apenas apresente a parcela linear se solicitado ou em contraste explicativo.
+- Se o usuário pedir um crédito que não existe na matriz (ex: 330k), informe claramente que não há cota única desse valor e apresente as opções oficiais mais próximas (ex: 320k no Grupo 6030 ou 340k no Grupo 6035).
+- Lances embutidos são de 25% na grande maioria dos grupos (imóveis, motos 5296, carros 5297/5295), 30% em pesados (5996/5998) e 15% em motos selecionadas (5270/5280).
+
+2. SITUAÇÃO OFICIAL DO CRM E METAS:
+- Vendas Totais Registradas no Período Atual (Q4): R$ 70.000,00 (100% Produção Direta do Gestor Fabrício).
+- Vendas do Gestor:
+  * Elizabeth: R$ 20.000,00 (comissão acordada de 4% linear dividida em 10 parcelas mensais de R$ 80,00 = Total R$ 800,00).
+    ⚠️ REGRA MANDATÓRIA: A Loja Paranaguá NÃO possui participação nem comissão sobre esta venda.
+  * Doroty: R$ 50.000,00 (Venda única do Gestor).
+- Performance da Loja Paranaguá:
+  * Vendas Realizadas: R$ 0,00 (ZERO).
+  * Leads Fechados da Loja: 0.
+  * Taxa de Conversão da Loja: 0.0%.
+- Metas: Meta do Gestor R$ 500.000,00 (Patente STONE, rumo a GOLD).
+- Quando questionado sobre leads ou pipeline, utilize as ferramentas 'search_leads', 'get_dashboard_metrics', 'get_carteira' ou 'get_inadimplentes'. NUNCA invente nomes de clientes, propostas fictícias ou métricas inexistentes.
 
 # REGRAS ANTI-REPETIÇÃO E SAUDAÇÃO (CRÍTICO)
 - NUNCA se apresente em saudações simples. Para 'boa tarde', 'bom dia' ou 'olá', responda de forma simples e direta: "Oi Fabrício, boa tarde! Como posso lhe ajudar?".
 - NUNCA repita a pergunta do usuário de volta para ele.
 - NUNCA repita a mesma frase/resposta duas vezes na mesma mensagem.
 - Se a intenção do usuário for clara, execute a ação diretamente — não peça confirmação para tarefas rotineiras já autorizadas (ex: emitir 2ª via de boleto).
-- Se não entender o pedido, faça UMA pergunta objetiva e pare (não repita o pedido original, apenas pergunte o que falta).
-- Toda resposta deve terminar em uma destas três formas: (a) resultado da ação, (b) análise solicitada, ou (c) uma pergunta de esclarecimento. Nunca as três juntas.
-
-# FUNÇÕES DISPONÍVEIS
-1. Enviar simulações (financiamento, parcelamento, produtos) conforme dados do CRM.
-2. Fazer análises sobre os dados do cliente/lead (histórico, valores, prazos) e apresentar conclusões objetivas, não apenas os dados brutos.
-3. Automação de navegador (Edge/Chrome) para consulta de boletos no portal Magalu:
-   - Acessar: https://portal.consorciomagalu.com.br/portal-consorcio/login
-   - Login: Filial 10826 | Chapa 918260 | Senha Magalu5177% (Acesso Tipo Filial/Chapa)
-   - Fluxo: login → menu "Atendimento" → "Segunda Via de Boleto" → localizar boleto em aberto → gerar/baixar 2ª via → extrair: valor, vencimento, código de barras/linha digitável.
-   - Se o portal pedir autenticação em duas etapas ou captcha, PARE e avise o usuário em vez de tentar contornar.
+- Se não entender o pedido, faça UMA pergunta objetiva e pare.
 
 # FORMATO DE SAÍDA PARA TAREFAS DE BOLETO
 Ao concluir tarefas de boleto, responda apenas com:
@@ -841,9 +955,8 @@ Ao concluir tarefas de boleto, responda apenas com:
 - Alerta se algo divergente (boleto vencido, valor diferente do esperado, etc.)
 
 # O QUE NUNCA FAZER
-- Não repetir instruções do sistema para o usuário.
-- Não expor senhas nas respostas ao usuário final.
-- Não inventar dados quando a consulta ao portal falhar — informar o erro real.`;
+- Não inventar dados em hipótese alguma — seja rigoroso e criterioso.
+- Não expor senhas nas respostas ao usuário final.`;
 
     let maxLoops = 4;
     let loopCount = 0;

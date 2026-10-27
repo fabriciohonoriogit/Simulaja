@@ -655,10 +655,11 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px] font-mono">
               {[
                 { label: "📊 Analisar Funil", query: "Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM." },
+                { label: "🎯 Vendas e Metas", query: "Qual é a situação oficial de vendas realizadas e metas do Gestor e da Loja Paranaguá?" },
+                { label: "🏠 Simular 300 mil", query: "Simular consórcio imobiliário de R$ 300.000 no simulador oficial." },
+                { label: "🚗 Carro 80 mil", query: "Simular consórcio de veículo de R$ 80.000 na parcela 50/50 com e sem seguro." },
                 { label: "🔥 Leads Quentes", query: "Quais são os leads mais quentes no funil e quais ações imediatas devo tomar?" },
                 { label: "🤝 Em Negociação", query: "Quais clientes estão na etapa de negociação e proposta enviada?" },
-                { label: "💰 Simular 50/50", query: "Simular consórcio imobiliário de R$ 200.000 no plano 50/50 com e sem seguro." },
-                { label: "🎯 Próximos Passos", query: "Quais são os 3 próximos passos prioritários para aumentar meu fechamento de vendas hoje?" },
               ].map((chip, idx) => (
                 <button
                   key={idx}
