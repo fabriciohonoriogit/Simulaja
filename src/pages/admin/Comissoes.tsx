@@ -130,9 +130,10 @@ export default function Comissoes() {
       } else {
         let currentList = data || [];
         
-        // Auto-provisioning: Se o cliente Doroty (50k e 40k) ou Elizabeth (20k) não estiverem corretos na lista, provisiona/corrige como VENDA_GESTOR
-        const hasDoroty50k = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("doroty") && Number(c.valor_venda) === 50000);
-        const hasDoroty40k = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("doroty") && Number(c.valor_venda) === 40000);
+        // Auto-provisioning e Alinhamento:
+        // 1. Elizabeth (20k): Única venda do mês de Outubro, 100% VENDA_GESTOR (4% em 10x de R$ 80 = Total R$ 800)
+        // 2. Doroty: Venda do mês passado (Setembro/2026), da Loja Paranaguá (INDICACAO_MAGALU, 0.8% em 4x). NÃO é venda de Outubro nem do Gestor.
+        const hasDoroty = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("doroty") || (c.cliente_nome || "").toLowerCase().includes("doroti"));
         const hasElizabeth = currentList.some(c => (c.cliente_nome || "").toLowerCase().includes("elizabeth") || (c.cliente_nome || "").toLowerCase().includes("elisabeth"));
 
         // Se Elizabeth já existir com regra de indicação/filial, corrige para VENDA_GESTOR
@@ -150,45 +151,57 @@ export default function Comissoes() {
               parcelas_comissao: 10
             }).eq("id", item.id).then();
           }
+
+          // Corrige Doroty: deve ser INDICACAO_MAGALU, da Loja Paranaguá e com data em Setembro (mês passado)
+          if (nomeLow.includes("doroty") || nomeLow.includes("doroti")) {
+            let changed = false;
+            if (item.regra_comissao !== "INDICACAO_MAGALU") {
+              item.regra_comissao = "INDICACAO_MAGALU";
+              item.taxa_comissao = 0.8;
+              item.parcelas_comissao = 4;
+              item.comissao_total = Number(item.valor_venda || 40000) * 0.008;
+              changed = true;
+            }
+            if (!item.data_venda || item.data_venda.startsWith("2026-10")) {
+              item.data_venda = "2026-09-15"; // Venda do mês passado (Setembro) da Loja Paranaguá
+              changed = true;
+            }
+            if (item.filial_nome !== "PARANAGUÁ") {
+              item.filial_nome = "PARANAGUÁ";
+              changed = true;
+            }
+            if (changed) {
+              supabase.from("comissoes").update({
+                regra_comissao: "INDICACAO_MAGALU",
+                taxa_comissao: item.taxa_comissao,
+                parcelas_comissao: item.parcelas_comissao,
+                comissao_total: item.comissao_total,
+                data_venda: item.data_venda,
+                filial_nome: "PARANAGUÁ"
+              }).eq("id", item.id).then();
+            }
+          }
         }
 
         const newItems = [];
         const todayStr = new Date().toISOString().split("T")[0];
 
-        if (!hasDoroty50k) {
-          newItems.push({
-            organizacao_id: profile.organizacao_id,
-            usuario_id: profile.id,
-            cliente_nome: "Doroty",
-            valor_venda: 50000,
-            regra_comissao: "VENDA_GESTOR",
-            taxa_comissao: 4.0,
-            tipo_comissionamento: "LINEAR",
-            comissao_total: 2000,
-            parcelas_comissao: 10,
-            pagamentos_retroativos: 0,
-            data_venda: todayStr,
-            administradora: "MAGALU",
-            parcela_atual: 1,
-            status: "ativo"
-          });
-        }
-
-        if (!hasDoroty40k) {
+        if (!hasDoroty) {
           newItems.push({
             organizacao_id: profile.organizacao_id,
             usuario_id: profile.id,
             cliente_nome: "Doroty",
             valor_venda: 40000,
             regra_comissao: "INDICACAO_MAGALU",
+            filial_nome: "PARANAGUÁ",
             taxa_comissao: 0.8,
             tipo_comissionamento: "LINEAR",
             comissao_total: 320,
             parcelas_comissao: 4,
             pagamentos_retroativos: 0,
-            data_venda: todayStr,
+            data_venda: "2026-09-15", // Venda do mês passado (Setembro) da Loja Paranaguá
             administradora: "MAGALU",
-            parcela_atual: 1,
+            parcela_atual: 2,
             status: "ativo"
           });
         }

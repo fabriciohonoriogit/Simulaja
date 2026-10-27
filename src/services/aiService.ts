@@ -267,18 +267,18 @@ export function getSystemAuthoritativeContext(): string {
 • Próximo Nível (GOLD): Meta de R$ 500.000,00
 
 --- SITUAÇÃO OFICIAL DE VENDAS E DESEMPENHO NO CRM (FATOS IMUTÁVEIS) ---
-• Total de Vendas Realizadas (Q4 / Mês Atual): R$ 70.000,00
-• Autoria e Distribuição das Vendas:
-  1. Elizabeth: R$ 20.000,00 — Venda 100% exclusiva do Gestor Fabrício. Comissão acordada de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00). 
-     ⚠️ REGRA MANDATÓRIA: A Loja Paranaguá NÃO possui participação nem comissão sobre esta venda.
-  2. Doroty: R$ 50.000,00 — Venda 100% exclusiva do Gestor Fabrício.
-• Performance da Loja Paranaguá:
-  - Vendas Realizadas: R$ 0,00 (ZERO).
-  - Leads Fechados da Loja: 0.
-  - Taxa de Conversão da Loja: 0.0%.
-  - Ticket Médio da Loja: R$ 0,00.
+• Total de Vendas Realizadas no Mês Atual (Outubro/2026): R$ 20.000,00
+• Autoria e Distribuição das Vendas de Outubro:
+  - Elizabeth: R$ 20.000,00 — ÚNICA venda do mês de Outubro até o momento, 100% exclusiva do Gestor Fabrício. Comissão acordada de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00). 
+    ⚠️ REGRA MANDATÓRIA: A Loja Paranaguá NÃO possui participação nem comissão sobre esta venda de Outubro.
+• Performance da Loja Paranaguá no Mês de Outubro/2026:
+  - Vendas Realizadas em Outubro: R$ 0,00 (ZERO).
+  - Leads Fechados da Loja em Outubro: 0.
+  - Taxa de Conversão da Loja em Outubro: 0.0%.
+  - Ticket Médio da Loja em Outubro: R$ 0,00.
+  *(Nota de Auditoria: A cliente Doroty foi venda do MÊS PASSADO / Setembro/2026, e foi da Loja Paranaguá. No mês de Outubro a loja não possui nenhuma venda).*
 • Estrutura de Metas da Equipe:
-  - Meta Individual do Gestor: R$ 500.000,00 (Realizado: R$ 70.000,00 | Faltam: R$ 430.000,00).
+  - Meta Individual do Gestor (Outubro): R$ 500.000,00 (Realizado em Outubro: R$ 20.000,00 | Faltam: R$ 480.000,00).
   - Meta Geral da Filial/Lojas: R$ 500.000,00.
 
 ${simContext}
@@ -423,18 +423,18 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
   ) {
     return `📊 SITUAÇÃO OFICIAL DE VENDAS E METAS NO CRM:
 
-• Total Vendido no Período Atual (Q4): R$ 70.000,00 (100% Produção Direta do Gestor ${firstName})
-• Detalhamento por Cliente:
-  1. Elizabeth: R$ 20.000,00 — Venda exclusiva do Gestor. Comissão de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00). A Loja Paranaguá NÃO tem participação nessa venda.
-  2. Doroty: R$ 50.000,00 — Venda exclusiva do Gestor.
-• Loja Paranaguá:
-  - Vendas Realizadas: R$ 0,00
-  - Leads Fechados: 0
+• Vendas do Mês Atual (Outubro/2026): R$ 20.000,00 (100% Produção Direta do Gestor ${firstName})
+• Detalhamento de Outubro:
+  - Elizabeth: R$ 20.000,00 — Única venda de Outubro até o momento, 100% exclusiva do Gestor. Comissão de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00). A Loja Paranaguá NÃO tem participação nessa venda.
+• Loja Paranaguá no Mês de Outubro:
+  - Vendas Realizadas: R$ 0,00 (ZERO)
+  - Leads Fechados da Loja: 0
   - Taxa de Conversão: 0.0%
-• Status Campanha Elite Magalu (Q4):
-  - Patente Atual: STONE (produção até 500k)
-  - Próximo Nível (GOLD): Meta de R$ 500.000,00 (Faltam R$ 430.000,00)
-  - Desafio Cromo: R$ 1,5 Milhão (Prêmio Base R$ 1.500 + Bônus = R$ 3.500)`;
+  - Ticket Médio: R$ 0,00
+  *(Nota: A cliente Doroty foi venda do MÊS PASSADO / Setembro, da Loja Paranaguá, e NÃO conta nas vendas de Outubro).*
+• Metas de Outubro:
+  - Meta Individual do Gestor: R$ 500.000,00 (Realizado: R$ 20.000,00 | Faltam: R$ 480.000,00)
+  - Patente Atual: STONE (produção até 500k)`;
   }
 
   // 4. FUNIL DE VENDAS & CRM (Análise Executiva Realtime)
@@ -528,7 +528,7 @@ Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
   }
 
   const safeSnippet = typeof userQuery === "string" ? userQuery.slice(0, 50) : "";
-  return `Entendi sua pergunta sobre "${safeSnippet}...". Estou operando com a matriz autoritária do CRM e do Simulador SimulaJá. Posso te apresentar cotações exatas (ex: "simular 300 mil imóvel"), extratos e boletos, status de vendas (Elizabeth/Doroty) ou análise de leads do funil!`;
+  return `Entendi sua pergunta sobre "${safeSnippet}...". Estou operando com a matriz autoritária do CRM e do Simulador SimulaJá. Posso te apresentar cotações exatas (ex: "simular 300 mil imóvel"), extratos e boletos, status de vendas de Outubro (Elizabeth 20k) ou análise de leads do funil!`;
 }
 
 export const aiService = {
@@ -601,9 +601,10 @@ NOME DO INTERLOCUTOR: "${userName}"
    - Se o usuário solicitar um valor que não existe na tabela (ex: 330k), informe com precisão que não há cota única desse valor e apresente as opções oficiais mais próximas (ex: 320k no Grupo 6030 ou 340k no Grupo 6035).
    - Para lances médios, utilize EXCLUSIVAMENTE a média histórica cadastrada do grupo (ex: 6042: 98.97%, 6030: 77.60%, 5295: 43.73%, 5296: 88.75%).
 2. DADOS DO CRM E VENDAS:
-   - O faturamento/vendas atual registrado é de R$ 70.000,00 (100% Produção do Gestor Fabrício: Elizabeth R$ 20.000,00 e Doroty R$ 50.000,00).
+   - No mês atual de OUTUBRO/2026, houve APENAS R$ 20.000,00 em vendas até o momento, referente exclusivamente à cliente Elizabeth (produção 100% do Gestor Fabrício).
    - A comissão de Elizabeth é de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00).
-   - A Loja Paranaguá possui R$ 0,00 em vendas e 0% de taxa de conversão (a venda de Elizabeth é única do Gestor e NÃO da loja).
+   - A Loja Paranaguá possui R$ 0,00 em vendas e 0% de taxa de conversão no mês de Outubro (zero fechamentos).
+   - A cliente Doroty foi venda do MÊS PASSADO (Setembro/2026), e foi da Loja Paranaguá. NUNCA diga que Doroty é venda de Outubro nem venda do Gestor.
    - Nunca invente nomes de leads, vendas fantasiosas ou métricas inexistentes.
 
 ${dynamicQuote ? `\n--- COTAÇÃO IDENTIFICADA DO SIMULADOR PARA ESTA CONSULTA ---\n${dynamicQuote}\n------------------------------------------------------------\n` : ""}

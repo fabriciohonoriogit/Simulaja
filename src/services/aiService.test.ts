@@ -84,19 +84,20 @@ describe("Jarvis OS — Autoridade e Consciência de Dados do Simulador e CRM", 
   });
 
   describe("getSystemAuthoritativeContext — Consciência do CRM e Vendas", () => {
-    it("deve conter estritamente as vendas reais do Gestor (R$ 70k: Elizabeth 20k e Doroty 50k)", () => {
+    it("deve conter estritamente as vendas de Outubro (R$ 20k da Elizabeth) e Doroty como mês passado da Loja Paranaguá", () => {
       const context = getSystemAuthoritativeContext();
-      expect(context).toContain("R$ 70.000,00");
+      expect(context).toContain("Total de Vendas Realizadas no Mês Atual (Outubro/2026): R$ 20.000,00");
       expect(context).toContain("Elizabeth: R$ 20.000,00");
-      expect(context).toContain("Doroty: R$ 50.000,00");
       expect(context).toContain("10 parcelas mensais de R$ 80,00");
+      expect(context).toContain("Doroty foi venda do MÊS PASSADO");
+      expect(context).toContain("Loja Paranaguá");
     });
 
     it("deve atestar com clareza absoluta que a Loja Paranaguá tem R$ 0,00 em vendas e 0.0% de conversão", () => {
       const context = getSystemAuthoritativeContext();
-      expect(context).toContain("Performance da Loja Paranaguá:");
-      expect(context).toContain("Vendas Realizadas: R$ 0,00");
-      expect(context).toContain("Taxa de Conversão da Loja: 0.0%");
+      expect(context).toContain("Performance da Loja Paranaguá no Mês de Outubro/2026:");
+      expect(context).toContain("Vendas Realizadas em Outubro: R$ 0,00");
+      expect(context).toContain("Taxa de Conversão da Loja em Outubro: 0.0%");
       expect(context).toContain("A Loja Paranaguá NÃO possui participação");
     });
 

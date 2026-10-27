@@ -928,16 +928,17 @@ Seu objetivo é executar comandos com máxima precisão técnica, inteligência 
 - Lances embutidos são de 25% na grande maioria dos grupos (imóveis, motos 5296, carros 5297/5295), 30% em pesados (5996/5998) e 15% em motos selecionadas (5270/5280).
 
 2. SITUAÇÃO OFICIAL DO CRM E METAS:
-- Vendas Totais Registradas no Período Atual (Q4): R$ 70.000,00 (100% Produção Direta do Gestor Fabrício).
-- Vendas do Gestor:
-  * Elizabeth: R$ 20.000,00 (comissão acordada de 4% linear dividida em 10 parcelas mensais de R$ 80,00 = Total R$ 800,00).
-    ⚠️ REGRA MANDATÓRIA: A Loja Paranaguá NÃO possui participação nem comissão sobre esta venda.
-  * Doroty: R$ 50.000,00 (Venda única do Gestor).
-- Performance da Loja Paranaguá:
-  * Vendas Realizadas: R$ 0,00 (ZERO).
-  * Leads Fechados da Loja: 0.
-  * Taxa de Conversão da Loja: 0.0%.
-- Metas: Meta do Gestor R$ 500.000,00 (Patente STONE, rumo a GOLD).
+- Vendas Totais Registradas no Mês de Outubro/2026: R$ 20.000,00.
+- Vendas do Gestor em Outubro/2026:
+  * Elizabeth: R$ 20.000,00 (Única venda do mês de Outubro até o momento, 100% exclusiva do Gestor Fabrício. Comissão acordada de 4% linear dividida em 10 parcelas mensais de R$ 80,00 = Total R$ 800,00).
+    ⚠️ REGRA MANDATÓRIA: A Loja Paranaguá NÃO possui participação nem comissão sobre esta venda de Outubro.
+- Performance da Loja Paranaguá no Mês de Outubro/2026:
+  * Vendas Realizadas em Outubro: R$ 0,00 (ZERO).
+  * Leads Fechados da Loja em Outubro: 0.
+  * Taxa de Conversão da Loja em Outubro: 0.0%.
+  * Ticket Médio da Loja em Outubro: R$ 0,00.
+  ⚠️ REGRA MANDATÓRIA SOBRE DOROTY: A cliente Doroty foi uma venda realizada no MÊS PASSADO (Setembro/2026), e foi da LOJA PARANAGUÁ (indicação de loja filial 952). NUNCA diga nem insinue que Doroty é venda deste mês de Outubro nem que foi venda do Gestor.
+- Metas: Meta Individual do Gestor em Outubro: R$ 500.000,00 (Realizado em Outubro: R$ 20.000,00 | Faltam: R$ 480.000,00 | Patente STONE, rumo a GOLD). Meta Geral das Lojas: R$ 500.000,00.
 - Quando questionado sobre leads ou pipeline, utilize as ferramentas 'search_leads', 'get_dashboard_metrics', 'get_carteira' ou 'get_inadimplentes'. NUNCA invente nomes de clientes, propostas fictícias ou métricas inexistentes.
 
 # REGRAS ANTI-REPETIÇÃO E SAUDAÇÃO (CRÍTICO)
