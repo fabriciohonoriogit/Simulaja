@@ -11,7 +11,6 @@ import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import TrialBanner from "@/components/admin/TrialBanner";
 import TrialGate from "@/components/admin/TrialGate";
 import { useSubscription } from "@/hooks/useSubscription";
-import { GlobalJarvisVoiceListener } from "@/components/admin/GlobalJarvisVoiceListener";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface MenuGroup {
@@ -72,8 +71,7 @@ const menuGroups: MenuGroup[] = [
     {
         label: "SUPORTE / IA",
         items: [
-            { icon: Sparkles, label: "Bella IA", path: "/admin/jarvis", color: "text-purple-500" },
-            { icon: Zap, label: "Jarvis OS (HUD)", path: "/admin/jarvis-hud", color: "text-cyan-400" },
+            { icon: Zap, label: "Jarvis OS", path: "/admin/jarvis", color: "text-cyan-400" },
         ]
     }
 ];
@@ -327,7 +325,6 @@ export default function AdminLayout() {
                 </main>
             </div>
             <PwaInstallPrompt />
-            <GlobalJarvisVoiceListener />
         </div>
     );
 }
