@@ -593,12 +593,19 @@ export default function Simulador() {
                   <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
                     <span>⚙️</span> Características do Grupo {c.grupo}
                   </span>
-                  <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                    Reajuste: {c.reajuste}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {c.status && (
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${c.status === 'Formação' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
+                        {c.status}
+                      </span>
+                    )}
+                    <span className="text-[9px] font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                      Reajuste: {c.reajuste}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                   <div>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">1ª Assembleia</p>
                     <p className="font-semibold text-slate-800">{c.primeiraAssembleia}</p>
@@ -607,12 +614,23 @@ export default function Simulador() {
                     <p className="text-[9px] font-bold text-muted-foreground uppercase font-sans">Próxima Assembleia</p>
                     <p className="font-semibold text-slate-800">{c.proximaAssembleia}</p>
                   </div>
-                  {MEDIA_LANCES_GRUPOS[c.grupo] !== undefined && (
-                    <div className="col-span-2 sm:col-span-1">
-                      <p className="text-[9px] font-bold text-emerald-600 uppercase font-sans">Média Lance Contemplado</p>
-                      <p className="font-bold text-emerald-700 font-mono">{MEDIA_LANCES_GRUPOS[c.grupo].toFixed(2)}%</p>
+                  {c.cotasVagas !== undefined && (
+                    <div>
+                      <p className="text-[9px] font-bold text-blue-600 uppercase font-sans">Cotas Vagas</p>
+                      <p className="font-bold text-blue-800 font-mono">{c.cotasVagas.toLocaleString('pt-BR')}</p>
                     </div>
                   )}
+                  {MEDIA_LANCES_GRUPOS[c.grupo] !== undefined ? (
+                    <div>
+                      <p className="text-[9px] font-bold text-emerald-600 uppercase font-sans">Média Lance</p>
+                      <p className="font-bold text-emerald-700 font-mono">{MEDIA_LANCES_GRUPOS[c.grupo].toFixed(2)}%</p>
+                    </div>
+                  ) : c.prazoRestante ? (
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase font-sans">Prazo Restante</p>
+                      <p className="font-semibold text-slate-800 font-mono">{c.prazoRestante}m</p>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="text-xs space-y-2 pt-2 border-t border-slate-100">
