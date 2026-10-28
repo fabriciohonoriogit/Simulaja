@@ -14,16 +14,10 @@ import {
   Building2,
   Users,
   Search,
-  CheckCircle2,
   Loader2,
   ExternalLink,
   ShieldCheck,
   Sparkles,
-  PhoneCall,
-  DollarSign,
-  TrendingUp,
-  ArrowRight,
-  Filter,
   CheckSquare,
   Square
 } from "lucide-react";
@@ -44,6 +38,32 @@ interface RadarCidadeModalProps {
   onLeadsImported?: () => void;
 }
 
+// 2 Sugestões de Estratégias Locais do Jarvis
+export const SUGESTOES_RADAR_LOCAL = [
+  {
+    id: "frotas_parana",
+    badge: "🚛 Frotistas & Pesados",
+    titulo: "Transportadoras e Cargas em Curitiba e Região",
+    cidade: "Curitiba",
+    uf: "PR",
+    nichoId: "transportes",
+    segmento: "pesados" as const,
+    credito: 300000,
+    descricao: "Mapeia sócios e diretores de transportadoras com proposta de carta de R$ 300.000 e lance embutido de 25%.",
+  },
+  {
+    id: "clinicas_imoveis",
+    badge: "🏥 Clínicas & Consultórios",
+    titulo: "Clínicas Médicas & Saúde para Sede Própria",
+    cidade: "Curitiba",
+    uf: "PR",
+    nichoId: "clinicas",
+    segmento: "imovel" as const,
+    credito: 400000,
+    descricao: "Mapeia médicos e sócios de clínicas com proposta de alavancagem de R$ 400.000 com meia parcela 50/50.",
+  },
+];
+
 export function RadarCidadeModal({
   open,
   onClose,
@@ -56,13 +76,20 @@ export function RadarCidadeModal({
   const [nichoLivre, setNichoLivre] = useState("");
   const [segmento, setSegmento] = useState<"pesados" | "imovel" | "veiculo">("pesados");
   const [faixaCredito, setFaixaCredito] = useState<number>(300000);
+  const [quantidade, setQuantidade] = useState<number>(10); // 10 a 20 clientes por vez
   
   const [loading, setLoading] = useState(false);
   const [prospects, setProspects] = useState<RadarLocalProspect[]>([]);
   const [salvando, setSalvando] = useState(false);
 
-  const handleBuscar = async () => {
-    if (!cidade.trim()) {
+  const handleBuscar = async (overrideParams?: { cidade?: string; uf?: string; segmento?: any; credito?: number; nichoId?: string }) => {
+    const c = overrideParams?.cidade || cidade;
+    const u = overrideParams?.uf || uf;
+    const seg = overrideParams?.segmento || segmento;
+    const cred = overrideParams?.credito || faixaCredito;
+    const nId = overrideParams?.nichoId || nichoSelecionado;
+
+    if (!c.trim()) {
       toast.error("Informe a cidade desejada!");
       return;
     }
@@ -71,25 +98,43 @@ export function RadarCidadeModal({
     setProspects([]);
 
     try {
-      const nichoObj = NICHOS_POPULARES.find((n) => n.id === nichoSelecionado);
+      const nichoObj = NICHOS_POPULARES.find((n) => n.id === nId);
       const nichoNome = nichoLivre.trim() || nichoObj?.label || "Empresas Locais";
 
       const results = await buscarEmpresasPorCidade({
-        cidade: cidade.trim(),
-        uf,
+        cidade: c.trim(),
+        uf: u,
         nicho: nichoNome,
-        segmento,
-        faixaCredito,
+        segmento: seg,
+        faixaCredito: cred,
+        quantidade,
       });
 
       setProspects(results);
-      toast.success(`📍 ${results.length} empresas mapeadas em ${cidade} - ${uf}!`);
+      toast.success(`📍 ${results.length} empresas mapeadas em ${c} - ${u}!`);
     } catch (err: any) {
       console.error(err);
       toast.error("Erro ao varrer cidade: " + (err.message || "Tente novamente"));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAplicarSugestao = (sug: typeof SUGESTOES_RADAR_LOCAL[0]) => {
+    setCidade(sug.cidade);
+    setUf(sug.uf);
+    setSegmento(sug.segmento);
+    setFaixaCredito(sug.credito);
+    setNichoSelecionado(sug.nichoId);
+    setNichoLivre("");
+    toast.info(`Estratégia aplicada: ${sug.titulo}`);
+    handleBuscar({
+      cidade: sug.cidade,
+      uf: sug.uf,
+      segmento: sug.segmento,
+      credito: sug.credito,
+      nichoId: sug.nichoId,
+    });
   };
 
   const handleNichoChange = (nichoId: string) => {
@@ -211,11 +256,40 @@ export function RadarCidadeModal({
           </div>
         </DialogHeader>
 
+        {/* BOX DE 2 PROMPTS / ESTRATÉGIAS RECOMENDADAS PELO JARVIS */}
+        <div className="bg-blue-50/50 border border-blue-200/70 rounded-2xl p-4 my-2">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Sparkles className="h-4 w-4 text-blue-600" />
+            <span className="text-[11px] font-black uppercase text-blue-950 tracking-wider">
+              2 Estratégias Recomendadas pelo Jarvis (Clique para Buscar):
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            {SUGESTOES_RADAR_LOCAL.map((sug) => (
+              <div
+                key={sug.id}
+                onClick={() => handleAplicarSugestao(sug)}
+                className="p-3 rounded-xl border bg-white border-blue-200/60 hover:border-blue-400 hover:shadow-sm transition-all cursor-pointer text-left"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-black uppercase text-blue-700">
+                    {sug.badge}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400">Ativar Radar ➔</span>
+                </div>
+                <h4 className="text-xs font-bold text-slate-900 mb-1">{sug.titulo}</h4>
+                <p className="text-[11px] text-slate-600 line-clamp-2">{sug.descricao}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* PAINEL DE CONTROLE DE BUSCA GEOGRÁFICA */}
-        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 space-y-4 mt-2">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
             {/* CIDADE */}
-            <div className="md:col-span-5 space-y-1.5">
+            <div className="md:col-span-4 space-y-1.5">
               <label className="text-[11px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5 text-blue-600" /> Cidade Alvo
               </label>
@@ -245,26 +319,33 @@ export function RadarCidadeModal({
               </select>
             </div>
 
-            {/* SEGMENTO DE CONSÓRCIO */}
+            {/* QUANTIDADE (10 A 20) */}
             <div className="md:col-span-3 space-y-1.5">
               <label className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
-                Carta Consórcio
+                Lote de Prospecção
               </label>
-              <select
-                value={segmento}
-                onChange={(e) => setSegmento(e.target.value as any)}
-                className="w-full h-10 px-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="pesados">🚛 Pesados / Frotas</option>
-                <option value="imovel">🏢 Imóveis / Galpões</option>
-                <option value="veiculo">🚗 Veículos / Leves</option>
-              </select>
+              <div className="flex gap-1 h-10">
+                {[10, 15, 20].map((qtd) => (
+                  <button
+                    key={qtd}
+                    type="button"
+                    onClick={() => setQuantidade(qtd)}
+                    className={`flex-1 rounded-xl text-xs font-black transition-all border ${
+                      quantidade === qtd
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
+                    }`}
+                  >
+                    {qtd}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* BOTÃO PROSPECTAR */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
               <Button
-                onClick={handleBuscar}
+                onClick={() => handleBuscar()}
                 disabled={loading}
                 className="w-full h-10 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md shadow-blue-500/20"
               >
@@ -273,7 +354,7 @@ export function RadarCidadeModal({
                 ) : (
                   <>
                     <Search className="h-3.5 w-3.5 mr-1.5" />
-                    Buscar
+                    Mapear {quantidade} Empresas
                   </>
                 )}
               </Button>
@@ -304,7 +385,7 @@ export function RadarCidadeModal({
         </div>
 
         {/* LISTAGEM DE RESULTADOS */}
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-slate-600" />
@@ -334,25 +415,25 @@ export function RadarCidadeModal({
           </div>
 
           {loading && (
-            <div className="py-16 text-center space-y-3">
+            <div className="py-14 text-center space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
               <p className="text-sm font-bold text-slate-700">
                 Varrendo Google Maps e cruzando CNPJs com a Receita Federal em {cidade}...
               </p>
               <p className="text-xs text-slate-400">
-                Localizando estabelecimentos, quadro societário (QSA) e simulando parcelas 50/50.
+                Localizando {quantidade} estabelecimentos, quadro societário (QSA) e simulando parcelas 50/50.
               </p>
             </div>
           )}
 
           {!loading && prospects.length === 0 && (
-            <div className="py-14 text-center border-2 border-dashed border-slate-200 rounded-2xl p-6">
-              <MapPin className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+            <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-2xl p-6">
+              <MapPin className="h-8 w-8 text-slate-300 mx-auto mb-2" />
               <h4 className="text-sm font-bold text-slate-700">
                 Pronto para mapear sua região!
               </h4>
               <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-                Escolha a cidade, o estado e o nicho desejado acima e clique em <b>Buscar</b> para trazer empresas, sócios e contatos para o seu funil.
+                Escolha uma das <b>2 Estratégias Recomendadas</b> ou preencha a cidade, defina o lote de <b>10 a 20 leads</b> e clique em <b>Mapear</b>.
               </p>
             </div>
           )}
@@ -362,14 +443,13 @@ export function RadarCidadeModal({
               <div
                 key={p.id}
                 onClick={() => handleToggleSelect(p.id)}
-                className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer ${
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                   p.selecionado
                     ? "bg-blue-50/40 border-blue-400 shadow-sm"
                     : "bg-white border-slate-200 hover:border-slate-300"
                 }`}
               >
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                  {/* DADOS DA EMPRESA E SÓCIOS */}
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1">
                     <input
                       type="checkbox"
@@ -379,10 +459,9 @@ export function RadarCidadeModal({
                       className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
 
-                    <div className="space-y-2 flex-1">
-                      {/* TÍTULO E BADGES */}
+                    <div className="space-y-1.5 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-base font-black text-slate-900">
+                        <span className="text-sm font-black text-slate-900">
                           {p.nomeFantasia}
                         </span>
                         <Badge variant="outline" className="text-[10px] font-bold text-slate-600 bg-white">
@@ -405,8 +484,7 @@ export function RadarCidadeModal({
                         </b>
                       </p>
 
-                      {/* QUADRO DE SÓCIOS (QSA) */}
-                      <div className="bg-slate-100/70 p-2.5 rounded-xl border border-slate-200/60 flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <div className="bg-slate-100/70 p-2 rounded-xl border border-slate-200/60 flex flex-wrap items-center gap-x-4 gap-y-1">
                         <span className="text-[11px] font-black text-blue-900 flex items-center gap-1">
                           <Users className="h-3.5 w-3.5 text-blue-600" /> Decisor: {p.decisorPrincipal}
                         </span>
@@ -417,10 +495,9 @@ export function RadarCidadeModal({
                         )}
                       </div>
 
-                      {/* ENDEREÇO E MAPS */}
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
                         <span className="flex items-center gap-1 font-medium">
-                          <MapPin className="h-3.5 w-3.5 text-slate-400" /> {p.endereco}
+                          <MapPin className="h-3 w-3 text-slate-400" /> {p.endereco}
                         </span>
                         {p.googleMapsUrl && (
                           <a
@@ -435,8 +512,7 @@ export function RadarCidadeModal({
                         )}
                       </div>
 
-                      {/* SIMULAÇÃO DE CONSÓRCIO E MEIA PARCELA */}
-                      <div className="bg-blue-50/70 p-2.5 rounded-xl border border-blue-100 text-xs text-blue-950 space-y-1">
+                      <div className="bg-blue-50/70 p-2 rounded-xl border border-blue-100 text-xs text-blue-950 space-y-1">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-bold">
                             💰 Crédito: R$ {p.valorCredito.toLocaleString("pt-BR")},00 em {p.prazoMeses} meses
@@ -452,7 +528,6 @@ export function RadarCidadeModal({
                     </div>
                   </div>
 
-                  {/* BOTÃO CHAT WHATSAPP DIRETO */}
                   <div className="md:self-center" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleWhatsAppSend(p)}

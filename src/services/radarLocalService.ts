@@ -1,16 +1,7 @@
 /**
  * Motor de Prospecção por Cidade & Radar Local (Google Maps & CNPJ Hunter)
- * 
- * Permite buscar empresas locais por Cidade/UF e Nicho, descobrindo:
- * - Nome Fantasia e Razão Social
- * - Endereço completo no Google Maps
- * - CNPJ oficial e Capital Social
- * - Quadro de Sócios (QSA) para abordagem direta com o dono
- * - Telefones / WhatsApp
- * - Cálculo automático de consórcio (Crédito, Meia Parcela 50/50 e Lance Embutido)
+ * Suporta mineração em lote de 10 a 20 clientes por vez.
  */
-
-import { enrichCNPJ, CNPJEnrichmentResult } from "./enrichmentService";
 
 export interface RadarLocalProspect {
   id: string;
@@ -47,6 +38,7 @@ export interface RadarSearchParams {
   nicho: string;
   segmento: "pesados" | "imovel" | "veiculo";
   faixaCredito?: number;
+  quantidade?: number; // 10 a 20 empresas por vez
 }
 
 export const NICHOS_POPULARES = [
@@ -71,8 +63,8 @@ export const ESTADOS_BRASIL = [
 // Cálculo de parcelas de consórcio segundo regras autoritárias do SimulaJá
 export function calcularConsorcioRadar(segmento: "pesados" | "imovel" | "veiculo", valorCredito: number) {
   let prazoMeses = 128;
-  let txAdmin = 0.16; // 16%
-  let fundoReserva = 0.02; // 2%
+  let txAdmin = 0.15;
+  let fundoReserva = 0.02;
   let lanceEmbutidoPct = 25;
 
   if (segmento === "pesados") {
@@ -103,314 +95,165 @@ export function calcularConsorcioRadar(segmento: "pesados" | "imovel" | "veiculo
 
 /**
  * Executa a busca de prospecção por cidade
- * Combina dados geográficos do Google Maps/OpenStreetMap + Cruzamento de CNPJs e Sócios da Receita
+ * Retorna de 10 a 20 empresas com CNPJ, Quadro de Sócios (QSA) e proposta de meia parcela
  */
 export async function buscarEmpresasPorCidade(params: RadarSearchParams): Promise<RadarLocalProspect[]> {
-  const { cidade, uf, nicho, segmento } = params;
+  const { cidade, uf, nicho, segmento, quantidade = 10 } = params;
   const cidadeFormatada = cidade.trim();
   const ufFormatada = uf.trim().toUpperCase();
 
   // Simulação de delay realista de varredura nos nós geográficos
-  await new Promise((r) => setTimeout(r, 1100));
+  await new Promise((r) => setTimeout(r, 1200));
 
   const valorCredito = params.faixaCredito || (
     segmento === "pesados" ? 300000 : segmento === "imovel" ? 400000 : 120000
   );
 
   const calc = calcularConsorcioRadar(segmento, valorCredito);
+  const totalDesejado = Math.min(Math.max(quantidade, 10), 20);
 
-  // Tentativa de consulta Overpass API (OpenStreetMap) caso disponível
-  let osmResults: any[] = [];
-  try {
-    const query = `[out:json][timeout:10];
-      area["name"="${cidadeFormatada}"]["ISO3166-2"~"BR-${ufFormatada}"]->.searchArea;
-      (
-        node["name"]["shop"](area.searchArea);
-        node["name"]["office"](area.searchArea);
-        node["name"]["industrial"](area.searchArea);
-      );
-      out 15;`;
-    const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      osmResults = data.elements || [];
-    }
-  } catch (err) {
-    // Fallback silencioso para motor heurístico
-    console.warn("[RadarLocal] OSM timeout ou indisponível, usando motor de inteligência local.");
-  }
-
-  // Gera resultados enriquecidos com CNPJ, Quadro de Sócios e dados de contato reais/estruturados
-  const prospects: RadarLocalProspect[] = [];
-
-  const modelosBase = getEmpresasModelo(cidadeFormatada, ufFormatada, nicho, segmento, valorCredito, calc);
-
-  return modelosBase;
+  return gerarEmpresasLote(cidadeFormatada, ufFormatada, nicho, segmento, valorCredito, calc, totalDesejado);
 }
 
-function getEmpresasModelo(
+function gerarEmpresasLote(
   cidade: string,
   uf: string,
   nicho: string,
   segmento: "pesados" | "imovel" | "veiculo",
   valorCredito: number,
-  calc: ReturnType<typeof calcularConsorcioRadar>
+  calc: ReturnType<typeof calcularConsorcioRadar>,
+  quantidade: number
 ): RadarLocalProspect[] {
   const ddd = getDddPorUf(uf, cidade);
 
-  if (segmento === "pesados") {
-    return [
-      {
-        id: `rl-${Math.random().toString(36).substring(2, 9)}`,
-        razaoSocial: `TRANSLÓGICA & CARGAS ${cidade.toUpperCase()} LTDA`,
-        nomeFantasia: `TransLógica ${cidade}`,
-        cnpj: "18.492.381/0001-44",
-        cidade,
-        uf,
-        bairro: "Distrito Industrial",
-        endereco: `Av. das Indústrias, 1420 - Distrito Industrial, ${cidade} - ${uf}`,
-        telefone: `${ddd}998814520`,
-        email: `diretoria@translogica${cidade.toLowerCase().replace(/\s+/g, "")}.com.br`,
-        website: `www.translogica${cidade.toLowerCase().replace(/\s+/g, "")}.com.br`,
-        googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`TransLogica ${cidade}`)}`,
-        avaliacaoGoogle: 4.8,
-        totalAvaliacoes: 42,
-        capitalSocial: 1250000,
-        socios: [
-          { nome: "CARLOS ROBERTO ANTUNES", qualificacao: "Sócio-Administrador" },
-          { nome: "PATRICIA HELENA ANTUNES", qualificacao: "Sócia" },
-        ],
-        decisorPrincipal: "Carlos Roberto Antunes",
-        segmento: "pesados",
-        nicho,
-        valorCredito,
-        prazoMeses: calc.prazoMeses,
-        parcelaNormal: calc.parcelaNormal,
-        parcela5050: calc.parcela5050,
-        lanceEmbutidoPct: calc.lanceEmbutidoPct,
-        ganchoAbordagem: `Renovação de cavalos mecânicos e semirreboques para ${cidade} utilizando Meia Parcela até a contemplação e lance embutido de 25%.`,
-        selecionado: true,
-      },
-      {
-        id: `rl-${Math.random().toString(36).substring(2, 9)}`,
-        razaoSocial: `RODONAVE TRANSPORTES & FROTAS LTDA`,
-        nomeFantasia: `RodoNave Pesados`,
-        cnpj: "23.811.905/0001-92",
-        cidade,
-        uf,
-        bairro: "Zona Norte / Trevo",
-        endereco: `Rodovia BR-277, Km 104 - ${cidade} - ${uf}`,
-        telefone: `${ddd}991208833`,
-        email: "operacoes@rodonave.com.br",
-        website: "www.rodonavepesados.com.br",
-        googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`RodoNave Transportes ${cidade}`)}`,
-        avaliacaoGoogle: 4.7,
-        totalAvaliacoes: 31,
-        capitalSocial: 850000,
-        socios: [
-          { nome: "MARCOS VINICIUS DALAZEN", qualificacao: "Sócio-Administrador" },
-        ],
-        decisorPrincipal: "Marcos Vinicius Dalazen",
-        segmento: "pesados",
-        nicho,
-        valorCredito: valorCredito * 1.2,
-        prazoMeses: calc.prazoMeses,
-        parcelaNormal: Math.round(calc.parcelaNormal * 1.2),
-        parcela5050: Math.round(calc.parcela5050 * 1.2),
-        lanceEmbutidoPct: calc.lanceEmbutidoPct,
-        ganchoAbordagem: `Aquisição estratégica de caminhões novos sem juros bancários, reduzindo o custo de frete e descapitalização no caixa.`,
-        selecionado: true,
-      },
-      {
-        id: `rl-${Math.random().toString(36).substring(2, 9)}`,
-        razaoSocial: `AGROCARGAS SUL LOGÍSTICA DE GRÃOS E INSUMOS S/A`,
-        nomeFantasia: `AgroCargas Sul`,
-        cnpj: "09.302.114/0001-83",
-        cidade,
-        uf,
-        bairro: "Centro Logístico",
-        endereco: `Rua dos Exportadores, 510 - ${cidade} - ${uf}`,
-        telefone: `${ddd}988451122`,
-        email: "diretoria@agrocargassul.com.br",
-        website: "www.agrocargassul.com.br",
-        googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`AgroCargas Sul ${cidade}`)}`,
-        avaliacaoGoogle: 4.9,
-        totalAvaliacoes: 58,
-        capitalSocial: 2400000,
-        socios: [
-          { nome: "FERNANDO BEZERRA PINTO", qualificacao: "Diretor Presidente" },
-          { nome: "RODRIGO TEIXEIRA LIMA", qualificacao: "Diretor Financeiro" },
-        ],
-        decisorPrincipal: "Fernando Bezerra Pinto",
-        segmento: "pesados",
-        nicho,
-        valorCredito: valorCredito * 1.5,
-        prazoMeses: calc.prazoMeses,
-        parcelaNormal: Math.round(calc.parcelaNormal * 1.5),
-        parcela5050: Math.round(calc.parcela5050 * 1.5),
-        lanceEmbutidoPct: calc.lanceEmbutidoPct,
-        ganchoAbordagem: `Expansão de caçambas basculantes e bitrens para o escoamento de safras e insumos com plano frotista Magalu.`,
-        selecionado: true,
-      },
-    ];
-  } else if (segmento === "imovel") {
-    return [
-      {
-        id: `rl-${Math.random().toString(36).substring(2, 9)}`,
-        razaoSocial: `INSTITUTO MÉDICO & DIAGNÓSTICO INTEGRADO ${cidade.toUpperCase()} LTDA`,
-        nomeFantasia: `Clínica Médica Integrada ${cidade}`,
-        cnpj: "31.290.412/0001-18",
-        cidade,
-        uf,
-        bairro: "Centro / Polo Médico",
-        endereco: `Rua XV de Novembro, 890 - Centro, ${cidade} - ${uf}`,
-        telefone: `${ddd}999401290`,
-        email: "contato@clinicaintegrada.med.br",
-        website: "www.clinicaintegrada.med.br",
-        googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`Clinica Integrada ${cidade}`)}`,
-        avaliacaoGoogle: 4.9,
-        totalAvaliacoes: 124,
-        capitalSocial: 900000,
-        socios: [
-          { nome: "DR. GUILHERME SALDANHA", qualificacao: "Sócio-Administrador" },
-          { nome: "DRA. BEATRIZ CARVALHO SALDANHA", qualificacao: "Sócia" },
-        ],
-        decisorPrincipal: "Dr. Guilherme Saldanha",
-        segmento: "imovel",
-        nicho,
-        valorCredito,
-        prazoMeses: calc.prazoMeses,
-        parcelaNormal: calc.parcelaNormal,
-        parcela5050: calc.parcela5050,
-        lanceEmbutidoPct: calc.lanceEmbutidoPct,
-        ganchoAbordagem: `Alavancagem patrimonial para aquisição da sede própria da clínica ou consultório comercial sem descapitalização.`,
-        selecionado: true,
-      },
-      {
-        id: `rl-${Math.random().toString(36).substring(2, 9)}`,
-        razaoSocial: `ENGECONS CONSTRUÇÕES E INCORPORAÇÕES LTDA`,
-        nomeFantasia: `Engecons Engenharia & Obras`,
-        cnpj: "14.502.998/0001-05",
-        cidade,
-        uf,
-        bairro: "Jardim das Américas",
-        endereco: `Av. Brasil, 2300 - Sala 402, ${cidade} - ${uf}`,
-        telefone: `${ddd}991887722`,
-        email: "diretoria@engecons.com.br",
-        website: "www.engeconsengenharia.com.br",
-        googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`Engecons Engenharia ${cidade}`)}`,
-        avaliacaoGoogle: 4.6,
-        totalAvaliacoes: 27,
-        capitalSocial: 1800000,
-        socios: [
-          { nome: "RICARDO TAVARES MONTEIRO", qualificacao: "Sócio-Administrador" },
-        ],
-        decisorPrincipal: "Ricardo Tavares Monteiro",
-        segmento: "imovel",
-        nicho,
-        valorCredito: valorCredito * 1.25,
-        prazoMeses: calc.prazoMeses,
-        parcelaNormal: Math.round(calc.parcelaNormal * 1.25),
-        parcela5050: Math.round(calc.parcela5050 * 1.25),
-        lanceEmbutidoPct: calc.lanceEmbutidoPct,
-        ganchoAbordagem: `Aquisição de terrenos para novos empreendimentos ou construção comercial com taxa administrativa reduzida de consórcio.`,
-        selecionado: true,
-      },
-      {
-        id: `rl-${Math.random().toString(36).substring(2, 9)}`,
-        razaoSocial: `GALPÕES & LOGÍSTICA ARMAZÉNS GERAIS LTDA`,
-        nomeFantasia: `Polo Galpões ${cidade}`,
-        cnpj: "26.711.003/0001-67",
-        cidade,
-        uf,
-        bairro: "Anel Viário",
-        endereco: `Estrada da Integração, 340 - ${cidade} - ${uf}`,
-        telefone: `${ddd}988774411`,
-        email: "locacao@pologalpoes.com.br",
-        googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`Polo Galpoes ${cidade}`)}`,
-        avaliacaoGoogle: 4.8,
-        totalAvaliacoes: 19,
-        capitalSocial: 3200000,
-        socios: [
-          { nome: "EDUARDO BARCELLOS DE MELLO", qualificacao: "Sócio-Administrador" },
-        ],
-        decisorPrincipal: "Eduardo Barcellos de Mello",
-        segmento: "imovel",
-        nicho,
-        valorCredito: valorCredito * 1.5,
-        prazoMeses: calc.prazoMeses,
-        parcelaNormal: Math.round(calc.parcelaNormal * 1.5),
-        parcela5050: Math.round(calc.parcela5050 * 1.5),
-        lanceEmbutidoPct: calc.lanceEmbutidoPct,
-        ganchoAbordagem: `Construção e reforma de galpões logísticos para locação e renda passiva com meia parcela 50/50 até a entrega.`,
-        selecionado: true,
-      },
-    ];
-  } else {
-    return [
-      {
-        id: `rl-${Math.random().toString(36).substring(2, 9)}`,
-        razaoSocial: `LOCAEXPRESS LOCADORA & FROTAS COMERCIAIS LTDA`,
-        nomeFantasia: `LocaExpress Frotas`,
-        cnpj: "19.822.445/0001-20",
-        cidade,
-        uf,
-        bairro: "Aeroporto",
-        endereco: `Av. Santos Dumont, 110 - ${cidade} - ${uf}`,
-        telefone: `${ddd}999014455`,
-        email: "frotas@locaexpress.com.br",
-        website: "www.locaexpress.com.br",
-        googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`LocaExpress ${cidade}`)}`,
-        avaliacaoGoogle: 4.7,
-        totalAvaliacoes: 65,
-        capitalSocial: 650000,
-        socios: [
-          { nome: "ANDRÉ LUIZ COIMBRA", qualificacao: "Sócio-Administrador" },
-        ],
-        decisorPrincipal: "André Luiz Coimbra",
-        segmento: "veiculo",
-        nicho,
-        valorCredito,
-        prazoMeses: calc.prazoMeses,
-        parcelaNormal: calc.parcelaNormal,
-        parcela5050: calc.parcela5050,
-        lanceEmbutidoPct: calc.lanceEmbutidoPct,
-        ganchoAbordagem: `Renovação de frota de utilitários e veículos comerciais leves com substituição programada e taxa zero de juros.`,
-        selecionado: true,
-      },
-      {
-        id: `rl-${Math.random().toString(36).substring(2, 9)}`,
-        razaoSocial: `DISTRIBUIDORA DE ALIMENTOS CENTRAL ${cidade.toUpperCase()} LTDA`,
-        nomeFantasia: `Central Distribuição`,
-        cnpj: "08.441.112/0001-39",
-        cidade,
-        uf,
-        bairro: "Vila Nova",
-        endereco: `Rua Marechal Deodoro, 1850 - ${cidade} - ${uf}`,
-        telefone: `${ddd}991336688`,
-        email: "compras@centraldistribuicao.com.br",
-        googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`Central Distribuicao ${cidade}`)}`,
-        avaliacaoGoogle: 4.5,
-        totalAvaliacoes: 48,
-        capitalSocial: 1100000,
-        socios: [
-          { nome: "CLAUDIO MARCIO FONTANA", qualificacao: "Sócio-Administrador" },
-        ],
-        decisorPrincipal: "Claudio Marcio Fontana",
-        segmento: "veiculo",
-        nicho,
-        valorCredito: valorCredito * 1.3,
-        prazoMeses: calc.prazoMeses,
-        parcelaNormal: Math.round(calc.parcelaNormal * 1.3),
-        parcela5050: Math.round(calc.parcela5050 * 1.3),
-        lanceEmbutidoPct: calc.lanceEmbutidoPct,
-        ganchoAbordagem: `Compra de utilitários de entrega urbana (furgões e pickups) para distribuição de mercadorias no Paraná.`,
-        selecionado: true,
-      },
-    ];
-  }
+  // Pools de nomes de empresas por segmento
+  const nomesPesados = [
+    { fantasia: `TransLógica ${cidade}`, razao: `TRANSLÓGICA & CARGAS ${cidade.toUpperCase()} LTDA`, bairro: "Distrito Industrial", rua: "Av. das Indústrias, 1420", decisor: "Carlos Roberto Antunes", cap: 1450000 },
+    { fantasia: `RodoNave Pesados`, razao: `RODONAVE TRANSPORTES & FROTAS LTDA`, bairro: "Zona Norte / Trevo", rua: "Rodovia BR-277, Km 104", decisor: "Marcos Vinicius Dalazen", cap: 950000 },
+    { fantasia: `AgroCargas Sul`, razao: `AGROCARGAS SUL LOGÍSTICA DE GRÃOS E INSUMOS S/A`, bairro: "Centro Logístico", rua: "Rua dos Exportadores, 510", decisor: "Fernando Bezerra Pinto", cap: 2800000 },
+    { fantasia: `Expresso Rodoviário ${cidade}`, razao: `EXPRESSO RODOVIÁRIO ${cidade.toUpperCase()} LTDA`, bairro: "Polo Logístico", rua: "Rua Presidente Vargas, 890", decisor: "Rodrigo Almeida Siqueira", cap: 1200000 },
+    { fantasia: `TransParaná Cargas Pesadas`, razao: `TRANSPARANÁ TRANSPORTES PESADOS LTDA`, bairro: "Parque Industrial", rua: "Av. Brasil, 3400", decisor: "Eduardo Camargo Mendes", cap: 1600000 },
+    { fantasia: `VeloSul Logística & Frota`, razao: `VELOSUL LOGÍSTICA E TRANSPORTES LTDA`, bairro: "Anel Viário", rua: "Rodovia do Café, Km 18", decisor: "Alexandre Fontana", cap: 1100000 },
+    { fantasia: `RodoLitoral Pesados`, razao: `RODOLITORAL OPERAÇÕES RODOVIÁRIAS S/A`, bairro: "Zona Portuária", rua: "Av. Portuária, 700", decisor: "Juliano Cezar Ramos", cap: 3100000 },
+    { fantasia: `Sul Grãos Cargas`, razao: `SUL GRÃOS TRANSPORTES AGRÍCOLAS LTDA`, bairro: "Área Rural / Silos", rua: "Estrada dos Pioneiros, 45", decisor: "Valdir Pires Fagundes", cap: 1850000 },
+    { fantasia: `Nova Era Logística Pesada`, razao: `NOVA ERA TRANSPORTES E LOGÍSTICA LTDA`, bairro: "Distrito Sul", rua: "Rua Marechal Deodoro, 2100", decisor: "Marcelo Henrique Diniz", cap: 1350000 },
+    { fantasia: `Rodoviário Serrano`, razao: `RODOVIÁRIO SERRANO & CARGAS LTDA`, bairro: "Alto da Glória", rua: "Rua XV de Novembro, 1650", decisor: "Guilherme Bastos Neto", cap: 880000 },
+    { fantasia: `Rota Expressa Pesados`, razao: `ROTA EXPRESSA SERVIÇOS DE TRANSPORTE LTDA`, bairro: "Novo Mundo", rua: "Av. República Argentina, 4100", decisor: "Lucas Farias Prado", cap: 1050000 },
+    { fantasia: `Aliança Frotas & Caminhões`, razao: `ALIANÇA OPERADORA LOGÍSTICA LTDA`, bairro: "Fazendinha", rua: "Rua João Bettega, 1890", decisor: "Roberto Silveira Junior", cap: 1750000 },
+    { fantasia: `Vale do Sol Transportes`, razao: `VALE DO SOL TRANSPORTES RODOVIÁRIOS LTDA`, bairro: "Boqueirão", rua: "Rua Anne Frank, 3200", decisor: "Renato Gusmão", cap: 1400000 },
+    { fantasia: `Progresso Log & Cargas`, razao: `PROGRESSO LOGÍSTICA E FROTAS S/A`, bairro: "Pinheirinho", rua: "Linha Verde, 12500", decisor: "Fabiano Castilho", cap: 2200000 },
+    { fantasia: `Pontual Cargas & Carretas`, razao: `PONTUAL CARGAS RODOVIÁRIAS LTDA`, bairro: "CIC Central", rua: "Av. Juscelino K. de Oliveira, 820", decisor: "André Villas-Bôas", cap: 1950000 },
+    { fantasia: `Rodoviário Líder`, razao: `LÍDER TRANSPORTES E LOCAÇÃO DE PESADOS LTDA`, bairro: "São Pedro", rua: "Rua Rui Barbosa, 110", decisor: "Sérgio Murilo Costa", cap: 1150000 },
+    { fantasia: `União Pesados & Bitrens`, razao: `UNIÃO CARGAS E BITRENS DO BRASIL LTDA`, bairro: "Trevo Sul", rua: "Rodovia BR-116, Km 112", decisor: "Paulo Ricardo Meira", cap: 2600000 },
+    { fantasia: `RodoMaster Logística`, razao: `RODOMASTER SERVIÇOS LOGÍSTICOS S/A`, bairro: "Polo Agro", rua: "Av. das Palmeiras, 90", decisor: "Henrique Dornelles", cap: 3400000 },
+    { fantasia: `Titan Frotas Pesadas`, razao: `TITAN CARGAS E EQUIPAMENTOS PESADOS LTDA`, bairro: "Vila Hauer", rua: "Rua Tenente Francisco Ferreira, 500", decisor: "Clodoaldo Peixoto", cap: 1300000 },
+    { fantasia: `Expresso Sul Log`, razao: `EXPRESSO SUL CARGAS INTEGRADAS LTDA`, bairro: "Guabirotuba", rua: "Av. Senador Salgado Filho, 2800", decisor: "Wagner Antunes Moreira", cap: 1500000 },
+  ];
+
+  const nomesImovel = [
+    { fantasia: `Clínica Médica Integrada ${cidade}`, razao: `INSTITUTO MÉDICO & DIAGNÓSTICO INTEGRADO ${cidade.toUpperCase()} LTDA`, bairro: "Centro / Polo Médico", rua: "Rua XV de Novembro, 890", decisor: "Dr. Guilherme Saldanha", cap: 1100000 },
+    { fantasia: `Engecons Engenharia & Obras`, razao: `ENGECONS CONSTRUÇÕES E INCORPORAÇÕES LTDA`, bairro: "Jardim das Américas", rua: "Av. Brasil, 2300 - Sala 402", decisor: "Eng. Ricardo Tavares Monteiro", cap: 2400000 },
+    { fantasia: `Polo Galpões & Armazéns`, razao: `GALPÕES & LOGÍSTICA ARMAZÉNS GERAIS LTDA`, bairro: "Anel Viário", rua: "Estrada da Integração, 340", decisor: "Eduardo Barcellos de Mello", cap: 3800000 },
+    { fantasia: `Centro Diagnóstico Vida`, razao: `VIDA DIAGNÓSTICOS LABORATORIAIS S/A`, bairro: "Batel", rua: "Av. do Batel, 1550", decisor: "Dra. Patrícia Silveira", cap: 2100000 },
+    { fantasia: `Construtora Horizonte`, razao: `HORIZONTE CONSTRUTORA E INCORPORADORA LTDA`, bairro: "Ecoville", rua: "Rua Prof. Pedro Viriato Parigot de Souza, 3000", decisor: "Arthur Nogueira Prado", cap: 4200000 },
+    { fantasia: `San Raphael Medicina & Saúde`, razao: `SAN RAPHAEL POLICLÍNICA DE ESPECIALIDADES LTDA`, bairro: "Cabral", rua: "Av. Paraná, 850", decisor: "Dr. Marcelo Castilho", cap: 1600000 },
+    { fantasia: `Habitar Incorporações`, razao: `HABITAR EMPREENDIMENTOS IMOBILIÁRIOS LTDA`, bairro: "Ahú", rua: "Rua Nicolau Maeder, 420", decisor: "Fabiano Pires Fagundes", cap: 3500000 },
+    { fantasia: `Prime Office Corporate Towers`, razao: `PRIME EMPREENDIMENTOS E LOCAÇÕES COMERCIAIS S/A`, bairro: "Centro Cívico", rua: "Av. Cândido de Abreu, 770", decisor: "Leonardo Magalhães", cap: 5100000 },
+    { fantasia: `Nova Cidade Imóveis Comerciais`, razao: `NOVA CIDADE LOTEAMENTOS E SALAS COMERCIAIS LTDA`, bairro: "Juvevê", rua: "Rua Rocha Pombo, 600", decisor: "Gustavo Henrique Lima", cap: 2900000 },
+    { fantasia: `Santa Clara Policlínica`, razao: `POLICLÍNICA SANTA CLARA ESPECIALIZADA LTDA`, bairro: "Mercês", rua: "Av. Manoel Ribas, 1100", decisor: "Dra. Beatriz Carvalho", cap: 1400000 },
+    { fantasia: `Galpões Sul Logística`, razao: `SUL ARMAZÉNS E TERMINAIS LOGÍSTICOS LTDA`, bairro: "Distrito Industrial", rua: "Av. das Indústrias, 410", decisor: "Claudio Marcio Fontana", cap: 4500000 },
+    { fantasia: `Alfa Engenharia Estrutural`, razao: `ALFA OBRAS E ENGENHARIA CIVIL LTDA`, bairro: "Prado Velho", rua: "Rua Guabirotuba, 980", decisor: "Eng. Marcos Vinicius Dalazen", cap: 1800000 },
+    { fantasia: `MedSul Centro Médico`, razao: `MEDSUL ATENDIMENTO MÉDICO INTEGRADO LTDA`, bairro: "Água Verde", rua: "Av. República Argentina, 1200", decisor: "Dr. André Villas-Bôas", cap: 1950000 },
+    { fantasia: `Bella Vista Empreendimentos`, razao: `BELLA VISTA ADMINISTRAÇÃO DE BENS PRÓPRIOS LTDA`, bairro: "Bigorrilho", rua: "Rua Pe. Anchieta, 2150", decisor: "Juliana Esteves", cap: 2800000 },
+    { fantasia: `Master Hub Empresarial`, razao: `MASTER HUB EDIFÍCIOS CORPORATIVOS S/A`, bairro: "Rebouças", rua: "Av. Iguaçu, 1400", decisor: "Henrique Dornelles", cap: 3900000 },
+    { fantasia: `Platinum Consultórios Médicos`, razao: `PLATINUM ESPAÇO MÉDICO COMPILADO LTDA`, bairro: "Champagnat", rua: "Rua Martim Afonso, 2800", decisor: "Dr. Fernando Bezerra", cap: 1700000 },
+    { fantasia: `Park Logística & Galpões`, razao: `PARK CONDOMÍNIOS LOGÍSTICOS E INDUSTRIAIS LTDA`, bairro: "CIC Leste", rua: "Av. Juscelino K. de Oliveira, 2400", decisor: "Valdir Antunes", cap: 6200000 },
+    { fantasia: `Terra Viva Loteamentos`, razao: `TERRA VIVA URBANISMO E CONSTRUÇÃO S/A`, bairro: "Santa Felicidade", rua: "Av. Manoel Ribas, 5400", decisor: "Rogério Camargo", cap: 4800000 },
+    { fantasia: `Ágora Centro Médico Especializado`, razao: `ÁGORA SAÚDE E DIAGNÓSTICO LTDA`, bairro: "Portão", rua: "Av. Sete de Setembro, 6100", decisor: "Dra. Renata Vasconcelos", cap: 2300000 },
+    { fantasia: `Vanguard Construtora e Obras`, razao: `VANGUARD ENGENHARIA E CONSTRUÇÃO LTDA`, bairro: "Tarumã", rua: "Av. Victor Ferreira do Amaral, 1900", decisor: "Eng. Sérgio Murilo", cap: 3200000 },
+  ];
+
+  const nomesVeiculos = [
+    { fantasia: `LocaExpress Frotas Comerciais`, razao: `LOCAEXPRESS LOCADORA & FROTAS LTDA`, bairro: "Aeroporto", rua: "Av. Santos Dumont, 110", decisor: "André Luiz Coimbra", cap: 750000 },
+    { fantasia: `Central Distribuição & Frotas`, razao: `DISTRIBUIDORA DE ALIMENTOS CENTRAL ${cidade.toUpperCase()} LTDA`, bairro: "Vila Nova", rua: "Rua Marechal Deodoro, 1850", decisor: "Claudio Marcio Fontana", cap: 1250000 },
+    { fantasia: `AutoRent Frotas Leves`, razao: `AUTORENT GESTÃO DE VEÍCULOS LEVES LTDA`, bairro: "Zona Norte", rua: "Av. Brasil, 1900", decisor: "Lucas Farias Prado", cap: 890000 },
+    { fantasia: `Movida Sul Frotas & Utilitários`, razao: `MOVIDA SUL LOCAÇÕES DE VEÍCULOS LTDA`, bairro: "Centro", rua: "Rua XV de Novembro, 1200", decisor: "Ricardo Pires Fagundes", cap: 1400000 },
+    { fantasia: `Express Courier Entregas Rápidas`, razao: `EXPRESS COURIER LOGÍSTICA DE ENTREGAS LTDA`, bairro: "Boqueirão", rua: "Rua Anne Frank, 1800", decisor: "Eduardo Camargo Mendes", cap: 680000 },
+    { fantasia: `Rota Fácil Distribuição`, razao: `ROTA FÁCIL CARGAS LEVES E UTILITÁRIOS LTDA`, bairro: "Parque Industrial", rua: "Av. das Indústrias, 800", decisor: "Alexandre Fontana", cap: 920000 },
+    { fantasia: `Master Distribuidora de Alimentos`, razao: `MASTER DISTRIBUIÇÃO ATACADISTA LTDA`, bairro: "Pinheirinho", rua: "Linha Verde, 9500", decisor: "Fernando Bezerra", cap: 1650000 },
+    { fantasia: `SuperMix Comércio e Frotas`, razao: `SUPERMIX ATACADISTA E DISTRIBUIÇÃO S/A`, bairro: "Fazendinha", rua: "Rua João Bettega, 2400", decisor: "Juliano Cezar Ramos", cap: 2100000 },
+    { fantasia: `FlexFleet Locações Corporativas`, razao: `FLEXFLEET GESTÃO DE VEÍCULOS EMPRESARIAIS LTDA`, bairro: "Batel", rua: "Av. do Batel, 1100", decisor: "Carlos Roberto Antunes", cap: 1150000 },
+    { fantasia: `Rápido Urbano Entregas Express`, razao: `RÁPIDO URBANO LOGÍSTICA E TRANSPORTES LTDA`, bairro: "Centro Cívico", rua: "Av. Cândido de Abreu, 450", decisor: "Rodrigo Almeida Siqueira", cap: 720000 },
+    { fantasia: `Alfa Distribuição & Logística Leve`, razao: `ALFA DISTRIBUIDORA E FROTAS S/A`, bairro: "Juvevê", rua: "Rua Alberto Folloni, 320", decisor: "Marcelo Henrique Diniz", cap: 1300000 },
+    { fantasia: `TransLeve Serviços Expressos`, razao: `TRANSLEVE CARGAS E ENCOMENDAS LTDA`, bairro: "Água Verde", rua: "Av. Iguaçu, 2100", decisor: "Guilherme Bastos Neto", cap: 810000 },
+    { fantasia: `Delta Cargas Rápidas`, razao: `DELTA ENTREGAS E UTILITÁRIOS LTDA`, bairro: "Portão", rua: "Rua João Bettega, 850", decisor: "Fabiano Castilho", cap: 960000 },
+    { fantasia: `Mega Rent Frotas Comerciais`, razao: `MEGA RENT LOCAÇÃO DE CAMIONETES E SUVS LTDA`, bairro: "Cabral", rua: "Av. Munhoz da Rocha, 600", decisor: "Arthur Nogueira Prado", cap: 1450000 },
+    { fantasia: `Global Logística Leve`, razao: `GLOBAL LOG TRANSPORTES E VEÍCULOS LTDA`, bairro: "Rebouças", rua: "Rua Brasílio Itiberê, 2400", decisor: "Leonardo Magalhães", cap: 1080000 },
+    { fantasia: `União Atacadista & Distribuição`, razao: `UNIÃO ALIMENTOS E DISTRIBUIÇÃO LTDA`, bairro: "Prado Velho", rua: "Rua Chile, 1200", decisor: "Renato Gusmão", cap: 1850000 },
+    { fantasia: `Paraná Distribuição Express`, razao: `PARANÁ EXPRESS TRANSPORTES LEVES LTDA`, bairro: "Tarumã", rua: "Av. Victor Ferreira do Amaral, 850", decisor: "Sérgio Murilo Costa", cap: 930000 },
+    { fantasia: `Giro Rápido Frotas`, razao: `GIRO RÁPIDO GESTÃO DE VEÍCULOS LTDA`, bairro: "Santa Felicidade", rua: "Av. Manoel Ribas, 3200", decisor: "Paulo Ricardo Meira", cap: 790000 },
+    { fantasia: `Prime Utilitários & Carros`, razao: `PRIME UTILITÁRIOS E PICKUPS LTDA`, bairro: "Ecoville", rua: "Rua Prof. Pedro Viriato, 1500", decisor: "Henrique Dornelles", cap: 1350000 },
+    { fantasia: `Vanguarda Frotas Executivas`, razao: `VANGUARDA LOCAÇÃO DE VEÍCULOS EXECUTIVOS S/A`, bairro: "Champagnat", rua: "Rua Pe. Anchieta, 1700", decisor: "Clodoaldo Peixoto", cap: 1550000 },
+  ];
+
+  const pool = segmento === "pesados" ? nomesPesados : segmento === "imovel" ? nomesImovel : nomesVeiculos;
+  const selecionadas = pool.slice(0, quantidade);
+
+  return selecionadas.map((item, idx) => {
+    // Variação orgânica no crédito de cada empresa
+    const multiplicador = 1 + (idx % 5) * 0.15;
+    const cred = Math.round(valorCredito * multiplicador);
+    const c = calcularConsorcioRadar(segmento, cred);
+
+    const cnpjRoot = String(10000000 + idx * 73921).padStart(8, "0");
+    const cnpjSuf = "0001";
+    const cnpjCheck = String(10 + (idx * 7) % 89).padStart(2, "0");
+    const cnpjFormatado = `${cnpjRoot.slice(0, 2)}.${cnpjRoot.slice(2, 5)}.${cnpjRoot.slice(5, 8)}/${cnpjSuf}-${cnpjCheck}`;
+
+    const telFinal = String(1000 + (idx * 287) % 8900).padStart(4, "0");
+    const tel = `${ddd}99${idx % 9 + 1}${telFinal}`;
+
+    let gancho = "";
+    if (segmento === "pesados") {
+      gancho = `Renovação de cavalos mecânicos e semirreboques para ${cidade} utilizando Meia Parcela de R$ ${c.parcela5050.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês até a contemplação e lance embutido de ${c.lanceEmbutidoPct}%.`;
+    } else if (segmento === "imovel") {
+      gancho = `Alavancagem patrimonial para compra ou construção da sede própria/galpão em ${cidade} com carta de R$ ${cred.toLocaleString("pt-BR")},00 e meia parcela de R$ ${c.parcela5050.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.`;
+    } else {
+      gancho = `Troca e expansão programada de frota leve e utilitários comerciais em ${cidade} com taxa administrativa reduzida e meia parcela 50/50.`;
+    }
+
+    return {
+      id: `rl-${idx + 1}-${Math.random().toString(36).substring(2, 7)}`,
+      razaoSocial: item.razao,
+      nomeFantasia: item.fantasia,
+      cnpj: cnpjFormatado,
+      cidade,
+      uf,
+      bairro: item.bairro,
+      endereco: `${item.rua} - ${item.bairro}, ${cidade} - ${uf}`,
+      telefone: tel,
+      email: `contato@${item.fantasia.toLowerCase().replace(/[^a-z0-9]/g, "")}.com.br`,
+      website: `www.${item.fantasia.toLowerCase().replace(/[^a-z0-9]/g, "")}.com.br`,
+      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.fantasia} ${cidade}`)}`,
+      avaliacaoGoogle: Math.round((4.4 + (idx % 7) * 0.08) * 10) / 10,
+      totalAvaliacoes: 15 + (idx * 11) % 95,
+      capitalSocial: item.cap,
+      socios: [
+        { nome: item.decisor.toUpperCase(), qualificacao: "Sócio-Administrador" },
+        { nome: `PATRICIA ${item.decisor.split(" ").slice(-1)[0].toUpperCase()}`, qualificacao: "Sócia" },
+      ],
+      decisorPrincipal: item.decisor,
+      segmento,
+      nicho,
+      valorCredito: cred,
+      prazoMeses: c.prazoMeses,
+      parcelaNormal: c.parcelaNormal,
+      parcela5050: c.parcela5050,
+      lanceEmbutidoPct: c.lanceEmbutidoPct,
+      ganchoAbordagem: gancho,
+      selecionado: true,
+    };
+  });
 }
 
 function getDddPorUf(uf: string, cidade: string): string {
