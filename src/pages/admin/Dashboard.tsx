@@ -428,7 +428,7 @@ export default function Dashboard() {
                     description: "O Link de Pré-Cadastro para emissão de contrato foi copiado."
                   });
                 }}
-                className="h-9 px-3.5 border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                className="h-9 px-3.5 border-amber-300 dark:border-amber-700 text-amber-950 dark:text-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/80 hover:from-amber-100 hover:to-amber-200 dark:from-amber-950/40 dark:to-amber-900/40 font-black uppercase text-[10px] tracking-wider rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-[1.02] flex items-center gap-1.5"
               >
                 <FileText className="h-3.5 w-3.5 text-amber-600 shrink-0" /> Link de Pré-Cadastro
               </Button>
@@ -444,7 +444,7 @@ export default function Dashboard() {
                     description: "O link de indicações exclusivo do seu parceiro foi copiado para a área de transferência."
                   });
                 }}
-                className="h-9 px-3.5 border-emerald-300 text-emerald-900 bg-emerald-50 hover:bg-emerald-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                className="h-9 px-3.5 border-emerald-300 dark:border-emerald-700 text-emerald-950 dark:text-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-100/80 hover:from-emerald-100 hover:to-teal-200 dark:from-emerald-950/40 dark:to-emerald-900/40 font-black uppercase text-[10px] tracking-wider rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-[1.02] flex items-center gap-1.5"
               >
                 <Share2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Link de Indicações
               </Button>
@@ -460,7 +460,7 @@ export default function Dashboard() {
                     description: "O Link da Operação Jarvis SRV foi copiado para a área de transferência."
                   });
                 }}
-                className="h-9 px-3.5 border-cyan-300 text-cyan-900 bg-cyan-50 hover:bg-cyan-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                className="h-9 px-3.5 border-cyan-300 dark:border-cyan-700 text-cyan-950 dark:text-cyan-200 bg-gradient-to-r from-cyan-50 to-blue-100/80 hover:from-cyan-100 hover:to-blue-200 dark:from-cyan-950/40 dark:to-cyan-900/40 font-black uppercase text-[10px] tracking-wider rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-[1.02] flex items-center gap-1.5"
               >
                 <Sparkles className="h-3.5 w-3.5 text-cyan-600 shrink-0" /> Jarvis SRV
               </Button>
@@ -469,7 +469,7 @@ export default function Dashboard() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setIsVoiceCloneModalOpen(true)}
-                className="h-9 px-3.5 border-purple-300 text-purple-900 bg-purple-50 hover:bg-purple-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                className="h-9 px-3.5 border-purple-300 dark:border-purple-700 text-purple-950 dark:text-purple-200 bg-gradient-to-r from-purple-50 to-pink-100/80 hover:from-purple-100 hover:to-pink-200 dark:from-purple-950/40 dark:to-purple-900/40 font-black uppercase text-[10px] tracking-wider rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-[1.02] flex items-center gap-1.5"
                 title="Clonar sua voz para o Jarvis e Podcasts"
               >
                 <Mic className="h-3.5 w-3.5 text-purple-600 shrink-0" /> Clonar Minha Voz (Voice Studio)
@@ -483,14 +483,14 @@ export default function Dashboard() {
         </div>
 
         {/* NAVEGAÇÃO DE ABAS PRINCIPAIS DO DASHBOARD */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-1.5 bg-slate-100 dark:bg-zinc-900/90 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-1.5 bg-white/80 dark:bg-zinc-900/90 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-sm">
           <div className="flex flex-1 sm:flex-initial items-center gap-2">
             <button
               onClick={() => setDashboardTab("noticias")}
               className={`flex-1 sm:flex-initial flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                 dashboardTab === "noticias"
-                  ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-500/25 scale-[1.01]"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-zinc-800/60"
+                  ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.02]"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-zinc-800/60"
               }`}
             >
               <Newspaper className="h-4 w-4" />
@@ -505,19 +505,22 @@ export default function Dashboard() {
               onClick={() => setDashboardTab("metricas")}
               className={`flex-1 sm:flex-initial flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                 dashboardTab === "metricas"
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.01]"
-                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-zinc-800/60"
+                  ? "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25 scale-[1.02]"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-zinc-800/60"
               }`}
             >
               <BarChart3 className="h-4 w-4" />
               <span>Métricas & Performance</span>
-              <span className="text-[10px] bg-slate-200/70 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md font-bold">
+              <span className={`text-[10px] px-2 py-0.5 rounded-md font-black tracking-tight ${
+                dashboardTab === "metricas" ? "bg-white/20 text-white" : "bg-slate-200/80 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300"
+              }`}>
                 Lojas + Gestor
               </span>
             </button>
           </div>
 
-          <div className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 px-3 hidden md:block">
+          <div className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 px-3 hidden md:flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             {dashboardTab === "noticias" ? "Atualizado em tempo real pelo Jarvis" : "Consolidado de Vendas e Produção"}
           </div>
         </div>

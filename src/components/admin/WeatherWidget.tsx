@@ -125,20 +125,22 @@ export function WeatherWidget() {
           );
         }
       }}
-      className="group relative flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50/80 via-sky-50/80 to-slate-50 border border-blue-100/60 shadow-sm transition-all hover:scale-105 hover:shadow-md cursor-pointer select-none"
+      className="group relative flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50/90 via-sky-50/80 to-white dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 border border-blue-200/80 dark:border-blue-900/60 shadow-sm transition-all hover:scale-105 hover:shadow-md cursor-pointer select-none"
       title="Clique para atualizar o clima agora"
     >
-      {icon}
+      <div className="shrink-0">
+        {icon}
+      </div>
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-black text-slate-800 leading-none">{weather.temperature}°C</span>
-          <span className="text-[10px] font-bold text-slate-500 border-l border-slate-300 pl-1.5 leading-none capitalize">
+          <span className="text-xs font-black text-slate-800 dark:text-white leading-none">{weather.temperature}°C</span>
+          <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 border-l border-slate-300 dark:border-zinc-700 pl-1.5 leading-none capitalize">
             {weather.city}
           </span>
         </div>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[9px] font-bold text-slate-500 tracking-wider uppercase leading-none">{desc}</span>
-          <span className="text-[9px] font-bold text-slate-400 border-l border-slate-300 pl-1.5 leading-none">{dataHoje}</span>
+          <span className="text-[9px] font-black text-blue-700 dark:text-cyan-400 tracking-wider uppercase leading-none">{desc}</span>
+          <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-500 border-l border-slate-300 dark:border-zinc-700 pl-1.5 leading-none">{dataHoje}</span>
         </div>
       </div>
       {refreshing && (
