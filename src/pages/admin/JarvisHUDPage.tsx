@@ -470,6 +470,21 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
       lowerPrompt.includes("dolar") ||
       lowerPrompt.includes("dólar") ||
       lowerPrompt.includes("gasolina") ||
+      lowerPrompt.includes("imóvel") ||
+      lowerPrompt.includes("imovel") ||
+      lowerPrompt.includes("imóveis") ||
+      lowerPrompt.includes("imoveis") ||
+      lowerPrompt.includes("imobiliário") ||
+      lowerPrompt.includes("imobiliario") ||
+      lowerPrompt.includes("veículo") ||
+      lowerPrompt.includes("veiculo") ||
+      lowerPrompt.includes("veículos") ||
+      lowerPrompt.includes("veiculos") ||
+      lowerPrompt.includes("carro") ||
+      lowerPrompt.includes("carros") ||
+      lowerPrompt.includes("fipe") ||
+      lowerPrompt.includes("cotação") ||
+      lowerPrompt.includes("cotacao") ||
       lowerPrompt.includes("principais jornais") ||
       lowerPrompt.includes("mercado hoje")
     ) {
