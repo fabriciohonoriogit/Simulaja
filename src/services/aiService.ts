@@ -582,8 +582,22 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
     const dynamicQuote = findAuthoritativeSimulatorQuote(question);
     const firstName = userName.split(" ")[0] || "Fabrício";
 
+    let newsContext = "";
+    if (typeof window !== "undefined") {
+      try {
+        const rawNews = localStorage.getItem("simulaja_daily_news_v3");
+        if (rawNews) {
+          const parsedNews = JSON.parse(rawNews);
+          const headlines = (parsedNews.items || []).slice(0, 5).map((i: any) => `* [${i.category.toUpperCase()}] ${i.source}: "${i.title}"`).join("\n");
+          const r = parsedNews.rates || {};
+          newsContext = `\n--- INDICADORES DE PREÇOS E PRINCIPAIS NOTÍCIAS DO DIA ---\nIndicadores: Selic ${r.selic || 10.75}%, IPCA ${r.ipca || 4.42}%, Dólar R$ ${r.dolar || 5.72}, Gasolina R$ ${r.gasolinaMedia || 6.14}/L, INCC ${r.incc || 4.25}%.\nManchetes:\n${headlines}\n-----------------------------------------------------------\n`;
+        }
+      } catch (e) {}
+    }
+
     const prompt = `Você é o Jarvis, assistente executivo e consultor de alta performance comercial e inteligência em consórcios e vendas da Prospera Planejamento / SimulaJá.
 NOME DO INTERLOCUTOR: "${userName}"
+${newsContext}
 
 # PERSONA E REGRAS DE OURO (JARVIS)
 - Responda como uma LLM analítica de nível mundial (estilo Claude 3.5 Sonnet / ChatGPT 4o), altamente articulada, estratégica, empática e orientada a conversão.

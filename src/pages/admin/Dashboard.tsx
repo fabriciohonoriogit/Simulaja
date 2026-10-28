@@ -1,9 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTriangle, MessageCircle, Clock, CheckCircle2, BarChart3, Bell, Target, Zap, Trophy, MessageSquare, Phone, Sparkles, Pencil, Trash2, ShieldAlert, Coins, Eye, EyeOff, Calculator, Share2, FileText } from "lucide-react";
-import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
+import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTriangle, MessageCircle, Clock, CheckCircle2, BarChart3, Bell, Target, Zap, Trophy, MessageSquare, Phone, Sparkles, Pencil, Trash2, ShieldAlert, Coins, Eye, EyeOff, Calculator, Share2, FileText, Newspaper } from "lucide-react";
+import { DailyNewsSection } from "@/components/admin/news/DailyNewsSection";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { formatCurrency, formatLeadValue, isVendaRealizadaNoMes, parseBRLValue } from "@/lib/utils";
@@ -82,6 +81,7 @@ export default function Dashboard() {
   const prevCountRef = useRef(0);
   const { toast } = useToast();
   const [showCommission, setShowCommission] = useState(false);
+  const [dashboardTab, setDashboardTab] = useState<"noticias" | "metricas">("noticias");
   const { setComissaoAtual, setProducaoMes } = useGamificationStore();
 
   async function handleDeleteLead(id: string, e: React.MouseEvent) {
@@ -410,75 +410,124 @@ export default function Dashboard() {
     <div className="flex-1 flex flex-col min-h-0 relative group/main-scroll overflow-hidden">
       <div id="dashboard-main-container" className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar pb-10">
         
-        {/* GAMIFICAÇÃO - HERO SECTION */}
-        <div className="space-y-6 mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            {profile?.organizacao_id ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    const link = `${window.location.origin}/pre-cadastro?org=${profile.organizacao_id}`;
-                    navigator.clipboard.writeText(link);
-                    toast({
-                      title: "Link Copiado! 📋",
-                      description: "O Link de Pré-Cadastro para emissão de contrato foi copiado."
-                    });
-                  }}
-                  className="h-10 px-4 border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
-                >
-                  <FileText className="h-4 w-4 text-amber-600 shrink-0" /> Link de Pré-Cadastro (Contrato)
-                </Button>
+        {/* BARRA SUPERIOR: LINKS RÁPIDOS, TAXAS E CLIMA */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          {profile?.organizacao_id ? (
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  const link = `${window.location.origin}/pre-cadastro?org=${profile.organizacao_id}`;
+                  navigator.clipboard.writeText(link);
+                  toast({
+                    title: "Link Copiado! 📋",
+                    description: "O Link de Pré-Cadastro para emissão de contrato foi copiado."
+                  });
+                }}
+                className="h-9 px-3.5 border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <FileText className="h-3.5 w-3.5 text-amber-600 shrink-0" /> Link de Pré-Cadastro
+              </Button>
 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    const link = `${window.location.origin}/indicacoes?org=${profile.organizacao_id}`;
-                    navigator.clipboard.writeText(link);
-                    toast({
-                      title: "Link Copiado!",
-                      description: "O link de indicações exclusivo do seu parceiro foi copiado para a área de transferência."
-                    });
-                  }}
-                  className="h-10 px-4 border-emerald-300 text-emerald-900 bg-emerald-50 hover:bg-emerald-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
-                >
-                  <Share2 className="h-4 w-4 text-emerald-600 shrink-0" /> Link de Indicações
-                </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  const link = `${window.location.origin}/indicacoes?org=${profile.organizacao_id}`;
+                  navigator.clipboard.writeText(link);
+                  toast({
+                    title: "Link Copiado!",
+                    description: "O link de indicações exclusivo do seu parceiro foi copiado para a área de transferência."
+                  });
+                }}
+                className="h-9 px-3.5 border-emerald-300 text-emerald-900 bg-emerald-50 hover:bg-emerald-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <Share2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Link de Indicações
+              </Button>
 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    const link = `${window.location.origin}/?org=${profile.organizacao_id}&srv=true`;
-                    navigator.clipboard.writeText(link);
-                    toast({
-                      title: "Link Copiado! 🚀",
-                      description: "O Link da Operação Jarvis SRV foi copiado para a área de transferência."
-                    });
-                  }}
-                  className="h-10 px-4 border-cyan-300 text-cyan-900 bg-cyan-50 hover:bg-cyan-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-2"
-                >
-                  <Sparkles className="h-4 w-4 text-cyan-600 shrink-0" /> Operação Jarvis SRV
-                </Button>
-              </div>
-            ) : <div />}
-            <div className="flex flex-wrap items-center gap-3">
-              <EconomyRatesBadge />
-              <WeatherWidget />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  const link = `${window.location.origin}/?org=${profile.organizacao_id}&srv=true`;
+                  navigator.clipboard.writeText(link);
+                  toast({
+                    title: "Link Copiado! 🚀",
+                    description: "O Link da Operação Jarvis SRV foi copiado para a área de transferência."
+                  });
+                }}
+                className="h-9 px-3.5 border-cyan-300 text-cyan-900 bg-cyan-50 hover:bg-cyan-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-cyan-600 shrink-0" /> Jarvis SRV
+              </Button>
             </div>
+          ) : <div />}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <EconomyRatesBadge />
+            <WeatherWidget />
           </div>
-          <AICoachMessage />
-          <DashboardHero />
-          <EliteRewardsPanel 
-            leads={leads} 
-            totalClientes={totalClientes} 
-            percentRetencao={percentRetencao} 
-            percentContemplados={percentContemplados} 
-          />
-          <HallOfFame ranking={ranking} profileId={profile?.id} />
         </div>
+
+        {/* NAVEGAÇÃO DE ABAS PRINCIPAIS DO DASHBOARD */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-1.5 bg-slate-100 dark:bg-zinc-900/90 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-sm">
+          <div className="flex flex-1 sm:flex-initial items-center gap-2">
+            <button
+              onClick={() => setDashboardTab("noticias")}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                dashboardTab === "noticias"
+                  ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-500/25 scale-[1.01]"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-zinc-800/60"
+              }`}
+            >
+              <Newspaper className="h-4 w-4" />
+              <span>Notícias & Radar do Dia</span>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-300"></span>
+              </span>
+            </button>
+
+            <button
+              onClick={() => setDashboardTab("metricas")}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                dashboardTab === "metricas"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.01]"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-zinc-800/60"
+              }`}
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>Métricas & Performance</span>
+              <span className="text-[10px] bg-slate-200/70 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md font-bold">
+                Lojas + Gestor
+              </span>
+            </button>
+          </div>
+
+          <div className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 px-3 hidden md:block">
+            {dashboardTab === "noticias" ? "Atualizado em tempo real pelo Jarvis" : "Consolidado de Vendas e Produção"}
+          </div>
+        </div>
+
+        {/* CONTEÚDO DA ABA SELECIONADA */}
+        {dashboardTab === "noticias" && (
+          <DailyNewsSection userName={profile?.nome_completo?.split(" ")[0] || "Fabrício"} />
+        )}
+
+        {dashboardTab === "metricas" && (
+          <>
+            {/* GAMIFICAÇÃO - HERO SECTION */}
+            <div className="space-y-6 mb-8">
+              <AICoachMessage />
+              <DashboardHero />
+              <EliteRewardsPanel 
+                leads={leads} 
+                totalClientes={totalClientes} 
+                percentRetencao={percentRetencao} 
+                percentContemplados={percentContemplados} 
+              />
+              <HallOfFame ranking={ranking} profileId={profile?.id} />
+            </div>
 
         {/* SEÇÃO MULTI-LOJA MAGALU: METAS, GRÁFICOS E RELATÓRIOS GERENCIAIS (EXCLUSIVO DA ORGANIZAÇÃO) */}
         <LojasDashboardSection leads={leads} carteira={carteira} organizacaoId={profile?.organizacao_id} />
@@ -1024,7 +1073,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      </div>
+      </>
+    )}
+    </div>
 
       {/* Vertical Scroll Controls */}
       <div className="hidden lg:flex absolute right-4 bottom-4 flex flex-col gap-2 opacity-0 group-hover/main-scroll:opacity-100 transition-opacity z-20">

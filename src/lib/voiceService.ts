@@ -168,5 +168,13 @@ export function speakJarvisText(
   speakNextSentence();
 }
 
+export function stopVoice() {
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
+  }
+}
+
 export const speakText = speakJarvisText;
 export const speakBellaText = speakJarvisText;

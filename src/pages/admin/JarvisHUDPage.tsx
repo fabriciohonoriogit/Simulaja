@@ -26,6 +26,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { aiService } from "@/services/aiService";
 import { speakText } from "@/lib/voiceService";
+import { fetchDailyNews, getNewsAnswerForJarvis } from "@/services/newsService";
 
 interface LogEntry {
   id: string;
@@ -429,6 +430,54 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
       { role: "user", text: textToRun }
     ];
 
+    // 5. Interceptador de Notícias, Política, Preços e Briefing Diário
+    if (
+      lowerPrompt.includes("noticia") ||
+      lowerPrompt.includes("notícia") ||
+      lowerPrompt.includes("noticias") ||
+      lowerPrompt.includes("notícias") ||
+      lowerPrompt.includes("briefing") ||
+      lowerPrompt.includes("politica") ||
+      lowerPrompt.includes("política") ||
+      lowerPrompt.includes("preço") ||
+      lowerPrompt.includes("preços") ||
+      lowerPrompt.includes("precos") ||
+      lowerPrompt.includes("preco") ||
+      lowerPrompt.includes("inflação") ||
+      lowerPrompt.includes("inflacao") ||
+      lowerPrompt.includes("selic") ||
+      lowerPrompt.includes("dolar") ||
+      lowerPrompt.includes("dólar") ||
+      lowerPrompt.includes("gasolina") ||
+      lowerPrompt.includes("principais jornais") ||
+      lowerPrompt.includes("mercado hoje")
+    ) {
+      try {
+        const newsData = await fetchDailyNews();
+        const newsResponse = getNewsAnswerForJarvis(textToRun, newsData.items, newsData.rates);
+        
+        setLogs(prev => [
+          {
+            id: Date.now().toString(),
+            time: timeStr,
+            tag: "RADAR & NOTÍCIAS DO DIA",
+            color: "text-cyan-300 font-bold",
+            text: newsResponse
+          },
+          ...prev
+        ]);
+        setChatHistory([
+          ...currentHistory,
+          { role: "assistant", text: newsResponse }
+        ]);
+        speakResponse(newsResponse);
+        setIsProcessing(false);
+        return;
+      } catch (err) {
+        console.warn("Falha no radar de notícias HUD:", err);
+      }
+    }
+
     try {
       // Integração com o assistente inteligente Jarvis AI via LLM
       const aiResult = await aiService.askAssistant(
@@ -649,12 +698,14 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
           <div className="w-full space-y-2">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px] font-mono">
               {[
+                { label: "📰 Briefing do Dia", query: "Jarvis, quais são as principais notícias do dia, política e preços dos jornais hoje?" },
+                { label: "📈 Preços & Selic", query: "Jarvis, como estão os preços, inflação, gasolina, dólar e Selic hoje?" },
+                { label: "🏛️ Política Hoje", query: "Jarvis, quais os destaques da política e votações em Brasília hoje?" },
                 { label: "📊 Analisar Funil", query: "Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM." },
                 { label: "🎯 Vendas e Metas", query: "Qual é a situação oficial de vendas realizadas e metas do Gestor e da Loja Paranaguá?" },
                 { label: "🏠 Simular 300 mil", query: "Simular consórcio imobiliário de R$ 300.000 no simulador oficial." },
                 { label: "🚗 Carro 80 mil", query: "Simular consórcio de veículo de R$ 80.000 na parcela 50/50 com e sem seguro." },
                 { label: "🔥 Leads Quentes", query: "Quais são os leads mais quentes no funil e quais ações imediatas devo tomar?" },
-                { label: "🤝 Em Negociação", query: "Quais clientes estão na etapa de negociação e proposta enviada?" },
               ].map((chip, idx) => (
                 <button
                   key={idx}
