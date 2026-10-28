@@ -30,22 +30,18 @@ export function getBestPtBrVoice(): SpeechSynthesisVoice | null {
   if (ptVoices.length === 0) return null;
 
   // Vozes com tecnologia Neural / Natural no Windows, Chrome, Edge, Safari e Android
+  // Prioriza o barítono executivo nobre característico do Jarvis
   const priorityVoices = [
-    "francisca",       // Microsoft Francisca Online (Natural) - PT-BR (Empática e aveludada)
-    "thalita",         // Microsoft Thalita Online (Natural) - PT-BR
-    "antonio",         // Microsoft Antonio Online (Natural) - PT-BR (Masculino Humano)
+    "antonio",         // Microsoft Antonio Online (Natural) - PT-BR (Barítono Nobre, Perfeito para o Jarvis)
+    "thomaz",          // Microsoft Thomaz Online (Natural) - PT-BR (Executivo e Aveludado)
     "fabio",           // Microsoft Fabio Online (Natural) - PT-BR
+    "google português do brasil",
+    "daniel",          // Voz masculina brasileira
+    "ricardo",
+    "francisca",       // Microsoft Francisca Online (Natural) - PT-BR (Feminina aveludada)
+    "thalita",
     "giovanna",
     "luciana",
-    "vitória",
-    "vitoria",
-    "google português do brasil",
-    "brazil female",
-    "leticia",
-    "letícia",
-    "heloisa",
-    "heloísa",
-    "daniel"
   ];
 
   for (const keyword of priorityVoices) {
@@ -94,7 +90,7 @@ export function normalizeTextForSpeech(text: string): string {
   return cleaned.replace(/\s+/g, " ").trim();
 }
 
-export function speakBellaText(
+export function speakJarvisText(
   text: string,
   onStart?: () => void,
   onEnd?: () => void,
@@ -143,9 +139,9 @@ export function speakBellaText(
       msg.voice = voice;
     }
 
-    // Parâmetros para voz humana aveludada, ritmada e calorosa
-    msg.rate = 1.0;   // Velocidade natural de conversa humana
-    msg.pitch = 1.02; // Tom equilibrado e agradável
+    // Parâmetros para voz humana aveludada, ritmada e executiva do Jarvis
+    msg.rate = 1.02;  // Velocidade natural e elegante de conversa humana
+    msg.pitch = 0.96; // Tom barítono envolvente e seguro (Jarvis style)
 
     if (currentIndex === 0 && onStart) {
       msg.onstart = () => onStart();
@@ -171,3 +167,6 @@ export function speakBellaText(
 
   speakNextSentence();
 }
+
+export const speakText = speakJarvisText;
+export const speakBellaText = speakJarvisText;

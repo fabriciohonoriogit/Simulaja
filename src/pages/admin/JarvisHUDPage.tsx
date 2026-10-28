@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { aiService } from "@/services/aiService";
+import { speakText } from "@/lib/voiceService";
 
 interface LogEntry {
   id: string;
@@ -309,17 +310,11 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
 
   const speakResponse = (text: string) => {
     if (!audioEnabled) return;
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text.replace(/[*#]/g, ''));
-      utterance.lang = "pt-BR";
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-      utterance.onstart = () => setOrbState("speaking");
-      utterance.onend = () => setOrbState("idle");
-      utterance.onerror = () => setOrbState("idle");
-      window.speechSynthesis.speak(utterance);
-    }
+    speakText(
+      text,
+      () => setOrbState("speaking"),
+      () => setOrbState("idle")
+    );
   };
 
   const processSmartCommand = (lowerPrompt: string, originalText: string): LogEntry | null => {

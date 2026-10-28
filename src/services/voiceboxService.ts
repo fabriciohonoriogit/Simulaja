@@ -13,7 +13,8 @@ export interface VoiceProfile {
   sampleUrl?: string;
   isCloned: boolean;
   status: "ready" | "recording" | "processing";
-  engine: "elevenlabs" | "openai" | "voicebox_local" | "web_speech";
+  engine: "voicestudio" | "elevenlabs" | "openai" | "voicebox_local" | "web_speech";
+  voiceStudioServerUrl?: string;
   elevenLabsApiKey?: string;
   elevenLabsVoiceId?: string;
   openAiApiKey?: string;
@@ -34,10 +35,11 @@ export interface PodcastScriptParams {
 
 export const DEFAULT_VOICE_PROFILE: VoiceProfile = {
   id: "fabricio-voicebox-master",
-  name: "Fabricio Honório (Voz Clonada - Neural Engine)",
+  name: "Jarvis & Fabricio (VoiceStudio Neural Engine)",
   isCloned: true,
   status: "ready",
-  engine: "elevenlabs",
+  engine: "voicestudio",
+  voiceStudioServerUrl: localStorage.getItem("VOICESTUDIO_SERVER_URL") || "http://localhost:8080",
   elevenLabsVoiceId: localStorage.getItem("ELEVENLABS_VOICE_ID") || "21m00Tcm4TlvDq8ikWAM", // Voice ID clonado
   elevenLabsApiKey: localStorage.getItem("ELEVENLABS_API_KEY") || "",
   openAiApiKey: localStorage.getItem("OPENAI_API_KEY") || "",
@@ -75,6 +77,29 @@ Dessa forma, você conquista seu objetivo com total planejamento e sem pagar jur
     text: string,
     profile: VoiceProfile = DEFAULT_VOICE_PROFILE
   ): Promise<{ audioUrl: string | null; error?: string }> {
+    // 0. VOICESTUDIO NEURAL ENGINE (Servidor Local ou Rede)
+    if (profile.engine === "voicestudio") {
+      const serverUrl = profile.voiceStudioServerUrl || localStorage.getItem("VOICESTUDIO_SERVER_URL") || "http://localhost:8080";
+      try {
+        const response = await fetch(`${serverUrl}/v1/audio/speech`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "tts-1-hd",
+            input: text,
+            voice: "jarvis",
+          }),
+        });
+
+        if (response.ok) {
+          const audioBlob = await response.blob();
+          return { audioUrl: URL.createObjectURL(audioBlob), error: undefined };
+        }
+      } catch (err: any) {
+        console.warn("[VoiceStudio] Servidor local indisponível, alternando para motor fallback:", err);
+      }
+    }
+
     // 1. ELEVENLABS NEURAL VOICE ENGINE (Voz Clonada Perfeita)
     if (profile.engine === "elevenlabs" && profile.elevenLabsApiKey && profile.elevenLabsVoiceId) {
       try {
@@ -160,21 +185,26 @@ Dessa forma, você conquista seu objetivo com total planejamento e sem pagar jur
       }
     }
 
-    // 4. FALLBACK WEB SPEECH COM PROSÓDIA OTIMIZADA
+    // 4. FALLBACK WEB SPEECH COM PROSÓDIA NATURAL BARÍTONO JARVIS
     return new Promise((resolve) => {
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "pt-BR";
-        utterance.rate = 1.15; // Ritmo alegre e fluído
-        utterance.pitch = 1.30; // Tom feminino elevado e vibrante
+        utterance.rate = 1.02; // Ritmo elegante e seguro de alto executivo
+        utterance.pitch = 0.96; // Barítono executivo aveludado e envolvente
 
         const voices = window.speechSynthesis.getVoices();
         const brVoice = voices.find(
           (v) =>
-            v.lang.includes("pt-BR") &&
-            (v.name.includes("Francisca") || v.name.includes("Thalita") || v.name.includes("Maria") || v.name.includes("Luciana") || v.name.includes("Giovanna") || v.name.includes("Google") || v.name.includes("Natural"))
-        ) || voices.find((v) => v.lang.includes("pt") && !v.name.includes("Daniel") && !v.name.includes("Ricardo"));
+            v.lang.toLowerCase().includes("pt") &&
+            (v.name.toLowerCase().includes("antonio") ||
+             v.name.toLowerCase().includes("thomaz") ||
+             v.name.toLowerCase().includes("fabio") ||
+             v.name.toLowerCase().includes("daniel") ||
+             v.name.toLowerCase().includes("google português") ||
+             v.name.toLowerCase().includes("natural"))
+        ) || voices.find((v) => v.lang.toLowerCase().includes("pt"));
 
         if (brVoice) utterance.voice = brVoice;
         window.speechSynthesis.speak(utterance);
