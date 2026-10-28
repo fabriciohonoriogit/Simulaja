@@ -26,6 +26,7 @@ import {
 import { LeadImportModal } from "@/components/admin/LeadImportModal";
 import { ProspeccaoEmailModal } from "@/components/admin/ProspeccaoEmailModal";
 import { VibeProspectingModal } from "@/components/admin/VibeProspectingModal";
+import { RadarCidadeModal } from "@/components/admin/RadarCidadeModal";
 import { LeadEnrichmentWidget } from "@/components/admin/LeadEnrichmentWidget";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { sendWhatsAppMessage, getWhatsAppMode } from "@/services/evolutionApiService";
@@ -74,6 +75,7 @@ export default function Leads() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isOutreachOpen, setIsOutreachOpen] = useState(false);
   const [isVibeOpen, setIsVibeOpen] = useState(false);
+  const [isRadarOpen, setIsRadarOpen] = useState(false);
   const [showEnrichment, setShowEnrichment] = useState(false);
 
   const { mutateAsync: deleteLead } = useDelete();
@@ -275,6 +277,14 @@ export default function Leads() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-black text-slate-900">Operação Leads</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsRadarOpen(true)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-black transition-all text-[11px] uppercase tracking-wide shadow-sm shadow-blue-500/20"
+            title="Radar de Prospecção por Cidade: Busca no Google Maps, CNPJ na Receita e Sócios Decisores"
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            Radar Cidade & CNPJ
+          </button>
           <button
             onClick={() => setIsVibeOpen(true)}
             className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black transition-all text-[11px] uppercase tracking-wide shadow-sm shadow-amber-500/20"
@@ -799,6 +809,13 @@ export default function Leads() {
       <VibeProspectingModal
         open={isVibeOpen}
         onClose={() => setIsVibeOpen(false)}
+        organizacaoId={profile?.organizacao_id}
+        onLeadsImported={refetchLeads}
+      />
+
+      <RadarCidadeModal
+        open={isRadarOpen}
+        onClose={() => setIsRadarOpen(false)}
         organizacaoId={profile?.organizacao_id}
         onLeadsImported={refetchLeads}
       />
