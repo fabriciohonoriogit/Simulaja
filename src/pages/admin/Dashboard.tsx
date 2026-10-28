@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTriangle, MessageCircle, Clock, CheckCircle2, BarChart3, Bell, Target, Zap, Trophy, MessageSquare, Phone, Sparkles, Pencil, Trash2, ShieldAlert, Coins, Eye, EyeOff, Calculator, Share2, FileText, Newspaper, Mic } from "lucide-react";
 import { DailyNewsSection } from "@/components/admin/news/DailyNewsSection";
 import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
@@ -683,18 +682,26 @@ export default function Dashboard() {
 
       {/* Ranking de Consultores - Standardized Slim Style */}
       {ranking.length > 0 && (
-        <AdminHeroCard 
-          title="Ranking de Consultores" 
-          subtitle="Performance Mensal da Equipe"
-          icon={Trophy} 
-          bgIcon={Trophy}
-          accentColor="amber"
-          className="mb-6"
-        >
+        <Card className="mb-6 p-4 sm:p-5 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm bg-white dark:bg-zinc-950">
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-zinc-800">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                <Trophy className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Ranking de Consultores</h3>
+                <p className="text-[11px] text-slate-500 font-medium">Performance Mensal da Equipe</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Ao Vivo
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {ranking.map((item, i) => (
-              <div key={item.id} className={`group/rank relative flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 transition-all hover:bg-white hover:shadow-md ${
-                i === 0 ? "border-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : ""
+              <div key={item.id} className={`group/rank relative flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 transition-all hover:bg-white dark:hover:bg-zinc-850 hover:shadow-md ${
+                i === 0 ? "border-emerald-300 dark:border-emerald-700/60 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : ""
               }`}>
                 <div className="relative">
                   <div className={`h-12 w-12 rounded-full border-2 overflow-hidden flex items-center justify-center text-lg font-black shrink-0 ${
@@ -716,7 +723,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-xs truncate text-slate-900">{item.nome}</p>
+                  <p className="font-bold text-xs truncate text-slate-900 dark:text-white">{item.nome}</p>
                   <p className={`text-[10px] font-black uppercase tracking-wider ${
                     i === 0 ? "text-emerald-500" : i === 1 ? "text-blue-400" : "text-violet-500"
                   }`}>
@@ -726,7 +733,7 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </AdminHeroCard>
+        </Card>
       )}
 
 

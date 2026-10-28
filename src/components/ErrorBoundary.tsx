@@ -37,10 +37,21 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
               {this.state.error?.message}
             </div>
             <Button 
-                onClick={() => window.location.reload()}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-12 rounded-xl"
+                onClick={() => {
+                  try {
+                    if (typeof window !== "undefined" && "caches" in window) {
+                      caches.keys().then((names) => {
+                        names.forEach((name) => caches.delete(name));
+                      });
+                    }
+                  } catch (e) {
+                    console.error("Erro ao limpar cache", e);
+                  }
+                  window.location.reload();
+                }}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-12 rounded-xl transition-all shadow-md"
             >
-              Tentar Novamente
+              Tentar Novamente (Atualizar Sistema)
             </Button>
             <p className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">
                 Support ID: {Math.random().toString(36).substring(7).toUpperCase()}
