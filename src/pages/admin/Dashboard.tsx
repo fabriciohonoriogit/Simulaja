@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTriangle, MessageCircle, Clock, CheckCircle2, BarChart3, Bell, Target, Zap, Trophy, MessageSquare, Phone, Sparkles, Pencil, Trash2, ShieldAlert, Coins, Eye, EyeOff, Calculator, Share2, FileText, Newspaper, Mic } from "lucide-react";
 import { DailyNewsSection } from "@/components/admin/news/DailyNewsSection";
 import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
