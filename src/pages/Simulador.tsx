@@ -227,7 +227,9 @@ export default function Simulador() {
   const txAtual = isLinear ? (_g.txLinear ?? _g.tx ?? 20) : (_g.tx5050 ?? _g.tx ?? 20);
   const frAtual = isLinear ? (_g.frLinear ?? _g.fr ?? 1) : (_g.fr5050 ?? _g.fr ?? 1);
   const saldoTotalContrato = (_g?.credito || 0) * (1 + (txAtual + frAtual) / 100);
-  const valorSeguroMensal = (saldoTotalContrato * (_g?.seguro ?? 0)) / 100;
+  const valorSeguroMensal = _g.r50SemSeguro !== undefined 
+    ? Number((_g.r50 - _g.r50SemSeguro).toFixed(2)) 
+    : (((_g?.credito || 0) * (_g?.seguro ?? 0)) / 100);
 
   const g = {
     ..._g,
