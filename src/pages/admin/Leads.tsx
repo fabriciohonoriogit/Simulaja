@@ -20,10 +20,12 @@ import {
   ChevronUp,
   ChevronDown,
   FileUp,
-  Mail
+  Mail,
+  Sparkles
 } from "lucide-react";
 import { LeadImportModal } from "@/components/admin/LeadImportModal";
 import { ProspeccaoEmailModal } from "@/components/admin/ProspeccaoEmailModal";
+import { VibeProspectingModal } from "@/components/admin/VibeProspectingModal";
 import { LeadEnrichmentWidget } from "@/components/admin/LeadEnrichmentWidget";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
 import { sendWhatsAppMessage, getWhatsAppMode } from "@/services/evolutionApiService";
@@ -71,6 +73,7 @@ export default function Leads() {
   const [viewingFichaLead, setViewingFichaLead] = useState<Lead | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isOutreachOpen, setIsOutreachOpen] = useState(false);
+  const [isVibeOpen, setIsVibeOpen] = useState(false);
   const [showEnrichment, setShowEnrichment] = useState(false);
 
   const { mutateAsync: deleteLead } = useDelete();
@@ -272,6 +275,14 @@ export default function Leads() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-black text-slate-900">Operação Leads</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsVibeOpen(true)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black transition-all text-[11px] uppercase tracking-wide shadow-sm shadow-amber-500/20"
+            title="Vibe Prospecting OS: Prospecção inteligente por linguagem natural com envio direto para o Funil"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Vibe Prospecting
+          </button>
           <button
             onClick={() => setShowEnrichment(prev => !prev)}
             className={`flex items-center gap-1.5 h-8 px-3 rounded-lg transition-colors border text-[11px] font-black uppercase tracking-wide ${
@@ -783,6 +794,13 @@ export default function Leads() {
         onClose={() => setIsImportOpen(false)}
         organizacaoId={profile?.organizacao_id}
         onImportDone={refetchLeads}
+      />
+
+      <VibeProspectingModal
+        open={isVibeOpen}
+        onClose={() => setIsVibeOpen(false)}
+        organizacaoId={profile?.organizacao_id}
+        onLeadsImported={refetchLeads}
       />
 
       <ProspeccaoEmailModal
