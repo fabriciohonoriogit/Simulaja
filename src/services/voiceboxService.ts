@@ -36,6 +36,7 @@ export interface PodcastScriptParams {
 export const DEFAULT_VOICE_PROFILE: VoiceProfile = {
   id: "fabricio-voicebox-master",
   name: "Jarvis & Fabricio (VoiceStudio Neural Engine)",
+  sampleUrl: "/audio/fabricio_voice_sample.webm",
   isCloned: true,
   status: "ready",
   engine: "voicestudio",

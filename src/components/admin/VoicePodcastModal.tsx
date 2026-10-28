@@ -62,7 +62,9 @@ export const VoicePodcastModal: React.FC<VoicePodcastModalProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [voiceSampleUrl, setVoiceSampleUrl] = useState<string | null>(null);
+  const [voiceSampleUrl, setVoiceSampleUrl] = useState<string | null>(
+    () => (typeof window !== "undefined" && localStorage.getItem("jarvis_user_voice_sample")) || "/audio/fabricio_voice_sample.webm"
+  );
 
   // Configurações de Clonagem Neural
   const [showSettings, setShowSettings] = useState(false);

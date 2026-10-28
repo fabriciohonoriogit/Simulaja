@@ -69,12 +69,15 @@ export const VoiceCloningModal: React.FC<VoiceCloningModalProps> = ({
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Carregar amostra salva anteriormente se houver
+    // Carregar amostra salva anteriormente se houver, ou a amostra oficial do Fabrício
     const savedSample = localStorage.getItem("jarvis_user_voice_sample");
     const savedName = localStorage.getItem("jarvis_user_voice_name");
     if (savedSample) {
       setAudioUrl(savedSample);
       setFileName(savedName || "minha_voz_gravada.wav");
+    } else {
+      setAudioUrl("/audio/fabricio_voice_sample.webm");
+      setFileName("voz_oficial_fabricio_honorio.webm");
     }
   }, [isOpen]);
 
