@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTriangle, MessageCircle, Clock, CheckCircle2, BarChart3, Bell, Target, Zap, Trophy, MessageSquare, Phone, Sparkles, Pencil, Trash2, ShieldAlert, Coins, Eye, EyeOff, Calculator, Share2, FileText, Newspaper } from "lucide-react";
+import { Users, UserPlus, TrendingUp, DollarSign, Handshake, Calendar, AlertTriangle, MessageCircle, Clock, CheckCircle2, BarChart3, Bell, Target, Zap, Trophy, MessageSquare, Phone, Sparkles, Pencil, Trash2, ShieldAlert, Coins, Eye, EyeOff, Calculator, Share2, FileText, Newspaper, Mic } from "lucide-react";
 import { DailyNewsSection } from "@/components/admin/news/DailyNewsSection";
+import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { formatCurrency, formatLeadValue, isVendaRealizadaNoMes, parseBRLValue } from "@/lib/utils";
@@ -82,6 +83,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [showCommission, setShowCommission] = useState(false);
   const [dashboardTab, setDashboardTab] = useState<"noticias" | "metricas">("noticias");
+  const [isVoiceCloneModalOpen, setIsVoiceCloneModalOpen] = useState(false);
   const { setComissaoAtual, setProducaoMes } = useGamificationStore();
 
   async function handleDeleteLead(id: string, e: React.MouseEvent) {
@@ -460,6 +462,16 @@ export default function Dashboard() {
                 className="h-9 px-3.5 border-cyan-300 text-cyan-900 bg-cyan-50 hover:bg-cyan-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
               >
                 <Sparkles className="h-3.5 w-3.5 text-cyan-600 shrink-0" /> Jarvis SRV
+              </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsVoiceCloneModalOpen(true)}
+                className="h-9 px-3.5 border-purple-300 text-purple-900 bg-purple-50 hover:bg-purple-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                title="Clonar sua voz para o Jarvis e Podcasts"
+              >
+                <Mic className="h-3.5 w-3.5 text-purple-600 shrink-0" /> Clonar Minha Voz (Voice Studio)
               </Button>
             </div>
           ) : <div />}
@@ -1102,6 +1114,12 @@ export default function Dashboard() {
           <ChevronDown className="h-6 w-6" />
         </Button>
       </div>
+
+      <VoiceCloningModal
+        isOpen={isVoiceCloneModalOpen}
+        onClose={() => setIsVoiceCloneModalOpen(false)}
+        userName={profile?.nome_completo || "Fabrício Honório"}
+      />
     </div>
   );
 }

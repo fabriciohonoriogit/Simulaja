@@ -1,4 +1,4 @@
-// Helper para carregar e selecionar vozes humanas de altíssima qualidade (Neural/Natural) no Web Speech API
+// Helper de voz humana ultra-natural (Neural/Natural) com modulação prosódica e respiração fluida para o Jarvis
 
 let availableVoices: SpeechSynthesisVoice[] = [];
 
@@ -29,16 +29,16 @@ export function getBestPtBrVoice(): SpeechSynthesisVoice | null {
 
   if (ptVoices.length === 0) return null;
 
-  // Vozes com tecnologia Neural / Natural no Windows, Chrome, Edge, Safari e Android
-  // Prioriza o barítono executivo nobre característico do Jarvis
+  // Prioridade para vozes com tecnologia Natural/Neural (Microsoft e Google)
+  // Tom barítono humano, seguro, caloroso e envolvente
   const priorityVoices = [
-    "antonio",         // Microsoft Antonio Online (Natural) - PT-BR (Barítono Nobre, Perfeito para o Jarvis)
-    "thomaz",          // Microsoft Thomaz Online (Natural) - PT-BR (Executivo e Aveludado)
-    "fabio",           // Microsoft Fabio Online (Natural) - PT-BR
-    "google português do brasil",
-    "daniel",          // Voz masculina brasileira
+    "antonio",                  // Microsoft Antonio Online (Natural) - PT-BR (Barítono Executivo Perfeito)
+    "thomaz",                   // Microsoft Thomaz Online (Natural) - PT-BR (Aveludado e Suave)
+    "fabio",                    // Microsoft Fabio Online (Natural) - PT-BR
+    "google português do brasil", // Google PT-BR (Natural Chrome)
+    "daniel",                   // Voz Daniel (Windows SAPI)
     "ricardo",
-    "francisca",       // Microsoft Francisca Online (Natural) - PT-BR (Feminina aveludada)
+    "francisca",                // Microsoft Francisca Online (Natural)
     "thalita",
     "giovanna",
     "luciana",
@@ -56,40 +56,69 @@ export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
   return getBestPtBrVoice();
 }
 
+/**
+ * Normaliza o texto para que a pronúncia soe 100% como uma pessoa conversando ao vivo
+ * Eliminando jargões truncados, siglas estranhas e pausas artificiais.
+ */
 export function normalizeTextForSpeech(text: string): string {
   if (!text) return "";
 
   let cleaned = text
+    // Remove blocos de código e markdown
     .replace(/```json[\s\S]*?```/g, "")
     .replace(/```[\s\S]*?```/g, "")
     .replace(/\{[\s\S]*?\}/g, "")
     .replace(/[*_#`~{}]/g, "")
     .replace(/https?:\/\/\S+/g, "")
     .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F300}-\u{1F5FF}]/gu, "")
-    .replace(/🚀|✨|🏆|💡|📊|🤖|✴|●|🟢|⚠️|[\u2000-\u3300]/g, "")
-    .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, "");
+    .replace(/🚀|✨|🏆|💡|📊|🤖|✴|●|🟢|⚠️|📌|🏛️|📈|📰|🎯|[\u2000-\u3300]/g, "")
+    .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, "")
+    // Remove marcadores de lista que causam pausas secas
+    .replace(/^[•\-\*]\s+/gm, "")
+    .replace(/\n[•\-\*]\s+/g, ", ")
+    .replace(/["“”«»]/g, "") // aspas causam pausas duras
+    .replace(/\s*:\s*/g, ", "); // dois pontos substituídos por vírgula para fluidez
 
-  // Converte valores monetários, porcentagens e jargões para pronúncia humana fluida
+  // Conversão de números e unidades para fala espontânea
   cleaned = cleaned
-    .replace(/R\$\s*500\.000,00/gi, "quinhentos mil reais")
-    .replace(/R\$\s*500\.000/gi, "quinhentos mil reais")
-    .replace(/R\$\s*500mil/gi, "quinhentos mil reais")
-    .replace(/R\$\s*1\.650,42/gi, "mil seiscentos e cinquenta reais e quarenta e dois centavos")
-    .replace(/R\$\s*2\.705,25/gi, "dois mil setecentos e cinco reais e vinte e cinco centavos")
-    .replace(/50\/50/gi, "cinquenta por cinquenta, meia parcela,")
-    .replace(/237\s*meses/gi, "duzentos e trinta e sete meses")
     .replace(/R\$\s*([\d\.]+),(\d{2})/gi, (_, intVal, cents) => {
       const num = intVal.replace(/\./g, "");
+      if (cents === "00") return `${num} reais`;
       return `${num} reais e ${cents} centavos`;
     })
     .replace(/R\$\s*([\d\.]+)/gi, (_, intVal) => {
       const num = intVal.replace(/\./g, "");
       return `${num} reais`;
-    });
+    })
+    .replace(/(\d+),(\d+)%/g, "$1 vírgula $2 por cento")
+    .replace(/(\d+)%/g, "$1 por cento")
+    .replace(/\ba\.a\./gi, "ao ano")
+    .replace(/\ba\.a\b/gi, "ao ano")
+    .replace(/\ba\.m\./gi, "ao mês")
+    .replace(/\ba\.m\b/gi, "ao mês")
+    .replace(/\/L\b/gi, " por litro")
+    .replace(/50\/50/gi, "cinquenta por cinquenta, meia parcela")
+    .replace(/\bIPCA\b/gi, "I-P-C-A")
+    .replace(/\bIGP-M\b/gi, "I-G-P-M")
+    .replace(/\bIGPM\b/gi, "I-G-P-M")
+    .replace(/\bINCC\b/gi, "I-N-C-C")
+    .replace(/\bBCB\b/gi, "Banco Central")
+    .replace(/\bCOPOM\b/gi, "Copom")
+    .replace(/\bANP\b/gi, "A-N-P")
+    .replace(/\bFIPE\b/gi, "Fipe")
+    .replace(/\bCDC\b/gi, "financiamento bancário tradicional")
+    .replace(/\bABAC\b/gi, "Ábaque")
+    .replace(/\bCNPJ\b/gi, "C-N-P-J")
+    .replace(/\bQSA\b/gi, "quadro societário");
 
+  // Limpa espaços duplicados
   return cleaned.replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Sintetizador Jarvis com respiração fluida e cadência contínua
+ * Sem cortes secos entre frases, mantendo a melodia vocal humana.
+ */
 export function speakJarvisText(
   text: string,
   onStart?: () => void,
@@ -112,60 +141,77 @@ export function speakJarvisText(
     window.speechSynthesis.cancel();
   } catch (e) {}
 
-  // Divide o texto em frases com pontuação para respiração natural
-  const sentences = cleanText
-    .split(/(?<=[.!?])\s+/)
-    .filter((s) => s.trim().length > 0);
+  const voice = customVoice || getBestPtBrVoice();
 
-  if (sentences.length === 0) {
+  // Dividimos em parágrafos ou blocos de pensamento grandes (em vez de quebrar em cada ponto),
+  // para que o navegador mantenha a prosódia contínua e a entonação humana natural.
+  // Quebramos em blocos de até 220 caracteres apenas em vírgulas ou pontos para evitar truncamento em navegadores antigos.
+  const chunks: string[] = [];
+  const words = cleanText.split(" ");
+  let currentChunk = "";
+
+  for (const word of words) {
+    if ((currentChunk + " " + word).length > 200 && /[.,;!?]$/.test(currentChunk)) {
+      chunks.push(currentChunk.trim());
+      currentChunk = word;
+    } else {
+      currentChunk += (currentChunk ? " " : "") + word;
+    }
+  }
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  if (chunks.length === 0) {
     if (onEnd) onEnd();
     return;
   }
 
-  const voice = customVoice || getBestPtBrVoice();
-  let currentIndex = 0;
+  let index = 0;
 
-  const speakNextSentence = () => {
-    if (currentIndex >= sentences.length) {
+  const playChunk = () => {
+    if (index >= chunks.length) {
       if (onEnd) onEnd();
       return;
     }
 
-    const sentence = sentences[currentIndex];
-    const msg = new SpeechSynthesisUtterance(sentence);
-    msg.lang = "pt-BR";
+    const chunkText = chunks[index];
+    const utterance = new SpeechSynthesisUtterance(chunkText);
+    utterance.lang = "pt-BR";
 
     if (voice) {
-      msg.voice = voice;
+      utterance.voice = voice;
     }
 
-    // Parâmetros para voz humana aveludada, ritmada e executiva do Jarvis
-    msg.rate = 1.02;  // Velocidade natural e elegante de conversa humana
-    msg.pitch = 0.96; // Tom barítono envolvente e seguro (Jarvis style)
+    // Parâmetros humanizados:
+    // Rate 1.0 = velocidade natural de uma conversa confortável (não apressada nem lenta)
+    // Pitch 0.98 = timbre barítono aquecido, seguro e expressivo
+    utterance.rate = 1.0;
+    utterance.pitch = 0.98;
 
-    if (currentIndex === 0 && onStart) {
-      msg.onstart = () => onStart();
+    if (index === 0 && onStart) {
+      utterance.onstart = () => onStart();
     }
 
-    msg.onend = () => {
-      currentIndex++;
-      // Micro-pausa de respiração de 100ms entre frases
-      setTimeout(speakNextSentence, 100);
+    utterance.onend = () => {
+      index++;
+      // Transição suave e imperceptível entre blocos
+      playChunk();
     };
 
-    msg.onerror = () => {
-      currentIndex++;
-      speakNextSentence();
+    utterance.onerror = () => {
+      index++;
+      playChunk();
     };
 
     try {
-      window.speechSynthesis.speak(msg);
+      window.speechSynthesis.speak(utterance);
     } catch (e) {
       if (onEnd) onEnd();
     }
   };
 
-  speakNextSentence();
+  playChunk();
 }
 
 export function stopVoice() {

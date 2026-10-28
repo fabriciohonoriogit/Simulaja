@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { aiService } from "@/services/aiService";
 import { speakText } from "@/lib/voiceService";
 import { fetchDailyNews, getNewsAnswerForJarvis } from "@/services/newsService";
+import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
 
 interface LogEntry {
   id: string;
@@ -55,6 +56,7 @@ export default function JarvisHUDPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<Array<{ role: string; text: string }>>([]);
+  const [isVoiceCloneOpen, setIsVoiceCloneOpen] = useState(false);
 
   const [logs, setLogs] = useState<LogEntry[]>([
     {
@@ -395,6 +397,25 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
       };
     }
 
+    // 5. Comando de Clonagem de Voz / Voice Studio
+    if (
+      lowerPrompt.includes("clonar voz") ||
+      lowerPrompt.includes("minha voz") ||
+      lowerPrompt.includes("enviar audio") ||
+      lowerPrompt.includes("enviar áudio") ||
+      lowerPrompt.includes("gravar voz") ||
+      lowerPrompt.includes("voice studio")
+    ) {
+      setIsVoiceCloneOpen(true);
+      return {
+        id: Date.now().toString(),
+        time: timeStr,
+        tag: "VOICE STUDIO CLONE",
+        color: "text-purple-400 font-bold",
+        text: "Abri o estúdio de clonagem de voz para você, Fabrício! Você pode enviar um arquivo de áudio (.mp3, .wav ou áudio de WhatsApp) ou gravar direto pelo microfone por 30 a 60 segundos."
+      };
+    }
+
     return null;
   };
 
@@ -577,6 +598,13 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
           <button 
+            onClick={() => setIsVoiceCloneOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold transition-all border border-purple-500/50 bg-purple-950/70 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)] hover:bg-purple-900/60 cursor-pointer"
+            title="Abrir Estúdio para Clonar Sua Voz com Arquivo ou Microfone"
+          >
+            <Mic className="h-4 w-4 text-purple-400" /> Clonar Minha Voz (Voice Studio)
+          </button>
+          <button 
             onClick={() => setAudioEnabled(!audioEnabled)}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold transition-all border shadow-lg ${
               audioEnabled 
@@ -698,6 +726,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
           <div className="w-full space-y-2">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px] font-mono">
               {[
+                { label: "🎙️ Clonar Minha Voz", query: "Jarvis, abrir estúdio para clonar minha voz e enviar áudio." },
                 { label: "📰 Briefing do Dia", query: "Jarvis, quais são as principais notícias do dia, política e preços dos jornais hoje?" },
                 { label: "📈 Preços & Selic", query: "Jarvis, como estão os preços, inflação, gasolina, dólar e Selic hoje?" },
                 { label: "🏛️ Política Hoje", query: "Jarvis, quais os destaques da política e votações em Brasília hoje?" },
@@ -857,6 +886,12 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         </div>
 
       </div>
+
+      <VoiceCloningModal
+        isOpen={isVoiceCloneOpen}
+        onClose={() => setIsVoiceCloneOpen(false)}
+        userName="Fabrício Honório"
+      />
     </div>
   );
 }

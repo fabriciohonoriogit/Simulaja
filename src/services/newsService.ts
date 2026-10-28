@@ -380,27 +380,27 @@ export function getDailyBriefingScript(
 ): string {
   const currentHour = new Date().getHours();
   const saudacao = currentHour < 12 ? "Bom dia" : currentHour < 18 ? "Boa tarde" : "Boa noite";
+  const firstName = userName.split(" ")[0] || "Fabrício";
 
   // Filtra as manchetes mais relevantes
-  const politicas = items.filter(i => i.category === "politica").slice(0, 2);
-  const precos = items.filter(i => i.category === "precos").slice(0, 2);
-  const gerais = items.filter(i => i.category === "geral" || i.category === "consorcio").slice(0, 2);
+  const politicas = items.filter(i => i.category === "politica");
+  const precos = items.filter(i => i.category === "precos");
+  const gerais = items.filter(i => i.category === "geral" || i.category === "consorcio");
 
-  const headlinePolitica = politicas[0] ? politicas[0].title : "em Brasília o Congresso mantém foco nas pautas fiscais e orçamentárias";
-  const headlinePreco = precos[0] ? precos[0].title : `o IPCA segue em ${rates.ipca} por cento e a Selic em ${rates.selic} por cento ao ano`;
-  const headlineGeral = gerais[0] ? gerais[0].title : "o setor de consórcios segue batendo recordes de adesão em todo o país";
+  const headlinePolitica = politicas[0]?.title || "em Brasília o Congresso mantém o foco nas reformas e pautas fiscais";
+  const headlinePreco = precos[0]?.title || "os índices de preços e combustíveis seguem no centro das atenções";
+  const headlineGeral = gerais[0]?.title || "a procura por cartas de consórcio bate recordes históricos no país";
 
   return `
-    Olá, ${userName}! ${saudacao}! Aqui é o Jarvis com o seu Briefing Executivo de notícias e mercado.
+    Fala, ${firstName}! ${saudacao}. Jarvis por aqui com os destaques mais quentes do dia para você chegar na frente nas negociações.
     
-    No cenário de preços e economia, a Taxa Selic está em ${rates.selic.toFixed(2).replace(".", ",")} por cento ao ano, com o Dólar cotado a ${rates.dolar.toFixed(2).replace(".", ",")} reais. Destaque para: ${headlinePreco}.
+    Olhando para a economia e preços agora, a Taxa Selic está em ${rates.selic.toFixed(2).replace(".", ",")} por cento ao ano, com o dólar cotado a ${rates.dolar.toFixed(2).replace(".", ",")} reais. Aliás, vale prestar muita atenção nessa manchete de mercado: ${headlinePreco}.
     
-    Na política nacional: ${headlinePolitica}.
+    Lá em Brasília, o principal assunto da política hoje é que ${headlinePolitica}.
     
-    Já no mercado geral e setor imobiliário e automotivo: ${headlineGeral}.
+    E nos grandes jornais pelo Brasil: ${headlineGeral}.
     
-    Insight comercial do Jarvis para hoje: com as altas taxas de financiamento bancário, o consórcio com plano de meia parcela é o maior argumento de fechamento para sua carteira de clientes. 
-    Tenha um dia extraordinário de vendas!
+    A grande sacada comercial pra você hoje é direta: com o financiamento bancário cobrando juros pesados, o consórcio com meia parcela é o seu maior trunfo para fechar clientes que querem comprar ou investir sem sufocar o bolso. Vamos pra cima e ótimos negócios!
   `.replace(/\s+/g, " ").trim();
 }
 
@@ -416,16 +416,16 @@ export function getNewsAnswerForJarvis(
 
   // Pergunta sobre preços, taxas, inflação, gasolina, selic ou dólar
   if (lower.includes("preço") || lower.includes("preco") || lower.includes("taxa") || lower.includes("selic") || lower.includes("inflação") || lower.includes("inflacao") || lower.includes("dolar") || lower.includes("dólar") || lower.includes("gasolina")) {
-    const newsPrecos = items.filter(i => i.category === "precos").slice(0, 2);
+    const newsPrecos = items.filter(i => i.category === "precos");
     const manchete = newsPrecos[0]?.title || "Preços monitorados pelo Banco Central e ANP";
-    return `Fabrício, sobre preços e indicadores econômicos hoje: a Selic está em ${rates.selic}% a.a., CDI em ${rates.cdi}%, IPCA acumulado em ${rates.ipca}%, INCC da construção em ${rates.incc}% e o Dólar comercial em R$ ${rates.dolar.toFixed(2).replace(".", ",")}. O preço médio da gasolina no país é de R$ ${rates.gasolinaMedia.toFixed(2).replace(".", ",")}/L. Principal manchete econômica do dia: "${manchete}".`;
+    return `Olha só, Fabrício: falando de preços e indicadores hoje, a Selic se mantém em ${rates.selic.toFixed(2).replace(".", ",")}% ao ano, e o dólar comercial tá girando em torno de R$ ${rates.dolar.toFixed(2).replace(".", ",")}. A gasolina comum tá com média nacional em R$ ${rates.gasolinaMedia.toFixed(2).replace(".", ",")} por litro. E a manchete econômica mais comentada de hoje é: "${manchete}". É um prato cheio pra você mostrar pro cliente que financiar no banco tá caríssimo e que o consórcio é a saída mais inteligente.`;
   }
 
   // Pergunta sobre política
   if (lower.includes("politica") || lower.includes("política") || lower.includes("governo") || lower.includes("congresso") || lower.includes("brasília") || lower.includes("brasilia")) {
     const newsPolitica = items.filter(i => i.category === "politica").slice(0, 2);
-    const titulos = newsPolitica.map(n => `"${n.title}"`).join(". Também temos: ");
-    return `Fabrício, no cenário político de hoje os principais jornais destacam: ${titulos || "A movimentação em Brasília com votações e pautas econômicas no Congresso"}. O marco legal do consórcio segue plenamente respaldado e seguro para seus clientes.`;
+    const titulos = newsPolitica.map(n => `"${n.title}"`).join(". E também: ");
+    return `Fabrício, no radar político de hoje os principais jornais destacam: ${titulos || "as votações e negociações orçamentárias no Congresso Nacional"}. No nosso setor de consórcios, o marco regulatório do Banco Central segue 100% sólido, dando total segurança para os seus clientes fecharem com tranquilidade.`;
   }
 
   // Pergunta geral de notícias / jornais / briefing
