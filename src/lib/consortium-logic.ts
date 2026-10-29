@@ -10,7 +10,7 @@ export const groupQuotaMap: Record<string, number> = {
   "6043": 4300,
   "6044": 4300,
   // Veículo
-  "5297": 2500,
+  "5297": 3100,
   "5295": 2500,
   "5294": 2500,
   "5292": 2500,
@@ -161,7 +161,8 @@ export const getLoteriaStatus = (
   if (isNaN(lotId)) return null;
 
   // Extreme cleaning for robustness
-  const cleanGrupo = grupoStr?.replace(/\D/g, '') || ""; // Extrai apenas os números (ex: "GRUPO: 1703" -> "1703")
+  const rawGrupo = grupoStr?.replace(/\D/g, '') || "";
+  const cleanGrupo = rawGrupo.replace(/^0+/, '') || rawGrupo;
   const cleanAdmin = administradora?.trim().toUpperCase() || "";
   const cleanTipo = tipoConsorcio?.trim().toLowerCase() || "";
 
@@ -172,7 +173,7 @@ export const getLoteriaStatus = (
   if (isAdemicon) {
     participants = getAdemiconParticipants(cleanGrupo, cleanTipo);
   } else {
-    participants = cleanGrupo ? (groupQuotaMap[cleanGrupo] || defaultParticipants) : defaultParticipants;
+    participants = cleanGrupo ? (groupQuotaMap[cleanGrupo] || groupQuotaMap[rawGrupo] || defaultParticipants) : defaultParticipants;
   }
 
   if (participants <= 0) return null;
