@@ -39,6 +39,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getLoteriaStatus } from "@/lib/consortium-logic";
+import { getWhatsAppWebUrl } from "@/services/evolutionApiService";
 import {
   Dialog,
   DialogContent,
@@ -1238,7 +1239,7 @@ export default function Carteira() {
                     onClick={() => {
                       const digits = c.celular?.replace(/\D/g, "") || "";
                       const formattedPhone = digits.startsWith("55") ? digits : `55${digits}`;
-                      window.open(`https://wa.me/${formattedPhone}`, "_blank");
+                      window.open(getWhatsAppWebUrl(formattedPhone), "_blank");
                     }} 
                     title="WhatsApp"
                   >

@@ -345,8 +345,8 @@ export function LeadChat({ lead }: { lead: Lead }) {
               variant="outline"
               size="sm"
               onClick={() => {
-                const msg = encodeURIComponent(`Olá, ${lead.nome}! Como posso ajudar com a sua cota de consórcio hoje?`);
-                window.open(`https://wa.me/${formatWhatsAppNumber(targetPhone)}?text=${msg}`, "_blank");
+                const msg = `Olá, ${lead.nome}! Como posso ajudar com a sua cota de consórcio hoje?`;
+                window.open(getWhatsAppWebUrl(targetPhone, msg), "_blank");
               }}
               className="h-7 px-2.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100 gap-1 rounded-lg"
               title="Abrir conversa direta no WhatsApp Web / Celular"

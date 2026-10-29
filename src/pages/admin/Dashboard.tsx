@@ -29,6 +29,7 @@ import { WeatherWidget } from "@/components/admin/WeatherWidget";
 import { EconomyRatesBadge } from "@/components/admin/EconomyRatesBadge";
 import { LojasDashboardSection } from "@/components/admin/lojas/LojasDashboardSection";
 import { calculateLojasPerformance, getLojasConfig, matchLeadToLoja } from "@/lib/lojasService";
+import { getWhatsAppWebUrl } from "@/services/evolutionApiService";
 
 interface Lead {
   id: string;
@@ -65,9 +66,9 @@ interface CarteiraItem {
 
 function openWhatsApp(lead: Lead, consultorName?: string) {
   const name = consultorName || "sua equipe de consórcio";
-  const msg = encodeURIComponent(`Olá, bom dia! Aqui é o ${name}. Vi sua empresa e pensei em uma forma de gerar mais oportunidades com planejamento financeiro… posso te explicar rapidinho?`);
+  const msg = `Olá, bom dia! Aqui é o ${name}. Vi sua empresa e pensei em uma forma de gerar mais oportunidades com planejamento financeiro… posso te explicar rapidinho?`;
   const phone = lead.celular ? lead.celular.replace(/\D/g, "") : "";
-  window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+  window.open(getWhatsAppWebUrl(phone, msg), "_blank");
 }
 
 export default function Dashboard() {

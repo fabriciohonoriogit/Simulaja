@@ -29,7 +29,7 @@ import {
   Check
 } from "lucide-react";
 import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
-import { sendWhatsAppMessage } from "@/services/evolutionApiService";
+import { sendWhatsAppMessage, getWhatsAppWebUrl } from "@/services/evolutionApiService";
 import { magaluPortalWorker } from "@/services/magaluPortalWorker";
 import { telegramService } from "@/services/telegramService";
 import { toast } from "sonner";
@@ -386,7 +386,7 @@ export default function Inadimplentes() {
           // Fallback para abrir WhatsApp Web diretamente
           const cleanNum = aviso.celular.replace(/\D/g, "");
           const encoded = encodeURIComponent(aviso.mensagem_whatsapp);
-          window.open(`https://wa.me/55${cleanNum}?text=${encoded}`, "_blank");
+          window.open(getWhatsAppWebUrl(cleanNum, aviso.mensagem_whatsapp), "_blank");
         }
       } else {
         toast.error("Cliente sem número de celular informado.");
@@ -1240,7 +1240,7 @@ export default function Inadimplentes() {
                                                 linhaDigitavel: linhaDigitavel,
                                                 vencimento: mesInfo.vencimentoEfetivo
                                               });
-                                              window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`, '_blank');
+                                              window.open(getWhatsAppWebUrl(num, msg), '_blank');
                                             } else {
                                               toast.error('Número de celular não informado');
                                             }

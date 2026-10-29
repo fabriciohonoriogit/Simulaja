@@ -33,6 +33,9 @@ export const formatWhatsAppNumber = (number: string): string => {
 export const getWhatsAppWebUrl = (number: string, text?: string): string => {
   const clean = formatWhatsAppNumber(number);
   const encodedText = text ? encodeURIComponent(text) : "";
+  if (typeof window !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    return `https://api.whatsapp.com/send?phone=${clean}${encodedText ? `&text=${encodedText}` : ""}`;
+  }
   return `https://web.whatsapp.com/send?phone=${clean}${encodedText ? `&text=${encodedText}` : ""}`;
 };
 
