@@ -23,7 +23,9 @@ import {
   Clock,
   Coins,
   Receipt,
-  FileCheck2
+  FileCheck2,
+  SlidersHorizontal,
+  RefreshCw
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -90,6 +92,17 @@ export function FinanciamentoImobiliarioTab() {
   const [taxaMIPInput, setTaxaMIPInput] = useState(""); // vazio = calculado pela idade automaticamente
   const [nomeCliente, setNomeCliente] = useState("");
 
+  // ==========================================
+  // PARÂMETROS ABERTOS DO CONSÓRCIO IMOBILIÁRIO
+  // ==========================================
+  // Padrão: 500mil (valor integral do imóvel que o cliente busca)
+  const [creditoConsorcioInput, setCreditoConsorcioInput] = useState<string>("500.000");
+  const [prazoConsorcioInput, setPrazoConsorcioInput] = useState<string>("220");
+  const [taxaAdmConsorcioInput, setTaxaAdmConsorcioInput] = useState<string>("19,00"); // 18% taxa + 1% FR
+  const [taxaINCCAnualInput, setTaxaINCCAnualInput] = useState<string>("5,50");
+  const [projetarINCC, setProjetarINCC] = useState<boolean>(true);
+  const [mostrarConfigConsorcio, setMostrarConfigConsorcio] = useState<boolean>(true);
+
   // Cálculo da data de nascimento oficial Caixa
   const infoNascimento = useMemo(() => {
     if (!dataNascimentoInput.trim()) return null;
@@ -125,7 +138,7 @@ export function FinanciamentoImobiliarioTab() {
     setValorEntradaInput(novoValorEntrada.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   };
 
-  // Handler para alteração do valor do imóvel (recalcula entrada se houver percentual ativo)
+  // Handler para alteração do valor do imóvel (recalcula entrada e sincroniza consórcio se aplicável)
   const handleValorImovelChange = (val: string) => {
     setValorImovelInput(val);
     const num = parseMoeda(val);
@@ -147,7 +160,6 @@ export function FinanciamentoImobiliarioTab() {
     setIdadeManual(null);
     const info = calcularPrazoMaximoPorDataNascimento(val);
     if (info && info.valido) {
-      // Se o prazo atual exceder o máximo permitido, ajusta automaticamente
       if (prazoMeses > info.prazoMaximoMeses) {
         setPrazoMesesInput(String(info.prazoMaximoMeses));
       }
@@ -188,62 +200,97 @@ export function FinanciamentoImobiliarioTab() {
     taxaMIPPercentual
   ]);
 
-  // Estimativa do Consórcio Imobiliário para o mesmo crédito (Ex: Magalu / SimulaJá 220 meses, taxa 18% + 1% FR)
+  // ========================================================
+  // CÁLCULO COMPLETO E ABERTO DO CONSÓRCIO IMOBILIÁRIO (500K)
+  // ========================================================
+  const creditoConsorcio = useMemo(() => parseMoeda(creditoConsorcioInput) || valorImovel, [creditoConsorcioInput, valorImovel]);
+  const prazoConsorcio = useMemo(() => Math.max(1, parseInt(prazoConsorcioInput) || 220), [prazoConsorcioInput]);
+  const taxaAdmConsorcio = useMemo(() => parseTaxaPercentual(taxaAdmConsorcioInput) || 19, [taxaAdmConsorcioInput]);
+  const taxaINCCAnual = useMemo(() => parseTaxaPercentual(taxaINCCAnualInput) || 5.5, [taxaINCCAnualInput]);
+
   const consorcioEstimado = useMemo(() => {
-    const cred = resultado.valorFinanciado;
-    const prazoConsorcio = 220; // Padrão Imóveis Magalu
-    const taxaTotal = 0.19; // 18% taxa + 1% FR
-    const totalPagoConsorcio = cred * (1 + taxaTotal);
-    const parcelaLinear = totalPagoConsorcio / prazoConsorcio;
-    const parcela5050 = (cred * (0.5 + taxaTotal)) / prazoConsorcio;
-    const economiaVsCaixa = resultado.totalFinanciamentoPago - totalPagoConsorcio;
+    const cred = creditoConsorcio;
+    const n = prazoConsorcio;
+    const taxaTotal = taxaAdmConsorcio / 100; // Ex: 19% = 0.19
+    const inccTaxa = taxaINCCAnual / 100; // Ex: 5.5% a.a.
+
+    // 1. Valores Nominais (na contratação / sem INCC)
+    const totalPagoNominal = cred * (1 + taxaTotal);
+    const parcelaLinear = totalPagoNominal / n;
+    const parcela5050 = (cred * (0.5 + taxaTotal)) / n;
+
+    // 2. Projeção com INCC anual (parcelas corrigidas a cada 12 meses)
+    let somaParcelasComINCC = 0;
+    let parcelaCorrente = parcelaLinear;
+    const totalAnos = Math.ceil(n / 12);
+
+    for (let ano = 1; ano <= totalAnos; ano++) {
+      const mesesNesteAno = Math.min(12, n - (ano - 1) * 12);
+      somaParcelasComINCC += parcelaCorrente * mesesNesteAno;
+      parcelaCorrente *= (1 + inccTaxa);
+    }
+
+    const totalPagoComINCC = somaParcelasComINCC;
+    const parcelaMediaComINCC = totalPagoComINCC / n;
+    const creditoFinalAtualizado = cred * Math.pow(1 + inccTaxa, n / 12);
+
+    // Comparativo contra o desembolso total da Caixa
+    const totalDesembolsoCaixa = resultado.valorEntrada + resultado.totalFinanciamentoPago;
+    const economiaVsCaixa = totalDesembolsoCaixa - totalPagoNominal;
+    const economiaVsFinanciado = resultado.totalFinanciamentoPago - totalPagoNominal;
+
+    // Oportunidade de usar a entrada da Caixa como Lance Livre no consórcio
+    const percentualLanceEntrada = (resultado.valorEntrada / cred) * 100;
 
     return {
       credito: cred,
-      prazo: prazoConsorcio,
+      prazo: n,
+      taxaAdmTotal: taxaAdmConsorcio,
+      taxaINCC: taxaINCCAnual,
       parcelaLinear,
       parcela5050,
-      totalPago: totalPagoConsorcio,
-      economiaVsCaixa: Math.max(0, economiaVsCaixa)
+      totalPago: totalPagoNominal,
+      parcelaMediaComINCC,
+      totalPagoComINCC,
+      creditoFinalAtualizado,
+      economiaVsCaixa: Math.max(0, economiaVsCaixa),
+      economiaVsFinanciado: Math.max(0, economiaVsFinanciado),
+      percentualLanceEntrada
     };
-  }, [resultado]);
+  }, [creditoConsorcio, prazoConsorcio, taxaAdmConsorcio, taxaINCCAnual, resultado]);
 
   // Compartilhar proposta no WhatsApp
   const handleShareWhatsApp = () => {
-    let msg = `🏠 *ESTUDO DE ANÁLISE DE CRÉDITO IMOBILIÁRIO*\n`;
+    let msg = `🏠 *ESTUDO COMPARATIVO DE CRÉDITO IMOBILIÁRIO*\n`;
     if (nomeCliente.trim()) {
       msg += `👤 *Cliente:* ${nomeCliente.trim()}\n`;
     }
-    msg += `🏦 *Modalidade:* Financiamento Imobiliário Caixa (${resultado.sistema})\n`;
+    msg += `🏦 *Modalidade 1:* Financiamento Imobiliário Caixa (${resultado.sistema})\n`;
     if (dataNascimentoInput) {
       msg += `🎂 *Data de Nascimento:* ${dataNascimentoInput} (${idadeProponente} anos | Prazo Máximo Caixa: ${infoNascimento?.prazoMaximoMeses || 369}m)\n\n`;
     }
     msg += `📍 *Valor do Imóvel:* ${formatCurrency(resultado.valorImovel)}\n`;
-    msg += `💵 *Entrada:* ${formatCurrency(resultado.valorEntrada)} (${((resultado.valorEntrada / (resultado.valorImovel || 1)) * 100).toFixed(1)}%)\n`;
-    msg += `💰 *Crédito Financiado:* ${formatCurrency(resultado.valorFinanciado)}\n`;
-    msg += `⏱️ *Prazo:* ${resultado.prazoMeses} meses (${(resultado.prazoMeses / 12).toFixed(1)} anos)\n`;
+    msg += `💵 *Entrada Exigida na Caixa:* ${formatCurrency(resultado.valorEntrada)} (${((resultado.valorEntrada / (resultado.valorImovel || 1)) * 100).toFixed(1)}%)\n`;
+    msg += `💰 *Crédito Financiado Caixa:* ${formatCurrency(resultado.valorFinanciado)}\n`;
+    msg += `⏱️ *Prazo Caixa:* ${resultado.prazoMeses} meses (${(resultado.prazoMeses / 12).toFixed(1)} anos)\n`;
     msg += `📊 *Taxa Efetiva Estimada:* ${resultado.taxaJurosAnual.toFixed(2)}% a.a.\n`;
-    msg += `📑 *ITBI e Despesas Cartorárias (5%):* ${formatCurrency(itbiDespesas)}\n\n`;
-
-    if (resultado.sistema === "SAC") {
-      msg += `💳 *1ª Parcela (Inicial):* ${formatCurrency(resultado.primeiraParcela)}\n`;
-      msg += `📉 *Última Parcela:* ${formatCurrency(resultado.ultimaParcela)}\n`;
-      msg += `⚖️ *Parcela Média:* ${formatCurrency(resultado.parcelaMedia)}\n\n`;
-    } else {
-      msg += `💳 *Parcela Mensal Fixa:* ${formatCurrency(resultado.primeiraParcela)}\n\n`;
-    }
-
-    msg += `🏛️ *TOTAL PAGO NO BANCO:* ${formatCurrency(resultado.totalFinanciamentoPago)}\n`;
-    msg += `💸 *Juros & Encargos Pagos:* ${formatCurrency(resultado.custoExtraTotal)}\n`;
-    msg += `⚠️ *Multiplicador:* Você paga *${resultado.multiplicadorImovel.toFixed(2)}x* o valor do imóvel!\n\n`;
+    msg += `💳 *1ª Parcela Caixa:* ${formatCurrency(resultado.primeiraParcela)}\n`;
+    msg += `🏛️ *TOTAL PAGO NO BANCO:* ${formatCurrency(resultado.totalFinanciamentoPago + resultado.valorEntrada)} (com entrada)\n`;
+    msg += `💸 *Juros & Encargos do Banco:* ${formatCurrency(resultado.custoExtraTotal)}\n\n`;
 
     msg += `─────────────────────\n`;
-    msg += `🎯 *COMPARATIVO COM CONSÓRCIO IMOBILIÁRIO:*\n`;
-    msg += `• Mesmo Crédito de: *${formatCurrency(consorcioEstimado.credito)}*\n`;
+    msg += `🎯 *MODALIDADE 2: CONSÓRCIO IMOBILIÁRIO (CRÉDITO DE ${formatCurrency(consorcioEstimado.credito)})*\n`;
+    msg += `• Prazo do Consórcio: *${consorcioEstimado.prazo} meses*\n`;
+    msg += `• Taxa Administrativa Total: *${consorcioEstimado.taxaAdmTotal.toFixed(2)}%* (ZERO JUROS BANCÁRIOS)\n`;
     msg += `• Meia Parcela (50/50): *${formatCurrency(consorcioEstimado.parcela5050)}/mês*\n`;
     msg += `• Parcela Integral (100%): *${formatCurrency(consorcioEstimado.parcelaLinear)}/mês*\n`;
-    msg += `• Custo Total no Consórcio: *${formatCurrency(consorcioEstimado.totalPago)}*\n`;
-    msg += `💰 *ECONOMIA REAL:* *${formatCurrency(consorcioEstimado.economiaVsCaixa)}* poupados de juros bancários!\n\n`;
+    if (projetarINCC) {
+      msg += `• Correção Anual INCC: *~${consorcioEstimado.taxaINCC.toFixed(2)}% a.a.* (Valoriza a sua carta de crédito na mesma proporção)\n`;
+    }
+    msg += `• Custo Total do Consórcio: *${formatCurrency(consorcioEstimado.totalPago)}*\n\n`;
+
+    msg += `💰 *ECONOMIA REAL NO CONSÓRCIO:* *${formatCurrency(consorcioEstimado.economiaVsCaixa)}* poupados de juros bancários!\n`;
+    msg += `🚀 *Estratégia de Lance:* A entrada de ${formatCurrency(resultado.valorEntrada)} vira um Lance Livre de *${consorcioEstimado.percentualLanceEntrada.toFixed(1)}%* para contemplar rapidamente!\n\n`;
     msg += `💬 _Gerado via Análise do Crédito — SimulaJá / Jarvis_`;
 
     const encoded = encodeURIComponent(msg);
@@ -251,7 +298,7 @@ export function FinanciamentoImobiliarioTab() {
   };
 
   const handleCopyResumo = () => {
-    const texto = `Financiamento Caixa ${resultado.sistema}: Crédito ${formatCurrency(resultado.valorFinanciado)} em ${resultado.prazoMeses}x (${idadeProponente} anos). 1ª Parcela: ${formatCurrency(resultado.primeiraParcela)} | Total Pago: ${formatCurrency(resultado.totalFinanciamentoPago)} (CET: ${resultado.cetAnual.toFixed(2)}% a.a.). Economia no Consórcio: ${formatCurrency(consorcioEstimado.economiaVsCaixa)}.`;
+    const texto = `Comparativo Caixa vs Consórcio (${formatCurrency(resultado.valorImovel)}): Caixa 1ª Parcela ${formatCurrency(resultado.primeiraParcela)} em ${resultado.prazoMeses}m (Total ${formatCurrency(resultado.totalFinanciamentoPago)}). Consórcio ${formatCurrency(consorcioEstimado.credito)} em ${consorcioEstimado.prazo}m (Taxa ${consorcioEstimado.taxaAdmTotal}%, Parcela ${formatCurrency(consorcioEstimado.parcelaLinear)}). Economia Real: ${formatCurrency(consorcioEstimado.economiaVsCaixa)}.`;
     navigator.clipboard.writeText(texto);
     toast.success("Resumo copiado para a área de transferência!");
   };
@@ -619,7 +666,7 @@ export function FinanciamentoImobiliarioTab() {
                   onClick={handleShareWhatsApp}
                   className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase gap-2 shadow-xs rounded-xl"
                 >
-                  <Share2 className="h-4 w-4" /> Enviar Estudo no WhatsApp
+                  <Share2 className="h-4 w-4" /> Enviar Comparativo no WhatsApp
                 </Button>
                 <div className="flex gap-2">
                   <Button 
@@ -792,7 +839,9 @@ export function FinanciamentoImobiliarioTab() {
             </div>
           </div>
 
-          {/* CARD DE COMPARATIVO ESTRATÉGICO COM CONSÓRCIO - TOTALMENTE CLEAN COM CARA DE IA */}
+          {/* ======================================================== */}
+          {/* CARD COMPARATIVO ESTRATÉGICO: FINANCIAMENTO VS CONSÓRCIO */}
+          {/* ======================================================== */}
           <Card className="border border-indigo-100 shadow-sm bg-gradient-to-br from-white via-indigo-50/15 to-slate-50/40 rounded-3xl overflow-hidden relative">
             <CardContent className="p-6 md:p-8 space-y-6">
               
@@ -816,7 +865,181 @@ export function FinanciamentoImobiliarioTab() {
                     </h3>
                   </div>
                 </div>
+
+                {/* Botão de Toggle para customizar parâmetros do consórcio */}
+                <button
+                  type="button"
+                  onClick={() => setMostrarConfigConsorcio(!mostrarConfigConsorcio)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-800 text-xs font-bold transition-all shadow-xs"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-600" />
+                  <span>Configurar Consórcio ({formatCurrency(consorcioEstimado.credito)})</span>
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", mostrarConfigConsorcio && "rotate-180")} />
+                </button>
               </div>
+
+              {/* PAINEL EXPANSÍVEL: PARÂMETROS ABERTOS DO CONSÓRCIO (CRÉDITO 500K, TAXA, PRAZO, INCC) */}
+              {mostrarConfigConsorcio && (
+                <div className="p-4 bg-white/90 border border-indigo-100 rounded-2xl space-y-3.5 animate-in fade-in shadow-xs">
+                  <div className="flex items-center justify-between border-b border-indigo-100/80 pb-2">
+                    <span className="text-xs font-black text-indigo-950 uppercase tracking-wide flex items-center gap-1.5">
+                      <BadgeCheck className="h-4 w-4 text-emerald-600" /> Parâmetros em Aberto do Consórcio Imobiliário
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreditoConsorcioInput(valorImovelInput);
+                        setPrazoConsorcioInput("220");
+                        setTaxaAdmConsorcioInput("19,00");
+                        setTaxaINCCAnualInput("5,50");
+                      }}
+                      className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                    >
+                      <RefreshCw className="h-3 w-3" /> Restaurar Padrões
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    
+                    {/* Campo 1: Crédito do Consórcio (Padrão: 500.000) */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase">
+                        Crédito da Carta (R$)
+                      </label>
+                      <Input 
+                        value={creditoConsorcioInput}
+                        onChange={e => setCreditoConsorcioInput(e.target.value)}
+                        placeholder="500.000"
+                        className="h-8 text-xs font-black text-slate-900 bg-slate-50/50 rounded-lg"
+                      />
+                      <div className="flex gap-1 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setCreditoConsorcioInput(valorImovelInput)}
+                          className="text-[9px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-1.5 py-0.5 rounded border border-indigo-200"
+                          title="Igualar ao valor do imóvel"
+                        >
+                          Imóvel ({formatCurrency(valorImovel)})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCreditoConsorcioInput(resultado.valorFinanciado.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }))}
+                          className="text-[9px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-1.5 py-0.5 rounded"
+                          title="Igualar ao crédito financiado"
+                        >
+                          Financiado
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Campo 2: Taxa Administrativa Total */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase">
+                        Taxa Adm Total (% no prazo)
+                      </label>
+                      <Input 
+                        value={taxaAdmConsorcioInput}
+                        onChange={e => setTaxaAdmConsorcioInput(e.target.value)}
+                        placeholder="19,00"
+                        className="h-8 text-xs font-black text-slate-900 bg-slate-50/50 rounded-lg"
+                      />
+                      <div className="flex gap-1 pt-0.5">
+                        {[15, 17, 19, 21].map(tx => (
+                          <button
+                            key={tx}
+                            type="button"
+                            onClick={() => setTaxaAdmConsorcioInput(String(tx))}
+                            className={cn(
+                              "text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all",
+                              taxaAdmConsorcio === tx 
+                                ? "bg-indigo-600 text-white border-indigo-600" 
+                                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                            )}
+                          >
+                            {tx}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Campo 3: Prazo do Consórcio (meses) */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase">
+                        Prazo do Consórcio
+                      </label>
+                      <Input 
+                        type="number"
+                        value={prazoConsorcioInput}
+                        onChange={e => setPrazoConsorcioInput(e.target.value)}
+                        placeholder="220"
+                        className="h-8 text-xs font-black text-slate-900 bg-slate-50/50 rounded-lg"
+                      />
+                      <div className="flex gap-1 pt-0.5">
+                        {[180, 200, 220, 240].map(pz => (
+                          <button
+                            key={pz}
+                            type="button"
+                            onClick={() => setPrazoConsorcioInput(String(pz))}
+                            className={cn(
+                              "text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all",
+                              prazoConsorcio === pz 
+                                ? "bg-indigo-600 text-white border-indigo-600" 
+                                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                            )}
+                          >
+                            {pz}m
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Campo 4: Correção Anual do INCC */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase">
+                          INCC Anual Estimado
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setProjetarINCC(!projetarINCC)}
+                          className={cn(
+                            "text-[9px] font-bold px-1 rounded",
+                            projetarINCC ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"
+                          )}
+                        >
+                          {projetarINCC ? "Ativo" : "Desativado"}
+                        </button>
+                      </div>
+                      <Input 
+                        value={taxaINCCAnualInput}
+                        onChange={e => setTaxaINCCAnualInput(e.target.value)}
+                        placeholder="5,50"
+                        disabled={!projetarINCC}
+                        className="h-8 text-xs font-black text-slate-900 bg-slate-50/50 rounded-lg"
+                      />
+                      <div className="flex gap-1 pt-0.5">
+                        {[4.5, 5.5, 6.0, 7.0].map(incc => (
+                          <button
+                            key={incc}
+                            type="button"
+                            disabled={!projetarINCC}
+                            onClick={() => setTaxaINCCAnualInput(incc.toFixed(1).replace(".", ","))}
+                            className={cn(
+                              "text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all",
+                              taxaINCCAnual === incc 
+                                ? "bg-indigo-600 text-white border-indigo-600" 
+                                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                            )}
+                          >
+                            {incc}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
 
               {/* Tabela de Contraste Direto Clean */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -834,6 +1057,14 @@ export function FinanciamentoImobiliarioTab() {
 
                   <div className="space-y-2 text-xs text-slate-600">
                     <div className="flex justify-between items-center py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Crédito Financiado:</span>
+                      <strong className="text-slate-900 text-sm font-black">{formatCurrency(resultado.valorFinanciado)}</strong>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Entrada Obrigatória Caixa:</span>
+                      <strong className="text-rose-600 font-bold">{formatCurrency(resultado.valorEntrada)}</strong>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-slate-100">
                       <span className="text-slate-500">1ª Parcela (Inicial):</span>
                       <strong className="text-slate-900 text-sm font-black">{formatCurrency(resultado.primeiraParcela)}</strong>
                     </div>
@@ -844,7 +1075,7 @@ export function FinanciamentoImobiliarioTab() {
                       </div>
                     )}
                     <div className="flex justify-between items-center py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Taxa Efetiva Anual:</span>
+                      <span className="text-slate-500">Taxa Efetiva Estimada:</span>
                       <strong className="text-slate-800 font-bold">{resultado.taxaJurosAnual.toFixed(2)}% a.a.</strong>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-slate-100">
@@ -852,8 +1083,8 @@ export function FinanciamentoImobiliarioTab() {
                       <strong className="text-rose-600 font-bold">{formatCurrency(itbiDespesas)}</strong>
                     </div>
                     <div className="flex justify-between items-center pt-2 text-sm">
-                      <span className="text-rose-700 font-bold">Total Pago ao Banco:</span>
-                      <strong className="text-rose-600 font-black text-base">{formatCurrency(resultado.totalFinanciamentoPago)}</strong>
+                      <span className="text-rose-700 font-bold">Total Pago (Entrada + Parcelas):</span>
+                      <strong className="text-rose-600 font-black text-base">{formatCurrency(resultado.valorEntrada + resultado.totalFinanciamentoPago)}</strong>
                     </div>
                     <p className="text-[10px] text-slate-400 italic text-right">
                       Você paga {formatCurrency(resultado.custoExtraTotal)} só em juros e taxas!
@@ -861,11 +1092,11 @@ export function FinanciamentoImobiliarioTab() {
                   </div>
                 </div>
 
-                {/* Lado Consórcio Clean */}
+                {/* Lado Consórcio Clean (Sobre 500k com Parâmetros Abertos) */}
                 <div className="bg-gradient-to-b from-emerald-50/50 via-white to-teal-50/20 border border-emerald-200/80 rounded-2xl p-5 space-y-3 shadow-xs">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-black uppercase text-emerald-800 flex items-center gap-1.5">
-                      <BadgeCheck className="h-4 w-4 text-emerald-600" /> Consórcio Imobiliário SimulaJá
+                      <BadgeCheck className="h-4 w-4 text-emerald-600" /> Consórcio Imobiliário
                     </span>
                     <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300/60 font-black text-[9px]">
                       {consorcioEstimado.prazo} meses
@@ -874,6 +1105,14 @@ export function FinanciamentoImobiliarioTab() {
 
                   <div className="space-y-2 text-xs text-slate-600">
                     <div className="flex justify-between items-center py-1 border-b border-emerald-100/60">
+                      <span className="text-slate-600">Crédito da Carta:</span>
+                      <strong className="text-emerald-800 text-sm font-black">{formatCurrency(consorcioEstimado.credito)}</strong>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-emerald-100/60">
+                      <span className="text-slate-600">Taxa Administrativa Total:</span>
+                      <strong className="text-emerald-700 font-bold">{consorcioEstimado.taxaAdmTotal.toFixed(2)}% (ZERO JUROS)</strong>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-emerald-100/60">
                       <span className="text-slate-600">Meia Parcela (50/50):</span>
                       <strong className="text-emerald-700 text-sm font-black">{formatCurrency(consorcioEstimado.parcela5050)}/mês</strong>
                     </div>
@@ -881,10 +1120,12 @@ export function FinanciamentoImobiliarioTab() {
                       <span className="text-slate-600">Parcela Linear (100%):</span>
                       <strong className="text-slate-800 font-bold">{formatCurrency(consorcioEstimado.parcelaLinear)}/mês</strong>
                     </div>
-                    <div className="flex justify-between items-center py-1 border-b border-emerald-100/60">
-                      <span className="text-slate-600">Juros Bancários:</span>
-                      <strong className="text-emerald-700 font-black">ZERO JUROS (Apenas Taxa Adm)</strong>
-                    </div>
+                    {projetarINCC && (
+                      <div className="flex justify-between items-center py-1 border-b border-emerald-100/60">
+                        <span className="text-slate-600">Correção Anual INCC (~{consorcioEstimado.taxaINCC}%):</span>
+                        <span className="text-[10px] text-emerald-700 font-bold">Valoriza o crédito para {formatCurrency(consorcioEstimado.creditoFinalAtualizado)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center py-1 border-b border-emerald-100/60">
                       <span className="text-slate-600">ITBI e Escritura:</span>
                       <strong className="text-emerald-700 font-bold">Pode embutir até 10% da carta</strong>
@@ -894,23 +1135,23 @@ export function FinanciamentoImobiliarioTab() {
                       <strong className="text-emerald-700 font-black text-base">{formatCurrency(consorcioEstimado.totalPago)}</strong>
                     </div>
                     <p className="text-[10px] text-emerald-700/80 italic text-right font-medium">
-                      Sem juros compostos da Caixa e sem amortizações punitivas.
+                      Diferença de custo para o crédito de {formatCurrency(consorcioEstimado.credito)} é de apenas {formatCurrency(consorcioEstimado.totalPago - consorcioEstimado.credito)}!
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Banner de Economia Clean */}
+              {/* Banner de Economia Clean e Estratégia de Lance */}
               <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100/70 border border-emerald-200/90 text-emerald-950 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
-                <div className="space-y-0.5 text-center sm:text-left">
+                <div className="space-y-1 text-center sm:text-left">
                   <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 flex items-center justify-center sm:justify-start gap-1">
-                    <Coins className="h-3.5 w-3.5 text-emerald-600" /> Economia no Bolso do Seu Cliente
+                    <Coins className="h-3.5 w-3.5 text-emerald-600" /> Economia Real no Bolso do Seu Cliente
                   </span>
                   <p className="text-2xl sm:text-3xl font-black tracking-tight text-emerald-700">
                     {formatCurrency(consorcioEstimado.economiaVsCaixa)}
                   </p>
                   <p className="text-xs font-bold text-emerald-800/90">
-                    Equivale a economizar {(consorcioEstimado.economiaVsCaixa / (resultado.valorImovel || 1)).toFixed(1)}x o valor do imóvel em juros bancários!
+                    💡 <strong>Poder de Lance:</strong> A entrada de {formatCurrency(resultado.valorEntrada)} vira um Lance Livre de <strong>{consorcioEstimado.percentualLanceEntrada.toFixed(1)}%</strong> na carta de {formatCurrency(consorcioEstimado.credito)}, com altíssima chance de contemplação rápida!
                   </p>
                 </div>
 
