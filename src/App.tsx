@@ -91,6 +91,7 @@ const AppContent = () => {
           <Route path="chat" element={<Chat />} />
           <Route path="whatsapp-inbox" element={<WhatsAppInbox />} />
           <Route path="carta-analise" element={<CartaAnalise />} />
+          <Route path="analise-credito" element={<CartaAnalise />} />
           <Route path="formularios" element={<CentralFormularios />} />
         </Route>
         <Route path="*" element={<NotFound />} />

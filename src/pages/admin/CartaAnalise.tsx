@@ -27,8 +27,11 @@ import {
   HelpCircle,
   Split,
   Percent,
-  ListPlus
+  ListPlus,
+  Landmark,
+  Building2
 } from "lucide-react";
+import { FinanciamentoImobiliarioTab } from "@/components/admin/credito/FinanciamentoImobiliarioTab";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -212,6 +215,7 @@ const calcTaxaFluxo = (pv: number, pmts: number[]): number | null => {
 };
 
 export default function CartaAnalise() {
+  const [modoAnalise, setModoAnalise] = useState<"financiamento" | "carta">("financiamento");
   const [activeTab, setActiveTab] = useState<"imovel" | "veiculo">("imovel");
   const [simulacoes, setSimulacoes] = useState<Record<string, Simulacao[]>>(() => {
     try {
@@ -566,9 +570,62 @@ export default function CartaAnalise() {
   const labelRef = isImovel ? "+ INCC ~6,0% a.a." : "sem correção";
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 min-h-screen bg-slate-50/50 p-4 md:p-6">
-      {/* SIDEBAR FORM */}
-      <div className="w-full lg:w-96 shrink-0 space-y-4">
+    <div className="min-h-screen bg-slate-50/50 p-4 md:p-6 space-y-6">
+      {/* HEADER SUPERIOR UNIFICADO - ANÁLISE DO CRÉDITO */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl shadow-md shadow-blue-500/20">
+            <Landmark className="h-6 w-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Análise do Crédito</h1>
+              <Badge className="bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-wider">
+                Operação de Crédito
+              </Badge>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-slate-500">
+              Estudo comparativo de viabilidade financeira: Financiamento Imobiliário Caixa (SAC / Price) e Carta Contemplada
+            </p>
+          </div>
+        </div>
+
+        {/* SELETOR DE MODO: FINANCIAMENTO IMOBILIÁRIO vs CARTA CONTEMPLADA */}
+        <div className="flex items-center p-1 bg-white border border-slate-200 shadow-sm rounded-2xl w-full sm:w-auto overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setModoAnalise("financiamento")}
+            className={cn(
+              "flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap",
+              modoAnalise === "financiamento"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            )}
+          >
+            <Building2 className="h-4 w-4" /> Financiamento Imobiliário (Caixa)
+          </button>
+          <button
+            type="button"
+            onClick={() => setModoAnalise("carta")}
+            className={cn(
+              "flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap",
+              modoAnalise === "carta"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            )}
+          >
+            <FileText className="h-4 w-4" /> Carta Contemplada (Taxas & Fluxo)
+          </button>
+        </div>
+      </div>
+
+      {/* RENDERIZAÇÃO DO MODO SELECIONADO */}
+      {modoAnalise === "financiamento" ? (
+        <FinanciamentoImobiliarioTab />
+      ) : (
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* SIDEBAR FORM */}
+          <div className="w-full lg:w-96 shrink-0 space-y-4">
         <Card className="border-slate-200 shadow-sm overflow-hidden bg-white">
           <CardHeader className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-4">
             <div className="flex items-center justify-between">
@@ -1340,6 +1397,8 @@ export default function CartaAnalise() {
           </div>
         )}
       </div>
+        </div>
+      )}
 
       {/* MODAL DE COLAR PROPOSTA */}
       <Dialog open={isPasteModalOpen} onOpenChange={setIsPasteModalOpen}>
