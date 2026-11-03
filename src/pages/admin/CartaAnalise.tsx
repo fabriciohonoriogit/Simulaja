@@ -598,7 +598,7 @@ export default function CartaAnalise() {
             className={cn(
               "flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap",
               modoAnalise === "financiamento"
-                ? "bg-blue-600 text-white shadow-sm"
+                ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
             )}
           >
@@ -610,7 +610,7 @@ export default function CartaAnalise() {
             className={cn(
               "flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap",
               modoAnalise === "carta"
-                ? "bg-slate-900 text-white shadow-sm"
+                ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
             )}
           >

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { simularFinanciamentoImobiliario } from "./financiamentoCaixa";
+import { simularFinanciamentoImobiliario, calcularPrazoMaximoPorDataNascimento } from "./financiamentoCaixa";
 
 describe("simularFinanciamentoImobiliario - Motor Caixa Econômica Federal", () => {
   it("calcula corretamente um financiamento SAC 360 meses de R$ 500.000 (80% financiado)", () => {
@@ -57,6 +57,76 @@ describe("simularFinanciamentoImobiliario - Motor Caixa Econômica Federal", () 
     expect(res.sistema).toBe("PRICE");
     expect(res.primeiraParcela).toBeGreaterThan(2000);
     expect(res.cronogramaCompleto).toHaveLength(240);
+  });
+
+  it("valida a regra da Caixa: idade + prazo <= 80 anos e 6 meses", () => {
+    // Cliente com 35 anos pode financiar até o prazo máximo (420 meses / 35 anos)
+    const res35 = simularFinanciamentoImobiliario({
+      valorImovel: 400000,
+      valorEntrada: 80000,
+      prazoMeses: 360,
+      taxaJurosAnual: 10.49,
+      sistemaAmortizacao: "SAC",
+      idadeProponente: 35
+    });
+    expect(res35.regraIdade.valido).toBe(true);
+    expect(res35.regraIdade.prazoMaximoPermitidoMeses).toBe(420);
+    expect(res35.regraIdade.idadeTerminoAnos).toBe(65);
+
+    // Cliente com 60 anos tentando 360 meses (30 anos) ultrapassaria 80,5 anos (teria 90 anos)
+    const res60 = simularFinanciamentoImobiliario({
+      valorImovel: 400000,
+      valorEntrada: 80000,
+      prazoMeses: 360,
+      taxaJurosAnual: 10.49,
+      sistemaAmortizacao: "SAC",
+      idadeProponente: 60
+    });
+    expect(res60.regraIdade.valido).toBe(false);
+    // (80.5 - 60) * 12 = 20.5 * 12 = 246 meses
+    expect(res60.regraIdade.prazoMaximoPermitidoMeses).toBe(246);
+    expect(res60.regraIdade.idadeTerminoAnos).toBe(90);
+
+    // O MIP de um cliente de 60 anos (0.1180%) é bem maior que o de 35 anos (0.0225%)
+    expect(res60.aliquotaMIPPercentual).toBeGreaterThan(res35.aliquotaMIPPercentual);
+  });
+
+  it("calcula perfeitamente PRICE em 420 meses sem overflow de juros", () => {
+    const res = simularFinanciamentoImobiliario({
+      valorImovel: 500000,
+      valorEntrada: 100000,
+      prazoMeses: 420,
+      taxaJurosAnual: 10.49,
+      sistemaAmortizacao: "PRICE",
+      idadeProponente: 35
+    });
+
+    expect(res.valorFinanciado).toBe(400000);
+    expect(res.prazoMeses).toBe(420);
+    // 1ª parcela real deve estar entre 3.600 e 3.900 (e NUNCA na casa dos 350.000)
+    expect(res.primeiraParcela).toBeGreaterThan(3600);
+    expect(res.primeiraParcela).toBeLessThan(3900);
+
+    // Total pago deve estar entre 1.4 milhão e 1.7 milhão (e NUNCA em sextilhões)
+    expect(res.totalFinanciamentoPago).toBeGreaterThan(1400000);
+    expect(res.totalFinanciamentoPago).toBeLessThan(1700000);
+
+    // CET deve estar próximo a 11% (e NUNCA em 188.000%)
+    expect(res.cetAnual).toBeGreaterThan(10.5);
+    expect(res.cetAnual).toBeLessThan(12.5);
+  });
+
+  it("calcula prazo máximo exato da Caixa para nascimento em 05/01/1977 (369 meses)", () => {
+    // Referência em Novembro de 2026
+    const dataRef = new Date(2026, 10, 3); // 03/11/2026
+    const res = calcularPrazoMaximoPorDataNascimento("05/01/1977", dataRef);
+
+    // Nascimento 05/01/1977 + 80 anos e 6 meses = 05/07/2057
+    // De 11/2026 a 07/2057 = (2057 - 2026)*12 + (6 - 10) = 372 - 4 = 368/369 meses
+    expect(res.prazoMaximoMeses).toBeGreaterThanOrEqual(368);
+    expect(res.prazoMaximoMeses).toBeLessThanOrEqual(369);
+    expect(res.valido).toBe(true);
+    expect(res.idadeAnos).toBe(49);
   });
 });
 

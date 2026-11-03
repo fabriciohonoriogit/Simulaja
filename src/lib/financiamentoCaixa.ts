@@ -6,15 +6,173 @@
 
 export type SistemaAmortizacao = "SAC" | "PRICE";
 
+/**
+ * Parâmetros Oficiais da Caixa Econômica Federal (SFH/SFI)
+ * Regra: Idade do proponente mais idoso + Prazo de financiamento <= 80 anos e 6 meses (80,5 anos = 966 meses)
+ */
+export const IDADE_MAXIMA_QUITACAO_CAIXA_ANOS = 80.5; // 80 anos e 6 meses
+export const PRAZO_MAXIMO_ABSOLUTO_CAIXA_MESES = 420; // 35 anos
+
+/**
+ * Alíquotas referenciais de seguro MIP (Morte e Invalidez Permanente) da Caixa Seguradora por faixa etária
+ */
+export function obterAliquotaMIPPorIdade(idade: number): number {
+  if (idade <= 30) return 0.0160;
+  if (idade <= 40) return 0.0225;
+  if (idade <= 45) return 0.0340;
+  if (idade <= 50) return 0.0460;
+  if (idade <= 55) return 0.0780;
+  if (idade <= 60) return 0.1180;
+  if (idade <= 65) return 0.2050;
+  if (idade <= 70) return 0.3950;
+  if (idade <= 75) return 0.7200;
+  return 1.0500;
+}
+
+export interface RegraIdadeCaixa {
+  idadeAtual: number;
+  prazoMeses: number;
+  idadeTerminoAnos: number;
+  prazoMaximoPermitidoMeses: number;
+  prazoMaximoPermitidoAnos: number;
+  valido: boolean;
+  motivoInvalido?: string;
+  aliquotaMIPEstimada: number;
+}
+
+/**
+ * Valida a regra de idade e prazo máximo da Caixa Econômica Federal
+ */
+export function calcularRegraIdadeCaixa(idade: number, prazoMeses: number): RegraIdadeCaixa {
+  const idadeLimpa = Math.max(18, Math.min(100, Math.round(idade) || 35));
+  const prazoLimpo = Math.max(1, Math.round(prazoMeses) || 360);
+  
+  const idadeTerminoAnos = Number((idadeLimpa + (prazoLimpo / 12)).toFixed(2));
+  
+  // Limite: 80.5 anos * 12 meses = 966 meses
+  const mesesRestantes = Math.floor((IDADE_MAXIMA_QUITACAO_CAIXA_ANOS - idadeLimpa) * 12);
+  const prazoMaximoPermitidoMeses = Math.min(
+    PRAZO_MAXIMO_ABSOLUTO_CAIXA_MESES,
+    Math.max(0, mesesRestantes)
+  );
+  const prazoMaximoPermitidoAnos = Number((prazoMaximoPermitidoMeses / 12).toFixed(1));
+
+  const valido = idadeTerminoAnos <= IDADE_MAXIMA_QUITACAO_CAIXA_ANOS && prazoMaximoPermitidoMeses > 0;
+  let motivoInvalido: string | undefined;
+
+  if (idadeLimpa >= IDADE_MAXIMA_QUITACAO_CAIXA_ANOS) {
+    motivoInvalido = `Proponente com ${idadeLimpa} anos atinge ou supera o limite máximo de quitação da Caixa (80 anos e 6 meses).`;
+  } else if (!valido) {
+    motivoInvalido = `Pela regra da Caixa (Idade + Prazo ≤ 80 anos e 6 meses), o proponente terá ${idadeTerminoAnos} anos ao final do contrato. O prazo máximo permitido para quem tem ${idadeLimpa} anos é de ${prazoMaximoPermitidoMeses} meses (${prazoMaximoPermitidoAnos} anos).`;
+  }
+
+  const aliquotaMIPEstimada = obterAliquotaMIPPorIdade(idadeLimpa);
+
+  return {
+    idadeAtual: idadeLimpa,
+    prazoMeses: prazoLimpo,
+    idadeTerminoAnos,
+    prazoMaximoPermitidoMeses,
+    prazoMaximoPermitidoAnos,
+    valido,
+    motivoInvalido,
+    aliquotaMIPEstimada
+  };
+}
+
+/**
+ * Calcula o prazo máximo exato da Caixa a partir da Data de Nascimento (ex: "05/01/1977")
+ * Regra: Data Limite = Data de Nascimento + 80 anos e 6 meses
+ */
+export function calcularPrazoMaximoPorDataNascimento(
+  dataNascStr: string,
+  dataRef: Date = new Date()
+): {
+  prazoMaximoMeses: number;
+  idadeAnos: number;
+  dataLimiteQuitacao: string;
+  valido: boolean;
+  mensagem?: string;
+} {
+  let dia = 1, mes = 1, ano = 1980;
+  const limpo = dataNascStr.trim();
+
+  if (limpo.includes("/")) {
+    const parts = limpo.split("/").map(p => parseInt(p, 10));
+    if (parts.length === 3 && parts[2] > 1900) {
+      dia = parts[0];
+      mes = parts[1] - 1;
+      ano = parts[2];
+    }
+  } else if (limpo.includes("-")) {
+    const parts = limpo.split("-").map(p => parseInt(p, 10));
+    if (parts.length === 3 && parts[0] > 1900) {
+      ano = parts[0];
+      mes = parts[1] - 1;
+      dia = parts[2];
+    }
+  }
+
+  const nasc = new Date(ano, mes, dia);
+  if (isNaN(nasc.getTime()) || ano < 1920) {
+    return { 
+      prazoMaximoMeses: 420, 
+      idadeAnos: 35, 
+      dataLimiteQuitacao: "", 
+      valido: true 
+    };
+  }
+
+  // Idade atual
+  let idadeAnos = dataRef.getFullYear() - ano;
+  if (dataRef.getMonth() < mes || (dataRef.getMonth() === mes && dataRef.getDate() < dia)) {
+    idadeAnos--;
+  }
+
+  // Data limite: Nascimento + 80 anos + 6 meses
+  const anoLimite = ano + 80;
+  const mesLimite = mes + 6;
+  const dataLimite = new Date(anoLimite, mesLimite, dia);
+
+  // Diferença em meses entre hoje e data limite
+  let mesesRestantes = (dataLimite.getFullYear() - dataRef.getFullYear()) * 12 + (dataLimite.getMonth() - dataRef.getMonth());
+  if (dataLimite.getDate() < dataRef.getDate()) {
+    mesesRestantes--;
+  }
+
+  const prazoMaximoMeses = Math.min(
+    PRAZO_MAXIMO_ABSOLUTO_CAIXA_MESES,
+    Math.max(0, mesesRestantes)
+  );
+
+  const valido = prazoMaximoMeses > 0 && idadeAnos < 80.5;
+
+  const diaFmt = String(dataLimite.getDate()).padStart(2, "0");
+  const mesFmt = String(dataLimite.getMonth() + 1).padStart(2, "0");
+  const anoFmt = dataLimite.getFullYear();
+  const dataLimiteQuitacao = `${diaFmt}/${mesFmt}/${anoFmt}`;
+
+  return {
+    prazoMaximoMeses,
+    idadeAnos,
+    dataLimiteQuitacao,
+    valido,
+    mensagem: !valido 
+      ? `Proponente com ${idadeAnos} anos atinge ou supera o limite máximo de quitação da Caixa (80 anos e 6 meses).`
+      : undefined
+  };
+}
+
 export interface FinanciamentoInput {
   valorImovel: number;
   valorEntrada: number;
   prazoMeses: number;
   taxaJurosAnual: number; // Ex: 10.49 (% a.a.)
   sistemaAmortizacao: SistemaAmortizacao;
+  idadeProponente?: number; // Padrão: 35 anos
   taxaAdminMensal?: number; // Padrão Caixa: R$ 25,00 fixos mensais
   taxaDFIPercentual?: number; // Padrão Caixa: ~0.0095% a.m. sobre o valor do imóvel
-  taxaMIPPercentual?: number; // Padrão Caixa: ~0.0280% a.m. sobre o saldo devedor
+  taxaMIPPercentual?: number; // Calculado pela idade se omitido
 }
 
 export interface ParcelaMes {
@@ -65,6 +223,10 @@ export interface FinanciamentoResultado {
   // Cronograma
   cronogramaCompleto: ParcelaMes[];
   marcosPrincipais: ParcelaMes[];
+
+  // Regra da Caixa e Idade
+  regraIdade: RegraIdadeCaixa;
+  aliquotaMIPPercentual: number;
 }
 
 /**
@@ -132,10 +294,15 @@ export function simularFinanciamentoImobiliario(input: FinanciamentoInput): Fina
     prazoMeses,
     taxaJurosAnual,
     sistemaAmortizacao,
+    idadeProponente = 35,
     taxaAdminMensal = 25.0, // Padrão Caixa SFH
     taxaDFIPercentual = 0.0095, // ~0.0095% sobre valor do imóvel
-    taxaMIPPercentual = 0.0280, // ~0.0280% sobre saldo devedor
   } = input;
+
+  const regraIdade = calcularRegraIdadeCaixa(idadeProponente, prazoMeses);
+  const taxaMIPPercentual = input.taxaMIPPercentual !== undefined 
+    ? input.taxaMIPPercentual 
+    : regraIdade.aliquotaMIPEstimada;
 
   const valorFinanciado = Math.max(0, valorImovel - valorEntrada);
   const n = Math.max(1, prazoMeses);
@@ -289,6 +456,8 @@ export function simularFinanciamentoImobiliario(input: FinanciamentoInput): Fina
     cetAnual,
     cronogramaCompleto,
     marcosPrincipais,
+    regraIdade,
+    aliquotaMIPPercentual: taxaMIPPercentual,
   };
 }
 
@@ -298,31 +467,31 @@ export function simularFinanciamentoImobiliario(input: FinanciamentoInput): Fina
 export const PRESETS_FINANCIAMENTO_CAIXA = [
   {
     id: "caixa-balcao",
-    nome: "Caixa Balcão (SFH Padrão)",
-    taxaAnual: 10.49,
-    descricao: "Taxa padrão para clientes sem pacote de relacionamento Caixa",
-    badge: "Padrão Balcão"
+    nome: "Caixa Balcão (SFH Vigente)",
+    taxaAnual: 11.49,
+    descricao: "Taxa anual estimada Caixa para clientes de balcão SFH",
+    badge: "11,49% a.a."
   },
   {
     id: "caixa-relacionamento",
     nome: "Caixa Relacionamento",
-    taxaAnual: 9.99,
-    descricao: "Com conta corrente, cheque especial e recebimento de salário na Caixa",
-    badge: "Bonificada"
+    taxaAnual: 10.49,
+    descricao: "Com conta corrente, cheque especial e salário na Caixa",
+    badge: "10,49% a.a."
   },
   {
     id: "caixa-pro-cotista",
     nome: "Caixa Pró-Cotista FGTS",
     taxaAnual: 8.66,
-    descricao: "Para trabalhadores com saldo ativo ou inativo no FGTS (recursos limitados)",
-    badge: "Pró-Cotista"
+    descricao: "Para trabalhadores com saldo ativo ou inativo no FGTS",
+    badge: "8,66% a.a."
   },
   {
     id: "caixa-sfi",
-    nome: "Caixa SFI (Imóveis > 1.5M)",
-    taxaAnual: 11.49,
+    nome: "Caixa SFI Mercado",
+    taxaAnual: 12.00,
     descricao: "Para imóveis acima do teto do SFH ou segundo imóvel",
-    badge: "SFI Mercado"
+    badge: "12,00% a.a."
   }
 ];
 
