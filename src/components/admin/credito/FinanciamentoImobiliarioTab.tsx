@@ -1422,8 +1422,8 @@ export function FinanciamentoImobiliarioTab() {
 
               <tr className="border-b border-slate-200 bg-slate-50/30">
                 <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Taxa de Juros / Custo</td>
-                <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">{resultado.taxaJurosAnual.toFixed(2)}% a.a. <span className="text-[9px] text-slate-500 block font-normal">Juros compostos (CET {resultado.cetAnualEstimado.toFixed(2)}%)</span></td>
-                <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{consorcioEstimado.taxaAdmTotal.toFixed(2)}% no total <span className="text-[9px] text-emerald-700 block font-normal">ZERO JUROS BANCÁRIOS</span></td>
+                <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">{(resultado.taxaJurosAnual || 0).toFixed(2)}% a.a. <span className="text-[9px] text-slate-500 block font-normal">Juros compostos (CET {(resultado.cetAnual || 0).toFixed(2)}%)</span></td>
+                <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{(consorcioEstimado.taxaAdmTotal || 0).toFixed(2)}% no total <span className="text-[9px] text-emerald-700 block font-normal">ZERO JUROS BANCÁRIOS</span></td>
                 <td className="p-1.5 text-slate-600 text-[10px]">Sem cobrança de juros compostos ou efeito cascata</td>
               </tr>
 
@@ -1510,7 +1510,7 @@ export function FinanciamentoImobiliarioTab() {
             <div className="p-2 border border-slate-200 bg-slate-50 rounded">
               <span className="text-slate-500 font-bold block uppercase text-[9px]">Tarifas CEF & CET</span>
               <strong className="text-slate-800 text-xs block">{formatCurrency(resultado.totalTaxasAdm)}</strong>
-              <span className="text-slate-500 text-[9px]">CET ~{resultado.cetAnualEstimado.toFixed(2)}% a.a.</span>
+              <span className="text-slate-500 text-[9px]">CET ~{(resultado.cetAnual || 0).toFixed(2)}% a.a.</span>
             </div>
           </div>
         </div>
