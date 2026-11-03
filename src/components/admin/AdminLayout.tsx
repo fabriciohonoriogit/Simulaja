@@ -285,13 +285,13 @@ export default function AdminLayout() {
     );
 
     return (
-        <div className="flex h-[100dvh] overflow-hidden bg-slate-50/50 [overscroll-behavior:none]">
-            <aside className="hidden lg:block h-full w-auto shrink-0 z-40">
+        <div className="flex h-[100dvh] overflow-hidden bg-slate-50/50 [overscroll-behavior:none] print:h-auto print:overflow-visible print:bg-white">
+            <aside className="hidden lg:block h-full w-auto shrink-0 z-40 print:hidden">
                 {renderSidebar(sidebarCollapsed)}
             </aside>
 
-            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-                <header className={`lg:hidden flex items-center justify-between px-4 h-16 shadow-sm z-30 transition-colors ${
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative print:h-auto print:overflow-visible print:static">
+                <header className={`lg:hidden flex items-center justify-between px-4 h-16 shadow-sm z-30 transition-colors print:hidden ${
                     isDayTime ? 'bg-white text-slate-900 border-b border-slate-100' : 'bg-[#001E3C] text-white border-b border-white/5'
                 }`}>
                     <img src="/icon-512.webp" alt="Logo" className="h-8 w-auto" />
@@ -307,9 +307,11 @@ export default function AdminLayout() {
                     </Sheet>
                 </header>
 
-                <main className="flex-1 flex flex-col min-h-0 bg-slate-50 overflow-y-auto">
-                    <TrialBanner />
-                    <div className="flex-1 flex flex-col min-h-0 w-full p-3 sm:p-4 md:p-6 pb-12">
+                <main className="flex-1 flex flex-col min-h-0 bg-slate-50 overflow-y-auto print:h-auto print:overflow-visible print:bg-white print:p-0">
+                    <div className="print:hidden">
+                        <TrialBanner />
+                    </div>
+                    <div className="flex-1 flex flex-col min-h-0 w-full p-3 sm:p-4 md:p-6 pb-12 print:p-0 print:m-0">
                         <ErrorBoundary>
                             <Suspense fallback={
                                 <div className="flex h-full w-full items-center justify-center py-20">
@@ -324,7 +326,9 @@ export default function AdminLayout() {
                     </div>
                 </main>
             </div>
-            <PwaInstallPrompt />
+            <div className="print:hidden">
+                <PwaInstallPrompt />
+            </div>
         </div>
     );
 }

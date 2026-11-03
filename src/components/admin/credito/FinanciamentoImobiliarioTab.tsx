@@ -304,9 +304,29 @@ export function FinanciamentoImobiliarioTab() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* GRID PRINCIPAL: FORMULÁRIO À ESQUERDA + RESULTADOS À DIREITA */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div>
+      {/* Estilos específicos de impressão para PDF/A4 */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 8mm 10mm;
+          }
+          body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+          }
+        }
+      `}</style>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 1. VISUALIZAÇÃO INTERATIVA EM TELA (INTACTA PARA O OPERADOR)  */}
+      {/* ------------------------------------------------------------- */}
+      <div className="print:hidden space-y-6">
+        {/* GRID PRINCIPAL: FORMULÁRIO À ESQUERDA + RESULTADOS À DIREITA */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* FORMULÁRIO DE ENTRADA (COL 12 / LG 4) - CLEAN AI DESIGN */}
         <div className="lg:col-span-4 space-y-4">
@@ -1307,6 +1327,219 @@ export function FinanciamentoImobiliarioTab() {
             </div>
           </Card>
 
+        </div>
+      </div>
+      {/* FIM DA VISUALIZAÇÃO INTERATIVA EM TELA */}
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 2. VISUALIZAÇÃO DE IMPRESSÃO (PDF EXECUTIVO LIMPO & RESUMIDO)  */}
+      {/* ------------------------------------------------------------- */}
+      <div className="hidden print:block w-full text-slate-800 bg-white font-sans text-xs space-y-4">
+        {/* Cabeçalho Executivo */}
+        <div className="border-b-2 border-slate-800 pb-3 flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-black tracking-tight text-slate-900 uppercase">SimulaJá</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">| Inteligência em Crédito Imobiliário</span>
+            </div>
+            <h1 className="text-sm font-black text-slate-900 mt-1 uppercase tracking-tight">
+              Estudo Comparativo de Viabilidade Financeira
+            </h1>
+            <p className="text-[10px] text-slate-600 font-medium">
+              Financiamento Habitacional Caixa Econômica Federal vs. Consórcio Imobiliário Estruturado
+            </p>
+          </div>
+          <div className="text-right text-[10px] space-y-0.5">
+            <p className="font-bold text-slate-700">Data de Emissão: <span className="font-normal">{new Date().toLocaleDateString('pt-BR')}</span></p>
+            <p className="text-slate-500 font-medium">Documento de Orientação Estratégica</p>
+          </div>
+        </div>
+
+        {/* Quadro de Metadados / Proponente */}
+        <div className="grid grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px]">
+          <div>
+            <span className="text-slate-500 font-bold block uppercase text-[9px]">Proponente / Cliente</span>
+            <strong className="text-slate-900 text-xs truncate block">{nomeCliente.trim() || "Cliente Proponente"}</strong>
+          </div>
+          <div>
+            <span className="text-slate-500 font-bold block uppercase text-[9px]">Data Nasc. / Idade</span>
+            <strong className="text-slate-900 text-xs block">{dataNascimentoInput ? `${dataNascimentoInput} (${idadeProponente} anos)` : `${idadeProponente} anos`}</strong>
+          </div>
+          <div>
+            <span className="text-slate-500 font-bold block uppercase text-[9px]">Valor do Imóvel</span>
+            <strong className="text-slate-900 text-xs block">{formatCurrency(resultado.valorImovel)}</strong>
+          </div>
+          <div>
+            <span className="text-slate-500 font-bold block uppercase text-[9px]">Enquadramento Caixa</span>
+            <strong className="text-slate-900 text-xs block">SFH ({resultado.sistema} - {resultado.taxaJurosAnual.toFixed(2)}% a.a.)</strong>
+          </div>
+        </div>
+
+        {/* Tabela Comparativa Principal */}
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+              1. Comparativo Direto de Viabilidade (Financiamento x Consórcio)
+            </h2>
+            <span className="text-[9px] text-slate-500 italic">Valores calculados sobre a base de {formatCurrency(resultado.valorImovel)}</span>
+          </div>
+
+          <table className="w-full border-collapse border border-slate-300 text-left text-[11px]">
+            <thead>
+              <tr className="bg-slate-100 text-slate-900 border-b border-slate-300">
+                <th className="p-2 font-bold w-[28%] border-r border-slate-300">Parâmetro / Indicador</th>
+                <th className="p-2 font-bold w-[24%] border-r border-slate-300 text-slate-900">
+                  Financiamento Caixa ({resultado.sistema})
+                </th>
+                <th className="p-2 font-bold w-[24%] border-r border-slate-300 text-emerald-900 bg-emerald-50/60">
+                  Consórcio Imobiliário
+                </th>
+                <th className="p-2 font-bold w-[24%] text-slate-700">Diferencial Estratégico</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-200">
+                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Crédito Disponível</td>
+                <td className="p-1.5 font-bold text-slate-900 border-r border-slate-200">{formatCurrency(resultado.valorFinanciado)} <span className="text-[9px] text-slate-500 block font-normal">Teto máximo 80%</span></td>
+                <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{formatCurrency(consorcioEstimado.credito)} <span className="text-[9px] text-emerald-700 block font-normal">100% integral do imóvel</span></td>
+                <td className="p-1.5 text-slate-600 text-[10px]">Poder de compra total sem desvalorização</td>
+              </tr>
+
+              <tr className="border-b border-slate-200 bg-slate-50/30">
+                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Entrada Exigida à Vista</td>
+                <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">{formatCurrency(resultado.valorEntrada)} <span className="text-[9px] text-slate-500 block font-normal">{((resultado.valorEntrada / (resultado.valorImovel || 1)) * 100).toFixed(1)}% obrigatório</span></td>
+                <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">R$ 0,00 obrigatório <span className="text-[9px] text-emerald-700 block font-normal">Lance livre facultativo</span></td>
+                <td className="p-1.5 text-slate-600 text-[10px]">A entrada vira Lance Livre de {consorcioEstimado.percentualLanceEntrada.toFixed(1)}% para contemplação rápida</td>
+              </tr>
+
+              <tr className="border-b border-slate-200">
+                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Prazo de Pagamento</td>
+                <td className="p-1.5 font-bold text-slate-900 border-r border-slate-200">{resultado.prazoMeses} meses <span className="text-[9px] text-slate-500 block font-normal">({(resultado.prazoMeses / 12).toFixed(1)} anos - teto pela idade)</span></td>
+                <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{consorcioEstimado.prazo} meses <span className="text-[9px] text-emerald-700 block font-normal">({(consorcioEstimado.prazo / 12).toFixed(1)} anos)</span></td>
+                <td className="p-1.5 text-slate-600 text-[10px]">{Math.max(0, resultado.prazoMeses - consorcioEstimado.prazo)} meses a menos pagando parcelas</td>
+              </tr>
+
+              <tr className="border-b border-slate-200 bg-slate-50/30">
+                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Taxa de Juros / Custo</td>
+                <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">{resultado.taxaJurosAnual.toFixed(2)}% a.a. <span className="text-[9px] text-slate-500 block font-normal">Juros compostos (CET {resultado.cetAnualEstimado.toFixed(2)}%)</span></td>
+                <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{consorcioEstimado.taxaAdmTotal.toFixed(2)}% no total <span className="text-[9px] text-emerald-700 block font-normal">ZERO JUROS BANCÁRIOS</span></td>
+                <td className="p-1.5 text-slate-600 text-[10px]">Sem cobrança de juros compostos ou efeito cascata</td>
+              </tr>
+
+              <tr className="border-b border-slate-200">
+                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">1ª Parcela Mensal</td>
+                <td className="p-1.5 font-black text-slate-900 border-r border-slate-200">{formatCurrency(resultado.primeiraParcela)}</td>
+                <td className="p-1.5 font-black text-emerald-900 border-r border-slate-200 bg-emerald-50/30">
+                  {formatCurrency(consorcioEstimado.parcelaLinear)}
+                  <span className="text-[9px] text-emerald-700 block font-medium">({formatCurrency(consorcioEstimado.parcela5050)} na 1/2 parcela)</span>
+                </td>
+                <td className="p-1.5 text-slate-600 text-[10px]">Parcela linear até {formatCurrency(resultado.primeiraParcela - consorcioEstimado.parcelaLinear)} menor</td>
+              </tr>
+
+              {resultado.sistema === "SAC" && (
+                <tr className="border-b border-slate-200 bg-slate-50/30">
+                  <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Última Parcela Estimada</td>
+                  <td className="p-1.5 font-bold text-slate-700 border-r border-slate-200">{formatCurrency(resultado.ultimaParcela)}</td>
+                  <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{formatCurrency(consorcioEstimado.parcelaLinear)}</td>
+                  <td className="p-1.5 text-slate-600 text-[10px]">Previsibilidade orçamentária para a família</td>
+                </tr>
+              )}
+
+              <tr className="border-b border-slate-200">
+                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">ITBI, Escritura e Registro</td>
+                <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">~{formatCurrency(itbiDespesas)} <span className="text-[9px] text-slate-500 block font-normal">À vista do bolso (~5%)</span></td>
+                <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">Embutido na Carta <span className="text-[9px] text-emerald-700 block font-normal">Até 10% do crédito</span></td>
+                <td className="p-1.5 text-slate-600 text-[10px]">Não descapitaliza o patrimônio inicial</td>
+              </tr>
+
+              <tr className="bg-slate-100 font-bold border-t-2 border-slate-300">
+                <td className="p-2 text-slate-900 border-r border-slate-300">Desembolso Total Final</td>
+                <td className="p-2 text-rose-700 text-xs border-r border-slate-300">
+                  {formatCurrency(resultado.valorEntrada + resultado.totalFinanciamentoPago)}
+                  <span className="text-[9px] text-slate-600 block font-normal">({resultado.multiplicadorImovel.toFixed(2)}x o valor do imóvel)</span>
+                </td>
+                <td className="p-2 text-emerald-900 text-xs border-r border-slate-300 bg-emerald-100/70">
+                  {formatCurrency(consorcioEstimado.totalPago)}
+                  <span className="text-[9px] text-emerald-800 block font-normal">({((consorcioEstimado.totalPago / (resultado.valorImovel || 1)) * 100).toFixed(0)}% do imóvel)</span>
+                </td>
+                <td className="p-2 text-emerald-900 text-xs bg-emerald-50">
+                  ECONOMIA DE {formatCurrency(consorcioEstimado.economiaVsCaixa)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Quadro de Destaque da Economia (Clean & Executivo) */}
+        <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-lg flex items-center justify-between">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide">
+              Síntese da Economia Financeira Projetada
+            </span>
+            <p className="text-sm font-black text-emerald-950">
+              Economia direta de {formatCurrency(consorcioEstimado.economiaVsCaixa)} no bolso do proponente
+            </p>
+            <p className="text-[10px] text-emerald-800 font-medium leading-relaxed">
+              Optando pelo consórcio imobiliário planejado, você adquire o imóvel de {formatCurrency(resultado.valorImovel)} pagando um custo total de apenas {formatCurrency(consorcioEstimado.totalPago - consorcioEstimado.credito)} de taxa administrativa, economizando {formatCurrency(resultado.custoExtraTotal)} em juros bancários.
+            </p>
+          </div>
+        </div>
+
+        {/* Detalhamento dos Custos do Financiamento Caixa */}
+        <div className="space-y-1.5 pt-1">
+          <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+            2. Composição da Dívida Caixa ({resultado.prazoMeses} meses)
+          </h2>
+          <div className="grid grid-cols-4 gap-2 text-[10px]">
+            <div className="p-2 border border-slate-200 bg-slate-50 rounded">
+              <span className="text-slate-500 font-bold block uppercase text-[9px]">Amortização do Imóvel</span>
+              <strong className="text-slate-900 text-xs block">{formatCurrency(resultado.totalAmortizacao)}</strong>
+              <span className="text-slate-500 text-[9px]">{((resultado.totalAmortizacao / (resultado.totalFinanciamentoPago || 1)) * 100).toFixed(1)}% do total</span>
+            </div>
+            <div className="p-2 border border-slate-200 bg-slate-50 rounded">
+              <span className="text-rose-600 font-bold block uppercase text-[9px]">Juros Bancários Cobrados</span>
+              <strong className="text-rose-700 text-xs block">{formatCurrency(resultado.totalJuros)}</strong>
+              <span className="text-rose-600 text-[9px]">{((resultado.totalJuros / (resultado.totalFinanciamentoPago || 1)) * 100).toFixed(1)}% do total</span>
+            </div>
+            <div className="p-2 border border-slate-200 bg-slate-50 rounded">
+              <span className="text-slate-500 font-bold block uppercase text-[9px]">Seguros Obrigatórios (MIP+DFI)</span>
+              <strong className="text-slate-800 text-xs block">{formatCurrency(resultado.totalSeguros)}</strong>
+              <span className="text-slate-500 text-[9px]">{((resultado.totalSeguros / (resultado.totalFinanciamentoPago || 1)) * 100).toFixed(1)}% do total</span>
+            </div>
+            <div className="p-2 border border-slate-200 bg-slate-50 rounded">
+              <span className="text-slate-500 font-bold block uppercase text-[9px]">Tarifas CEF & CET</span>
+              <strong className="text-slate-800 text-xs block">{formatCurrency(resultado.totalTaxasAdm)}</strong>
+              <span className="text-slate-500 text-[9px]">CET ~{resultado.cetAnualEstimado.toFixed(2)}% a.a.</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Recomendações Estratégicas do Especialista */}
+        <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1 text-[10px]">
+          <h3 className="font-bold text-slate-900 uppercase text-[10px]">3. Recomendações Estratégicas de Aquisição</h3>
+          <ul className="list-disc pl-4 space-y-0.5 text-slate-700">
+            <li><strong>Aproveitamento da Entrada como Lance:</strong> O valor exigido pela Caixa ({formatCurrency(resultado.valorEntrada)}) pode ser utilizado como Lance Livre ({consorcioEstimado.percentualLanceEntrada.toFixed(1)}%) na cota do consórcio para acelerar a contemplação imediata.</li>
+            <li><strong>Atualização Patrimonial (INCC):</strong> O consórcio atualiza anualmente o crédito pelo INCC (~{consorcioEstimado.taxaINCC.toFixed(2)}% a.a.), garantindo que o seu poder de compra acompanhe fielmente os preços de mercado dos imóveis.</li>
+            <li><strong>Despesas Notariais Inclusas:</strong> Economia de {formatCurrency(itbiDespesas)} à vista ao usar até 10% do crédito contemplado para quitação do ITBI e custos cartorários.</li>
+          </ul>
+        </div>
+
+        {/* Observações Legais & Assinaturas */}
+        <div className="pt-2 border-t border-slate-200 text-[9px] text-slate-500 space-y-3">
+          <p>
+            * Este documento é uma simulação orientativa de viabilidade financeira. As taxas e encargos do financiamento seguem as normas do SFH/SFI da Caixa Econômica Federal e dependem de análise cadastral. O consórcio é regido pela Lei Federal 11.795/08 e fiscalizado pelo Banco Central do Brasil.
+          </p>
+          <div className="grid grid-cols-2 gap-8 pt-4">
+            <div className="border-t border-slate-400 pt-1 text-center">
+              <p className="font-bold text-slate-800">Consultoria Especializada em Crédito</p>
+              <p className="text-[8px] text-slate-500">SimulaJá - Planejamento Patrimonial</p>
+            </div>
+            <div className="border-t border-slate-400 pt-1 text-center">
+              <p className="font-bold text-slate-800">{nomeCliente.trim() || "Proponente Interessado"}</p>
+              <p className="text-[8px] text-slate-500">Ciência e Recebimento da Simulação</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

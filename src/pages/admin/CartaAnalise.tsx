@@ -570,9 +570,9 @@ export default function CartaAnalise() {
   const labelRef = isImovel ? "+ INCC ~6,0% a.a." : "sem correção";
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 md:p-6 space-y-6">
+    <div className="min-h-screen bg-slate-50/50 p-4 md:p-6 space-y-6 print:min-h-0 print:p-0 print:m-0 print:space-y-0 print:bg-white">
       {/* HEADER SUPERIOR UNIFICADO - ANÁLISE DO CRÉDITO */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200 print:hidden">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl shadow-md shadow-blue-500/20">
             <Landmark className="h-6 w-6" />
@@ -591,7 +591,7 @@ export default function CartaAnalise() {
         </div>
 
         {/* SELETOR DE MODO: FINANCIAMENTO IMOBILIÁRIO vs CARTA CONTEMPLADA */}
-        <div className="flex items-center p-1 bg-white border border-slate-200 shadow-sm rounded-2xl w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center p-1 bg-white border border-slate-200 shadow-sm rounded-2xl w-full sm:w-auto overflow-x-auto print:hidden">
           <button
             type="button"
             onClick={() => setModoAnalise("financiamento")}
