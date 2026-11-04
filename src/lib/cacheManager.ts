@@ -4,9 +4,7 @@
  * forçando hard reload em todos os dispositivos (Android, iOS, Desktop).
  */
 
-// BUILD FORCE v2.5.2 - 2026-05-02 - forced cache bust for iOS Jarvis Avatar update
 const BUILD_VERSION = __APP_VERSION__;
-
 const VERSION_KEY = "app_build_version";
 
 export async function checkAndClearCache(): Promise<void> {
@@ -46,6 +44,12 @@ export async function checkAndClearCache(): Promise<void> {
         }
       } catch (err) {
         console.warn("[CacheManager] Erro ao salvar versão no localStorage:", err);
+      }
+
+      // 4. Se havia uma versão anterior, recarrega para garantir que os novos bundles sejam carregados
+      if (stored && typeof window !== "undefined") {
+        console.log("[CacheManager] Versão atualizada, forçando recarga imediata...");
+        window.location.reload();
       }
     }
   } catch (err) {

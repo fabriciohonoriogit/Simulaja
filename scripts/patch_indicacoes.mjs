@@ -155,3 +155,4 @@ code = code.replace(
 
 fs.writeFileSync('src/pages/Indicacoes.tsx', code, 'utf8');
 console.log('src/pages/Indicacoes.tsx updated successfully!');
+

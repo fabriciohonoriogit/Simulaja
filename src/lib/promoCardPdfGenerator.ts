@@ -434,3 +434,4 @@ export const generatePromoCardPDF = (data: PromoCardPdfData): jsPDF => {
 
   return doc;
 };
+
