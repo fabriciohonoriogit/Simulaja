@@ -24,6 +24,8 @@ import { createLead } from "@/services/leadService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 import { BannerGenerator } from "@/components/BannerGenerator";
 import { BlackFridayBanner } from "@/components/BlackFridayBanner";
+import { BlackFridayPromptModal } from "@/components/BlackFridayPromptModal";
+import { Sparkles } from "lucide-react";
 import { isBlackFridayActive } from "@/utils/blackFridayTheme";
 import { generatePromoCardPDF } from "@/lib/promoCardPdfGenerator";
 
@@ -759,7 +761,7 @@ export default function Simulador() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                 <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-11 text-[11px] bg-white rounded-xl shadow-sm hover:bg-slate-50">
                   <FileText className="mr-1.5 w-4 h-4 text-slate-500" /> PDF Proposta
                 </Button>
@@ -768,6 +770,13 @@ export default function Simulador() {
                 </Button>
                 <Button onClick={handleGerarImagem} className="bg-gradient-to-r from-[#FF7A00] to-[#FF5500] hover:from-[#FF5500] hover:to-[#E64D00] text-white font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5">
                   <ImageIcon className="mr-1.5 w-4 h-4" /> {isBF ? "Gerar Arte Black 🔥" : "Gerar Arte 🎁"}
+                </Button>
+                <Button 
+                  onClick={() => setIsPromptModalOpen(true)} 
+                  className="bg-gradient-to-r from-[#030712] to-[#082f49] hover:from-[#082f49] hover:to-[#0c4a6e] text-cyan-200 border border-cyan-400/50 font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5"
+                  title="Ver Prompts de Inteligência Artificial para gerar imagens no Midjourney/Flux"
+                >
+                  <Sparkles className="mr-1.5 w-4 h-4 text-pink-400" /> Prompt IA 🎨
                 </Button>
                 <Button 
                   onClick={() => {
@@ -839,6 +848,7 @@ export default function Simulador() {
         </div>
       </div>
 
+      <BlackFridayPromptModal isOpen={isPromptModalOpen} onClose={() => setIsPromptModalOpen(false)} defaultCategoria={categoria} />
     </div>
   );
 }

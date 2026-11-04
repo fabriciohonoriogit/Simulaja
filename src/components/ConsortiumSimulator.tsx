@@ -35,6 +35,8 @@ import { isBlackFridayActive } from "@/utils/blackFridayTheme";
 import { generatePromoCardPDF } from "@/lib/promoCardPdfGenerator";
 import { NotebookLMPresentation } from "@/components/NotebookLMPresentation";
 import { VoicePodcastModal } from "@/components/admin/VoicePodcastModal";
+import { BlackFridayPromptModal } from "@/components/BlackFridayPromptModal";
+import { Sparkles } from "lucide-react";
 import { generateNotebookLMPdfFromRef } from "@/utils/generateNotebookLMPdf";
 import { CRMDrawer } from "@/components/admin/CRMDrawer";
 import { supabase } from "@/integrations/supabase/client";
@@ -324,6 +326,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
 
   const notebookRef = useRef<HTMLDivElement>(null);
   const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
 
   const handleGerarApresentacaoLM = async () => {
     if (!notebookRef.current) return;
@@ -1040,34 +1043,48 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                   </div>
 
                   {/* Linha 2 (Apenas Simulador Interno): Ferramentas IA Executivas */}
-                  {isInternal && (
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <button
-                        onClick={handleGerarApresentacaoLM}
-                        className="w-full py-3 px-3 rounded-xl text-[0.7rem] font-extrabold uppercase tracking-wider text-amber-300 flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-[0.97] border border-amber-500/50 shadow-[0_8px_20px_-4px_rgba(245,158,11,0.3)] group"
-                        style={{ background: "linear-gradient(135deg, #0B132B 0%, #1C2541 100%)" }}
-                        title="Gerar Estudo Estratégico em PDF no estilo Notebook LM"
-                      >
-                        <svg className="w-4 h-4 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                          <path d="M12 6h4" />
-                          <path d="M12 10h4" />
-                        </svg>
-                        <span className="whitespace-nowrap">Apresentação LM</span>
-                      </button>
+                  <div className="space-y-2 mb-2">
+                    <div className={`grid ${isInternal ? "grid-cols-3" : "grid-cols-1"} gap-2.5`}>
+                      {isInternal && (
+                        <>
+                          <button
+                            onClick={handleGerarApresentacaoLM}
+                            className="w-full py-3 px-3 rounded-xl text-[0.7rem] font-extrabold uppercase tracking-wider text-amber-300 flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-[0.97] border border-amber-500/50 shadow-[0_8px_20px_-4px_rgba(245,158,11,0.3)] group"
+                            style={{ background: "linear-gradient(135deg, #0B132B 0%, #1C2541 100%)" }}
+                            title="Gerar Estudo Estratégico em PDF no estilo Notebook LM"
+                          >
+                            <svg className="w-4 h-4 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                              <path d="M12 6h4" />
+                              <path d="M12 10h4" />
+                            </svg>
+                            <span className="whitespace-nowrap">Apresentação LM</span>
+                          </button>
+
+                          <button
+                            onClick={() => setIsPodcastModalOpen(true)}
+                            className="w-full py-3 px-3 rounded-xl text-[0.7rem] font-extrabold uppercase tracking-wider text-emerald-300 flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-[0.97] border border-emerald-500/50 shadow-[0_8px_20px_-4px_rgba(16,185,129,0.3)] group"
+                            style={{ background: "linear-gradient(135deg, #064E3B 0%, #022C22 100%)" }}
+                            title="Gerar Podcast Executivo com Voz Clonada Voicebox"
+                          >
+                            <Mic className="w-4 h-4 shrink-0 text-emerald-400 group-hover:scale-110 transition-transform" />
+                            <span className="truncate">Podcast Voice</span>
+                          </button>
+                        </>
+                      )}
 
                       <button
-                        onClick={() => setIsPodcastModalOpen(true)}
-                        className="w-full py-3 px-3 rounded-xl text-[0.7rem] font-extrabold uppercase tracking-wider text-emerald-300 flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-[0.97] border border-emerald-500/50 shadow-[0_8px_20px_-4px_rgba(16,185,129,0.3)] group"
-                        style={{ background: "linear-gradient(135deg, #064E3B 0%, #022C22 100%)" }}
-                        title="Gerar Podcast Executivo com Voz Clonada Voicebox"
+                        onClick={() => setIsPromptModalOpen(true)}
+                        className="w-full py-3 px-2 rounded-xl text-[0.7rem] font-extrabold uppercase tracking-wider text-cyan-200 flex items-center justify-center gap-1.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-[0.97] border border-cyan-400/50 shadow-[0_8px_20px_-4px_rgba(0,229,255,0.3)] group"
+                        style={{ background: "linear-gradient(135deg, #030712 0%, #082f49 100%)" }}
+                        title="Ver Prompts de IA oficiais da campanha Black das Blacks (Midjourney / Flux / DALL-E)"
                       >
-                        <Mic className="w-4 h-4 shrink-0 text-emerald-400 group-hover:scale-110 transition-transform" />
-                        <span className="whitespace-nowrap">Podcast Voicebox</span>
+                        <Sparkles className="w-3.5 h-3.5 shrink-0 text-pink-400 group-hover:rotate-12 transition-transform" />
+                        <span className="truncate">Prompt IA 🎨</span>
                       </button>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 <div className="h-px bg-slate-200 mb-5" />
@@ -1422,6 +1439,11 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
           parcelasContemplar={parcelasContemplar}
         />
       )}
+      <BlackFridayPromptModal
+        isOpen={isPromptModalOpen}
+        onClose={() => setIsPromptModalOpen(false)}
+        defaultCategoria={categoria}
+      />
 
       {/* CRMDrawer (Engrenagem / Lista de Leads) para parceiros e uso externo */}
       <CRMDrawer 
