@@ -241,3 +241,4 @@ console.log(`- Veículos: ${motosPlanos.length} motos + ${autoPlanos.length} aut
 console.log(`- Pesados: ${caminhoesPlanos.length} caminhões`);
 console.log(`- Serviços: ${eletroPlanos.length} eletro + ${servicosPlanos.length} serviços`);
 console.log('Excluídos rigorosamente planos SILVER e FUNCIONÁRIOS!');
+

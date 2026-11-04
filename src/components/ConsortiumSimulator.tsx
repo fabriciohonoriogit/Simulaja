@@ -30,6 +30,8 @@ import { useSimuladorStore } from "@/stores/simuladorStore";
 import { ResultadosSimulacao } from "./ResultadosSimulacao";
 import { SimulacaoData } from "@/schemas/simulacao";
 import { BannerGenerator } from "@/components/BannerGenerator";
+import { BlackFridayBanner } from "@/components/BlackFridayBanner";
+import { isBlackFridayActive } from "@/utils/blackFridayTheme";
 import { NotebookLMPresentation } from "@/components/NotebookLMPresentation";
 import { VoicePodcastModal } from "@/components/admin/VoicePodcastModal";
 import { generateNotebookLMPdfFromRef } from "@/utils/generateNotebookLMPdf";
@@ -122,6 +124,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const salvarSimulacao = useSimuladorStore((state) => state.salvarSimulacao);
   const historicoZustand = useSimuladorStore((state) => state.historico) || [];
   const [searchParams] = useSearchParams();
+  const isBF = isBlackFridayActive();
 
   const dynamicCategorias = overrideConfig?.categorias || hookCategorias;
   const dynamicGrupos = overrideConfig?.grupos || hookGrupos;
@@ -286,12 +289,17 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
     const accentColor = "#f47920";
     
     // Header
-    doc.setFillColor(primaryColor);
+    doc.setFillColor(isBF ? "#050B16" : primaryColor);
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
+    doc.setFontSize(isBF ? 18 : 22);
     doc.setFont("helvetica", "bold");
-    doc.text("PROPOSTA DE CONSÓRCIO", 105, 25, { align: "center" });
+    doc.text(isBF ? "PROPOSTA DE CONSÓRCIO - BLACK DAS BLACKS" : "PROPOSTA DE CONSÓRCIO", 105, isBF ? 22 : 25, { align: "center" });
+    if (isBF) {
+      doc.setFontSize(9);
+      doc.setTextColor(0, 229, 255);
+      doc.text("CONDIÇÃO PROMOCIONAL CONSÓRCIO MAGALU - VÁLIDA ATÉ 30/11/2026", 105, 32, { align: "center" });
+    }
     
     // Client Info
     doc.setTextColor(0, 0, 0);
@@ -619,6 +627,10 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             </div>
           </div>
 
+          {isBF && (
+            <BlackFridayBanner className="w-full mb-6" />
+          )}
+
           <div ref={simulatorRef} className="w-full bg-white rounded-[24px] shadow-2xl p-5 sm:p-8 relative z-10 border border-white/10">
             <div className={isInternal ? "grid grid-cols-1 md:grid-cols-2 gap-8" : ""}>
               
@@ -776,12 +788,19 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     </p>
                   </div>
                 ) : null}
-                <div className="rounded-2xl p-5 text-center mb-5 relative overflow-hidden shadow-lg border-2 border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50/60 to-emerald-100/50">
-                  <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600" />
-                  <p className="text-[0.65rem] font-black uppercase tracking-widest mb-1 text-emerald-800">
-                    {g.isPlanoGold ? (isLinear ? "Plano Golden Linear" : (g.tipoVenda ?? "PLANO GOLD")) : (isLinear ? "Parcela Linear" : "Parcela reduzida 50%")} <span className="text-emerald-600 font-normal">· {g.isPlanoGold ? "golden" : (isLinear ? "integral" : "até a contemplação")}</span>
+                <div className={`rounded-2xl p-5 text-center mb-5 relative overflow-hidden shadow-lg border-2 ${
+                  isBF 
+                    ? "border-cyan-400/90 bg-gradient-to-br from-cyan-50/70 via-slate-50 to-pink-50/40 shadow-[0_0_25px_rgba(0,229,255,0.2)]" 
+                    : "border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50/60 to-emerald-100/50"
+                }`}>
+                  <div className={`absolute top-0 left-0 right-0 h-[4px] ${
+                    isBF ? "bg-gradient-to-r from-cyan-400 via-pink-500 to-cyan-400 animate-pulse" : "bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600"
+                  }`} />
+                  <p className={`text-[0.65rem] font-black uppercase tracking-widest mb-1 ${isBF ? "text-cyan-900 flex items-center justify-center gap-1.5 flex-wrap" : "text-emerald-800"}`}>
+                    {isBF && <span className="text-pink-600 font-extrabold mr-1">🔥 BLACK DAS BLACKS MAGALU ·</span>}
+                    {g.isPlanoGold ? (isLinear ? "Plano Golden Linear" : (g.tipoVenda ?? "PLANO GOLD")) : (isLinear ? "Parcela Linear" : "Parcela reduzida 50%")} <span className={`${isBF ? "text-cyan-700" : "text-emerald-600"} font-normal`}>· {g.isPlanoGold ? "golden" : (isLinear ? "integral" : "até a contemplação")}</span>
                   </p>
-                  <p className="text-3xl sm:text-4xl font-black text-emerald-700 font-mono drop-shadow-sm">
+                  <p className={`text-3xl sm:text-4xl font-black font-mono drop-shadow-sm ${isBF ? "text-[#0f2044]" : "text-emerald-700"}`}>
                     {fmtFull(selectedInstallment)}
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-3">

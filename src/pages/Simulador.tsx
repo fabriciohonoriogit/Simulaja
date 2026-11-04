@@ -23,6 +23,8 @@ import { GRUPOS, CATEGORIAS, GrupoItem, GRUPO_CARACTERISTICAS, MEDIA_LANCES_GRUP
 import { createLead } from "@/services/leadService";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 import { BannerGenerator } from "@/components/BannerGenerator";
+import { BlackFridayBanner } from "@/components/BlackFridayBanner";
+import { isBlackFridayActive } from "@/utils/blackFridayTheme";
 
 const customAnimations = `
 @keyframes breathe {
@@ -104,6 +106,7 @@ type HistItem = {
 export default function Simulador() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const isBF = isBlackFridayActive();
   const refCelular = searchParams.get("ref") || "";
   const refNome = searchParams.get("nome") ? decodeURIComponent(searchParams.get("nome")!) : "";
   const initialSegment = searchParams.get("segmento") || "imovel";
@@ -340,11 +343,16 @@ export default function Simulador() {
     const isIm = categoria === 'imovel';
     const navy = [15, 30, 60];
     
-    doc.setFillColor(navy[0], navy[1], navy[2]);
+    doc.setFillColor(isBF ? 5 : navy[0], isBF ? 11 : navy[1], isBF ? 22 : navy[2]);
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
-    doc.text("O ESPECIALISTA CONSÓRCIO", 20, 25);
+    doc.text("O ESPECIALISTA CONSÓRCIO", 20, isBF ? 22 : 25);
+    if (isBF) {
+      doc.setFontSize(9);
+      doc.setTextColor(0, 229, 255);
+      doc.text("EDIÇÃO ESPECIAL BLACK DAS BLACKS MAGALU - VÁLIDA ATÉ 30/11/2026", 20, 32);
+    }
     
     doc.setTextColor(navy[0], navy[1], navy[2]);
     doc.setFontSize(16);
@@ -452,7 +460,7 @@ export default function Simulador() {
          <JarvisOrb state="idle" />
       </div>
 
-      <div className="w-full max-w-[420px] animate-in fade-in duration-1000 z-10 flex flex-col items-center mt-4 sm:mt-8 pb-16">
+      <div className={`w-full ${isBF ? 'max-w-[520px]' : 'max-w-[420px]'} animate-in fade-in duration-1000 z-10 flex flex-col items-center mt-4 sm:mt-8 pb-16`}>
         
         {/* Logo Section with Atom Rings */}
         <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
@@ -478,6 +486,10 @@ export default function Simulador() {
             Simule seu Consórcio <span className="text-[#84CC16] font-bold">em segundos</span>
           </p>
         </div>
+
+        {isBF && (
+          <BlackFridayBanner className="w-full mb-6" />
+        )}
 
         {/* Card Principal (Idêntico ao Login) */}
         <div className="w-full bg-white rounded-[20px] shadow-[0_0_40px_rgba(0,0,0,0.3)] p-6 sm:p-8 relative z-10 border border-white/10">
@@ -573,12 +585,19 @@ export default function Simulador() {
           ) : null}
 
           {/* Card da Parcela Reduzida */}
-          <div className="rounded-2xl p-5 text-center mb-5 relative overflow-hidden shadow-lg border-2 border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50/60 to-emerald-100/50">
-            <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600" />
-            <p className="text-[0.65rem] font-black uppercase tracking-widest mb-1 text-emerald-800">
+          <div className={`rounded-2xl p-5 text-center mb-5 relative overflow-hidden shadow-lg border-2 ${
+            isBF 
+              ? "border-cyan-400/90 bg-gradient-to-br from-cyan-50/70 via-slate-50 to-pink-50/40 shadow-[0_0_25px_rgba(0,229,255,0.2)]" 
+              : "border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50/60 to-emerald-100/50"
+          }`}>
+            <div className={`absolute top-0 left-0 right-0 h-[4px] ${
+              isBF ? "bg-gradient-to-r from-cyan-400 via-pink-500 to-cyan-400 animate-pulse" : "bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600"
+            }`} />
+            <p className={`text-[0.65rem] font-black uppercase tracking-widest mb-1 ${isBF ? "text-cyan-900 flex items-center justify-center gap-1.5 flex-wrap" : "text-emerald-800"}`}>
+              {isBF && <span className="text-pink-600 font-extrabold mr-1">🔥 BLACK DAS BLACKS MAGALU ·</span>}
               {g.isPlanoGold ? (effectiveMode === "linear" ? "Plano Golden Linear" : "PLANO GOLD") : (effectiveMode === "linear" ? "Parcela Linear" : "Parcela Reduzida (50%)")}
             </p>
-            <p className="text-3xl sm:text-4xl font-black text-emerald-700 font-mono drop-shadow-sm">
+            <p className={`text-3xl sm:text-4xl font-black font-mono drop-shadow-sm ${isBF ? "text-[#0f2044]" : "text-emerald-700"}`}>
               {fmt(selectedInstallment)}
             </p>
           </div>
@@ -721,9 +740,9 @@ export default function Simulador() {
               <div className="mb-4 p-3 bg-white border border-slate-200 rounded-xl shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                    🎁 Arte Dia dos Pais (Consórcio Magalu)
+                    {isBF ? "🔥 Campanha Oficial Black das Blacks" : "🎁 Arte Dia dos Pais (Consórcio Magalu)"}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-medium">Variação da Foto</span>
+                  <span className="text-[10px] text-slate-400 font-medium">{isBF ? "Válido até 30/11" : "Variação da Foto"}</span>
                 </div>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
@@ -756,7 +775,7 @@ export default function Simulador() {
                   <Share2 className="mr-1.5 w-4 h-4" /> WhatsApp
                 </Button>
                 <Button onClick={handleGerarImagem} className="bg-gradient-to-r from-[#FF7A00] to-[#FF5500] hover:from-[#FF5500] hover:to-[#E64D00] text-white font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5">
-                  <ImageIcon className="mr-1.5 w-4 h-4" /> Gerar Arte 🎁
+                  <ImageIcon className="mr-1.5 w-4 h-4" /> {isBF ? "Gerar Arte Black 🔥" : "Gerar Arte 🎁"}
                 </Button>
                 <Button 
                   onClick={() => {

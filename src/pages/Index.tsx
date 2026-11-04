@@ -15,6 +15,8 @@ import { Sparkles, Clock, ShieldCheck } from "lucide-react";
 import { BlueParticlesBackground } from "@/components/BlueParticlesBackground";
 
 import { MagaluGalleryCarousel } from "@/components/MagaluGalleryCarousel";
+import { BlackFridayBanner } from "@/components/BlackFridayBanner";
+import { isBlackFridayActive } from "@/utils/blackFridayTheme";
 
 const Index = () => {
   const { toast } = useToast();
@@ -89,6 +91,7 @@ const Index = () => {
 
   return (
     <main className="min-h-screen bg-white text-slate-900 selection:bg-amber-100 selection:text-[#B8860B]">
+      {isBlackFridayActive() && <BlackFridayBanner compact={true} className="sticky top-0 z-50" />}
       <StickySimulatorCTA />
       <Header />
 
@@ -107,8 +110,8 @@ const Index = () => {
             {/* Header Acima do Simulador */}
             <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Simulador Inteligente</span>
+                <Sparkles className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+                <span>{isBlackFridayActive() ? "Black das Blacks Magalu · Simulador Oficial" : "Simulador Inteligente"}</span>
               </div>
 
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
