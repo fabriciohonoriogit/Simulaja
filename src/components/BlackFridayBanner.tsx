@@ -183,3 +183,4 @@ export const BlackFridayBanner: React.FC<BlackFridayBannerProps> = ({
     </>
   );
 };
+

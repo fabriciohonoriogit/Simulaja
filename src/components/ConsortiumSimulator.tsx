@@ -32,6 +32,7 @@ import { SimulacaoData } from "@/schemas/simulacao";
 import { BannerGenerator } from "@/components/BannerGenerator";
 import { BlackFridayBanner } from "@/components/BlackFridayBanner";
 import { isBlackFridayActive } from "@/utils/blackFridayTheme";
+import { generatePromoCardPDF } from "@/lib/promoCardPdfGenerator";
 import { NotebookLMPresentation } from "@/components/NotebookLMPresentation";
 import { VoicePodcastModal } from "@/components/admin/VoicePodcastModal";
 import { generateNotebookLMPdfFromRef } from "@/utils/generateNotebookLMPdf";
@@ -283,89 +284,41 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const handleExportPDF = () => {
     const res = resultado || (isInternal ? g : null);
     if (!res) return;
-    
-    const doc = new jsPDF();
-    const primaryColor = "#0D214F";
-    const accentColor = "#f47920";
-    
-    // Header
-    doc.setFillColor(isBF ? "#050B16" : primaryColor);
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(isBF ? 18 : 22);
-    doc.setFont("helvetica", "bold");
-    doc.text(isBF ? "PROPOSTA DE CONSÓRCIO - BLACK DAS BLACKS" : "PROPOSTA DE CONSÓRCIO", 105, isBF ? 22 : 25, { align: "center" });
-    if (isBF) {
-      doc.setFontSize(9);
-      doc.setTextColor(0, 229, 255);
-      doc.text("CONDIÇÃO PROMOCIONAL CONSÓRCIO MAGALU - VÁLIDA ATÉ 30/11/2026", 105, 32, { align: "center" });
-    }
-    
-    // Client Info
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Cliente: ${simNome || "Não informado"}`, 20, 55);
-    doc.text(`WhatsApp: ${simWpp || "Não informado"}`, 20, 62);
-    doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, 150, 55);
-    
-    // Simulation Box
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(15, 75, 180, 100, 3, 3);
-    
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Detalhes da Simulação", 25, 87);
 
     const resIsLinear = isLinear;
     const resTx = resIsLinear ? (res.txLinear ?? res.tx ?? 20) : (res.tx5050 ?? res.tx ?? 20);
     const resFr = resIsLinear ? (res.frLinear ?? res.fr ?? 1) : (res.fr5050 ?? res.fr ?? 1);
+    const valParcela = isLinear ? (res.r100 ?? res.r50) : res.r50;
 
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text("Crédito:", 25, 100);
-    doc.setFont("helvetica", "bold");
-    doc.text(fmtFull(res.credito), 80, 100);
+    const doc = generatePromoCardPDF({
+      nomeCliente: simNome || "Cliente Especial",
+      whatsappCliente: simWpp || "",
+      segmento: dynamicCategorias.find((c) => c.id === categoria)?.label || categoria,
+      grupo: String(resIsLinear ? (res.grupoLinear ?? res.grupo) : res.grupo),
+      credito: res.credito,
+      prazo: resIsLinear ? (res.prazoLinear ?? res.prazo) : res.prazo,
+      tipoVenda: res.tipoVenda,
+      tipoParcela: res.tipoVenda ? res.tipoVenda : (res.isPlanoGold ? (resIsLinear ? "Golden Linear" : "PLANO GOLD") : (resIsLinear ? "Linear" : "Reduzida 50%")),
+      parcelaValor: valParcela,
+      taxaAdm: resTx,
+      fundoReserva: resFr,
+      seguro: res.seguro,
+      lanceDinheiroPct: lanceDinheiroPct > 0 ? lanceDinheiroPct : undefined,
+      lanceEmbutidoPct: lanceEmbutidoPct > 0 ? lanceEmbutidoPct : undefined,
+      lanceTotalRS: (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) ? (res.credito * (lanceDinheiroPct + lanceEmbutidoPct) / 100) : undefined,
+      lanceTotalPct: (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) ? (lanceDinheiroPct + lanceEmbutidoPct) : undefined,
+      prazoRestante: prazoRestante,
+      proximaAssembleia: "25/11/2026",
+      consultorNome: profile?.nome || searchParams.get("nome") || "Fabricio Honório - O Especialista",
+      consultorTelefone: "41997925357",
+    });
 
-    doc.setFont("helvetica", "normal");
-    doc.text("Prazo:", 25, 110);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${resIsLinear ? (res.prazoLinear ?? res.prazo) : res.prazo} meses`, 80, 110);
+    const cleanNome = (simNome || "cliente").replace(/\s+/g, "_").toLowerCase();
+    doc.save(`card_promocional_consorcio_${cleanNome}.pdf`);
 
-    doc.setFont("helvetica", "normal");
-    doc.text(isLinear ? "Parcela Linear:" : "Parcela Reduzida (50%):", 25, 120);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor("#16a34a");
-    doc.text(fmtFull(isLinear ? (res.r100 ?? res.r50) : res.r50), 80, 120);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "normal");
-    doc.text("Taxa Administrativa:", 25, 130);
-    doc.text(`${resTx}%`, 80, 130);
-    doc.text("Fundo de Reserva:", 25, 140);
-    doc.text(`${resFr}%`, 80, 140);
-    
-    if (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Estratégia de Lance:", 25, 155);
-        doc.setFont("helvetica", "normal");
-        const lanceTotal = res.credito * (lanceDinheiroPct + lanceEmbutidoPct) / 100;
-        doc.text(`Total: ${fmtFull(lanceTotal)} (${lanceDinheiroPct + lanceEmbutidoPct}%)`, 80, 155);
-    }
-    
-    // Footer
-    doc.setFillColor(245, 245, 245);
-    doc.rect(0, 277, 210, 20, 'F');
-    doc.setTextColor(100, 100, 100);
-    doc.setFontSize(10);
-    doc.text("www.oespecialistaconsorcio.com.br", 105, 288, { align: "center" });
-    
-    doc.save(`simulacao_consorcio_${simNome.replace(/\s+/g, '_').toLowerCase()}.pdf`);
-    
     toast({
-        title: "PDF Gerado!",
-        description: "A proposta foi baixada com sucesso.",
+      title: "Card Promocional Baixado!",
+      description: "O PDF no formato de card promocional exclusivo foi gerado com sucesso.",
     });
   };
 

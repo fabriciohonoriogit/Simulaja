@@ -25,6 +25,7 @@ import { JarvisOrb } from "@/components/admin/JarvisOrb";
 import { BannerGenerator } from "@/components/BannerGenerator";
 import { BlackFridayBanner } from "@/components/BlackFridayBanner";
 import { isBlackFridayActive } from "@/utils/blackFridayTheme";
+import { generatePromoCardPDF } from "@/lib/promoCardPdfGenerator";
 
 const customAnimations = `
 @keyframes breathe {
@@ -339,42 +340,33 @@ export default function Simulador() {
   };
 
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    const isIm = categoria === 'imovel';
-    const navy = [15, 30, 60];
-    
-    doc.setFillColor(isBF ? 5 : navy[0], isBF ? 11 : navy[1], isBF ? 22 : navy[2]);
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.text("O ESPECIALISTA CONSÓRCIO", 20, isBF ? 22 : 25);
-    if (isBF) {
-      doc.setFontSize(9);
-      doc.setTextColor(0, 229, 255);
-      doc.text("EDIÇÃO ESPECIAL BLACK DAS BLACKS MAGALU - VÁLIDA ATÉ 30/11/2026", 20, 32);
-    }
-    
-    doc.setTextColor(navy[0], navy[1], navy[2]);
-    doc.setFontSize(16);
-    doc.text("SIMULAÇÃO DE CONSÓRCIO", 20, 55);
-    doc.setFontSize(12);
-    doc.text(`Cliente: ${nome || 'Não informado'}`, 20, 65);
-    
-    let y = 80;
-    const addRow = (label: string, value: string, isBold = false) => {
-      doc.setFont("helvetica", isBold ? "bold" : "normal");
-      doc.text(label, 20, y);
-      doc.text(value, 120, y);
-      y += 10;
-    };
-    
-    addRow("Tipo de Bem:", CATEGORIAS.find(c => c.id === categoria)?.label  || "");
-    addRow("Crédito:", fmt(g.credito), true);
-    addRow("Prazo:", `${g.prazo} meses`);
-    addRow(paymentMode === 'linear' ? "Parcela Linear:" : "Parcela 50%:", fmt(selectedInstallment), true);
-    
-    doc.save(`simulacao_${nome.split(' ')[0] || 'cliente'}.pdf`);
-    toast({ title: "PDF Gerado!" });
+    const isLinear = effectiveMode === 'linear';
+    const tx = isLinear ? (g.txLinear ?? g.tx ?? 20) : (g.tx5050 ?? g.tx ?? 20);
+    const fr = isLinear ? (g.frLinear ?? g.fr ?? 1) : (g.fr5050 ?? g.fr ?? 1);
+
+    const doc = generatePromoCardPDF({
+      nomeCliente: nome || 'Cliente Especial',
+      whatsappCliente: wpp || '',
+      segmento: CATEGORIAS.find(c => c.id === categoria)?.label || categoria,
+      grupo: String(isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo),
+      credito: g.credito,
+      prazo: isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo,
+      tipoParcela: g.isPlanoGold ? (isLinear ? 'Golden Linear' : 'PLANO GOLD') : (isLinear ? 'Linear' : 'Reduzida 50%'),
+      parcelaValor: selectedInstallment,
+      taxaAdm: tx,
+      fundoReserva: fr,
+      seguro: g.seguro,
+      proximaAssembleia: "25/11/2026",
+      consultorNome: refNome || 'O Especialista Consórcio',
+      consultorTelefone: refCelular || '41997925357'
+    });
+
+    const cleanNome = (nome || 'cliente').split(' ')[0].toLowerCase();
+    doc.save(`card_promocional_${cleanNome}.pdf`);
+    toast({ 
+      title: "Card Promocional Gerado!",
+      description: "O PDF em formato de card exclusivo foi baixado com sucesso." 
+    });
   };
 
   const handleShareWhatsApp = () => {

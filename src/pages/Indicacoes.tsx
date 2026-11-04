@@ -16,6 +16,9 @@ import {
 
 import { GRUPOS, CATEGORIAS, GrupoItem } from "@/constants/simulador";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
+import { BlackFridayBanner } from "@/components/BlackFridayBanner";
+import { isBlackFridayActive } from "@/utils/blackFridayTheme";
+import { generatePromoCardPDF } from "@/lib/promoCardPdfGenerator";
 
 const customAnimations = `
 @keyframes breathe {
@@ -95,6 +98,7 @@ type HistItem = {
 };
 
 export default function Indicacoes() {
+  const isBF = isBlackFridayActive();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const orgParam = searchParams.get("org") || searchParams.get("organizacao_id") || undefined;
@@ -271,37 +275,37 @@ export default function Indicacoes() {
   };
 
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    const navy = [15, 30, 60];
-    
-    doc.setFillColor(navy[0], navy[1], navy[2]);
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.text("PROPOSTA DE CONSÓRCIO", 20, 25);
-    
-    doc.setTextColor(navy[0], navy[1], navy[2]);
-    doc.setFontSize(16);
-    doc.text("SIMULAÇÃO DE CONSÓRCIO", 20, 55);
-    doc.setFontSize(12);
-    doc.text(`Cliente: ${nomeCliente || 'Não informado'}`, 20, 65);
-    doc.text(`Indicado por: ${pNome || 'Não informado'}`, 20, 75);
-    
-    let y = 90;
-    const addRow = (label: string, value: string, isBold = false) => {
-      doc.setFont("helvetica", isBold ? "bold" : "normal");
-      doc.text(label, 20, y);
-      doc.text(value, 120, y);
-      y += 10;
-    };
-    
-    addRow("Tipo de Bem:", CATEGORIAS.find(c => c.id === categoria)?.label  || "");
-    addRow("Crédito:", fmt(g.credito), true);
-    addRow("Prazo:", `${g.prazo} meses`);
-    addRow(isLinear ? "Parcela Linear:" : "Parcela 50%:", fmt(selectedInstallment), true);
-    
-    doc.save(`simulacao_${nomeCliente.split(' ')[0] || 'cliente'}.pdf`);
-    toast({ title: "PDF Gerado!" });
+    const isLinear = effectiveMode === 'linear';
+    const tx = isLinear ? (g.txLinear ?? g.tx ?? 20) : (g.tx5050 ?? g.tx ?? 20);
+    const fr = isLinear ? (g.frLinear ?? g.fr ?? 1) : (g.fr5050 ?? g.fr ?? 1);
+
+    const doc = generatePromoCardPDF({
+      nomeCliente: nomeCliente || 'Cliente Indicado',
+      whatsappCliente: wppCliente || '',
+      segmento: CATEGORIAS.find(c => c.id === categoria)?.label || categoria,
+      grupo: String(isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo),
+      credito: g.credito,
+      prazo: isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo,
+      tipoParcela: g.isPlanoGold ? (isLinear ? 'Golden Linear' : 'PLANO GOLD') : (isLinear ? 'Linear' : 'Reduzida 50%'),
+      parcelaValor: selectedInstallment,
+      taxaAdm: tx,
+      fundoReserva: fr,
+      seguro: g.seguro,
+      lanceDinheiroPct: lanceDinheiroPct > 0 ? lanceDinheiroPct : undefined,
+      lanceEmbutidoPct: lanceEmbutidoPct > 0 ? lanceEmbutidoPct : undefined,
+      lanceTotalRS: (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) ? (g.credito * (lanceDinheiroPct + lanceEmbutidoPct) / 100) : undefined,
+      lanceTotalPct: (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) ? (lanceDinheiroPct + lanceEmbutidoPct) : undefined,
+      proximaAssembleia: "25/11/2026",
+      consultorNome: pNome ? `Indicador: ${pNome}` : 'Parceiro Indicador Autorizado',
+      consultorTelefone: pWpp || '41997925357'
+    });
+
+    const cleanNome = (nomeCliente || 'cliente').split(' ')[0].toLowerCase();
+    doc.save(`card_promocional_indicacao_${cleanNome}.pdf`);
+    toast({ 
+      title: "Card Promocional Baixado!",
+      description: "O PDF em formato de card exclusivo foi gerado com sucesso."
+    });
   };
 
   const handleShareWhatsApp = () => {
@@ -372,7 +376,7 @@ export default function Indicacoes() {
          <JarvisOrb state="idle" />
       </div>
 
-      <div className="w-full max-w-[480px] animate-in fade-in duration-1000 z-10 flex flex-col items-center mt-4 sm:mt-8 pb-16 px-4">
+      <div className={`w-full ${isBF ? "max-w-[520px]" : "max-w-[480px]"} animate-in fade-in duration-1000 z-10 flex flex-col items-center mt-4 sm:mt-8 pb-16 px-4`}>
         
         {/* Logo Section */}
         <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
@@ -387,12 +391,19 @@ export default function Indicacoes() {
           <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
             <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
             <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">ÁREA DO PARCEIRO</span>
+            {isBF && (
+              <span className="text-[10px] sm:text-xs font-black tracking-widest text-cyan-300 uppercase mt-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 shadow-[0_0_15px_rgba(0,229,255,0.3)] animate-pulse">
+                🔥 EDIÇÃO BLACK DAS BLACKS MAGALU
+              </span>
+            )}
           </div>
           
           <p className="text-slate-200 text-[12px] sm:text-[13px] mt-3 font-medium text-center leading-relaxed max-w-[300px] relative z-10 drop-shadow-md">
             Simule para seus <span className="text-[#84CC16] font-bold">Clientes</span>
           </p>
         </div>
+
+        {isBF && <BlackFridayBanner className="w-full mb-6" />}
 
         {/* Card Principal */}
         <div className="w-full bg-white rounded-[20px] shadow-[0_0_40px_rgba(0,0,0,0.3)] p-6 sm:p-8 relative z-10 border border-white/10">
@@ -526,11 +537,19 @@ export default function Indicacoes() {
             </div>
           ) : null}
 
-          <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4 flex flex-col items-center justify-center mb-6">
-            <p className="text-[9px] font-bold text-green-600 uppercase tracking-widest mb-1">
+          <div className={`rounded-xl p-4 flex flex-col items-center justify-center mb-6 relative overflow-hidden shadow-lg border-2 ${
+            isBF 
+              ? "border-cyan-400 bg-gradient-to-br from-cyan-50/70 via-slate-50 to-pink-50/40 text-slate-900 shadow-[0_0_25px_rgba(0,229,255,0.2)]" 
+              : "bg-[#f0fdf4] border-[#86efac]"
+          }`}>
+            <div className={`absolute top-0 left-0 right-0 h-[3px] ${
+              isBF ? "bg-gradient-to-r from-cyan-400 via-pink-500 to-cyan-400 animate-pulse" : "bg-green-500"
+            }`} />
+            <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${isBF ? "text-cyan-900 flex items-center justify-center gap-1.5 flex-wrap" : "text-green-600"}`}>
+              {isBF && <span className="text-pink-600 font-extrabold">🔥 BLACK DAS BLACKS MAGALU ·</span>}
               {isLinear ? "Parcela Linear" : "Parcela Reduzida (50%)"}
             </p>
-            <p className="text-2xl font-mono font-bold text-green-700">{fmt(selectedInstallment)}</p>
+            <p className={`text-2xl sm:text-3xl font-mono font-bold ${isBF ? "text-[#0f2044]" : "text-green-700"}`}>{fmt(selectedInstallment)}</p>
             
             <div className="w-full grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-green-200 text-center">
               <div>
@@ -656,7 +675,7 @@ export default function Indicacoes() {
                 className="border-white/30 text-white font-bold h-10 text-[11px] bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl transition-all"
               >
                 <FileText className="w-4 h-4 mr-1.5 text-slate-300 shrink-0" />
-                Baixar PDF
+                Baixar Card PDF 🔥
               </Button>
             </div>
           </div>
@@ -692,7 +711,7 @@ export default function Indicacoes() {
               <h3 className="font-black text-emerald-900 mb-4 text-center text-xs uppercase tracking-wider">Simulação da Indicação Gerada!</h3>
               <div className="grid grid-cols-2 gap-3">
                 <Button onClick={handleExportPDF} variant="outline" className="border-slate-300 text-slate-700 font-bold h-11 text-[11px] bg-white rounded-xl shadow-sm hover:bg-slate-50">
-                  <FileText className="mr-2 w-4 h-4 text-slate-500" /> Baixar PDF
+                  <FileText className="mr-2 w-4 h-4 text-cyan-600" /> Baixar Card PDF 🔥
                 </Button>
                 <Button onClick={handleShareWhatsApp} className="bg-gradient-to-r from-[#25D366] to-[#1ebd59] hover:from-[#1ebd59] hover:to-[#17a84e] text-white font-extrabold h-11 text-[11px] shadow-lg rounded-xl transition-all hover:-translate-y-0.5">
                   <Share2 className="mr-2 w-4 h-4" /> Enviar WhatsApp
