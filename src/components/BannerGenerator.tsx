@@ -10,6 +10,8 @@ interface BannerGeneratorProps {
   installmentValue: number;
   theme?: 'black-friday' | 'dia-dos-pais' | 'padrao';
   fathersDayVariation?: 1 | 2 | 3 | 4;
+  consultorNome?: string;
+  consultorTelefone?: string;
 }
 
 const fmtNumberOnly = (v: number) => {
@@ -24,24 +26,35 @@ const fmtCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
-  ({ grupo, categoria, subCategoria, paymentMode, installmentValue, theme, fathersDayVariation = 1 }, ref) => {
+  ({ 
+    grupo, 
+    categoria, 
+    subCategoria, 
+    paymentMode, 
+    installmentValue, 
+    theme, 
+    fathersDayVariation = 1,
+    consultorNome = 'Fabricio Honório',
+    consultorTelefone = '(41) 99792-5357'
+  }, ref) => {
     if (!grupo) return null;
 
     const activeTheme = theme || (isBlackFridayActive() ? 'black-friday' : 'dia-dos-pais');
     const isBlackFriday = activeTheme === 'black-friday';
 
-    // Seleção da Imagem de Fundo e Textos por Tema
+    // Regra de Seleção de Background e Títulos
     let bgImage = '/dia-dos-pais-1.png';
     let headlineText = 'O melhor presente para um pai é ver a família realizada na casa própria.';
     let discountBadge = '20% DE DESCONTO NA TAXA ADMINISTRATIVA';
-    let economyPill = '';
+    let economyPill = 'ECONOMIA HISTÓRICA';
+    let isPreBaked = false;
 
     if (isBlackFriday) {
       if (categoria === 'imovel') {
         bgImage = '/images/magalu/bf/bf-imovel.jpg';
-        headlineText = 'BLACK DAS BLACKS: O SEU IMÓVEL COM AS MENORES PARCELAS DO ANO';
         discountBadge = '20% DE DESCONTO NA TAXA ADMINISTRATIVA';
-        economyPill = 'PARCELA REDUZIDA ATÉ A CONTEMPLAÇÃO';
+        economyPill = 'ECONOMIA GARANTIDA';
+        isPreBaked = true;
       } else if (categoria === 'veiculo' || categoria === 'pesados') {
         const val = grupo.credito;
         if (val >= 180000) {
@@ -50,24 +63,25 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
           headlineText = 'BLACK DAS BLACKS: SUA CAMINHONETE NOVA COM AS MENORES PARCELAS';
           discountBadge = '25% DE DESCONTO NA TAXA ADMINISTRATIVA';
           economyPill = 'ECONOMIA: ATÉ R$ 12.000';
+          isPreBaked = false; // Gerada via IA, não tem textos gravados na imagem
         } else if (val >= 70000 && val <= 179999) {
           // De 70 a 179 mil -> Carro / SUV
           bgImage = '/images/magalu/bf/bf-carro.jpg';
-          headlineText = 'BLACK DAS BLACKS: CONQUISTE SEU CARRO NOVO COM DESCONTO EXCLUSIVO';
           discountBadge = '25% DE DESCONTO NA TAXA ADMINISTRATIVA';
           economyPill = 'ECONOMIA: ATÉ R$ 7.000';
+          isPreBaked = true;
         } else {
           // De 18 a 39 mil (e até 69 mil ou moto) -> Moto
           bgImage = '/images/magalu/bf/bf-moto.jpg';
-          headlineText = 'BLACK DAS BLACKS: SUA MOTO NOVA COM PARCELAS EM ATÉ 100 MESES';
           discountBadge = '30% DE DESCONTO NA TAXA DE ADMINISTRAÇÃO';
           economyPill = 'ECONOMIA: ATÉ R$ 4.800';
+          isPreBaked = true;
         }
       } else {
         bgImage = '/images/magalu/bf/bf-master.jpg';
-        headlineText = 'BLACK DAS BLACKS CONSÓRCIO MAGALU: AS MENORES PARCELAS DO ANO';
         discountBadge = 'TAXAS COM DESCONTO ESPECIAL DE BLACK FRIDAY';
-        economyPill = 'ECONOMIA HISTÓRICA';
+        economyPill = 'CONDIÇÃO EXCLUSIVA';
+        isPreBaked = true;
       }
     } else {
       if (categoria === 'imovel') {
@@ -93,13 +107,144 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
     }
 
     const isLinear = paymentMode === 'linear';
-    const subBadgeText = isLinear ? 'PLANO LINEAR · PARCELAS INTEGRAIS' : 'PARCELA REDUZIDA (50%) ATÉ A CONTEMPLAÇÃO';
+    const subBadgeText = isLinear ? 'PLANO LINEAR · 100% DO CRÉDITO' : 'PARCELA REDUZIDA (50%) ATÉ A CONTEMPLAÇÃO';
 
+    // RENDERIZAÇÃO ESPECIAL BLACK FRIDAY (COM OVERLAY SÓLIDO PARA ZERO TRUNCAMENTO)
+    if (isBlackFriday) {
+      return (
+        <div
+          id="banner-generator-container"
+          ref={ref}
+          className="fixed top-0 left-[-9999px] w-[1080px] h-[1920px] bg-black flex flex-col justify-between overflow-hidden font-sans text-slate-900 select-none"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'top center',
+            opacity: 1,
+            pointerEvents: 'none',
+            zIndex: -9999,
+          }}
+        >
+          {/* HEADER SEPARADO SE NÃO FOR PRE-BAKED (Ex: Caminhonete AI) */}
+          {!isPreBaked ? (
+            <div className="relative z-10 pt-[55px] px-[80px] flex flex-col items-center text-center">
+              <img
+                src="/logo-consorcio-magalu-white.png"
+                alt="Consórcio Magalu"
+                className="h-[110px] w-auto object-contain drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] mb-[15px]"
+              />
+              <div className="text-[52px] font-black tracking-tight text-white drop-shadow-[0_0_25px_rgba(0,229,255,0.7)] uppercase mb-2">
+                BLACK DAS <span className="text-[#00E5FF]">BLACKS</span>
+              </div>
+              <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-black/80 border-2 border-[#FF7A00] text-[#FFB703] font-black text-[22px] tracking-wider uppercase shadow-[0_0_20px_rgba(255,122,0,0.5)]">
+                🔥 {economyPill}
+              </div>
+            </div>
+          ) : (
+            // Spacer para deixar o cabeçalho original e o veículo 100% visíveis sem sobreposição
+            <div className="h-[840px] w-full pointer-events-none" />
+          )}
+
+          {/* PAINEL SÓLIDO 100% OPACO PARA A OFERTA DO CLIENTE (COBRE QUALQUER NÚMERO ANTIGO) */}
+          <div 
+            className="w-full relative z-20 flex flex-col items-center text-center px-[60px] pb-[40px] pt-[30px]"
+            style={{ 
+              backgroundColor: '#020617', 
+              boxShadow: '0 -25px 60px rgba(0, 0, 0, 0.95)',
+              borderTop: '3px solid #FF7A00'
+            }}
+          >
+            {/* Linha Néon de Destaque no topo da transição */}
+            <div className="absolute -top-[3px] left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent shadow-[0_0_20px_#00E5FF]" />
+
+            {/* Pill Badge Oficial da Oferta */}
+            <div className="inline-flex items-center gap-[10px] px-[32px] py-[10px] rounded-full bg-black border-2 border-[#FF7A00] shadow-[0_0_30px_rgba(255,122,0,0.6)] mb-[24px]">
+              <span className="text-[24px]">🔥</span>
+              <span className="text-[24px] font-black tracking-widest text-[#FFB703] uppercase">
+                {economyPill}
+              </span>
+            </div>
+
+            {/* CARD PRINCIPAL DE OFERTA EXECUTIVA (Estilo Oficial Black das Blacks) */}
+            <div 
+              className="w-full max-w-[960px] rounded-[32px] p-[38px] flex flex-col items-center mb-[20px]"
+              style={{
+                backgroundColor: '#000000',
+                border: '3px solid #FF8C00',
+                boxShadow: '0 0 50px rgba(255, 140, 0, 0.45)',
+              }}
+            >
+              {/* Tabela de 2 Colunas: Crédito | Parcela */}
+              <div className="w-full grid grid-cols-2 divide-x-2 divide-[#FF7A00]/40 mb-[18px]">
+                
+                {/* Coluna 1: Crédito */}
+                <div className="flex flex-col items-center pr-[25px]">
+                  <span className="text-[26px] font-black text-slate-400 mb-[4px] uppercase tracking-widest">
+                    Crédito
+                  </span>
+                  <div className="text-[82px] font-black leading-none font-mono text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+                    {fmtNumberOnly(grupo.credito)}
+                  </div>
+                  <span className="text-[20px] font-bold text-slate-400 mt-2 uppercase tracking-widest">
+                    Prazo {grupo.prazo} Meses
+                  </span>
+                </div>
+
+                {/* Coluna 2: Parcela Promocional */}
+                <div className="flex flex-col items-center pl-[25px]">
+                  <span className="text-[26px] font-black text-[#FFB703] mb-[4px] uppercase tracking-widest">
+                    Por Apenas
+                  </span>
+                  <div className="text-[82px] font-black leading-none font-mono text-[#FF8C00] drop-shadow-[0_0_35px_rgba(255,140,0,0.7)]">
+                    R$ {fmtCurrency(installmentValue)}
+                  </div>
+                  <span className="text-[19px] font-black text-[#00E5FF] mt-2 uppercase tracking-widest">
+                    {subBadgeText}
+                  </span>
+                </div>
+
+              </div>
+
+              {/* Linha Divisória Néon */}
+              <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-[#FF7A00] to-transparent mb-[16px]" />
+
+              {/* Anúncio do Desconto na Taxa Adm */}
+              <div className="text-[30px] font-black tracking-wide text-[#FFB703] uppercase mb-3">
+                {discountBadge}
+              </div>
+
+              {/* Botão Oficial Saiba Mais */}
+              <div className="px-[50px] py-[12px] rounded-full bg-gradient-to-r from-black via-[#1a0800] to-black border-2 border-[#FF7A00] shadow-[0_0_25px_rgba(255,122,0,0.5)] flex items-center gap-2">
+                <span className="text-[24px] font-black uppercase tracking-widest text-white">
+                  SAIBA MAIS &gt;
+                </span>
+              </div>
+            </div>
+
+            {/* RODAPÉ DO CONSULTOR & REGRAS OFICIAIS */}
+            <div className="w-full max-w-[960px] flex flex-col items-center gap-[6px]">
+              <p className="text-[26px] font-black tracking-wide text-white uppercase drop-shadow-md">
+                Consultor Autorizado: {consultorNome} · WhatsApp: {consultorTelefone}
+              </p>
+              <p className="text-[20px] font-black tracking-widest text-[#00E5FF] uppercase">
+                Assembleia Oficial 25/11/2026 · Válido até 30/11
+              </p>
+              <p className="text-[12px] text-slate-400 leading-tight max-w-[920px] mt-1 text-center font-normal">
+                *Ofertas Black das Blacks Consórcio Magalu com taxa de administração reduzida promocional válida enquanto houver vagas disponíveis nos grupos. Sujeito a alteração conforme regras da administradora. Ouvidoria: 0800 340 1214.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    // RENDERIZAÇÃO PADRÃO (Tema Dia dos Pais ou Clássico)
     return (
       <div
         id="banner-generator-container"
         ref={ref}
-        className="fixed top-0 left-[-9999px] w-[1080px] h-[1920px] bg-black flex flex-col justify-between overflow-hidden font-sans text-slate-900 select-none"
+        className="fixed top-0 left-[-9999px] w-[1080px] h-[1920px] bg-white flex flex-col justify-between overflow-hidden font-sans text-slate-900 select-none"
         style={{
           backgroundImage: `url(${bgImage})`,
           backgroundSize: 'cover',
@@ -110,121 +255,68 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
           transform: 'scale(1)',
         }}
       >
-        {/* Layer 1: Degradê suave no topo e fundo escuro profissional */}
-        <div className={`absolute inset-0 pointer-events-none ${isBlackFriday
-            ? 'bg-gradient-to-b from-[#020617]/85 via-transparent via-45% to-[#020617]/95'
-            : 'bg-gradient-to-b from-white/90 via-transparent via-60% to-black/75'
-          }`} />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/90 via-transparent via-60% to-black/75" />
 
         {/* TOP HEADER SECTION */}
-        <div className="relative z-10 pt-[60px] px-[80px] flex flex-col items-center text-center">
-          {/* Logo Consórcio Magalu */}
-          <div className="flex flex-col items-center mb-[20px]">
+        <div className="relative z-10 pt-[70px] px-[80px] flex flex-col items-center text-center">
+          <div className="flex flex-col items-center mb-[30px]">
             <img
-              src={isBlackFriday ? "/logo-consorcio-magalu-white.png" : "/logo-consorcio-magalu-black.png"}
+              src="/logo-consorcio-magalu-black.png"
               alt="Consórcio Magalu"
-              className="h-[120px] w-auto object-contain drop-shadow-lg"
+              className="h-[135px] w-auto object-contain drop-shadow-md"
             />
           </div>
 
-          {/* Headline */}
-          <h1 className={`text-[44px] font-black tracking-tight leading-[1.2] max-w-[940px] mb-[20px] drop-shadow-md ${isBlackFriday ? 'text-white uppercase' : 'font-serif font-medium text-[#0F2F57]'
-            }`}>
-            {isBlackFriday ? (
-              <>
-                BLACK DAS <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-amber-400 to-cyan-300">BLACKS</span>: AS MENORES PARCELAS DO ANO
-              </>
-            ) : (
-              headlineText
-            )}
+          <h1 className="text-[46px] font-medium font-serif text-[#0F2F57] tracking-tight leading-[1.2] max-w-[940px] mb-[28px] drop-shadow-md">
+            {headlineText}
           </h1>
 
-          {/* Pill Badge de Destaque */}
-          {isBlackFriday && economyPill && (
-            <div className="inline-flex items-center gap-[12px] px-[36px] py-[12px] rounded-full shadow-[0_0_30px_rgba(255,140,0,0.4)] bg-gradient-to-r from-[#030712] via-[#1a0c02] to-[#030712] border-2 border-[#FF7A00] text-amber-300">
-              <span className="text-[24px]">🔥</span>
-              <span className="text-[22px] font-black tracking-widest uppercase">
-                {economyPill}
-              </span>
-            </div>
-          )}
+          <div className="inline-flex items-center gap-[12px] px-[32px] py-[14px] rounded-full shadow-lg bg-[#EBF4FC] border border-[#BDE0FE] text-[#0F2F57]">
+            <span className="text-[26px]">🏠</span>
+            <span className="text-[22px] font-black tracking-wider uppercase">
+              {isLinear ? 'PARCELA FIXA ATÉ A CONTEMPLAÇÃO' : 'PARCELA REDUZIDA ATÉ A CONTEMPLAÇÃO'}
+            </span>
+          </div>
         </div>
 
-        {/* BOTTOM SECTION: FLOATING CARD DE OFERTA & CALL TO ACTION */}
-        <div className="relative z-10 pb-[50px] px-[70px] flex flex-col items-center text-center w-full">
-
-          {/* FLOATING CARD DE SIMULAÇÃO (Estilo Oficial Black das Blacks) */}
-          <div className={`w-full max-w-[940px] backdrop-blur-md rounded-[36px] p-[40px] flex flex-col items-center mb-[25px] ${isBlackFriday
-              ? 'bg-[#030712]/92 border-2 border-[#FF7A00] shadow-[0_0_60px_rgba(255,122,0,0.4)] text-white'
-              : 'bg-white/75 border-2 border-white/80 shadow-[0_25px_60px_rgba(0,0,0,0.25)] text-[#0F2F57]'
-            }`}>
-
-            {/* 2-Column Table (Crédito | Parcela) */}
-            <div className={`w-full grid grid-cols-2 divide-x-2 mb-[20px] ${isBlackFriday ? 'divide-[#FF7A00]/40' : 'divide-[#0F2F57]/20'
-              }`}>
-              {/* Crédito */}
+        {/* BOTTOM SECTION */}
+        <div className="relative z-10 pb-[65px] px-[70px] flex flex-col items-center text-center w-full">
+          <div className="w-full max-w-[940px] backdrop-blur-md rounded-[36px] p-[45px] flex flex-col items-center mb-[35px] bg-white/75 border-2 border-white/80 shadow-[0_25px_60px_rgba(0,0,0,0.25)] text-[#0F2F57]">
+            <div className="w-full grid grid-cols-2 divide-x-2 divide-[#0F2F57]/20 mb-[25px]">
               <div className="flex flex-col items-center pr-[20px]">
-                <span className={`text-[28px] font-black mb-[4px] uppercase tracking-wider ${isBlackFriday ? 'text-slate-300' : 'text-[#0F2F57]'}`}>
+                <span className="text-[28px] font-bold mb-[6px] uppercase text-[#0F2F57]">
                   Crédito
                 </span>
-                <div className={`text-[82px] font-black leading-none tracking-tight font-mono ${isBlackFriday ? 'text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]' : 'text-[#0F2F57]'
-                  }`}>
+                <div className="text-[86px] font-black leading-none tracking-tight font-mono text-[#0F2F57]">
                   {fmtNumberOnly(grupo.credito)}
                 </div>
-                <span className="text-[18px] font-bold text-slate-400 mt-2 uppercase tracking-widest">
-                  Prazo {grupo.prazo} Meses
-                </span>
               </div>
 
-              {/* Parcela */}
               <div className="flex flex-col items-center pl-[20px]">
-                <span className={`text-[28px] font-black mb-[4px] uppercase tracking-wider ${isBlackFriday ? 'text-amber-400' : 'text-[#0F2F57]'}`}>
-                  Por Apenas
+                <span className="text-[28px] font-bold mb-[6px] uppercase text-[#0F2F57]">
+                  Parcela
                 </span>
-                <div className={`text-[82px] font-black leading-none tracking-tight font-mono ${isBlackFriday ? 'text-[#FF8C00] drop-shadow-[0_0_30px_rgba(255,140,0,0.6)]' : 'text-[#0F2F57]'
-                  }`}>
-                  R$ {fmtCurrency(installmentValue)}
+                <div className="text-[86px] font-black leading-none tracking-tight font-mono text-[#0F2F57]">
+                  {fmtCurrency(installmentValue)}
                 </div>
-                <span className="text-[18px] font-black text-cyan-300 mt-2 uppercase tracking-widest">
-                  {subBadgeText}
-                </span>
               </div>
             </div>
 
-            {/* Separator Line */}
-            <div className={`w-full h-[2px] mb-[18px] ${isBlackFriday ? 'bg-gradient-to-r from-transparent via-[#FF7A00] to-transparent' : 'bg-[#0F2F57]/20'
-              }`} />
+            <div className="w-full h-[2px] mb-[20px] bg-[#0F2F57]/20" />
 
-            {/* Discount Announcement Badge */}
-            {isBlackFriday && (
-              <div className="flex flex-col items-center gap-1 mb-2">
-                <span className="text-[30px] font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300 uppercase">
-                  {discountBadge}
-                </span>
-              </div>
-            )}
-
-            {/* Saiba Mais Button Style */}
-            <div className="mt-2 px-[44px] py-[12px] rounded-full bg-gradient-to-r from-[#030712] via-[#2a1303] to-[#030712] border-2 border-[#FF7A00] shadow-[0_0_25px_rgba(255,122,0,0.4)] flex items-center gap-3">
-              <span className="text-[22px] font-black uppercase tracking-widest text-white">
-                SAIBA MAIS &gt;
-              </span>
+            <div className="text-[26px] font-black tracking-[0.25em] uppercase text-[#0F2F57]">
+              PRAZO {grupo.prazo} MESES · ASSEMBLEIA 25/11/2026
             </div>
           </div>
 
-          {/* FOOTER CALL TO ACTION & WEBSITE */}
-          <div className="flex flex-col items-center gap-[8px] w-full max-w-[940px]">
-            <p className="text-[28px] font-black tracking-wide text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
-              Fale com o especialista · Assembleia 25/11/2026 · Válido até 30/11
+          <div className="flex flex-col items-center gap-[10px] w-full max-w-[940px]">
+            <p className="text-[34px] font-extrabold tracking-wide text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
+              Fale com o especialista · Condição Especial
             </p>
-            <p className="text-[22px] font-black tracking-widest text-cyan-300 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
+            <p className="text-[26px] font-black tracking-widest text-cyan-300 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
               www.oespecialistaconsorcio.com.br
             </p>
-            <p className="text-[13px] text-slate-400 leading-tight max-w-[900px] mt-1 text-center">
-              *Condições promocionais Black das Blacks Consórcio Magalu com desconto sobre taxa de administração. Ofertas válidas enquanto houver vagas nos grupos. Ouvidoria: 0800 340 1214. Imagens meramente ilustrativas.
-            </p>
           </div>
-
         </div>
       </div>
     );

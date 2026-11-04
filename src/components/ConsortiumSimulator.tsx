@@ -1405,6 +1405,8 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             categoria={categoria}
             paymentMode={effectiveMode}
             installmentValue={selectedInstallment}
+            consultorNome={profile?.nome || searchParams.get("nome") || 'Fabricio Honório'}
+            consultorTelefone={profile?.telefone || searchParams.get("whatsapp") || '(41) 99792-5357'}
           />
           <NotebookLMPresentation
             ref={notebookRef}

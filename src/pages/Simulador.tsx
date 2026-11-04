@@ -820,6 +820,8 @@ export default function Simulador() {
             paymentMode={effectiveMode}
             installmentValue={selectedInstallment}
             fathersDayVariation={fathersDayVar}
+            consultorNome={searchParams.get("nome") || 'Fabricio Honório'}
+            consultorTelefone={searchParams.get("whatsapp") || '(41) 99792-5357'}
           />
         </div>
 
