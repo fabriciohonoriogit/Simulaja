@@ -3,7 +3,7 @@
  * Micro-servidor de WhatsApp compatível com a API do WAHA (devlikeapro/waha)
  * Desenvolvido para rodar direto no Windows / Node.js sem Docker Desktop.
  * 
- * Inclui SINCRONIZAÇÃO BIDIRECIONAL EM TEMPO REAL com o banco Supabase do CRM!
+ * Integração 100% direta via Webhook Supabase com privilégio de gravação no CRM!
  */
 
 import http from "http";
@@ -20,20 +20,13 @@ const pino = require("../evolution-api/node_modules/pino");
 const QRCode = require("../evolution-api/node_modules/qrcode");
 const qrcodeTerminal = require("../evolution-api/node_modules/qrcode-terminal");
 
-// Configura Supabase com WebSocket compatível com Node.js
-const { createClient } = require("@supabase/supabase-js");
-const ws = require("../evolution-api/node_modules/ws");
-globalThis.WebSocket = ws;
-
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://pfedvdqpnpbrlhfbzjcj.supabase.co";
-const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmZWR2ZHFwbnBicmxoZmJ6amNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MDAwMTgsImV4cCI6MjA4NjQ3NjAxOH0.5X19fj92_I5-ovCSobX0FCiHUMOVDUJBlrUkRXvhSsE";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false },
-});
-
 const PORT = process.env.PORT || 3000;
 const SESSION_DIR = path.resolve("./whatsapp_session");
+
+// URL da Edge Function do Supabase (ignora RLS e grava direto em chat_messages e leads)
+const SUPABASE_WEBHOOK_URL =
+  process.env.SUPABASE_WEBHOOK_URL ||
+  "https://pfedvdqpnpbrlhfbzjcj.supabase.co/functions/v1/webhook-evolution";
 
 let sock = null;
 let currentStatus = "STARTING"; // STARTING, SCAN_QR_CODE, WORKING, STOPPED
@@ -47,13 +40,14 @@ if (!fs.existsSync(SESSION_DIR)) {
 }
 
 /**
- * Sincroniza mensagens recebidas e enviadas diretamente com a tabela chat_messages do CRM
+ * Encaminha todas as mensagens recebidas e enviadas para o Webhook do Supabase
+ * para gravação instantânea e sincronização em tempo real com o CRM.
  */
-async function syncMessageToCRM(msg) {
+async function forwardToSupabaseWebhook(msg) {
   try {
     const remoteJid = msg.key?.remoteJid;
     if (!remoteJid || remoteJid.includes("@g.us") || remoteJid === "status@broadcast") {
-      return; // Ignora mensagens de grupos e status por enquanto
+      return; // Ignora grupos e status por enquanto
     }
 
     const text =
@@ -73,80 +67,30 @@ async function syncMessageToCRM(msg) {
 
     const contentText = text || (isAudio ? "🎤 [Áudio]" : isImage ? "📷 [Imagem]" : "📎 [Documento]");
     const isFromMe = Boolean(msg.key?.fromMe);
-    const rawNumber = remoteJid.replace(/@.*$/, "").replace(/\D/g, "");
-    const last8 = rawNumber.slice(-8);
+    const sender = isFromMe ? "Você (celular)" : (msg.pushName || remoteJid.replace(/@.*$/, ""));
 
-    console.log(`📩 [WhatsApp ${isFromMe ? "Enviada" : "Recebida"} | ${rawNumber}]: ${contentText}`);
+    console.log(`📩 [WhatsApp ${isFromMe ? "Enviada" : "Recebida"}]: ${sender}: ${contentText}`);
 
-    // 1. Busca o lead pelo telefone no Supabase
-    let lead = null;
-    const { data: leads, error: leadErr } = await supabase
-      .from("leads")
-      .select("id, nome, celular, organizacao_id")
-      .ilike("celular", `%${last8}%`)
-      .limit(1);
+    const res = await fetch(SUPABASE_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        event: "messages.upsert",
+        data: msg,
+      }),
+    });
 
-    if (leads && leads.length > 0) {
-      lead = leads[0];
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      console.log(`💾 [CRM Sincronizado] Mensagem gravada no CRM com sucesso! Lead ID: ${data.leadId || "OK"}`);
     } else {
-      // Tenta buscar pelo nome push se disponível
-      if (msg.pushName) {
-        const { data: nameLeads } = await supabase
-          .from("leads")
-          .select("id, nome, celular, organizacao_id")
-          .ilike("nome", `%${msg.pushName}%`)
-          .limit(1);
-        if (nameLeads && nameLeads.length > 0) {
-          lead = nameLeads[0];
-        }
-      }
-    }
-
-    // Se não encontrou o lead, cadastra automaticamente para a conversa não sumir
-    if (!lead && !isFromMe) {
-      const contactName = msg.pushName || `Contato ${rawNumber.slice(-4)}`;
-      console.log(`✨ [WAHA Local] Criando lead automático para novo contato: ${contactName} (${rawNumber})`);
-      const { data: newLead, error: createLeadErr } = await supabase
-        .from("leads")
-        .insert({
-          nome: contactName,
-          celular: rawNumber,
-          origem: "WhatsApp Orgânico",
-          status: "novo",
-        })
-        .select()
-        .single();
-
-      if (!createLeadErr && newLead) {
-        lead = newLead;
-      }
-    }
-
-    if (lead) {
-      // 2. Grava a mensagem na tabela chat_messages do CRM
-      const role = isFromMe ? "assistant" : "user";
-      const { error: insertErr } = await supabase.from("chat_messages").insert({
-        lead_id: lead.id,
-        content: contentText,
-        role: role,
-        created_at: new Date(msg.messageTimestamp ? Number(msg.messageTimestamp) * 1000 : Date.now()).toISOString(),
-      });
-
-      if (!insertErr) {
-        console.log(`💾 [CRM Sincronizado] Mensagem vinculada com sucesso ao Lead: ${lead.nome} (${lead.id})`);
-        // Atualiza updated_at do lead para que ele suba para o topo no Kanban e no Inbox
-        await supabase
-          .from("leads")
-          .update({ updated_at: new Date().toISOString() })
-          .eq("id", lead.id);
-      } else {
-        console.error("❌ Erro ao gravar mensagem no Supabase:", insertErr.message);
-      }
-    } else {
-      console.log(`ℹ️ [WAHA Local] Mensagem de ${rawNumber} não vinculada a nenhum Lead.`);
+      const errText = await res.text().catch(() => "");
+      console.error(`❌ [Erro Webhook Supabase ${res.status}]: ${errText.substring(0, 150)}`);
     }
   } catch (err) {
-    console.error("❌ Erro ao sincronizar mensagem com o CRM:", err);
+    console.error("❌ Falha ao enviar para webhook do Supabase:", err.message);
   }
 }
 
@@ -224,11 +168,11 @@ async function connectToWhatsApp() {
     }
   });
 
-  // Escuta todas as mensagens recebidas e enviadas e sincroniza automaticamente com o Supabase
+  // Escuta todas as mensagens e encaminha para o Webhook do Supabase
   sock.ev.on("messages.upsert", async (m) => {
     for (const msg of m.messages) {
       if (!msg?.message) continue;
-      await syncMessageToCRM(msg);
+      await forwardToSupabaseWebhook(msg);
     }
   });
 }
@@ -354,15 +298,16 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (!chatId.includes("@")) {
-      chatId = `${chatId.replace(/\D/g, "")}@s.whatsapp.net`;
-    } else if (chatId.endsWith("@c.us")) {
-      chatId = chatId.replace("@c.us", "@s.whatsapp.net");
+    let targetJid = chatId;
+    if (!targetJid.includes("@")) {
+      targetJid = `${targetJid.replace(/\D/g, "")}@s.whatsapp.net`;
+    } else if (targetJid.endsWith("@c.us")) {
+      targetJid = targetJid.replace("@c.us", "@s.whatsapp.net");
     }
 
     try {
-      const result = await sock.sendMessage(chatId, { text });
-      console.log(`📤 [Mensagem Enviada para ${chatId}]: ${text.substring(0, 60)}...`);
+      const result = await sock.sendMessage(targetJid, { text });
+      console.log(`📤 [Mensagem Enviada pelo CRM para ${targetJid}]: ${text.substring(0, 60)}...`);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(
         JSON.stringify({
@@ -396,10 +341,11 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (!chatId.includes("@")) {
-      chatId = `${chatId.replace(/\D/g, "")}@s.whatsapp.net`;
-    } else if (chatId.endsWith("@c.us")) {
-      chatId = chatId.replace("@c.us", "@s.whatsapp.net");
+    let targetJid = chatId;
+    if (!targetJid.includes("@")) {
+      targetJid = `${targetJid.replace(/\D/g, "")}@s.whatsapp.net`;
+    } else if (targetJid.endsWith("@c.us")) {
+      targetJid = targetJid.replace("@c.us", "@s.whatsapp.net");
     }
 
     try {
@@ -408,8 +354,8 @@ const server = http.createServer(async (req, res) => {
         ? { document: { url: file.url }, fileName: file.filename || "documento.pdf", caption: caption || "" }
         : { image: { url: file.url }, caption: caption || "" };
 
-      const result = await sock.sendMessage(chatId, msgPayload);
-      console.log(`📎 [Arquivo Enviado para ${chatId}]: ${file.filename || file.url}`);
+      const result = await sock.sendMessage(targetJid, msgPayload);
+      console.log(`📎 [Arquivo Enviado para ${targetJid}]: ${file.filename || file.url}`);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(
         JSON.stringify({
@@ -437,6 +383,6 @@ server.listen(PORT, () => {
   console.log(`🔌 Status: http://localhost:${PORT}/api/sessions/default`);
   console.log(`📱 QR Code: http://localhost:${PORT}/api/default/auth/qr`);
   console.log(`🛡️  Modo: 100% Node.js nativo (Zero Docker necessário!)`);
-  console.log(`💾 Sincronização Automática: Supabase chat_messages Ativa!`);
+  console.log(`💾 Sincronização Automática: Supabase Webhook Ativa!`);
   console.log(`======================================================\n`);
 });
