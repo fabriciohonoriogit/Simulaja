@@ -39,7 +39,9 @@ import {
   getWhatsAppMode, 
   saveWhatsAppMode,
   getWhatsAppWebUrl, 
-  formatWhatsAppNumber 
+  getWhatsAppDirectUrl,
+  formatWhatsAppNumber,
+  type WhatsAppMode
 } from "@/services/evolutionApiService";
 import { formatCurrency } from "@/lib/utils";
 
@@ -114,7 +116,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
   const [aiEnabled, setAiEnabled] = useState(lead.atendimento_ia !== false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showAudioHelper, setShowAudioHelper] = useState(false);
-  const [waMode, setWaMode] = useState<"evolution" | "web">(() => getWhatsAppMode());
+  const [waMode, setWaMode] = useState<WhatsAppMode>(() => getWhatsAppMode());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const targetPhone = lead.celular || (lead as any).telefone || "";
@@ -273,10 +275,11 @@ export function LeadChat({ lead }: { lead: Lead }) {
           duration: 4000
         });
         if (targetPhone) {
-          window.open(getWhatsAppWebUrl(targetPhone, messageText), "_blank");
+          window.open(getWhatsAppDirectUrl(targetPhone, messageText), "_blank");
         }
       } else {
-        toast.success("🟢 Mensagem enviada ao WhatsApp e salva no CRM!");
+        const providerLabel = waStatus?.provider === "waha" ? "WAHA" : "Evolution API";
+        toast.success(`🟢 Mensagem enviada direto pelo CRM via ${providerLabel}!`);
       }
     }
 
@@ -289,10 +292,10 @@ export function LeadChat({ lead }: { lead: Lead }) {
   };
 
   const toggleWhatsAppMode = () => {
-    const nextMode = waMode === "evolution" ? "web" : "evolution";
+    const nextMode: WhatsAppMode = waMode === "waha" ? "web" : "waha";
     setWaMode(nextMode);
     saveWhatsAppMode(nextMode);
-    toast.info(`Modo de envio alterado para: ${nextMode === "evolution" ? "Evolution API (Automático)" : "WhatsApp Web Direto"}`);
+    toast.info(`Modo de envio alterado para: ${nextMode === "waha" ? "🚀 Envio Direto (WAHA)" : "📱 WhatsApp Direto (wa.me)"}`);
   };
 
   return (
@@ -323,36 +326,38 @@ export function LeadChat({ lead }: { lead: Lead }) {
 
         {/* BOTOES DE AÇÃO RÁPIDA NO HEADER */}
         <div className="flex items-center gap-2">
-          {/* Alternador de Modo: Evolution vs WhatsApp Web */}
+          {/* Alternador de Modo: WAHA vs wa.me Direto */}
           <button
             type="button"
             onClick={toggleWhatsAppMode}
-            className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border transition-all flex items-center gap-1 ${
-              waMode === "evolution"
-                ? "bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-800 dark:text-indigo-300"
-                : "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300"
+            className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border transition-all flex items-center gap-1.5 ${
+              waMode === "waha"
+                ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
+                : waMode === "evolution"
+                ? "bg-indigo-600 text-white border-indigo-700 shadow-sm"
+                : "bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border-slate-300 dark:border-zinc-700"
             }`}
-            title="Clique para alternar entre Evolution API e WhatsApp Web Direto"
+            title="Clique para alternar entre Envio Direto (WAHA) e WhatsApp Direto (wa.me)"
           >
             <Zap className="h-3 w-3" />
-            {waMode === "evolution" ? "Evolution API" : "WhatsApp Web"}
+            {waMode === "waha" ? "🚀 Envio Direto (WAHA)" : waMode === "evolution" ? "⚡ Evolution API" : "📱 Whats Direto (wa.me)"}
           </button>
 
-          {/* Botão de Disparo Direto no WhatsApp Web */}
+          {/* Botão de Disparo Direto no wa.me */}
           {targetPhone && (
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => {
-                const msg = `Olá, ${lead.nome}! Como posso ajudar com a sua cota de consórcio hoje?`;
-                window.open(getWhatsAppWebUrl(targetPhone, msg), "_blank");
+                const msg = `Olá, ${lead.nome}! Como posso te ajudar com a sua cota de consórcio hoje?`;
+                window.open(getWhatsAppDirectUrl(targetPhone, msg), "_blank");
               }}
               className="h-7 px-2.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100 gap-1 rounded-lg"
-              title="Abrir conversa direta no WhatsApp Web / Celular"
+              title="Abrir diretamente no wa.me / Celular"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              WhatsApp
+              wa.me
             </Button>
           )}
 

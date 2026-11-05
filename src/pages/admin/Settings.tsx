@@ -12,7 +12,20 @@ import { Users, Mail, UserPlus, Copy, RefreshCw, Trash2, Shield, ChevronDown, Up
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createWhatsAppInstance } from "@/services/evolutionOnboardingService";
-import { getEvolutionConfig, saveEvolutionConfig, checkEvolutionStatus, fetchEvolutionQrCode, getWhatsAppMode, saveWhatsAppMode, WhatsAppMode } from "@/services/evolutionApiService";
+import { 
+  getEvolutionConfig, 
+  saveEvolutionConfig, 
+  checkEvolutionStatus, 
+  fetchEvolutionQrCode, 
+  getWhatsAppMode, 
+  saveWhatsAppMode, 
+  getWahaConfig,
+  saveWahaConfig,
+  checkWahaStatus,
+  fetchWahaQrCode,
+  requestWahaPairingCode,
+  WhatsAppMode 
+} from "@/services/evolutionApiService";
 import { QRCodeSVG } from "qrcode.react";
 
 const ROLES = [
@@ -48,12 +61,25 @@ export default function Settings() {
   const [qrCodeImg, setQrCodeImg] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [webQrOpen, setWebQrOpen] = useState(false);
+  const [wahaUrl, setWahaUrl] = useState("");
+  const [wahaKey, setWahaKey] = useState("");
+  const [wahaSession, setWahaSession] = useState("default");
+  const [wahaStatus, setWahaStatus] = useState<string>("UNKNOWN");
+  const [wahaTesting, setWahaTesting] = useState(false);
+  const [wahaCreating, setWahaCreating] = useState(false);
+  const [wahaQrCodeImg, setWahaQrCodeImg] = useState<string | null>(null);
+  const [wahaPairingPhone, setWahaPairingPhone] = useState("");
+  const [wahaPairingCode, setWahaPairingCode] = useState<string | null>(null);
 
   useEffect(() => {
     const cfg = getEvolutionConfig();
     setEvolutionUrl(cfg.apiUrl);
     setEvolutionKey(cfg.apiKey);
     setEvolutionInstance(cfg.instanceName);
+    const wahaCfg = getWahaConfig();
+    setWahaUrl(wahaCfg.apiUrl);
+    setWahaKey(wahaCfg.apiKey);
+    setWahaSession(wahaCfg.sessionName || "default");
     setWaMode(getWhatsAppMode());
   }, []);
 
@@ -63,15 +89,135 @@ export default function Settings() {
     if (mode === "web") {
       setEvolutionStatus("WEB_MODE");
       setQrCodeImg(null);
+      setWahaQrCodeImg(null);
       toast({
-        title: "🟢 Modo WhatsApp Web (Direto) Ativo!",
-        description: "Suas conversas e mensagens serão abertas diretamente no WhatsApp Web/App sem depender de servidor.",
+        title: "🟢 Modo WhatsApp Direto (wa.me) Ativo!",
+        description: "Suas conversas e mensagens serão abertas diretamente no WhatsApp sem depender de servidor.",
+      });
+    } else if (mode === "waha") {
+      setQrCodeImg(null);
+      toast({
+        title: "🚀 Modo WAHA (Envio Direto pelo CRM) Ativo!",
+        description: "Disparo direto sem abrir novas abas. Leve, rápido e sem dependência de banco de dados complexo.",
       });
     } else {
+      setWahaQrCodeImg(null);
       toast({
         title: "⚡ Modo Evolution API Ativo",
         description: "Configure abaixo o endereço do seu servidor Evolution API (VPS ou Docker).",
       });
+    }
+  };
+
+  const handleTestWaha = async () => {
+    if (!wahaUrl.trim()) {
+      toast({ title: "URL Ausente", description: "Informe a URL da API WAHA (ex: http://localhost:3000)", variant: "destructive" });
+      return;
+    }
+    setWahaTesting(true);
+    saveWahaConfig({ apiUrl: wahaUrl, apiKey: wahaKey, sessionName: wahaSession || "default" });
+    try {
+      const res = await checkWahaStatus(wahaSession || "default");
+      setWahaStatus(res.state);
+      if (res.state === "WORKING") {
+        setWahaQrCodeImg(null);
+        setWahaPairingCode(null);
+        toast({
+          title: "Status: CONECTADO! 🟢",
+          description: "Sua instância WAHA está conectada ao WhatsApp e pronta para envio direto pelo CRM.",
+        });
+      } else if (res.state === "SCAN_QR_CODE") {
+        toast({
+          title: "Aguardando QR Code 🟡",
+          description: "Clique em 'Gerar QR Code' para escanear com seu celular.",
+        });
+      } else {
+        toast({
+          title: `Status: ${res.state}`,
+          description: res.reason || "Sessão não está ativa. Clique em 'Provisionar / QR Code' para iniciar.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      setWahaStatus("DISCONNECTED");
+      toast({
+        title: "Erro ao conectar com WAHA",
+        description: err?.message || "Verifique se o container WAHA está rodando.",
+        variant: "destructive",
+      });
+    } finally {
+      setWahaTesting(false);
+    }
+  };
+
+  const handleCreateWahaQr = async () => {
+    if (!wahaUrl.trim()) {
+      toast({ title: "URL Ausente", description: "Informe a URL da API WAHA", variant: "destructive" });
+      return;
+    }
+    setWahaCreating(true);
+    setWahaQrCodeImg(null);
+    setWahaPairingCode(null);
+    saveWahaConfig({ apiUrl: wahaUrl, apiKey: wahaKey, sessionName: wahaSession || "default" });
+    try {
+      const qrRes = await fetchWahaQrCode(wahaSession || "default");
+      if (qrRes.success && qrRes.connected) {
+        setWahaStatus("WORKING");
+        toast({
+          title: "WhatsApp Já Conectado! 🟢",
+          description: "Sua sessão WAHA está ativa e pronta para envio direto.",
+        });
+        return;
+      }
+      if (qrRes.success && qrRes.qrcode) {
+        setWahaQrCodeImg(qrRes.qrcode);
+        setWahaStatus("SCAN_QR_CODE");
+        toast({
+          title: "QR Code WAHA Gerado com Sucesso!",
+          description: "Escaneie o QR Code exibido na tela no seu WhatsApp > Aparelhos Conectados.",
+        });
+        return;
+      }
+      toast({
+        title: "Aviso",
+        description: qrRes.error || "Aguardando o container gerar o QR Code...",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Erro ao gerar QR Code",
+        description: err?.message || "Falha de rede com o servidor WAHA.",
+        variant: "destructive",
+      });
+    } finally {
+      setWahaCreating(false);
+    }
+  };
+
+  const handleRequestWahaPairing = async () => {
+    if (!wahaPhoneForCode.trim()) {
+      toast({ title: "Telefone Ausente", description: "Informe o número com DDD (ex: 11999999999)", variant: "destructive" });
+      return;
+    }
+    setWahaCreating(true);
+    try {
+      const res = await requestWahaPairingCode(wahaPhoneForCode, wahaSession || "default");
+      if (res.success && res.code) {
+        setWahaPairingCode(res.code);
+        toast({
+          title: "Código de Pareamento Gerado! 📱",
+          description: "Digite o código no seu WhatsApp > Conectar com número de telefone.",
+        });
+      } else {
+        toast({
+          title: "Falha ao gerar código",
+          description: res.error || "O servidor não retornou código de pareamento.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro", description: err?.message, variant: "destructive" });
+    } finally {
+      setWahaCreating(false);
     }
   };
 
@@ -598,86 +744,238 @@ export default function Settings() {
             {isAdmin && (
               <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
                 <CardHeader className="bg-slate-900 text-white p-6">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-green-500/20 rounded-xl"><MessageSquare className="h-5 w-5 text-green-400" /></div>
                       <div>
-                        <CardTitle className="text-base font-bold">Conexão WhatsApp</CardTitle>
+                        <CardTitle className="text-base font-bold">Conexão WhatsApp &amp; Mensageria</CardTitle>
                         <CardDescription className="text-slate-400 text-xs">
-                          {waMode === "web" ? "Modo Direto (WhatsApp Web)" : "Evolution API (Automação Servidor)"}
+                          {waMode === "waha" ? "WAHA (Envio Direto pelo CRM sem abrir abas)" : waMode === "web" ? "Modo Direto (wa.me / WhatsApp Web)" : "Evolution API (Servidor Legado)"}
                         </CardDescription>
                       </div>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${waMode === "web" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-blue-500/20 text-blue-300 border border-blue-500/40"}`}>
-                      {waMode === "web" ? "🟢 Whats Web Direto" : "⚡ Evolution API"}
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${waMode === "waha" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : waMode === "web" ? "bg-blue-500/20 text-blue-300 border border-blue-500/40" : "bg-purple-500/20 text-purple-300 border border-purple-500/40"}`}>
+                      {waMode === "waha" ? "🚀 WAHA (Envio Direto)" : waMode === "web" ? "🟢 Whats Direto (wa.me)" : "⚡ Evolution API"}
                     </span>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-5">
                   {/* Seleção de Modo */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-700">Selecione o Modo de Conexão WhatsApp:</Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Label className="text-xs font-bold text-slate-700">Selecione o Modo de Envio:</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <button
                         type="button"
-                        onClick={() => handleModeChange("web")}
-                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${waMode === "web" ? "border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20" : "border-slate-200 hover:border-slate-300 bg-white"}`}
+                        onClick={() => handleModeChange("waha")}
+                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${waMode === "waha" ? "border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20" : "border-slate-200 hover:border-slate-300 bg-white"}`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                            📱 WhatsApp Web (Direto)
+                            🚀 WAHA (Recomendado)
                           </span>
-                          {waMode === "web" && <span className="h-2 w-2 rounded-full bg-emerald-500"></span>}
+                          {waMode === "waha" && <span className="h-2 w-2 rounded-full bg-emerald-500"></span>}
                         </div>
                         <p className="text-[11px] text-slate-500 leading-snug">
-                          Abre as conversas direto no seu WhatsApp Web/App com mensagens pré-preenchidas. Sem erros de servidor!
+                          Envio direto pelo CRM sem abrir abas! Container ultraleve (~120 MB RAM) e alta estabilidade.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleModeChange("web")}
+                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${waMode === "web" ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20" : "border-slate-200 hover:border-slate-300 bg-white"}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                            📱 Whats Direto (wa.me)
+                          </span>
+                          {waMode === "web" && <span className="h-2 w-2 rounded-full bg-blue-500"></span>}
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-snug">
+                          Abre as conversas direto no seu WhatsApp Web/App com mensagens pré-preenchidas. Sem servidor!
                         </p>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleModeChange("evolution")}
-                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${waMode === "evolution" ? "border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20" : "border-slate-200 hover:border-slate-300 bg-white"}`}
+                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${waMode === "evolution" ? "border-purple-500 bg-purple-50/60 ring-2 ring-purple-500/20" : "border-slate-200 hover:border-slate-300 bg-white"}`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                            ⚡ Evolution API (Robô)
+                            ⚡ Evolution API
                           </span>
-                          {waMode === "evolution" && <span className="h-2 w-2 rounded-full bg-blue-500"></span>}
+                          {waMode === "evolution" && <span className="h-2 w-2 rounded-full bg-purple-500"></span>}
                         </div>
                         <p className="text-[11px] text-slate-500 leading-snug">
-                          Conexão automatizada em segundo plano (requer servidor Evolution API rodando em Docker ou VPS).
+                          Conexão com servidor Evolution API legado em Docker/VPS.
                         </p>
                       </button>
                     </div>
                   </div>
 
                   {waMode === "web" ? (
-                    <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs text-emerald-950 space-y-3">
+                    <div className="p-4 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-blue-950 space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <p className="font-bold flex items-center gap-1.5 text-emerald-900">
-                          🟢 Modo WhatsApp Web (Direto) Ativo
+                        <p className="font-bold flex items-center gap-1.5 text-blue-900">
+                          🟢 Modo WhatsApp Direto (wa.me) Ativo
                         </p>
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
                           onClick={() => window.open("https://web.whatsapp.com", "_blank")}
-                          className="h-7 text-[11px] font-bold text-emerald-800 border-emerald-300 bg-white hover:bg-emerald-100/60 gap-1 rounded-lg shrink-0 shadow-sm"
+                          className="h-7 text-[11px] font-bold text-blue-800 border-blue-300 bg-white hover:bg-blue-100/60 gap-1 rounded-lg shrink-0 shadow-sm"
                         >
-                          <ExternalLink className="h-3.5 w-3.5 text-emerald-700" />
-                          Abrir WhatsApp Web no PC
+                          <ExternalLink className="h-3.5 w-3.5 text-blue-700" />
+                          Abrir WhatsApp Web
                         </Button>
                       </div>
-                      <p className="text-[11.5px] text-emerald-800 leading-relaxed">
+                      <p className="text-[11.5px] text-blue-800 leading-relaxed">
                         Nenhuma configuração ou servidor de QR Code é necessário neste modo! Ao conversar com leads no CRM:
                       </p>
-                      <ul className="list-disc pl-4 text-[11px] text-emerald-800 space-y-1">
-                        <li>O sistema abre diretamente o WhatsApp Web/App com o número do cliente e o texto pronto.</li>
-                        <li>A mensagem é registrada no histórico do CRM.</li>
-                        <li>Se desejar conectar via escaneamento de QR Code com servidor automático de mensagens, altere acima para o <strong>Modo Automação API (Evolution)</strong>.</li>
+                      <ul className="list-disc pl-4 text-[11px] text-blue-800 space-y-1">
+                        <li>O sistema abre diretamente o link universal <code>wa.me</code> com o telefone do cliente e o texto já preenchido.</li>
+                        <li>Todas as mensagens continuam sendo registradas normalmente no histórico do CRM.</li>
+                        <li>Se quiser disparar <strong>100% direto sem abrir novas abas</strong>, altere acima para o <strong>Modo WAHA (Recomendado)</strong>.</li>
                       </ul>
                     </div>
+                  ) : waMode === "waha" ? (
+                    <>
+                      {/* PAINEL DE CONFIGURAÇÃO WAHA */}
+                      <div className="space-y-3 pt-1 border-t border-slate-100">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-bold text-slate-700">Server URL (WAHA API)</Label>
+                            <span className="text-[10px] text-slate-400 font-mono">Padrão local: http://localhost:3000</span>
+                          </div>
+                          <Input
+                            placeholder="http://localhost:3000 ou https://waha.seudominio.com"
+                            value={wahaUrl}
+                            onChange={(e) => setWahaUrl(e.target.value)}
+                            className="h-10 text-xs font-mono mt-1"
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs font-bold text-slate-700">API Key (X-Api-Key)</Label>
+                            <Input
+                              type="password"
+                              placeholder="Opcional se configurado WAHA_API_KEY"
+                              value={wahaKey}
+                              onChange={(e) => setWahaKey(e.target.value)}
+                              className="h-10 text-xs font-mono mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs font-bold text-slate-700">Nome da Sessão</Label>
+                            <Input
+                              placeholder="default"
+                              value={wahaSession}
+                              onChange={(e) => setWahaSession(e.target.value)}
+                              className="h-10 text-xs font-mono mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-100 flex-wrap">
+                        <div className="text-xs font-bold">
+                          Status WAHA:{" "}
+                          <span className={wahaStatus === "WORKING" ? "text-emerald-600 font-black" : wahaStatus === "SCAN_QR_CODE" ? "text-amber-600 font-black" : "text-slate-600 font-black"}>
+                            {wahaStatus === "WORKING" ? "🟢 CONECTADO" : wahaStatus === "SCAN_QR_CODE" ? "🟡 AGUARDANDO QR CODE" : wahaStatus === "UNKNOWN" ? "⚪ NÃO TESTADO" : `🔴 ${wahaStatus}`}
+                          </span>
+                        </div>
+
+                        <div className="flex gap-2 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleTestWaha}
+                            disabled={wahaTesting}
+                            className="font-bold text-xs h-9"
+                          >
+                            {wahaTesting ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
+                            Salvar &amp; Testar
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={handleCreateWahaQr}
+                            disabled={wahaCreating}
+                            className="font-bold text-xs h-9 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          >
+                            {wahaCreating && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                            <QrCode className="mr-1.5 h-3.5 w-3.5" />
+                            Gerar QR Code
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* GUIA DOCKER RÁPIDO DO WAHA */}
+                      <div className="p-3 bg-slate-900 text-slate-200 rounded-xl text-xs space-y-2 border border-slate-800">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-emerald-400 flex items-center gap-1.5">
+                            🐳 Subir WAHA em 1 comando (Docker Compose)
+                          </span>
+                          <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">120 MB RAM</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">
+                          Execute no terminal da sua máquina ou VPS onde está o projeto:
+                        </p>
+                        <div className="p-2 bg-black/60 rounded-lg font-mono text-[11px] text-emerald-300 flex items-center justify-between select-all">
+                          <code>docker compose -f docker-compose.waha.yml up -d</code>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText("docker compose -f docker-compose.waha.yml up -d");
+                              toast({ title: "Comando Copiado!" });
+                            }}
+                            className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded ml-2"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* EXIBIÇÃO DE QR CODE OU CÓDIGO DE PAREAMENTO DO WAHA */}
+                      {(wahaQrCodeImg || wahaPairingCode) && (
+                        <div className="mt-4 p-5 bg-slate-900 rounded-2xl flex flex-col items-center justify-center text-center space-y-4 border border-emerald-500/40 shadow-xl animate-in fade-in zoom-in-95">
+                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                            <span className="relative flex h-2.5 w-2.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            Aguardando Leitura no Celular...
+                          </div>
+
+                          {wahaQrCodeImg && (
+                            <div className="p-3 bg-white rounded-xl shadow-2xl border border-slate-200">
+                              <img
+                                src={wahaQrCodeImg}
+                                alt="QR Code WhatsApp WAHA"
+                                className="w-56 h-56 object-contain"
+                              />
+                            </div>
+                          )}
+
+                          {wahaPairingCode && (
+                            <div className="p-3 bg-slate-800/90 rounded-xl border border-emerald-500/30 text-center w-full max-w-xs space-y-1">
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+                                Código de Pareamento de 8 dígitos:
+                              </p>
+                              <p className="text-xl font-mono font-black text-emerald-400 tracking-widest">
+                                {wahaPairingCode}
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="text-[11px] text-slate-300 space-y-1 max-w-xs leading-snug">
+                            <p className="font-bold text-white">No seu Celular:</p>
+                            <p>Abra o WhatsApp &gt; <strong>Aparelhos Conectados</strong> &gt; <strong>Conectar um Aparelho</strong></p>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <>
                       <div className="space-y-3 pt-1 border-t border-slate-100">

@@ -32,7 +32,7 @@ import { ptBR } from "date-fns/locale";
 import { Lead } from "@/types/funil";
 import { LeadChat } from "@/components/admin/funil/LeadChat";
 import { formatCurrency } from "@/lib/utils";
-import { getWhatsAppWebUrl, formatWhatsAppNumber, getWhatsAppMode, saveWhatsAppMode } from "@/services/evolutionApiService";
+import { getWhatsAppWebUrl, getWhatsAppDirectUrl, formatWhatsAppNumber, getWhatsAppMode, saveWhatsAppMode, WhatsAppMode } from "@/services/evolutionApiService";
 
 interface ChatLead extends Lead {
   last_message?: string;
@@ -50,7 +50,7 @@ export default function WhatsAppInbox() {
   const [inboxTab, setInboxTab] = useState<"conversas" | "todos">("conversas");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showLeadDetails, setShowLeadDetails] = useState(false);
-  const [waMode, setWaMode] = useState<"evolution" | "web">(() => getWhatsAppMode());
+  const [waMode, setWaMode] = useState<WhatsAppMode>(() => getWhatsAppMode());
 
   const fetchLeads = async (silent = false) => {
     if (!profile?.organizacao_id) return;
@@ -430,13 +430,13 @@ export default function WhatsAppInbox() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        const webUrl = getWhatsAppWebUrl(selectedLead.celular || "", `Olá ${selectedLead.nome}, como posso te ajudar com seu consórcio?`);
+                        const webUrl = getWhatsAppDirectUrl(selectedLead.celular || "", `Olá ${selectedLead.nome}, como posso te ajudar com seu consórcio?`);
                         window.open(webUrl, "_blank");
                       }}
                       className="h-8 px-3 text-xs font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 rounded-xl gap-1.5"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
-                      WhatsApp Web
+                      wa.me
                     </Button>
                   )}
 

@@ -459,7 +459,8 @@ export default function Leads() {
                               const clean = l.celular.replace(/\D/g, "");
                               window.open(`https://wa.me/55${clean}?text=Olá!`, "_blank");
                             } else {
-                              toast.info(`Enviando mensagem via Evolution API para ${l.nome}...`);
+                              const providerLabel = mode === "waha" ? "WAHA" : "Evolution API";
+                              toast.info(`Enviando mensagem via ${providerLabel} para ${l.nome}...`);
                               const res = await sendWhatsAppMessage({
                                 number: l.celular,
                                 text: `Olá ${l.nome}! Tudo bem? Sou da equipe do consórcio, vi seu interesse e gostaria de tirar suas dúvidas sobre o planejamento.`,
@@ -468,11 +469,11 @@ export default function Leads() {
                                 organizacaoId: l.organizacao_id
                               });
                               if (res.success) {
-                                toast.success(res.viaMake ? "Enviado via Make.com!" : "Mensagem enviada via Evolution API!");
+                                toast.success(res.viaMake ? "Enviado via Make.com!" : `Mensagem enviada via ${providerLabel}!`);
                               } else if (res.webUrl) {
                                 window.open(res.webUrl, "_blank");
                               } else {
-                                toast.error(res.error || "Falha ao enviar via Evolution API");
+                                toast.error(res.error || `Falha ao enviar via ${providerLabel}`);
                               }
                             }
                           }}

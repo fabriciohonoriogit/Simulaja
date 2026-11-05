@@ -1,7 +1,39 @@
 import { supabase } from "@/integrations/supabase/client";
 import { makeService } from "@/services/makeService";
+import {
+  getWahaConfig,
+  saveWahaConfig,
+  isWahaConfigured,
+  sendWahaTextMessage,
+  sendWahaFileMessage,
+  checkWahaStatus,
+  fetchWahaQrCode,
+  requestWahaPairingCode,
+  formatWahaNumber,
+  formatWahaChatId,
+  type WahaConfig,
+  type WahaSendParams,
+  type WahaSendFileParams,
+} from "@/services/wahaApiService";
 
-export type WhatsAppMode = "web" | "evolution";
+// Re-exporta funções do WAHA para uso centralizado
+export {
+  getWahaConfig,
+  saveWahaConfig,
+  isWahaConfigured,
+  sendWahaTextMessage,
+  sendWahaFileMessage,
+  checkWahaStatus,
+  fetchWahaQrCode,
+  requestWahaPairingCode,
+  formatWahaNumber,
+  formatWahaChatId,
+  type WahaConfig,
+  type WahaSendParams,
+  type WahaSendFileParams,
+};
+
+export type WhatsAppMode = "waha" | "web" | "evolution";
 
 export interface EvolutionConfig {
   apiUrl: string;
@@ -12,9 +44,15 @@ export interface EvolutionConfig {
 export const getWhatsAppMode = (): WhatsAppMode => {
   if (typeof window === "undefined") return "web";
   const saved = localStorage.getItem("whatsapp_mode") as WhatsAppMode;
-  if (saved) return saved;
-  // Se não há Evolution API configurada no navegador, o padrão seguro é 'web' (WhatsApp Web direto)
-  return isEvolutionConfigured() ? "evolution" : "web";
+  if (saved && (saved === "waha" || saved === "web" || saved === "evolution")) {
+    return saved;
+  }
+  // Se o WAHA estiver configurado, adota WAHA por padrão para envio direto no CRM
+  if (isWahaConfigured()) return "waha";
+  // Se houver Evolution API configurada no navegador
+  if (isEvolutionConfigured()) return "evolution";
+  // Padrão seguro sem servidor: WhatsApp Web / wa.me Direto
+  return "web";
 };
 
 export const saveWhatsAppMode = (mode: WhatsAppMode) => {
@@ -28,6 +66,15 @@ export const formatWhatsAppNumber = (number: string): string => {
     clean = `55${clean}`;
   }
   return clean;
+};
+
+/**
+ * URL universal wa.me para abertura direta do WhatsApp Web ou App
+ */
+export const getWhatsAppDirectUrl = (number: string, text?: string): string => {
+  const clean = formatWhatsAppNumber(number);
+  const encodedText = text ? encodeURIComponent(text) : "";
+  return `https://wa.me/${clean}${encodedText ? `?text=${encodedText}` : ""}`;
 };
 
 export const getWhatsAppWebUrl = (number: string, text?: string): string => {
@@ -73,17 +120,30 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId, leadId,
   const cleanNumber = formatWhatsAppNumber(number);
   const mode = getWhatsAppMode();
   const webUrl = getWhatsAppWebUrl(cleanNumber, text);
+  const directUrl = getWhatsAppDirectUrl(cleanNumber, text);
 
-  // Modo WhatsApp Web Direto (Abre guia no navegador)
+  // 1. Modo WhatsApp Web / wa.me Direto (Abre guia no navegador)
   if (mode === "web") {
     window.open(webUrl, "_blank");
-    return { success: true, isWebFallback: true, webUrl };
+    return { success: true, isWebFallback: true, webUrl, directUrl };
   }
 
-  const config = getEvolutionConfig();
+  // 2. Modo WAHA (Envio Direto pelo CRM sem abrir novas abas)
+  if (mode === "waha") {
+    try {
+      const wahaRes = await sendWahaTextMessage({ number: cleanNumber, text });
+      if (wahaRes.success) {
+        return { success: true, provider: "waha", data: wahaRes.data };
+      }
+      console.warn("[WAHA] Envio direto retornou erro:", wahaRes.error);
+    } catch (err: any) {
+      console.warn("[WAHA] Erro de rede ao conectar:", err);
+    }
+  }
 
-  // 1. Tentar envio direto via Evolution API (se configurado)
-  if (isEvolutionConfigured()) {
+  // 3. Modo Evolution API (se configurado e selecionado)
+  if (mode === "evolution" && isEvolutionConfigured()) {
+    const config = getEvolutionConfig();
     try {
       const endpoint = `${config.apiUrl}/message/sendText/${config.instanceName}`;
       let response = await fetch(endpoint, {
@@ -124,14 +184,14 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId, leadId,
 
       if (response.ok) {
         const data = await response.json();
-        return { success: true, data };
+        return { success: true, provider: "evolution", data };
       }
     } catch (error: any) {
       console.warn("[Evolution API] Envio direto falhou. Tentando fallbacks via Make & Edge Function...", error);
     }
   }
 
-  // 2. Fallback via Webhook do Make.com
+  // 4. Fallback via Webhook do Make.com (se configurado)
   try {
     const makeSuccess = await makeService.dispararWhatsAppViaMake({
       number: cleanNumber,
@@ -147,13 +207,14 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId, leadId,
     console.warn("[Make.com Fallback] Erro ao enviar por webhook do Make:", e);
   }
 
-  // 3. Fallback via Edge Function do Supabase
+  // 5. Fallback via Edge Function do Supabase
   try {
+    const evolutionConfig = getEvolutionConfig();
     const { data, error: edgeErr } = await supabase.functions.invoke("evolution-send-message", {
       body: { 
         number: cleanNumber, 
         text, 
-        instanceName: config.instanceName || "simulaja",
+        instanceName: evolutionConfig.instanceName || "simulaja",
         organizacaoId: organizacaoId || "",
         clients: [{ id: '1', nome: leadNome || 'Cliente', celular: cleanNumber }],
         template: text
@@ -166,11 +227,12 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId, leadId,
     console.error("[Edge Function Fallback] Erro total:", e);
   }
 
-  // 4. Última instância: Retorna URL para abrir no WhatsApp Web
+  // 6. Última contingência: Disponibiliza link direto do WhatsApp Web / wa.me
   return { 
     success: false, 
-    error: `Não foi possível enviar automaticamente. Clique para abrir no WhatsApp Web.`, 
-    webUrl 
+    error: `Servidor de WhatsApp não respondeu. Clique para abrir no WhatsApp Web.`, 
+    webUrl,
+    directUrl
   };
 };
 
