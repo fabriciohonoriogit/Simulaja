@@ -64,6 +64,40 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
       );
 
+      // Buscar a organização real do CRM e o responsável principal (Fabrício)
+      let targetOrgId = "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4";
+      let targetRespId = "107a58fc-e65c-459c-95e8-cdc524d72042";
+
+      try {
+        const { data: adminProfile } = await supabaseAdmin
+          .from("perfis")
+          .select("id, organizacao_id")
+          .not("organizacao_id", "is", null)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (adminProfile?.organizacao_id) {
+          targetOrgId = adminProfile.organizacao_id;
+          targetRespId = adminProfile.id;
+        } else {
+          const { data: sampleLead } = await supabaseAdmin
+            .from("leads")
+            .select("organizacao_id, responsavel_id")
+            .not("organizacao_id", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (sampleLead?.organizacao_id) {
+            targetOrgId = sampleLead.organizacao_id;
+            if (sampleLead.responsavel_id) targetRespId = sampleLead.responsavel_id;
+          }
+        }
+      } catch (orgErr) {
+        console.error("Erro ao resolver targetOrgId:", orgErr);
+      }
+
       // 3. REGRA DE FILTRO: Buscar se o número de telefone pertence a um LEAD EXISTENTE no CRM
       const last4 = rawNumber.slice(-4);
       const mid4 = rawNumber.length >= 8 ? rawNumber.slice(-8, -4) : "";
@@ -74,17 +108,17 @@ serve(async (req) => {
 
       const { data: leads } = await supabaseAdmin
         .from("leads")
-        .select("id, nome, celular, atendimento_ia, organizacao_id")
+        .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
         .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%,celular.ilike.%${withHyphen}%,celular.ilike.%${withSpace}%`)
         .limit(5);
 
       if (leads && leads.length > 0) {
         matchedLead = leads[0];
       } else {
-        // Fallback: busca os leads e compara os dígitos limpos do celular em memória
+        // Fallback 1: busca os leads e compara os dígitos limpos do celular em memória
         const { data: allLeads } = await supabaseAdmin
           .from("leads")
-          .select("id, nome, celular, atendimento_ia, organizacao_id")
+          .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
           .order("created_at", { ascending: false })
           .limit(200);
 
@@ -97,13 +131,41 @@ serve(async (req) => {
         }
       }
 
-      // Se o número NÃO pertence a nenhum lead existente no CRM, CRIA AUTOMATICAMENTE o lead no CRM
-      if (!matchedLead) {
+      // Fallback 2: Se não encontrou por telefone e temos pushName (ex: Dorys Pedrozo ou contato com LID)
+      if (!matchedLead && pushName) {
+        const cleanPushName = pushName.trim();
+        const firstName = cleanPushName.split(" ")[0];
+        if (firstName.length >= 3) {
+          const { data: nameLeads } = await supabaseAdmin
+            .from("leads")
+            .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
+            .ilike("nome", `%${firstName}%`)
+            .limit(5);
+
+          if (nameLeads && nameLeads.length > 0) {
+            matchedLead = nameLeads[0];
+          }
+        }
+      }
+
+      // Se o lead existe, garante que esteja vinculado à organização correta do CRM
+      if (matchedLead) {
+        if (!matchedLead.organizacao_id || matchedLead.organizacao_id !== targetOrgId || !matchedLead.responsavel_id) {
+          await supabaseAdmin
+            .from("leads")
+            .update({
+              organizacao_id: targetOrgId,
+              responsavel_id: matchedLead.responsavel_id || targetRespId
+            })
+            .eq("id", matchedLead.id);
+          matchedLead.organizacao_id = targetOrgId;
+          matchedLead.responsavel_id = matchedLead.responsavel_id || targetRespId;
+        }
+      } else {
+        // Se o número NÃO pertence a nenhum lead existente no CRM, CRIA AUTOMATICAMENTE o lead no CRM
         console.log(`[Filtro WhatsApp] Criando novo lead automaticamente no CRM para o número ${rawNumber}...`);
         try {
-          const { data: orgs } = await supabaseAdmin.from("organizacoes").select("id").limit(1);
-          const defaultOrgId = orgs && orgs.length > 0 ? orgs[0].id : null;
-          const displayName = pushName ? `Lead ${pushName}` : `Lead WhatsApp (${rawNumber.slice(-4)})`;
+          const displayName = pushName ? pushName.replace(/^Lead\s+/i, "").trim() : `Contato WhatsApp (${rawNumber.slice(-4)})`;
 
           const { data: newLead, error: createErr } = await supabaseAdmin
             .from("leads")
@@ -112,14 +174,15 @@ serve(async (req) => {
               celular: rawNumber,
               status: "novo_lead",
               atendimento_ia: true,
-              organizacao_id: defaultOrgId,
+              organizacao_id: targetOrgId,
+              responsavel_id: targetRespId,
               dados_cadastro: {
                 nome: displayName,
                 telefone: rawNumber,
                 origem: "WhatsApp Entrante"
               }
             } as any)
-            .select("id, nome, celular, atendimento_ia, organizacao_id")
+            .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
             .single();
 
           if (!createErr && newLead) {
@@ -130,6 +193,19 @@ serve(async (req) => {
         } catch (autoErr) {
           console.error("Exceção ao auto-criar lead:", autoErr);
         }
+      }
+
+      // Auto-reparo preventivo: atribui organizacao_id aos leads órfãos recentes (como Dorys)
+      try {
+        await supabaseAdmin
+          .from("leads")
+          .update({
+            organizacao_id: targetOrgId,
+            responsavel_id: targetRespId
+          })
+          .or(`organizacao_id.is.null,celular.ilike.%163904676180218%,nome.ilike.%Dorys%`);
+      } catch (patchErr) {
+        // Ignora silenciosamente
       }
 
       if (!matchedLead) {
@@ -148,6 +224,12 @@ serve(async (req) => {
           content: incomingText,
           role: msgRole,
         });
+
+      // Atualiza o updated_at do lead para subir imediatamente ao topo da lista no CRM
+      await supabaseAdmin
+        .from("leads")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", matchedLead.id);
 
       if (msgErr) {
         console.error("Erro ao registrar chat_messages:", msgErr);

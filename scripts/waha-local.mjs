@@ -33,6 +33,7 @@ let currentStatus = "STARTING"; // STARTING, SCAN_QR_CODE, WORKING, STOPPED
 let currentQrText = null;
 let currentQrPngBuffer = null;
 let currentQrDataUrl = null;
+const contactNameCache = new Map();
 
 // Garante que a pasta de sessão existe
 if (!fs.existsSync(SESSION_DIR)) {
@@ -48,6 +49,12 @@ async function forwardToSupabaseWebhook(msg) {
     const remoteJid = msg.key?.remoteJid;
     if (!remoteJid || remoteJid.includes("@g.us") || remoteJid === "status@broadcast") {
       return; // Ignora grupos e status por enquanto
+    }
+
+    if (msg.pushName) {
+      contactNameCache.set(remoteJid, msg.pushName);
+    } else if (contactNameCache.has(remoteJid)) {
+      msg.pushName = contactNameCache.get(remoteJid);
     }
 
     const text =

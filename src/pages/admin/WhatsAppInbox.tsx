@@ -75,12 +75,12 @@ export default function WhatsAppInbox() {
         }
       });
 
-      // 2. Busca TODOS os leads da organização no CRM
-      const { data: leadsData, error: leadError } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("organizacao_id", profile.organizacao_id)
-        .order("created_at", { ascending: false });
+      // 2. Busca TODOS os leads da organização no CRM (incluindo possíveis leads recém-criados pelo webhook sem org ou sob responsabilidade do usuário)
+      let leadsQuery = supabase.from("leads").select("*");
+      if (profile?.organizacao_id) {
+        leadsQuery = leadsQuery.or(`organizacao_id.eq.${profile.organizacao_id},responsavel_id.eq.${profile.id},organizacao_id.is.null`);
+      }
+      const { data: leadsData, error: leadError } = await leadsQuery.order("created_at", { ascending: false });
 
       if (leadError) throw leadError;
 
@@ -96,11 +96,23 @@ export default function WhatsAppInbox() {
 
       setAllLeads(formatted);
 
-      // Se nenhum lead estiver selecionado, seleciona o primeiro com conversa ativa ou primeiro lead geral
-      if (!selectedLead && formatted.length > 0) {
+      // Mantém a seleção atual do usuário sem forçar reset para o primeiro lead a cada polling
+      setSelectedLead((prev) => {
+        if (prev) {
+          const updated = formatted.find(l => l.id === prev.id);
+          return updated || prev;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const urlLeadId = params.get("leadId") || params.get("id");
+        if (urlLeadId) {
+          const fromUrl = formatted.find(l => l.id === urlLeadId);
+          if (fromUrl) return fromUrl;
+        }
+
         const firstWithChat = formatted.find(l => l.has_chat_history) || formatted[0];
-        setSelectedLead(firstWithChat);
-      }
+        return firstWithChat || null;
+      });
     } catch (err) {
       console.error("Erro ao carregar dados do WhatsApp Inbox:", err);
     } finally {
@@ -169,12 +181,12 @@ export default function WhatsAppInbox() {
   }, [allLeads, inboxTab, statusFilter, searchTerm]);
 
   const toggleWhatsAppMode = () => {
-    const nextMode = waMode === "evolution" ? "web" : "evolution";
+    const nextMode = waMode === "waha" ? "web" : "waha";
     setWaMode(nextMode);
     saveWhatsAppMode(nextMode);
     toast({
       title: "Modo WhatsApp alterado",
-      description: nextMode === "evolution" ? "Disparo automático via Evolution API / Make" : "Abertura direta via WhatsApp Web"
+      description: nextMode === "waha" ? "Disparo direto (WAHA Local)" : "Abertura direta via WhatsApp Web"
     });
   };
 
@@ -206,13 +218,13 @@ export default function WhatsAppInbox() {
             type="button"
             onClick={toggleWhatsAppMode}
             className={`px-3 py-1.5 text-xs font-black uppercase rounded-xl border transition-all flex items-center gap-1.5 ${
-              waMode === "evolution"
+              waMode === "waha"
                 ? "bg-indigo-900/60 border-indigo-500 text-indigo-200"
                 : "bg-emerald-900/60 border-emerald-500 text-emerald-200"
             }`}
           >
             <Zap className="h-3.5 w-3.5 text-amber-400" />
-            <span>Modo: {waMode === "evolution" ? "Evolution API" : "WhatsApp Web"}</span>
+            <span>Modo: {waMode === "waha" ? "WhatsApp Direto (WAHA)" : "WhatsApp Web"}</span>
           </button>
 
           <Button
