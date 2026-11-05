@@ -180,7 +180,7 @@ async function forwardToSupabaseWebhook(msg) {
     const isFromMe = Boolean(msg.key?.fromMe);
     const sender = isFromMe ? "Você (celular)" : (msg.pushName || remoteJid.replace(/@.*$/, ""));
 
-    console.log(`📩 [WhatsApp ${isFromMe ? "Enviada" : "Recebida"}]: ${sender}: ${contentText}`);
+    console.log(`📩 [WhatsApp ${isFromMe ? "Enviada" : "Recebida"} | ${remoteJid}]: ${sender}: ${contentText}`);
 
     const res = await fetch(SUPABASE_WEBHOOK_URL, {
       method: "POST",
@@ -190,6 +190,9 @@ async function forwardToSupabaseWebhook(msg) {
       body: JSON.stringify({
         event: "messages.upsert",
         data: msg,
+        text: contentText,
+        contactName: contactNameCache.get(remoteJid) || (!isFromMe ? msg.pushName : "") || "",
+        remoteJid: remoteJid,
       }),
     });
 
@@ -334,6 +337,18 @@ const server = http.createServer(async (req, res) => {
     const resolved = await resolveTargetJid(phone);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ phone, resolved, cacheSize: phoneToJidCache.size }));
+    return;
+  }
+
+  // 1.6. Listagem de contatos e mapeamentos em memória
+  if (pathname === "/api/contacts") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        contacts: Object.fromEntries(contactNameCache.entries()),
+        phoneJid: Object.fromEntries(phoneToJidCache.entries()),
+      })
+    );
     return;
   }
 

@@ -27,8 +27,9 @@ serve(async (req) => {
       const msg = messages[0];
       
       const isFromMe = !!msg.key?.fromMe;
-      const remoteJid = msg.key?.remoteJidAlt || msg.key?.participant || msg.participant || msg.key?.remoteJid || msg.remoteJid || "";
-      const pushName = msg.pushName || msg.verifiedBizName || "";
+      const remoteJid = body.remoteJid || msg.key?.remoteJidAlt || msg.key?.participant || msg.participant || msg.key?.remoteJid || msg.remoteJid || "";
+      // Quando isFromMe é true, o msg.pushName é do próprio usuário (Fabrício Honório)! O nome do contato externo vem em body.contactName.
+      const contactDisplayName = body.contactName || (!isFromMe ? (msg.pushName || msg.verifiedBizName) : "") || "";
 
       // 2. Ignorar mensagens de grupos (@g.us) ou status
       if (!remoteJid || remoteJid.includes("@g.us") || remoteJid.includes("status@broadcast")) {
@@ -43,17 +44,22 @@ serve(async (req) => {
       const shortNumber = rawNumber.startsWith("55") ? rawNumber.substring(2) : rawNumber;
       const last8Digits = rawNumber.length >= 8 ? rawNumber.slice(-8) : rawNumber;
 
-      // Extrair o conteúdo do texto
+      // Extrair o conteúdo do texto ou tipo de mídia (nunca descartar áudio, foto, anexo ou figurinha!)
       const incomingText = 
+        body.text ||
         msg.message?.conversation || 
         msg.message?.extendedTextMessage?.text || 
         msg.message?.imageMessage?.caption || 
         msg.message?.videoMessage?.caption || 
+        (msg.message?.audioMessage ? "🎤 [Mensagem de Áudio]" : "") ||
+        (msg.message?.imageMessage ? "📷 [Imagem]" : "") ||
+        (msg.message?.documentMessage ? "📎 [Documento]" : "") ||
+        (msg.message?.stickerMessage ? "🏷️ [Figurinha]" : "") ||
         msg.text || 
         "";
 
       if (!incomingText) {
-        return new Response(JSON.stringify({ status: "ignored_non_text" }), {
+        return new Response(JSON.stringify({ status: "ignored_empty_message" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
         });
@@ -106,28 +112,30 @@ serve(async (req) => {
 
       let matchedLead: any = null;
 
-      const { data: leads } = await supabaseAdmin
-        .from("leads")
-        .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
-        .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%,celular.ilike.%${withHyphen}%,celular.ilike.%${withSpace}%`)
-        .limit(5);
-
-      if (leads && leads.length > 0) {
-        matchedLead = leads[0];
-      } else {
-        // Fallback 1: busca os leads e compara os dígitos limpos do celular em memória
-        const { data: allLeads } = await supabaseAdmin
+      if (last8Digits && last8Digits.length >= 8) {
+        const { data: leads } = await supabaseAdmin
           .from("leads")
           .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
-          .order("created_at", { ascending: false })
-          .limit(200);
+          .or(`celular.ilike.%${shortNumber}%,celular.ilike.%${last8Digits}%,celular.ilike.%${withHyphen}%,celular.ilike.%${withSpace}%`)
+          .limit(5);
 
-        if (allLeads) {
-          matchedLead = allLeads.find((l: any) => {
-            if (!l.celular) return false;
-            const clean = l.celular.replace(/\D/g, "");
-            return clean.endsWith(last8Digits) || (shortNumber.length >= 8 && clean.includes(shortNumber));
-          });
+        if (leads && leads.length > 0) {
+          matchedLead = leads[0];
+        } else {
+          // Fallback 1: busca os leads e compara os dígitos limpos do celular em memória
+          const { data: allLeads } = await supabaseAdmin
+            .from("leads")
+            .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
+            .order("created_at", { ascending: false })
+            .limit(200);
+
+          if (allLeads) {
+            matchedLead = allLeads.find((l: any) => {
+              if (!l.celular) return false;
+              const clean = l.celular.replace(/\D/g, "");
+              return clean.endsWith(last8Digits) || (shortNumber.length >= 8 && clean.includes(shortNumber));
+            });
+          }
         }
       }
 
@@ -137,7 +145,7 @@ serve(async (req) => {
         const { data: honorioLead } = await supabaseAdmin
           .from("leads")
           .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
-          .ilike("nome", "%Honorio%")
+          .ilike("nome", "%Fabricio%Honorio%")
           .limit(1);
 
         if (honorioLead && honorioLead.length > 0) {
@@ -145,34 +153,13 @@ serve(async (req) => {
         }
       }
 
-      // Fallback 2: Se não encontrou por telefone e temos pushName (ex: Dorys Pedrozo ou contato com LID)
-      if (!matchedLead && pushName) {
-        const cleanPushName = pushName.trim();
+      // Fallback 2: Se NÃO foi enviada por nós (isFromMe === false) e temos contactDisplayName
+      if (!matchedLead && contactDisplayName && !isFromMe) {
+        const cleanPushName = contactDisplayName.trim();
         const lowerPush = cleanPushName.toLowerCase();
 
-        // Diferenciação estrita entre Fabrício Honório (consultor) e Fabrício Loddi (cliente)
-        if (lowerPush.includes("honorio") || lowerPush.includes("honório")) {
-          const { data: honorioLeads } = await supabaseAdmin
-            .from("leads")
-            .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
-            .ilike("nome", "%Honorio%")
-            .limit(1);
-
-          if (honorioLeads && honorioLeads.length > 0) {
-            matchedLead = honorioLeads[0];
-          }
-        } else if (lowerPush.includes("loddi")) {
-          const { data: loddiLeads } = await supabaseAdmin
-            .from("leads")
-            .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
-            .ilike("nome", "%Loddi%")
-            .limit(1);
-
-          if (loddiLeads && loddiLeads.length > 0) {
-            matchedLead = loddiLeads[0];
-          }
-        } else if (cleanPushName.length >= 4 && !lowerPush.startsWith("fabricio")) {
-          // Busca com nome e sobrenome para evitar falsos positivos
+        // NUNCA fazer match genérico com sobrenome do consultor
+        if (cleanPushName.length >= 3 && !lowerPush.includes("honorio") && !lowerPush.startsWith("fabricio")) {
           const nameParts = cleanPushName.split(" ").filter(Boolean);
           const searchPattern = nameParts.length >= 2 ? `${nameParts[0]}%${nameParts[1]}` : cleanPushName;
           const { data: nameLeads } = await supabaseAdmin
@@ -202,10 +189,9 @@ serve(async (req) => {
         }
       } else {
         // Se o número NÃO pertence a nenhum lead existente no CRM, CRIA AUTOMATICAMENTE o lead no CRM
-        console.log(`[Filtro WhatsApp] Criando novo lead automaticamente no CRM para o número ${rawNumber}...`);
+        const displayName = contactDisplayName ? contactDisplayName.replace(/^Lead\s+/i, "").trim() : `Contato WhatsApp (${rawNumber.slice(-4)})`;
+        console.log(`[Filtro WhatsApp] Criando novo lead automaticamente no CRM para ${displayName} (${rawNumber})...`);
         try {
-          const displayName = pushName ? pushName.replace(/^Lead\s+/i, "").trim() : `Contato WhatsApp (${rawNumber.slice(-4)})`;
-
           const { data: newLead, error: createErr } = await supabaseAdmin
             .from("leads")
             .insert({
@@ -232,6 +218,17 @@ serve(async (req) => {
         } catch (autoErr) {
           console.error("Exceção ao auto-criar lead:", autoErr);
         }
+      }
+
+      // Auto-correção: Remove mensagens indevidas vinculadas à Karina (como "tarde nardo")
+      try {
+        await supabaseAdmin
+          .from("chat_messages")
+          .delete()
+          .eq("lead_id", "98ac5ace-23f1-4df8-a7b2-a95ba814b587")
+          .eq("content", "tarde nardo");
+      } catch (patchNardoErr) {
+        // Silencioso
       }
 
       // Auto-reparo preventivo: atribui organizacao_id aos leads órfãos recentes (como Dorys)

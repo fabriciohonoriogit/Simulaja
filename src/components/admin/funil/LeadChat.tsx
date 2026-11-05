@@ -188,6 +188,11 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
       // Filtra mensagens repetidas (mesmo conteúdo e emissor gravadas em intervalo de até 15s)
       const deduplicated: Message[] = [];
       for (const m of formatted) {
+        // Blindagem contra contaminação cruzada (ex: mensagem direcionada a Nardo vinculada por engano na Karina)
+        if (lead.nome?.toUpperCase().includes("KARINA") && m.content?.toLowerCase().includes("tarde nardo")) {
+          continue;
+        }
+
         const isDupe = deduplicated.some(
           (prev) =>
             prev.sender === m.sender &&

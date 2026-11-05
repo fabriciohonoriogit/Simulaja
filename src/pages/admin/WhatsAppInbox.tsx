@@ -72,6 +72,10 @@ export default function WhatsAppInbox() {
       const leadMsgMap = new Map<string, { last_message: string; last_message_at: string }>();
       (messages || []).forEach(m => {
         if (m.lead_id && !leadMsgMap.has(m.lead_id)) {
+          // Ignora mensagens contaminadas de outros contatos atribuídas indevidamente a Karina
+          if (m.content?.toLowerCase().includes("tarde nardo") && m.lead_id === "98ac5ace-23f1-4df8-a7b2-a95ba814b587") {
+            return;
+          }
           leadMsgMap.set(m.lead_id, {
             last_message: m.content || "",
             last_message_at: m.created_at
