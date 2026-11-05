@@ -29,7 +29,7 @@ import { VibeProspectingModal } from "@/components/admin/VibeProspectingModal";
 import { RadarCidadeModal } from "@/components/admin/RadarCidadeModal";
 import { LeadEnrichmentWidget } from "@/components/admin/LeadEnrichmentWidget";
 import { formatToUpper, formatToFourDigits } from "@/lib/formatters";
-import { sendWhatsAppMessage, getWhatsAppMode } from "@/services/evolutionApiService";
+import { sendWhatsAppMessage, getWhatsAppMode, getWhatsAppDirectUrl } from "@/services/evolutionApiService";
 import { WhatsAppIcon, TelegramIcon } from "@/components/SocialIcons";
 import { telegramService } from "@/services/telegramService";
 import { Input } from "@/components/ui/input";
@@ -455,30 +455,34 @@ export default function Leads() {
                               return;
                             }
                             const mode = getWhatsAppMode();
+                            const clean = l.celular.replace(/\D/g, "");
+                            const msgText = `Olá ${l.nome}! Tudo bem? Sou da equipe do consórcio, vi seu interesse e gostaria de tirar suas dúvidas sobre o planejamento.`;
+
                             if (mode === "web") {
-                              const clean = l.celular.replace(/\D/g, "");
-                              window.open(`https://wa.me/55${clean}?text=Olá!`, "_blank");
+                              const directUrl = getWhatsAppDirectUrl(clean, msgText);
+                              window.open(directUrl, "_blank");
                             } else {
                               const providerLabel = mode === "waha" ? "WAHA" : "Evolution API";
-                              toast.info(`Enviando mensagem via ${providerLabel} para ${l.nome}...`);
+                              toast.info(`Enviando direto via ${providerLabel} para ${l.nome}...`);
                               const res = await sendWhatsAppMessage({
                                 number: l.celular,
-                                text: `Olá ${l.nome}! Tudo bem? Sou da equipe do consórcio, vi seu interesse e gostaria de tirar suas dúvidas sobre o planejamento.`,
+                                text: msgText,
                                 leadId: l.id,
                                 leadNome: l.nome,
                                 organizacaoId: l.organizacao_id
                               });
                               if (res.success) {
                                 toast.success(res.viaMake ? "Enviado via Make.com!" : `Mensagem enviada via ${providerLabel}!`);
-                              } else if (res.webUrl) {
-                                window.open(res.webUrl, "_blank");
                               } else {
-                                toast.error(res.error || `Falha ao enviar via ${providerLabel}`);
+                                // Se o servidor estiver offline, abre na hora no wa.me para nunca travar o atendimento
+                                toast.error(res.error || `Servidor ${providerLabel} não respondeu. Abrindo no WhatsApp Direto...`);
+                                const directUrl = getWhatsAppDirectUrl(clean, msgText);
+                                window.open(directUrl, "_blank");
                               }
                             }
                           }}
                           className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors"
-                          title="Enviar WhatsApp (Evolution API / Make)"
+                          title="WhatsApp (WAHA Direto / wa.me)"
                         >
                           <WhatsAppIcon className="h-3.5 w-3.5" />
                         </button>

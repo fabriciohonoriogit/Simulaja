@@ -44,14 +44,17 @@ export interface EvolutionConfig {
 export const getWhatsAppMode = (): WhatsAppMode => {
   if (typeof window === "undefined") return "web";
   const saved = localStorage.getItem("whatsapp_mode") as WhatsAppMode;
-  if (saved && (saved === "waha" || saved === "web" || saved === "evolution")) {
+  if (saved === "waha" || saved === "web") {
     return saved;
+  }
+  // Se estava salvo como evolution, migra automaticamente para waha ou web se evolution nao tiver servidor publico
+  if (saved === "evolution") {
+    if (isEvolutionConfigured()) return "evolution";
+    return isWahaConfigured() ? "waha" : "web";
   }
   // Se o WAHA estiver configurado, adota WAHA por padrão para envio direto no CRM
   if (isWahaConfigured()) return "waha";
-  // Se houver Evolution API configurada no navegador
-  if (isEvolutionConfigured()) return "evolution";
-  // Padrão seguro sem servidor: WhatsApp Web / wa.me Direto
+  // Padrão seguro universal sem servidor: WhatsApp Direto (wa.me)
   return "web";
 };
 
