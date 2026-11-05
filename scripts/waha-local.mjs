@@ -155,8 +155,14 @@ async function forwardToSupabaseWebhook(msg) {
     // Registra mapeamento do JID real do contato no cache imediatamente
     recordJidMapping(remoteJid, remoteJid);
 
-    if (msg.pushName) {
-      contactNameCache.set(remoteJid, msg.pushName);
+    const isFromMe = Boolean(msg.key?.fromMe);
+
+    // NUNCA salvar o pushName do consultor (Fabrício) como nome do cliente/contato!
+    if (!isFromMe && msg.pushName) {
+      const lower = msg.pushName.toLowerCase();
+      if (!lower.includes("honorio") && !lower.includes("fabricio")) {
+        contactNameCache.set(remoteJid, msg.pushName);
+      }
     } else if (contactNameCache.has(remoteJid)) {
       msg.pushName = contactNameCache.get(remoteJid);
     }
@@ -177,10 +183,20 @@ async function forwardToSupabaseWebhook(msg) {
     }
 
     const contentText = text || (isAudio ? "🎤 [Áudio]" : isImage ? "📷 [Imagem]" : "📎 [Documento]");
-    const isFromMe = Boolean(msg.key?.fromMe);
     const sender = isFromMe ? "Você (celular)" : (msg.pushName || remoteJid.replace(/@.*$/, ""));
 
     console.log(`📩 [WhatsApp ${isFromMe ? "Enviada" : "Recebida"} | ${remoteJid}]: ${sender}: ${contentText}`);
+
+    // Garante que o contactName nunca seja o próprio Fabrício Honório
+    let safeContactName = "";
+    if (!isFromMe) {
+      safeContactName = contactNameCache.get(remoteJid) || msg.pushName || "";
+    } else if (contactNameCache.has(remoteJid)) {
+      safeContactName = contactNameCache.get(remoteJid) || "";
+    }
+    if (safeContactName.toLowerCase().includes("honorio") || safeContactName.toLowerCase().includes("fabricio")) {
+      safeContactName = "";
+    }
 
     const res = await fetch(SUPABASE_WEBHOOK_URL, {
       method: "POST",
@@ -191,7 +207,7 @@ async function forwardToSupabaseWebhook(msg) {
         event: "messages.upsert",
         data: msg,
         text: contentText,
-        contactName: contactNameCache.get(remoteJid) || (!isFromMe ? msg.pushName : "") || "",
+        contactName: safeContactName,
         remoteJid: remoteJid,
       }),
     });

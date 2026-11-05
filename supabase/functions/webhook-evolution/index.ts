@@ -176,6 +176,22 @@ serve(async (req) => {
 
       // Se o lead existe, garante que esteja vinculado à organização correta do CRM
       if (matchedLead) {
+        // Auto-correção: Se o lead tem nome genérico ou foi registrado com nome do consultor e temos o nome real do cliente
+        if (contactDisplayName && !isFromMe) {
+          const currentName = (matchedLead.nome || "").toLowerCase();
+          const cleanDisplayName = contactDisplayName.trim();
+          const lowerDisplay = cleanDisplayName.toLowerCase();
+          if (
+            !lowerDisplay.includes("honorio") &&
+            !lowerDisplay.startsWith("fabricio") &&
+            (currentName.includes("fabricio") || currentName.includes("contato whatsapp") || currentName.startsWith("lead"))
+          ) {
+            console.log(`[Correção Automática Lead] Atualizando nome do lead ${matchedLead.id} de "${matchedLead.nome}" para "${cleanDisplayName}"`);
+            await supabaseAdmin.from("leads").update({ nome: cleanDisplayName }).eq("id", matchedLead.id);
+            matchedLead.nome = cleanDisplayName;
+          }
+        }
+
         if (!matchedLead.organizacao_id || matchedLead.organizacao_id !== targetOrgId || !matchedLead.responsavel_id) {
           await supabaseAdmin
             .from("leads")
@@ -189,7 +205,10 @@ serve(async (req) => {
         }
       } else {
         // Se o número NÃO pertence a nenhum lead existente no CRM, CRIA AUTOMATICAMENTE o lead no CRM
-        const displayName = contactDisplayName ? contactDisplayName.replace(/^Lead\s+/i, "").trim() : `Contato WhatsApp (${rawNumber.slice(-4)})`;
+        let displayName = contactDisplayName ? contactDisplayName.replace(/^Lead\s+/i, "").trim() : `Contato WhatsApp (${rawNumber.slice(-4)})`;
+        if (displayName.toLowerCase().includes("honorio") || displayName.toLowerCase().startsWith("fabricio")) {
+          displayName = `Contato WhatsApp (${rawNumber.slice(-4)})`;
+        }
         console.log(`[Filtro WhatsApp] Criando novo lead automaticamente no CRM para ${displayName} (${rawNumber})...`);
         try {
           const { data: newLead, error: createErr } = await supabaseAdmin

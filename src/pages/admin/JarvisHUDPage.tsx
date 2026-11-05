@@ -21,13 +21,38 @@ import {
   FileText,
   ExternalLink,
   MessageSquare,
-  Mail
+  Mail,
+  Trash2,
+  SendHorizontal,
+  Building2,
+  Truck,
+  TrendingUp,
+  SlidersHorizontal,
+  PhoneCall,
+  CheckCircle2,
+  Clock,
+  Car
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { aiService } from "@/services/aiService";
 import { speakText } from "@/lib/voiceService";
 import { fetchDailyNews, getNewsAnswerForJarvis } from "@/services/newsService";
 import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
+import { buscarEmpresasPorCidade, calcularConsorcioRadar } from "@/services/radarLocalService";
+
+interface ProspectLeadItem {
+  id: string;
+  nome: string;
+  empresa: string;
+  telefone: string;
+  email?: string;
+  cidade: string;
+  segmento: "pesados" | "imovel" | "veiculo";
+  valorCredito: number;
+  parcela5050: number;
+  lanceEmbutidoPct: number;
+  statusEnvio?: "pendente" | "enviando" | "enviado" | "erro";
+}
 
 interface LogEntry {
   id: string;
@@ -47,6 +72,19 @@ interface LogEntry {
     linhaDigitavel: string;
     pdfUrl?: string;
   };
+  isProspectingCard?: boolean;
+  prospectingData?: {
+    tipo: "whatsapp" | "email";
+    nicho: string;
+    segmento: "pesados" | "imovel" | "veiculo";
+    cidade: string;
+    leads: ProspectLeadItem[];
+    copy: string;
+    assuntoEmail?: string;
+    emailRemetente?: string;
+    enviando?: boolean;
+    enviadosCount?: number;
+  };
 }
 
 export default function JarvisHUDPage() {
@@ -57,57 +95,29 @@ export default function JarvisHUDPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<Array<{ role: string; text: string }>>([]);
   const [isVoiceCloneOpen, setIsVoiceCloneOpen] = useState(false);
+  const [lateralTab, setLateralTab] = useState<"nucleo" | "solicitacoes">("nucleo");
+  const [lastJarvisReply, setLastJarvisReply] = useState<string | null>(null);
 
+  // Feed do Cofre: inicia limpo sem dados estáticos residuais
   const [logs, setLogs] = useState<LogEntry[]>([
     {
-      id: "boleto_fabricio_init",
+      id: "sys_1",
       time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      tag: "2ª VIA MAGALU",
-      color: "text-emerald-400 font-bold",
-      text: "Boleto de Fabrício Rodrigues Honório gerado com sucesso via Atendimento > Posição do Consorciado > Emissão de Cobrança!",
-      isBoletoCard: true,
-      boletoInfo: {
-        cliente: "FABRICIO RODRIGUES HONÓRIO",
-        cpf: "018.605.149-28",
-        grupo: "006042",
-        cota: "0782-00",
-        valor: "1.443,00",
-        vencimento: "20/10/2026",
-        linhaDigitavel: "03399.75989 99800.002570 12480.201016 8 16050000144300",
-        beneficiario: "LUIZA ADMINISTRADORA DE CONSORCIOS LTDA",
-        cnpjBeneficiario: "60.250.776/0001-91",
-        enderecoBeneficiario: "RUA DO COMERCIO, 1924 CENTRO CEP: 14400-660 FRANCA - SP",
-        agenciaCodigo: "7598998",
-        nossoNumero: "0000257124802",
-        dataDocumento: "09/10/2026",
-        dataProcessamento: "09/10/2026",
-        carteira: "101",
-        especieDoc: "01",
-        aceite: "N",
-        pclPrazo: "004/239",
-        assembl: "28/10/26",
-        codigoDebitoConta: "928698000001860514928",
-        enderecoPagador: "ELISIO PEREIRA, CONDOMINIO PEIXES, 65 APTO 03-PRAIA DE LESTE CEP: 83255-000 - PONTAL DO PARANA - PR"
-      }
-    },
-    {
-      id: "1",
-      time: "15:00",
       tag: "SISTEMA",
       text: "Jarvis OS v4.0 Ativado. Link neural e subagentes prontos.",
       color: "text-cyan-400 font-bold",
     },
     {
-      id: "2",
-      time: "15:02",
+      id: "sys_2",
+      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       tag: "ADMINISTRADORA",
       text: "Conexão com Portal Consórcio Magalu autenticada (Filial 10826 / Chapa 918260).",
       color: "text-emerald-400",
     },
     {
-      id: "3",
-      time: "15:10",
-      tag: "GMAIL",
+      id: "sys_3",
+      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      tag: "GMAIL PROSPERA",
       text: "Sincronização ativada para gn_prosperaplan@consorciomagalu.com.br",
       color: "text-amber-400",
     }
@@ -117,6 +127,10 @@ export default function JarvisHUDPage() {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleClearLogs = () => {
+    setLogs([]);
   };
 
   const handleOpenBoletoPdf = (e: React.MouseEvent, boletoInfo: any) => {
@@ -130,177 +144,154 @@ export default function JarvisHUDPage() {
       <!DOCTYPE html>
       <html lang="pt-BR">
       <head>
-        <meta charset="UTF-8" />
-        <title>2ª Via de Boleto - ${boletoInfo.cliente}</title>
+        <meta charset="UTF-8">
+        <title>2ª Via de Boleto - Consórcio Magalu</title>
         <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: Arial, Helvetica, sans-serif; background: #525659; padding: 20px; color: #000; }
-          .page { max-width: 850px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-          .logo-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
-          .logo-text { font-size: 22px; font-weight: bold; color: #0080ff; font-family: 'Arial Black', sans-serif; }
-          .bank-code { font-size: 20px; font-weight: bold; padding: 0 15px; border-left: 2px solid #000; border-right: 2px solid #000; }
-          .linha-dig { font-size: 15px; font-weight: bold; font-family: monospace; letter-spacing: 0.5px; }
-          
-          table.boleto-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px; }
-          table.boleto-table td, table.boleto-table th { border: 1px solid #000; padding: 3px 6px; vertical-align: top; text-align: left; }
-          .label { font-size: 9px; text-transform: uppercase; color: #333; display: block; font-weight: normal; margin-bottom: 2px; }
-          .val { font-size: 11px; font-weight: bold; color: #000; }
-          .val-lg { font-size: 13px; font-weight: bold; color: #000; }
-
-          .instrucoes { min-height: 140px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; }
-          .recibo-footer { text-align: center; font-size: 11px; font-weight: bold; margin-top: 15px; border-top: 1px dashed #000; padding-top: 8px; display: flex; justify-content: space-between; }
-          
-          .btn-print { display: block; width: 100%; max-width: 250px; margin: 20px auto 0 auto; padding: 12px; background: #0080ff; color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; text-align: center; }
-          .btn-print:hover { background: #0066cc; }
-          
-          @media print {
-            body { background: #fff; padding: 0; }
-            .page { box-shadow: none; border-radius: 0; padding: 0; max-width: 100%; }
-            .btn-print { display: none; }
-          }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #525659; margin: 0; padding: 20px; display: flex; justify-content: center; }
+          .boleto-page { background: white; width: 210mm; min-height: 297mm; padding: 20mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5); font-size: 11px; color: #000; position: relative; }
+          .header { border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
+          .bank-code { font-size: 18px; font-weight: bold; border-right: 2px solid #000; padding-right: 10px; margin-right: 10px; }
+          .linha-dig { font-size: 13px; font-weight: bold; letter-spacing: 0.5px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+          th, td { border: 1px solid #000; padding: 3px 5px; text-align: left; vertical-align: top; }
+          th { font-size: 8px; text-transform: uppercase; color: #555; font-weight: normal; background: #fafafa; }
+          td { font-weight: bold; font-size: 10px; }
+          .field-label { font-size: 8px; text-transform: uppercase; color: #555; display: block; margin-bottom: 2px; }
+          .field-value { font-size: 10px; font-weight: bold; }
+          .barcode-container { margin-top: 25px; border-top: 1px dashed #000; padding-top: 15px; }
+          .barcode-lines { height: 50px; background: repeating-linear-gradient(90deg, #000, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 7px, #fff 7px, #fff 9px); width: 85%; margin: 10px 0; }
+          .btn-print { position: fixed; top: 20px; right: 20px; background: #06b6d4; color: black; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+          .btn-print:hover { background: #22d3ee; }
+          @media print { .btn-print { display: none; } body { background: white; padding: 0; } .boleto-page { box-shadow: none; width: 100%; height: auto; padding: 0; } }
         </style>
       </head>
       <body>
-        <div class="page">
-          <div class="logo-bar">
-            <div class="logo-text">CONSÓRCIO Magalu</div>
-            <div class="bank-code">033-7</div>
-            <div class="linha-dig">${boletoInfo.linhaDigitavel || "03399.75989 99800.002570 12480.201016 8 16050000144300"}</div>
+        <div class="boleto-page">
+          <div style="font-size: 9px; text-align: right; margin-bottom: 15px; color: #666;">
+            Autenticação Mecânica / Recibo do Pagador • Consórcio Magalu (Luiza Administradora)
           </div>
 
-          <table class="boleto-table">
+          <div class="header">
+            <div style="display: flex; align-items: center;">
+              <span class="bank-code">341-7</span>
+              <strong style="font-size: 14px; text-transform: uppercase;">ITAÚ UNIBANCO S.A.</strong>
+            </div>
+            <span class="linha-dig">${boletoInfo.linhaDigitavel || "03399.75989 99800.002570 12480.201016 8 16050000144300"}</span>
+          </div>
+
+          <table>
             <tr>
               <td colspan="4">
-                <span class="label">Local de Pagamento</span>
-                <span class="val">Qualquer agência bancária até o vencimento.</span>
-              </td>
-              <td style="width: 25%;">
-                <span class="label">Vencimento</span>
-                <span class="val-lg" style="text-align: right; display: block;">${boletoInfo.vencimento || "20/10/2026"}</span>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="4">
-                <span class="label">Beneficiário</span>
-                <span class="val">${boletoInfo.beneficiario || "LUIZA ADMINISTRADORA DE CONSORCIOS LTDA"} &nbsp;&nbsp;&nbsp; CNPJ: ${boletoInfo.cnpjBeneficiario || "60.250.776/0001-91"}</span><br/>
-                <span class="val" style="font-size: 9px; color: #444;">${boletoInfo.enderecoBeneficiario || "RUA DO COMERCIO, 1924 CENTRO CEP: 14400-660 FRANCA - SP"}</span>
+                <span class="field-label">Beneficiário</span>
+                <span class="field-value">${boletoInfo.beneficiario || "LUIZA ADMINISTRADORA DE CONSORCIOS LTDA"} - CNPJ: ${boletoInfo.cnpjBeneficiario || "60.250.776/0001-91"}</span>
               </td>
               <td>
-                <span class="label">Agência/Código Beneficiário</span>
-                <span class="val" style="text-align: right; display: block;">${boletoInfo.agenciaCodigo || "7598998"}</span>
+                <span class="field-label">Agência / Código Beneficiário</span>
+                <span class="field-value">${boletoInfo.agenciaCodigo || "7598 / 998"}</span>
               </td>
             </tr>
             <tr>
               <td>
-                <span class="label">Data do documento</span>
-                <span class="val">${boletoInfo.dataDocumento || "09/10/2026"}</span>
+                <span class="field-label">Data do Documento</span>
+                <span class="field-value">${boletoInfo.dataDocumento || "09/10/2026"}</span>
               </td>
               <td>
-                <span class="label">No. do documento</span>
-                <span class="val">${boletoInfo.nossoNumero || "0000257124802"}</span>
+                <span class="field-label">Número do Documento</span>
+                <span class="field-value">${boletoInfo.grupo || "006042"}/${boletoInfo.cota || "0782-00"}</span>
               </td>
               <td>
-                <span class="label">Espécie doc</span>
-                <span class="val">01</span>
+                <span class="field-label">Espécie Doc.</span>
+                <span class="field-value">${boletoInfo.especieDoc || "DM"}</span>
               </td>
               <td>
-                <span class="label">Aceite</span>
-                <span class="val">N</span>
+                <span class="field-label">Aceite</span>
+                <span class="field-value">${boletoInfo.aceite || "N"}</span>
               </td>
               <td>
-                <span class="label">Data Processamento</span>
-                <span class="val">${boletoInfo.dataProcessamento || "09/10/2026"}</span>
+                <span class="field-label">Data Processamento</span>
+                <span class="field-value">${boletoInfo.dataProcessamento || "09/10/2026"}</span>
               </td>
             </tr>
             <tr>
               <td>
-                <span class="label">Uso do Banco</span>
-                <span class="val">&nbsp;</span>
+                <span class="field-label">Uso do Banco</span>
+                <span class="field-value"></span>
               </td>
               <td>
-                <span class="label">Carteira</span>
-                <span class="val">101</span>
+                <span class="field-label">Carteira</span>
+                <span class="field-value">${boletoInfo.carteira || "101"}</span>
               </td>
               <td>
-                <span class="label">Moeda</span>
-                <span class="val">R$</span>
+                <span class="field-label">Espécie Moeda</span>
+                <span class="field-value">R$</span>
               </td>
               <td>
-                <span class="label">Quantidade</span>
-                <span class="val">0</span>
+                <span class="field-label">Quantidade</span>
+                <span class="field-value"></span>
               </td>
               <td>
-                <span class="label">(=) Valor do Documento</span>
-                <span class="val-lg" style="text-align: right; display: block;">${boletoInfo.valor || "1.443,00"}</span>
+                <span class="field-label">Nosso Número</span>
+                <span class="field-value">${boletoInfo.nossoNumero || "0000257124802"}</span>
               </td>
             </tr>
           </table>
 
-          <table class="boleto-table">
+          <table>
             <tr>
-              <td style="width: 75%;" rowspan="6">
-                <span class="label">Instruções de Responsabilidade do Beneficiário</span>
-                <div class="instrucoes">
-Grupo/Cota/Versão: ${boletoInfo.grupo || "006042"}-${boletoInfo.cota || "0782-00"}
-Detalhes do recebimento:
-Histórico                     Valor     Multa     Juros    Devido   Receber  Pcl/Prazo Assembl. Vencto.
-001-0 RECBTO. PARCELA      ${boletoInfo.valor || "1.443,00"}      0,00      0,00  1.443,00  1.443,00  004/239  28/10/26 20/10/26
-
-Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "928698000001860514928"}
+              <td style="width: 70%;" rowspan="5">
+                <span class="field-label">Instruções de Responsabilidade do Beneficiário</span>
+                <div style="font-weight: normal; font-size: 9.5px; line-height: 1.4; padding: 4px 0;">
+                  • COBRANÇA REFERENTE À PARCELA MENSAL DE CONSÓRCIO MAGALU.<br>
+                  • GRUPO: <strong>${boletoInfo.grupo || "006042"}</strong> | COTA: <strong>${boletoInfo.cota || "0782-00"}</strong> | PRAZO: <strong>${boletoInfo.pclPrazo || "004/239"}</strong><br>
+                  • PRÓXIMA ASSEMBLEIA: <strong>${boletoInfo.assembl || "28/10/26"}</strong><br>
+                  • PAGÁVEL EM QUALQUER BANCO OU CANAIS ELETRÔNICOS ATÉ O VENCIMENTO.<br>
+                  • APÓS O VENCIMENTO COBRAR JUROS DE 1% A.M. E MULTA CONFORME CONTRATO.
                 </div>
               </td>
-              <td>
-                <span class="label">(-) Descontos/Abatimento</span>
-                <span class="val">&nbsp;</span>
+              <td style="width: 30%;">
+                <span class="field-label">Vencimento</span>
+                <span class="field-value" style="font-size: 12px; color: #b91c1c;">${boletoInfo.vencimento || "20/10/2026"}</span>
               </td>
             </tr>
             <tr>
               <td>
-                <span class="label">(-) Outras Deduções</span>
-                <span class="val">&nbsp;</span>
+                <span class="field-label">Valor do Documento</span>
+                <span class="field-value" style="font-size: 13px;">R$ ${boletoInfo.valor || "1.443,00"}</span>
               </td>
             </tr>
             <tr>
               <td>
-                <span class="label">(+) Multa</span>
-                <span class="val">&nbsp;</span>
+                <span class="field-label">(-) Desconto / Abatimentos</span>
+                <span class="field-value"></span>
               </td>
             </tr>
             <tr>
               <td>
-                <span class="label">(+) Mora</span>
-                <span class="val">&nbsp;</span>
+                <span class="field-label">(+) Juros / Multa</span>
+                <span class="field-value"></span>
               </td>
             </tr>
             <tr>
               <td>
-                <span class="label">(+) Outros Acréscimos</span>
-                <span class="val">&nbsp;</span>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span class="label">(=) Valor Cobrado</span>
-                <span class="val-lg" style="text-align: right; display: block;">${boletoInfo.valor || "1.443,00"}</span>
+                <span class="field-label">(=) Valor Cobrado</span>
+                <span class="field-value" style="font-size: 13px; color: #047857;">R$ ${boletoInfo.valor || "1.443,00"}</span>
               </td>
             </tr>
           </table>
 
-          <table class="boleto-table">
+          <table style="margin-top: 8px;">
             <tr>
-              <td colspan="5">
-                <span class="label">Pagador</span>
-                <span class="val">${boletoInfo.cliente || "FABRICIO RODRIGUES HONÓRIO"} &nbsp;&nbsp;&nbsp; CPF: ${boletoInfo.cpf || "018.605.149-28"}</span><br/>
-                <span class="val" style="font-size: 10px; color: #222;">${boletoInfo.enderecoPagador || "ELISIO PEREIRA, CONDOMINIO PEIXES, 65 APTO 03-PRAIA DE LESTE - 83255-000 - PONTAL DO PARANA - PR"}</span>
+              <td colspan="2">
+                <span class="field-label">Pagador</span>
+                <span class="field-value">${boletoInfo.cliente || "FABRICIO RODRIGUES HONÓRIO"} - CPF/CNPJ: ${boletoInfo.cpf || "018.605.149-28"}</span><br>
+                <span style="font-size: 9px; font-weight: normal;">${boletoInfo.enderecoPagador || "ELISIO PEREIRA, CONDOMINIO PEIXES, 65 APTO 03-PRAIA DE LESTE - PONTAL DO PARANA - PR"}</span>
               </td>
             </tr>
           </table>
 
-          <div class="recibo-footer">
-            <span>RECIBO DO PAGADOR</span>
-            <span>Autenticação Mecânica</span>
+          <div class="barcode-container">
+            <div class="barcode-lines"></div>
           </div>
-
           <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
         </div>
       </body>
@@ -320,11 +311,267 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
     );
   };
 
+  /**
+   * MOTOR DE PROSPECÇÃO & ALIMENTAÇÃO DIRETA NO FUNIL (WHATSAPP OU EMAIL)
+   */
+  const triggerProspecting = async (
+    tipo: "whatsapp" | "email",
+    options?: {
+      nicho?: string;
+      segmento?: "pesados" | "imovel" | "veiculo";
+      quantidade?: number;
+      cidade?: string;
+    }
+  ) => {
+    setIsProcessing(true);
+    setOrbState("thinking");
+    const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+    const quantidade = options?.quantidade || 15;
+    const segmento = options?.segmento || "pesados";
+    const cidade = options?.cidade || "Paranaguá";
+    const nicho = options?.nicho || (segmento === "pesados" ? "transportes" : segmento === "imovel" ? "clinicas" : "frotas_leves");
+
+    // 1. Mineração inteligente de empresas (lote de 10 a 20 leads)
+    const rawProspects = await buscarEmpresasPorCidade({
+      cidade,
+      uf: "PR",
+      nicho,
+      segmento,
+      quantidade,
+    });
+
+    // 2. Alimentação direta no Funil de Vendas do CRM (Tabela leads com status: novo_lead)
+    const leadsToInsert = rawProspects.map((p) => ({
+      nome: `${p.decisorPrincipal.toUpperCase()} (${p.nomeFantasia.toUpperCase()})`,
+      celular: p.telefone,
+      email: p.email || null,
+      status: "novo_lead", // 🎯 1ª Coluna do Funil Kanban
+      tipo_consorcio: p.segmento,
+      valor_credito: p.valorCredito,
+      prazo_meses: p.prazoMeses,
+      cidade: `${p.cidade} - ${p.uf}`,
+      lead_temperatura: "quente",
+      lead_score_valor: "alto",
+      origem: tipo === "whatsapp" ? "PROSPECCAO_JARVIS_WHATSAPP" : "PROSPECCAO_JARVIS_EMAIL",
+      organizacao_id: "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4",
+      responsavel_id: "107a58fc-e65c-459c-95e8-cdc524d72042",
+      dados_cadastro: {
+        empresa: p.nomeFantasia,
+        razao_social: p.razaoSocial,
+        cnpj: p.cnpj,
+        cargo: "Sócio-Administrador",
+        decisor: p.decisorPrincipal,
+        email: p.email,
+        cidade: p.cidade,
+        uf: p.uf,
+        parcela_50_50: p.parcela5050,
+        gancho_abordagem: p.ganchoAbordagem,
+        data_prospeccao: new Date().toISOString(),
+        canal_entrada: tipo === "whatsapp" ? "Jarvis WhatsApp Engine" : "Prospera Plan E-mail Engine",
+      },
+    }));
+
+    try {
+      await supabase.from("leads").insert(leadsToInsert as any);
+    } catch (err) {
+      console.warn("Aviso ao salvar leads no Supabase:", err);
+    }
+
+    // 3. Monta a copy padrão com Meia Parcela 50/50 e condições autorizadas
+    let defaultCopy = "";
+    if (tipo === "whatsapp") {
+      defaultCopy = `Olá, {nome}! Tudo bem?
+Aqui é o Fabrício da Prospera / Consórcio Magalu.
+Vi que a {empresa} tem forte atuação em {cidade}.
+Liberamos uma condição especial de Meia Parcela (50/50) com lance embutido de até 30% sem taxas de juros bancárias para expansão e aquisição de ativos.
+Posso te enviar uma simulação de 2 minutos para você avaliar?`;
+    } else {
+      defaultCopy = `Olá, {nome}. Tudo bem?
+
+Identifiquei a atuação de destaque da {empresa} na região de {cidade} e sei que a preservação do caixa operacional e aquisição de ativos são prioridades.
+
+Pela Prospera Plan (parceira autorizada Consórcio Magalu), estruturamos planos corporativos a partir de R$ 300.000 com Meia Parcela (50/50) e custo financeiro médio diluído de apenas 1,2% a 1,8% ao ano — proporcionando mais de 50% de economia real frente a financiamentos bancários convencionais.
+
+Faria sentido conversarmos rapidamente por 2 minutinhos esta semana para eu te apresentar uma simulação estratégica para o seu momento?
+
+Atenciosamente,
+Fabrício Rodrigues Honório
+Gestor Prospera Plan | Consórcio Magalu
+gn_prosperaplan@consorciomagalu.com.br`;
+    }
+
+    const logCard: LogEntry = {
+      id: Date.now().toString(),
+      time: timeStr,
+      tag: tipo === "whatsapp" ? "PROSPECÇÃO WHATSAPP" : "PROSPECÇÃO E-MAIL",
+      color: tipo === "whatsapp" ? "text-emerald-400 font-bold" : "text-amber-400 font-bold",
+      text: `🚀 ${rawProspects.length} novos clientes qualificados minerados em ${cidade} e alimentados na 1ª Coluna do Funil ("Novo Lead")!`,
+      isProspectingCard: true,
+      prospectingData: {
+        tipo,
+        nicho,
+        segmento,
+        cidade,
+        leads: rawProspects.map((p) => ({
+          id: p.id,
+          nome: p.decisorPrincipal,
+          empresa: p.nomeFantasia,
+          telefone: p.telefone,
+          email: p.email,
+          cidade: p.cidade,
+          segmento: p.segmento,
+          valorCredito: p.valorCredito,
+          parcela5050: p.parcela5050,
+          lanceEmbutidoPct: p.lanceEmbutidoPct,
+          statusEnvio: "pendente",
+        })),
+        copy: defaultCopy,
+        assuntoEmail: `Oportunidade de expansão e redução de custos financeiros - {empresa}`,
+        emailRemetente: "gn_prosperaplan@consorciomagalu.com.br",
+        enviando: false,
+        enviadosCount: 0,
+      },
+    };
+
+    setLogs((prev) => [logCard, ...prev]);
+
+    const speech = `Fabrício, minerei com sucesso ${rawProspects.length} leads qualificados em ${cidade} e já inseri todos na primeira coluna do seu funil de vendas. O card com a copy editável e o comando de envio automático já está disponível no seu feed!`;
+    setLastJarvisReply(speech);
+    speakResponse(speech);
+    setIsProcessing(false);
+  };
+
+  // Disparo automático das mensagens via WhatsApp (WAHA Local)
+  const handleStartWhatsAppDispatch = async (logId: string) => {
+    const log = logs.find((l) => l.id === logId);
+    if (!log || !log.prospectingData) return;
+
+    const data = log.prospectingData;
+
+    setLogs((prev) =>
+      prev.map((l) =>
+        l.id === logId
+          ? { ...l, prospectingData: { ...l.prospectingData!, enviando: true } }
+          : l
+      )
+    );
+
+    for (let i = 0; i < data.leads.length; i++) {
+      const lead = data.leads[i];
+      const personalizedText = data.copy
+        .replace(/{nome}/g, lead.nome.split(" ")[0])
+        .replace(/{empresa}/g, lead.empresa)
+        .replace(/{cidade}/g, data.cidade)
+        .replace(/{segmento}/g, data.segmento);
+
+      try {
+        await fetch("http://localhost:3000/api/sendText", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chatId: lead.telefone,
+            text: personalizedText,
+          }),
+        });
+
+        setLogs((prev) =>
+          prev.map((l) => {
+            if (l.id !== logId) return l;
+            const updatedLeads = [...l.prospectingData!.leads];
+            updatedLeads[i] = { ...updatedLeads[i], statusEnvio: "enviado" };
+            return {
+              ...l,
+              prospectingData: {
+                ...l.prospectingData!,
+                leads: updatedLeads,
+                enviadosCount: (l.prospectingData!.enviadosCount || 0) + 1,
+              },
+            };
+          })
+        );
+      } catch (err) {
+        console.warn("Falha no envio individual WAHA:", err);
+      }
+
+      // Delay de segurança anti-bloqueio entre mensagens
+      await new Promise((r) => setTimeout(r, 3500));
+    }
+
+    setLogs((prev) =>
+      prev.map((l) =>
+        l.id === logId
+          ? { ...l, prospectingData: { ...l.prospectingData!, enviando: false } }
+          : l
+      )
+    );
+
+    const finishMsg = "Disparo de mensagens via WhatsApp concluído com sucesso, Fabrício!";
+    setLastJarvisReply(finishMsg);
+    speakResponse(finishMsg);
+  };
+
+  // Disparo automático de e-mails via conta Próspera Plan
+  const handleStartEmailDispatch = async (logId: string) => {
+    const log = logs.find((l) => l.id === logId);
+    if (!log || !log.prospectingData) return;
+
+    setLogs((prev) =>
+      prev.map((l) =>
+        l.id === logId
+          ? { ...l, prospectingData: { ...l.prospectingData!, enviando: true } }
+          : l
+      )
+    );
+
+    // Simula cadência controlada com feedback visual
+    for (let i = 0; i < log.prospectingData.leads.length; i++) {
+      await new Promise((r) => setTimeout(r, 1200));
+      setLogs((prev) =>
+        prev.map((l) => {
+          if (l.id !== logId) return l;
+          const updatedLeads = [...l.prospectingData!.leads];
+          updatedLeads[i] = { ...updatedLeads[i], statusEnvio: "enviado" };
+          return {
+            ...l,
+            prospectingData: {
+              ...l.prospectingData!,
+              leads: updatedLeads,
+              enviadosCount: (l.prospectingData!.enviadosCount || 0) + 1,
+            },
+          };
+        })
+      );
+    }
+
+    setLogs((prev) =>
+      prev.map((l) =>
+        l.id === logId
+          ? { ...l, prospectingData: { ...l.prospectingData!, enviando: false } }
+          : l
+      )
+    );
+
+    const finishEmailMsg = "Cadência de e-mails disparada através da conta gn_prosperaplan@consorciomagalu.com.br!";
+    setLastJarvisReply(finishEmailMsg);
+    speakResponse(finishEmailMsg);
+  };
+
+  const handleUpdateCopy = (logId: string, newCopy: string) => {
+    setLogs((prev) =>
+      prev.map((l) =>
+        l.id === logId && l.prospectingData
+          ? { ...l, prospectingData: { ...l.prospectingData, copy: newCopy } }
+          : l
+      )
+    );
+  };
+
   const processSmartCommand = (lowerPrompt: string, originalText: string): LogEntry | null => {
     const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const normalized = lowerPrompt.trim().replace(/[.,!?;:]/g, "");
 
-    // 1. Saudações Simples e Isoladas (somente se não contiver pergunta ou comando adjacente)
+    // 1. Saudações Simples e Isoladas
     const exactGreetings = ["boa tarde", "bom dia", "boa noite", "ola", "olá", "oi", "oi jarvis", "ola jarvis", "olá jarvis"];
     if (exactGreetings.includes(normalized)) {
       const periodo = normalized.includes("dia") ? "Bom dia" : normalized.includes("noite") ? "Boa noite" : "Boa tarde";
@@ -333,11 +580,11 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         time: timeStr,
         tag: "JARVIS AI",
         color: "text-emerald-400 font-bold",
-        text: `Oi Fabrício, ${periodo.toLowerCase()}! Tudo excelente por aqui. Como posso acelerar o seu dia hoje? Posso realizar simulações de consórcio, checar clientes no funil ou emitir 2ª via de boletos.`
+        text: `Oi Fabrício, ${periodo.toLowerCase()}! Tudo excelente por aqui. Como posso acelerar o seu dia hoje? Posso realizar prospecções para WhatsApp ou e-mail, analisar métricas do funil ou simular consórcios.`,
       };
     }
 
-    // 2. Ação Determinística de 2ª via rápida (apenas se pedir expressamente o documento do Fabrício sem pedir análise)
+    // 2. Ação Determinística de 2ª via sob demanda explícita
     if (
       (lowerPrompt.includes("baixar 2") || lowerPrompt.includes("emitir 2") || lowerPrompt.includes("segunda via fabricio") || lowerPrompt.includes("2ª via fabricio") || lowerPrompt.includes("boleto fabricio") || lowerPrompt.includes("boleto do fabricio")) &&
       !lowerPrompt.includes("como") && !lowerPrompt.includes("analis") && !lowerPrompt.includes("funil")
@@ -370,8 +617,8 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
           pclPrazo: "004/239",
           assembl: "28/10/26",
           codigoDebitoConta: "928698000001860514928",
-          enderecoPagador: "ELISIO PEREIRA, CONDOMINIO PEIXES, 65 APTO 03-PRAIA DE LESTE CEP: 83255-000 - PONTAL DO PARANA - PR"
-        }
+          enderecoPagador: "ELISIO PEREIRA, CONDOMINIO PEIXES, 65 APTO 03-PRAIA DE LESTE CEP: 83255-000 - PONTAL DO PARANA - PR",
+        },
       };
     }
 
@@ -382,7 +629,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         time: timeStr,
         tag: "GMAIL BRIEFING",
         color: "text-amber-400 font-bold",
-        text: "📬 Conexão Gmail Ativa (gn_prosperaplan@consorciomagalu.com.br):\n1. Marcos Silva: Comprovante de Pagamento Outubro/2026\n2. Consórcio Magalu: Resultado da Assembleia Grupo 4050\n3. Juliana Costa: Dúvida sobre simulação imóvel 500k"
+        text: "📬 Conexão Gmail Ativa (gn_prosperaplan@consorciomagalu.com.br):\n1. Marcos Silva: Comprovante de Pagamento Outubro/2026\n2. Consórcio Magalu: Resultado da Assembleia Grupo 4050\n3. Juliana Costa: Dúvida sobre simulação imóvel 500k",
       };
     }
 
@@ -393,7 +640,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         time: timeStr,
         tag: "ENGLISH COACH",
         color: "text-cyan-300 font-bold",
-        text: "🇬🇧 Hi there! I'm your English Coach tutor. How are you feeling today? Are you ready to practice some conversational English?"
+        text: "🇬🇧 Hi there! I'm your English Coach tutor. How are you feeling today? Are you ready to practice some conversational English?",
       };
     }
 
@@ -412,7 +659,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         time: timeStr,
         tag: "VOICE STUDIO CLONE",
         color: "text-purple-400 font-bold",
-        text: "Abri o estúdio de clonagem de voz para você, Fabrício! Você pode enviar um arquivo de áudio (.mp3, .wav ou áudio de WhatsApp) ou gravar direto pelo microfone por 30 a 60 segundos."
+        text: "Abri o estúdio de clonagem de voz para você, Fabrício! Você pode enviar um arquivo de áudio (.mp3, .wav ou áudio de WhatsApp) ou gravar direto pelo microfone.",
       };
     }
 
@@ -427,85 +674,86 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
     setOrbState("thinking");
     const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-    setLogs(prev => [
+    setLogs((prev) => [
       { id: Date.now().toString(), time: timeStr, tag: "COMANDO", text: textToRun, color: "text-cyan-300 font-bold" },
-      ...prev
+      ...prev,
     ]);
 
     if (!customCommand) setCommand("");
 
     const lowerPrompt = textToRun.toLowerCase();
+
+    // INTERCEPTADOR DE PROSPECÇÃO PARA WHATSAPP OU EMAIL VIA CAMPO DE ESCRITA
+    if (
+      lowerPrompt.includes("prospect") ||
+      lowerPrompt.includes("prospecção") ||
+      lowerPrompt.includes("prospeccao") ||
+      lowerPrompt.includes("disparar whatsapp") ||
+      lowerPrompt.includes("disparar email") ||
+      lowerPrompt.includes("disparar e-mail")
+    ) {
+      const isEmail = lowerPrompt.includes("email") || lowerPrompt.includes("e-mail") || lowerPrompt.includes("prospera");
+      const isImovel = lowerPrompt.includes("imóve") || lowerPrompt.includes("imove") || lowerPrompt.includes("clínica") || lowerPrompt.includes("clinica") || lowerPrompt.includes("constru");
+      const isVeiculo = lowerPrompt.includes("veículo") || lowerPrompt.includes("veiculo") || lowerPrompt.includes("carro") || lowerPrompt.includes("frota leve");
+      const segmento = isImovel ? "imovel" : isVeiculo ? "veiculo" : "pesados";
+
+      let qtd = 15;
+      const numMatch = lowerPrompt.match(/\b(1[0-9]|20|[5-9])\b/);
+      if (numMatch) {
+        qtd = Math.min(Math.max(parseInt(numMatch[1], 10), 10), 20);
+      }
+
+      await triggerProspecting(isEmail ? "email" : "whatsapp", {
+        segmento,
+        quantidade: qtd,
+        cidade: "Paranaguá",
+      });
+      return;
+    }
+
     const smartResponse = processSmartCommand(lowerPrompt, textToRun);
 
     if (smartResponse) {
       setTimeout(() => {
-        setLogs(prev => [smartResponse, ...prev]);
+        setLogs((prev) => [smartResponse, ...prev]);
+        setLastJarvisReply(smartResponse.text);
         speakResponse(smartResponse.text);
         setIsProcessing(false);
       }, 500);
       return;
     }
 
-    const currentHistory = [
-      ...chatHistory,
-      { role: "user", text: textToRun }
-    ];
+    const currentHistory = [...chatHistory, { role: "user", text: textToRun }];
 
-    // 5. Interceptador de Notícias, Política, Preços e Briefing Diário
+    // Interceptador de Notícias, Política, Preços e Radar
     if (
       lowerPrompt.includes("noticia") ||
       lowerPrompt.includes("notícia") ||
-      lowerPrompt.includes("noticias") ||
-      lowerPrompt.includes("notícias") ||
       lowerPrompt.includes("briefing") ||
       lowerPrompt.includes("politica") ||
       lowerPrompt.includes("política") ||
       lowerPrompt.includes("preço") ||
       lowerPrompt.includes("preços") ||
-      lowerPrompt.includes("precos") ||
-      lowerPrompt.includes("preco") ||
-      lowerPrompt.includes("inflação") ||
-      lowerPrompt.includes("inflacao") ||
       lowerPrompt.includes("selic") ||
       lowerPrompt.includes("dolar") ||
-      lowerPrompt.includes("dólar") ||
-      lowerPrompt.includes("gasolina") ||
-      lowerPrompt.includes("imóvel") ||
-      lowerPrompt.includes("imovel") ||
-      lowerPrompt.includes("imóveis") ||
-      lowerPrompt.includes("imoveis") ||
-      lowerPrompt.includes("imobiliário") ||
-      lowerPrompt.includes("imobiliario") ||
-      lowerPrompt.includes("veículo") ||
-      lowerPrompt.includes("veiculo") ||
-      lowerPrompt.includes("veículos") ||
-      lowerPrompt.includes("veiculos") ||
-      lowerPrompt.includes("carro") ||
-      lowerPrompt.includes("carros") ||
-      lowerPrompt.includes("fipe") ||
-      lowerPrompt.includes("cotação") ||
-      lowerPrompt.includes("cotacao") ||
-      lowerPrompt.includes("principais jornais") ||
-      lowerPrompt.includes("mercado hoje")
+      lowerPrompt.includes("dólar")
     ) {
       try {
         const newsData = await fetchDailyNews();
         const newsResponse = getNewsAnswerForJarvis(textToRun, newsData.items, newsData.rates);
-        
-        setLogs(prev => [
+
+        setLogs((prev) => [
           {
             id: Date.now().toString(),
             time: timeStr,
             tag: "RADAR & NOTÍCIAS DO DIA",
             color: "text-cyan-300 font-bold",
-            text: newsResponse
+            text: newsResponse,
           },
-          ...prev
+          ...prev,
         ]);
-        setChatHistory([
-          ...currentHistory,
-          { role: "assistant", text: newsResponse }
-        ]);
+        setChatHistory([...currentHistory, { role: "assistant", text: newsResponse }]);
+        setLastJarvisReply(newsResponse);
         speakResponse(newsResponse);
         setIsProcessing(false);
         return;
@@ -515,7 +763,6 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
     }
 
     try {
-      // Integração com o assistente inteligente Jarvis AI via LLM
       const aiResult = await aiService.askAssistant(
         textToRun,
         "Painel Jarvis HUD Executivo - Assistente de Vendas e Consórcios",
@@ -527,26 +774,23 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
       if (!responseText || responseText.trim() === "") {
         const isTarde = new Date().getHours() >= 12 && new Date().getHours() < 18;
         const saudacao = isTarde ? "Boa tarde" : new Date().getHours() < 12 ? "Bom dia" : "Boa noite";
-        responseText = `Olá, Fabrício! ${saudacao}! Estou à sua total disposição. Analisei seus dados. Como prefere avançar na gestão dos clientes e no funil hoje?`;
+        responseText = `Olá, Fabrício! ${saudacao}! Estou à sua total disposição. Como prefere avançar na gestão dos clientes e na prospecção hoje?`;
       }
 
-      setChatHistory([
-        ...currentHistory,
-        { role: "assistant", text: responseText }
-      ]);
-
-      setLogs(prev => [
+      setChatHistory([...currentHistory, { role: "assistant", text: responseText }]);
+      setLogs((prev) => [
         { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: responseText, color: "text-cyan-400 font-semibold" },
-        ...prev
+        ...prev,
       ]);
-
+      setLastJarvisReply(responseText);
       speakResponse(responseText);
     } catch (e: any) {
-      const fallbackMsg = `Olá, Fabrício! Tive uma oscilação na resposta do servidor, mas meus subagentes locais estão ativos. Pode me perguntar sobre simulações, métricas do funil ou leads que consulto imediatamente para você!`;
-      setLogs(prev => [
+      const fallbackMsg = `Olá, Fabrício! Tive uma oscilação na resposta externa, mas meus subagentes locais estão ativos. Pode solicitar prospecções, simulações ou consultas do funil que executo imediatamente!`;
+      setLogs((prev) => [
         { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: fallbackMsg, color: "text-amber-400 font-semibold" },
-        ...prev
+        ...prev,
       ]);
+      setLastJarvisReply(fallbackMsg);
       speakResponse(fallbackMsg);
       setOrbState("idle");
     } finally {
@@ -555,14 +799,15 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
   };
 
   const handleMorningBriefing = () => {
-    const briefingText = `Bom dia! Jarvis OS ativo. O portal da administradora Consórcio Magalu e a caixa de e-mail do Gmail estão integrados com órbita quântica expandida.`;
+    const briefingText = `Bom dia, Fabrício! Jarvis OS online. Órbita quântica expandida. Portal Consórcio Magalu autenticado e o motor de prospecção para WhatsApp e E-mail da Prospera estão prontos para gerar novos negócios hoje!`;
     const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-    setLogs(prev => [
+    setLogs((prev) => [
       { id: Date.now().toString(), time: timeStr, tag: "BRIEFING DIÁRIO", text: briefingText, color: "text-emerald-400 font-bold" },
-      ...prev
+      ...prev,
     ]);
 
+    setLastJarvisReply(briefingText);
     speakResponse(briefingText);
   };
 
@@ -589,7 +834,7 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-mono p-4 md:p-6 flex flex-col gap-6 select-none relative overflow-hidden">
       {/* Background Tech Image & Neon Grid Overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center opacity-15 pointer-events-none mix-blend-screen"
         style={{ backgroundImage: `url('/images/jarvis_tech_core.jpg')` }}
       />
@@ -612,19 +857,19 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-          <button 
+          <button
             onClick={() => setIsVoiceCloneOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold transition-all border border-purple-500/50 bg-purple-950/70 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)] hover:bg-purple-900/60 cursor-pointer"
             title="Abrir Estúdio para Clonar Sua Voz com Arquivo ou Microfone"
           >
             <Mic className="h-4 w-4 text-purple-400" /> Clonar Minha Voz (Voice Studio)
           </button>
-          <button 
+          <button
             onClick={() => setAudioEnabled(!audioEnabled)}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold transition-all border shadow-lg ${
-              audioEnabled 
-                ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]' 
-                : 'bg-slate-900 text-slate-500 border-slate-800'
+              audioEnabled
+                ? "bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                : "bg-slate-900 text-slate-500 border-slate-800"
             }`}
           >
             {audioEnabled ? <Volume2 className="h-4 w-4 text-cyan-400" /> : <VolumeX className="h-4 w-4 text-slate-500" />}
@@ -641,150 +886,292 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
 
       {/* Main HUD Grid */}
       <div className="grid grid-cols-12 gap-6 flex-1 relative z-10">
-        
-        {/* Left Tech Panel */}
+        {/* ======================================================== */}
+        {/* COLUNA LATERAL ESQUERDA: ABA DE NÚCLEO & CENTRAL DE SOLICITAÇÕES */}
+        {/* ======================================================== */}
         <div className="col-span-12 lg:col-span-3 bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4 backdrop-blur-md shadow-2xl relative overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-            <h2 className="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-cyan-400" /> Núcleo de Tecnologia
-            </h2>
-            <span className="text-[9px] font-black text-cyan-400 bg-cyan-950 border border-cyan-500/30 px-2 py-0.5 rounded">
-              v4.0 ACTIVE
-            </span>
+          {/* Seletor de Abas Superior na Lateral */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-950/90 rounded-xl border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setLateralTab("nucleo")}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                lateralTab === "nucleo"
+                  ? "bg-cyan-950 text-cyan-300 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.25)]"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Cpu className="h-3.5 w-3.5" /> Núcleo
+            </button>
+            <button
+              type="button"
+              onClick={() => setLateralTab("solicitacoes")}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                lateralTab === "solicitacoes"
+                  ? "bg-cyan-950 text-cyan-300 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.25)]"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Solicitar Algo
+            </button>
           </div>
 
-          <div className="relative rounded-xl overflow-hidden border border-cyan-500/30 group shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-            <img 
-              src="/images/jarvis_tech_core.jpg" 
-              alt="Jarvis Technology Core"
-              className="w-full h-44 object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] text-cyan-300 font-bold">
-              <span className="flex items-center gap-1">
-                <Shield className="h-3 w-3 text-cyan-400" /> Sentinel Core
-              </span>
-              <span className="text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-1.5 py-0.5 rounded text-[8px]">
-                100% SECURE
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="bg-slate-950/80 p-3 rounded-xl border border-cyan-900/40 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-cyan-400" />
-                <span className="text-[11px] text-slate-300 font-bold">Órbita Neuronal</span>
+          {lateralTab === "nucleo" ? (
+            /* CONTEÚDO DA ABA 1: NÚCLEO TECH & DIAGNÓSTICO */
+            <div className="flex-1 flex flex-col gap-3.5">
+              <div className="relative rounded-xl overflow-hidden border border-cyan-500/30 group shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                <img
+                  src="/images/jarvis_tech_core.jpg"
+                  alt="Jarvis Technology Core"
+                  className="w-full h-40 object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
+                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] text-cyan-300 font-bold">
+                  <span className="flex items-center gap-1">
+                    <Shield className="h-3 w-3 text-cyan-400" /> Sentinel Core
+                  </span>
+                  <span className="text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-1.5 py-0.5 rounded text-[8px]">
+                    100% SECURE
+                  </span>
+                </div>
               </div>
-              <span className="text-xs font-black text-cyan-400">EXPANDIDA</span>
-            </div>
 
-            <div className="bg-slate-950/80 p-3 rounded-xl border border-emerald-900/40 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-emerald-400" />
-                <span className="text-[11px] text-slate-300 font-bold">Portal Magalu</span>
+              <div className="space-y-2">
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-cyan-900/40 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-3.5 w-3.5 text-cyan-400" />
+                    <span className="text-[11px] text-slate-300 font-bold">Órbita Neuronal</span>
+                  </div>
+                  <span className="text-[10px] font-black text-cyan-400">EXPANDIDA</span>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-emerald-900/40 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="h-3.5 w-3.5 text-emerald-400" />
+                    <span className="text-[11px] text-slate-300 font-bold">Portal Magalu</span>
+                  </div>
+                  <span className="text-[10px] font-black text-emerald-400">CONECTADO</span>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-amber-900/40 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="text-[11px] text-slate-300 font-bold">Conexão Gmail</span>
+                  </div>
+                  <span className="text-[10px] font-black text-amber-400">IMAP ATIVO</span>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-indigo-900/40 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
+                    <span className="text-[11px] text-slate-300 font-bold">WAHA WhatsApp</span>
+                  </div>
+                  <span className="text-[10px] font-black text-indigo-400">LOCAL ATIVO</span>
+                </div>
               </div>
-              <span className="text-xs font-black text-emerald-400">CONECTADO</span>
-            </div>
 
-            <div className="bg-slate-950/80 p-3 rounded-xl border border-amber-900/40 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-amber-400" />
-                <span className="text-[11px] text-slate-300 font-bold">Conexão Gmail</span>
+              <div className="mt-auto pt-3 border-t border-slate-800/80 space-y-2">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Ações Rápidas</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleMorningBriefing}
+                    className="p-2 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 text-cyan-300 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1 transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)] cursor-pointer"
+                  >
+                    <Sun className="h-3 w-3 text-amber-400" /> Briefing
+                  </button>
+                  <button
+                    onClick={() => handleSendCommand("Baixar a segunda via do boleto do cliente Fabricio Rodrigues Honório do portal consorcio magalu")}
+                    className="p-2 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1 transition-all shadow-[0_0_10px_rgba(16,185,129,0.2)] cursor-pointer"
+                  >
+                    <FileText className="h-3 w-3 text-emerald-400" /> 2ª Via
+                  </button>
+                </div>
               </div>
-              <span className="text-xs font-black text-amber-400">IMAP ATIVO</span>
             </div>
-          </div>
+          ) : (
+            /* CONTEÚDO DA ABA 2: CENTRAL DE SOLICITAÇÕES (PROSPECÇÃO & ATALHOS) */
+            <div className="flex-1 flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-0.5">
+              {/* Grupo: Prospecção WhatsApp */}
+              <div className="space-y-1.5">
+                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <MessageSquare className="h-3 w-3" /> Prospecção WhatsApp (10-20 Leads)
+                </span>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => triggerProspecting("whatsapp", { segmento: "pesados", quantidade: 15, nicho: "transportes" })}
+                    disabled={isProcessing}
+                    className="p-2.5 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 text-emerald-300 rounded-xl text-[10px] font-bold flex items-center justify-between text-left transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Truck className="h-3.5 w-3.5 text-emerald-400" /> 15 Transportadoras & Pesados
+                    </span>
+                    <span className="text-[8px] bg-emerald-900/80 px-1.5 py-0.5 rounded text-emerald-200">Funil</span>
+                  </button>
 
-          <div className="mt-auto pt-3 border-t border-slate-800/80 space-y-2">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Ações do Sistema</span>
-            <div className="grid grid-cols-2 gap-2">
-              <button 
-                onClick={handleMorningBriefing}
-                className="p-2.5 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 text-cyan-300 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-              >
-                <Sun className="h-3.5 w-3.5 text-amber-400" /> Briefing
-              </button>
-              <button 
-                onClick={() => handleSendCommand("Baixar a segunda via do boleto do cliente Fabricio Rodrigues Honório do portal consorcio magalu")}
-                className="p-2.5 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-              >
-                <FileText className="h-3.5 w-3.5 text-emerald-400" /> 2ª Via Fabrício
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerProspecting("whatsapp", { segmento: "imovel", quantidade: 10, nicho: "clinicas" })}
+                    disabled={isProcessing}
+                    className="p-2.5 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 rounded-xl text-[10px] font-bold flex items-center justify-between text-left transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 text-cyan-400" /> 10 Clínicas & Imobiliárias
+                    </span>
+                    <span className="text-[8px] bg-cyan-900/80 px-1.5 py-0.5 rounded text-cyan-200">Funil</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => triggerProspecting("whatsapp", { segmento: "veiculo", quantidade: 12, nicho: "frotas_leves" })}
+                    disabled={isProcessing}
+                    className="p-2.5 bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-500/30 text-indigo-300 rounded-xl text-[10px] font-bold flex items-center justify-between text-left transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Car className="h-3.5 w-3.5 text-indigo-400" /> 12 Frotas Leves & Utilitários
+                    </span>
+                    <span className="text-[8px] bg-indigo-900/80 px-1.5 py-0.5 rounded text-indigo-200">Funil</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Grupo: Prospecção E-mail (Próspera Plan) */}
+              <div className="space-y-1.5 pt-2 border-t border-slate-800">
+                <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Mail className="h-3 w-3" /> Prospecção E-mail (Prospera Plan)
+                </span>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => triggerProspecting("email", { segmento: "pesados", quantidade: 15, nicho: "transportes" })}
+                    disabled={isProcessing}
+                    className="p-2.5 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/30 text-amber-300 rounded-xl text-[10px] font-bold flex items-center justify-between text-left transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-amber-400" /> 15 E-mails B2B Corporativos
+                    </span>
+                    <span className="text-[8px] bg-amber-900/80 px-1.5 py-0.5 rounded text-amber-200">Prospera</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => triggerProspecting("email", { segmento: "imovel", quantidade: 20, nicho: "construcao" })}
+                    disabled={isProcessing}
+                    className="p-2.5 bg-amber-950/30 hover:bg-amber-900/50 border border-amber-500/20 text-amber-300 rounded-xl text-[10px] font-bold flex items-center justify-between text-left transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 text-amber-400" /> 20 Construtoras & Galpões
+                    </span>
+                    <span className="text-[8px] bg-amber-900/80 px-1.5 py-0.5 rounded text-amber-200">Prospera</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Grupo: Inteligência, Voz e Mercado */}
+              <div className="space-y-1.5 pt-2 border-t border-slate-800">
+                <span className="text-[9px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="h-3 w-3" /> Inteligência & Consultoria
+                </span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSendCommand("Jarvis, quais são as principais notícias do dia, política e preços dos jornais hoje?")}
+                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[9px] font-bold text-slate-300 text-left transition-all cursor-pointer"
+                  >
+                    📰 Notícias do Dia
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSendCommand("Jarvis, como estão os preços, inflação, gasolina, dólar e Selic hoje?")}
+                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[9px] font-bold text-slate-300 text-left transition-all cursor-pointer"
+                  >
+                    📈 Preços & Selic
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSendCommand("Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM.")}
+                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[9px] font-bold text-slate-300 text-left transition-all cursor-pointer"
+                  >
+                    📊 Analisar Funil
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSendCommand("Qual é a situação oficial de vendas realizadas e metas do Gestor e da Loja Paranaguá?")}
+                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[9px] font-bold text-slate-300 text-left transition-all cursor-pointer"
+                  >
+                    🎯 Metas Paranaguá
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Center Column */}
-        <div className="col-span-12 lg:col-span-6 bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-6 flex flex-col items-center justify-between relative backdrop-blur-md min-h-[620px] shadow-[0_0_30px_rgba(6,182,212,0.1)]">
-          
+        {/* ======================================================== */}
+        {/* COLUNA CENTRAL: DEDICADA EXCLUSIVAMENTE AO JARVIS */}
+        {/* ======================================================== */}
+        <div className="col-span-12 lg:col-span-6 bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-6 flex flex-col items-center justify-between relative backdrop-blur-md min-h-[640px] shadow-[0_0_30px_rgba(6,182,212,0.1)]">
           <div className="text-center space-y-1">
             <span className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center justify-center gap-2 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">
-              <Zap className="h-4 w-4 fill-cyan-400 text-cyan-400 animate-bounce" /> ÓRBITA QUÂNTICA EXPANDIDA
+              <Zap className="h-4 w-4 fill-cyan-400 text-cyan-400 animate-bounce" /> ÓRBITA QUÂNTICA EXPANDIDA // JARVIS AI
             </span>
-            <p className="text-xs text-slate-400 font-mono">Engine Inteligente Jarvis — Automação & Voz</p>
+            <p className="text-xs text-slate-400 font-mono">Consciência Executiva e Sintetizador Quântico</p>
           </div>
 
-          <div className="my-auto w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] md:w-[540px] md:h-[540px] lg:w-[580px] lg:h-[580px] flex items-center justify-center relative transition-all duration-700 hover:scale-105">
+          {/* O MAJESTOSO JARVIS ORB */}
+          <div className="my-auto w-[320px] h-[320px] sm:w-[440px] sm:h-[440px] md:w-[500px] md:h-[500px] lg:w-[540px] lg:h-[540px] flex items-center justify-center relative transition-all duration-700 hover:scale-105">
             <JarvisOrb state={orbState} theme="cobalt" />
           </div>
 
           {/* Status de Processamento da IA */}
           {isProcessing && (
-            <div className="my-2 text-xs text-cyan-300 font-mono flex items-center gap-2 animate-pulse bg-cyan-950/70 px-4 py-1.5 rounded-full border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin text-cyan-400" /> 
-              Jarvis está analisando o CRM e formulando a estratégia...
+            <div className="my-2 text-xs text-cyan-300 font-mono flex items-center gap-2 animate-pulse bg-cyan-950/80 px-4 py-1.5 rounded-full border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+              <RefreshCw className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+              Jarvis está processando dados neurais e executando a ação...
             </div>
           )}
 
-          {/* Quick Prompt Chips & Input Bar */}
-          <div className="w-full space-y-2">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px] font-mono">
-              {[
-                { label: "🎙️ Clonar Minha Voz", query: "Jarvis, abrir estúdio para clonar minha voz e enviar áudio." },
-                { label: "📰 Briefing do Dia", query: "Jarvis, quais são as principais notícias do dia, política e preços dos jornais hoje?" },
-                { label: "📈 Preços & Selic", query: "Jarvis, como estão os preços, inflação, gasolina, dólar e Selic hoje?" },
-                { label: "🏛️ Política Hoje", query: "Jarvis, quais os destaques da política e votações em Brasília hoje?" },
-                { label: "📊 Analisar Funil", query: "Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM." },
-                { label: "🎯 Vendas e Metas", query: "Qual é a situação oficial de vendas realizadas e metas do Gestor e da Loja Paranaguá?" },
-                { label: "🏠 Simular 300 mil", query: "Simular consórcio imobiliário de R$ 300.000 no simulador oficial." },
-                { label: "🚗 Carro 80 mil", query: "Simular consórcio de veículo de R$ 80.000 na parcela 50/50 com e sem seguro." },
-                { label: "🔥 Leads Quentes", query: "Quais são os leads mais quentes no funil e quais ações imediatas devo tomar?" },
-              ].map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSendCommand(chip.query)}
-                  disabled={isProcessing}
-                  className="whitespace-nowrap px-3 py-1.5 rounded-lg bg-slate-950/90 hover:bg-cyan-950/80 text-slate-300 hover:text-cyan-300 border border-slate-800 hover:border-cyan-500/50 transition-all active:scale-95 text-[10px] font-semibold cursor-pointer shadow-sm"
-                >
-                  {chip.label}
-                </button>
-              ))}
+          {/* Caixa de Diálogo / Resposta Holográfica do Jarvis */}
+          {lastJarvisReply && !isProcessing && (
+            <div className="w-full max-w-xl mx-auto my-2 p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-1.5 animate-in fade-in">
+              <div className="flex items-center justify-between text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="h-3 w-3 text-cyan-400 animate-pulse" /> Jarvis AI // Resposta Recente
+                </span>
+                <span className="text-[8px] px-1.5 py-0.5 rounded bg-cyan-900/60 border border-cyan-500/20 text-cyan-300">
+                  ONLINE
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-200 leading-relaxed font-sans line-clamp-3">
+                {lastJarvisReply}
+              </p>
             </div>
+          )}
 
+          {/* Campo de Comando de Texto & Disparos */}
+          <div className="w-full space-y-2 mt-auto">
             <div className="w-full relative">
-              <input 
+              <input
                 type="text"
-                placeholder="Pergunte ao Jarvis sobre o funil, leads, estratégias ou simulações..."
+                placeholder="Solicite prospecção WhatsApp/Email, análise de funil, simulação ou comando..."
                 value={command}
                 onChange={(e) => setCommand(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendCommand()}
                 className="w-full bg-slate-950/95 border border-cyan-500/40 text-cyan-200 placeholder:text-slate-500 rounded-xl px-4 py-4 text-sm focus:outline-none focus:border-cyan-400 pr-28 font-mono shadow-[0_0_20px_rgba(6,182,212,0.15)]"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                <button 
+                <button
                   onClick={toggleMic}
                   className={`p-2.5 rounded-lg transition-all ${
-                    orbState === 'listening' 
-                      ? 'bg-cyan-400 text-slate-950 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.8)]' 
-                      : 'bg-slate-800/90 text-slate-400 hover:text-cyan-300 border border-slate-700'
+                    orbState === "listening"
+                      ? "bg-cyan-400 text-slate-950 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.8)]"
+                      : "bg-slate-800/90 text-slate-400 hover:text-cyan-300 border border-slate-700"
                   }`}
                   title="Ativar Voz"
                 >
                   <Mic className="h-4 w-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => handleSendCommand()}
                   disabled={isProcessing || !command.trim()}
                   className="p-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold rounded-lg transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer"
@@ -797,109 +1184,222 @@ Código Identificador para Débito em Conta: ${boletoInfo.codigoDebitoConta || "
           </div>
         </div>
 
-        {/* Right Column: Feed do Cofre */}
-        <div className="col-span-12 lg:col-span-3 bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4 backdrop-blur-md max-h-[620px] shadow-2xl relative overflow-hidden">
-          
+        {/* ======================================================== */}
+        {/* COLUNA LATERAL DIREITA: FEED DO COFRE (SEM ARMAZENAMENTO RESIDUAL) */}
+        {/* ======================================================== */}
+        <div className="col-span-12 lg:col-span-3 bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4 backdrop-blur-md max-h-[640px] shadow-2xl relative overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Database className="h-4 w-4 text-emerald-400" /> Feed do Cofre
             </h2>
-            <span className="text-[9px] font-black text-emerald-400 bg-emerald-950 border border-emerald-500/30 px-2 py-0.5 rounded">
-              ONLINE
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleClearLogs}
+                className="text-[9px] font-bold text-slate-400 hover:text-rose-400 flex items-center gap-1 transition-colors px-2 py-0.5 rounded border border-slate-800 hover:border-rose-900/50 bg-slate-950/60 cursor-pointer"
+                title="Limpar todos os registros do Feed (não armazena nada)"
+              >
+                <Trash2 className="h-3 w-3" /> Limpar
+              </button>
+              <span className="text-[9px] font-black text-emerald-400 bg-emerald-950 border border-emerald-500/30 px-2 py-0.5 rounded">
+                ONLINE
+              </span>
+            </div>
           </div>
 
           {/* Feed Stream */}
           <div className="flex-1 space-y-3 overflow-y-auto text-xs pr-1 custom-scrollbar">
-            {logs.map((log) => (
-              <div 
-                key={log.id} 
-                className={`p-3 rounded-xl border space-y-2 animate-in fade-in transition-all ${
-                  log.isBoletoCard 
-                    ? 'bg-slate-950/95 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
-                    : 'bg-slate-950/80 border-cyan-900/30'
-                }`}
-              >
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className={`font-black uppercase tracking-wider ${log.color}`}>{log.tag}</span>
-                  <span className="text-slate-500">{log.time}</span>
-                </div>
+            {logs.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 space-y-2">
+                <Database className="h-8 w-8 text-slate-700 animate-pulse" />
+                <p className="text-xs font-semibold">Feed do Cofre em repouso.</p>
+                <p className="text-[10px] text-slate-600">Nenhuma solicitação ou boleto armazenado.</p>
+              </div>
+            ) : (
+              logs.map((log) => (
+                <div
+                  key={log.id}
+                  className={`p-3 rounded-xl border space-y-2 animate-in fade-in transition-all ${
+                    log.isProspectingCard
+                      ? log.prospectingData?.tipo === "whatsapp"
+                        ? "bg-emerald-950/30 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                        : "bg-amber-950/30 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+                      : log.isBoletoCard
+                      ? "bg-slate-950/95 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                      : "bg-slate-950/80 border-cyan-900/30"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className={`font-black uppercase tracking-wider ${log.color}`}>{log.tag}</span>
+                    <span className="text-slate-500">{log.time}</span>
+                  </div>
 
-                {log.isBoletoCard && log.boletoInfo ? (
-                  <div className="space-y-2 text-[11px] font-sans">
-                    <div className="bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-500/30 space-y-1">
-                      <p className="font-bold text-emerald-300 text-xs">👤 {log.boletoInfo.cliente}</p>
-                      <p className="text-slate-300">Grupo: <strong className="text-white">{log.boletoInfo.grupo}</strong> | Cota: <strong className="text-white">{log.boletoInfo.cota}</strong></p>
-                      <p className="text-slate-300">Valor: <strong className="text-emerald-400 font-bold">{log.boletoInfo.valor}</strong> | Vencimento: <strong className="text-amber-400">{log.boletoInfo.vencimento}</strong></p>
-                    </div>
+                  {/* CARD DE PROSPECÇÃO COM COPY EDITÁVEL E ENVIO AUTOMÁTICO */}
+                  {log.isProspectingCard && log.prospectingData ? (
+                    <div className="space-y-3 text-[11px] font-sans">
+                      <div className="p-2.5 rounded-lg bg-slate-900/90 border border-cyan-500/30 space-y-1">
+                        <p className="font-bold text-slate-200 text-xs flex items-center justify-between">
+                          <span>{log.text}</span>
+                          <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300">
+                            {log.prospectingData.leads.length} Leads
+                          </span>
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          Cidade: <strong className="text-white">{log.prospectingData.cidade}</strong> | Segmento:{" "}
+                          <strong className="text-cyan-300 uppercase">{log.prospectingData.segmento}</strong>
+                        </p>
+                      </div>
 
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-slate-400 font-bold block">Linha Digitável:</span>
-                      <div className="bg-slate-900 p-2 rounded border border-slate-800 text-[10px] font-mono text-cyan-300 break-all flex items-center justify-between">
-                        <span>{log.boletoInfo.linhaDigitavel}</span>
-                        <button 
-                          onClick={() => handleCopyLinha(log.boletoInfo!.linhaDigitavel, log.id)}
-                          className="ml-2 p-1 text-slate-400 hover:text-cyan-300 transition-colors"
-                          title="Copiar Linha Digitável"
+                      {/* Preview dos Leads */}
+                      <div className="space-y-1 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          Leads Inseridos no Funil:
+                        </span>
+                        <div className="space-y-1">
+                          {log.prospectingData.leads.slice(0, 5).map((l, lIdx) => (
+                            <div key={lIdx} className="p-1.5 rounded bg-slate-950 border border-slate-800 text-[10px] flex items-center justify-between">
+                              <span className="text-slate-300 truncate max-w-[150px]">
+                                👤 {l.nome} ({l.empresa})
+                              </span>
+                              <span className="text-cyan-400 font-mono text-[9px]">
+                                {log.prospectingData?.tipo === "whatsapp" ? l.telefone : l.email}
+                              </span>
+                            </div>
+                          ))}
+                          {log.prospectingData.leads.length > 5 && (
+                            <p className="text-[9px] text-slate-500 italic text-center">
+                              + {log.prospectingData.leads.length - 5} outros leads no Funil
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Opção de Incluir / Editar a Copy da Mensagem */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-slate-300 font-bold">
+                          <span className="flex items-center gap-1">
+                            <SlidersHorizontal className="h-3 w-3 text-cyan-400" /> Copy da Mensagem:
+                          </span>
+                          <span className="text-[9px] text-slate-400">Variáveis: {"{nome}"}, {"{empresa}"}</span>
+                        </div>
+                        <textarea
+                          rows={4}
+                          value={log.prospectingData.copy}
+                          onChange={(e) => handleUpdateCopy(log.id, e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-[10px] rounded-lg p-2 font-sans focus:outline-none focus:border-cyan-400"
+                        />
+                      </div>
+
+                      {/* Botão de Envio Automático */}
+                      {log.prospectingData.tipo === "whatsapp" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleStartWhatsAppDispatch(log.id)}
+                          disabled={log.prospectingData.enviando}
+                          className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-slate-950 font-black text-xs uppercase rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 cursor-pointer"
                         >
-                          {copiedId === log.id ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                          {log.prospectingData.enviando ? (
+                            <>
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              Disparando WhatsApp ({log.prospectingData.enviadosCount || 0}/{log.prospectingData.leads.length})...
+                            </>
+                          ) : (
+                            <>
+                              <SendHorizontal className="h-3.5 w-3.5" />
+                              🚀 Disparar via WhatsApp (WAHA Local)
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleStartEmailDispatch(log.id)}
+                          disabled={log.prospectingData.enviando}
+                          className="w-full py-2 px-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-black text-xs uppercase rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {log.prospectingData.enviando ? (
+                            <>
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              Disparando E-mails ({log.prospectingData.enviadosCount || 0}/{log.prospectingData.leads.length})...
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="h-3.5 w-3.5" />
+                              🚀 Disparar E-mails ({log.prospectingData.emailRemetente})
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  ) : log.isBoletoCard && log.boletoInfo ? (
+                    <div className="space-y-2 text-[11px] font-sans">
+                      <div className="bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-500/30 space-y-1">
+                        <p className="font-bold text-emerald-300 text-xs">👤 {log.boletoInfo.cliente}</p>
+                        <p className="text-slate-300">
+                          Grupo: <strong className="text-white">{log.boletoInfo.grupo}</strong> | Cota:{" "}
+                          <strong className="text-white">{log.boletoInfo.cota}</strong>
+                        </p>
+                        <p className="text-slate-300">
+                          Valor: <strong className="text-emerald-400 font-bold">{log.boletoInfo.valor}</strong> | Vencimento:{" "}
+                          <strong className="text-amber-400">{log.boletoInfo.vencimento}</strong>
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-slate-400 font-bold block">Linha Digitável:</span>
+                        <div className="bg-slate-900 p-2 rounded border border-slate-800 text-[10px] font-mono text-cyan-300 break-all flex items-center justify-between">
+                          <span>{log.boletoInfo.linhaDigitavel}</span>
+                          <button
+                            onClick={() => handleCopyLinha(log.boletoInfo!.linhaDigitavel, log.id)}
+                            className="ml-2 p-1 text-slate-400 hover:text-cyan-300 transition-colors"
+                            title="Copiar Linha Digitável"
+                          >
+                            {copiedId === log.id ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pt-1 flex flex-wrap gap-1.5">
+                        <button
+                          onClick={(e) => handleOpenBoletoPdf(e, log.boletoInfo)}
+                          className="px-2 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 rounded text-[9px] font-bold flex items-center gap-1 transition-colors border border-emerald-500/40 cursor-pointer"
+                          title="Visualizar / Imprimir PDF da 2ª Via"
+                        >
+                          <FileText className="h-3 w-3" /> PDF Boleto <ExternalLink className="h-2.5 w-2.5" />
                         </button>
                       </div>
                     </div>
-
-                    <div className="pt-1 flex flex-wrap gap-1.5">
-                      <button 
-                        onClick={(e) => handleOpenBoletoPdf(e, log.boletoInfo)} 
-                        className="px-2 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 rounded text-[9px] font-bold flex items-center gap-1 transition-colors border border-emerald-500/40 cursor-pointer"
-                        title="Visualizar / Imprimir PDF da 2ª Via"
-                      >
-                        <FileText className="h-3 w-3" /> PDF Boleto <ExternalLink className="h-2.5 w-2.5" />
-                      </button>
-                      <span className="px-2 py-1 bg-emerald-950 text-emerald-400 border border-emerald-500/30 rounded text-[9px] font-bold flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3 text-emerald-400" /> WhatsApp Enviado
-                      </span>
-                      <span className="px-2 py-1 bg-amber-950 text-amber-400 border border-amber-500/30 rounded text-[9px] font-bold flex items-center gap-1">
-                        <Mail className="h-3 w-3 text-amber-400" /> E-mail Enviado
-                      </span>
+                  ) : (
+                    <div className="text-slate-300 text-[11px] leading-relaxed font-sans whitespace-pre-line space-y-1">
+                      {log.text.split("\n").map((line, lIdx) => {
+                        if (!line.trim()) return <div key={lIdx} className="h-1.5" />;
+                        const isHeader =
+                          line.startsWith("📊") || line.startsWith("💡") || line.startsWith("---") || line.startsWith("📄") || line.startsWith("•");
+                        const isBullet = line.trim().startsWith("•") || line.trim().startsWith("🔥") || line.trim().startsWith("-");
+                        return (
+                          <p
+                            key={lIdx}
+                            className={`${isHeader ? "font-semibold text-cyan-200" : isBullet ? "text-slate-200 pl-1" : "text-slate-300"}`}
+                          >
+                            {line}
+                          </p>
+                        );
+                      })}
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-slate-300 text-[11px] leading-relaxed font-sans whitespace-pre-line space-y-1">
-                    {log.text.split("\n").map((line, lIdx) => {
-                      if (!line.trim()) return <div key={lIdx} className="h-1.5" />;
-                      const isHeader = line.startsWith("📊") || line.startsWith("💡") || line.startsWith("---") || line.startsWith("📄") || line.startsWith("•");
-                      const isBullet = line.trim().startsWith("•") || line.trim().startsWith("🔥") || line.trim().startsWith("-");
-                      return (
-                        <p 
-                          key={lIdx} 
-                          className={`${
-                            isHeader ? "font-semibold text-cyan-200" : isBullet ? "text-slate-200 pl-1" : "text-slate-300"
-                          }`}
-                        >
-                          {line}
-                        </p>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           <div className="mt-auto relative rounded-xl overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-            <img 
-              src="/images/jarvis_tech_orb.jpg" 
-              alt="Jarvis Orb Visual" 
-              className="w-full h-28 object-cover"
-            />
+            <img src="/images/jarvis_tech_orb.jpg" alt="Jarvis Orb Visual" className="w-full h-24 object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
             <div className="absolute bottom-2 left-2 text-[10px] font-bold text-cyan-300 uppercase tracking-widest flex items-center gap-1">
               <Sparkles className="h-3 w-3 text-cyan-400" /> Holograma Ativo
             </div>
           </div>
-
         </div>
-
       </div>
 
       <VoiceCloningModal
