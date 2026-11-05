@@ -911,26 +911,50 @@ export default function Settings() {
                         </div>
                       </div>
 
-                      {/* GUIA DOCKER RÁPIDO DO WAHA */}
-                      <div className="p-3 bg-slate-900 text-slate-200 rounded-xl text-xs space-y-2 border border-slate-800">
+                      {/* OPÇÃO DE PAREAMENTO POR NÚMERO (SEM CÂMERA) */}
+                      <div className="p-3 bg-slate-50 dark:bg-zinc-900/60 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs space-y-2">
+                        <Label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                          📱 Conectar com Código de 8 dígitos (sem escanear QR Code)
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Seu celular com DDD (ex: 11999999999)"
+                            value={wahaPairingPhone}
+                            onChange={(e) => setWahaPairingPhone(e.target.value)}
+                            className="h-9 text-xs"
+                          />
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={handleRequestWahaPairing}
+                            disabled={wahaCreating || !wahaPairingPhone.trim()}
+                            className="h-9 text-xs font-bold shrink-0"
+                          >
+                            Gerar Código
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* GUIA DE INICIALIZAÇÃO LOCAL DO SERVIDOR */}
+                      <div className="p-3 bg-slate-900 text-slate-200 rounded-xl text-xs space-y-2.5 border border-slate-800">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-emerald-400 flex items-center gap-1.5">
-                            🐳 Subir WAHA em 1 comando (Docker Compose)
+                            ⚡ Iniciar Servidor Local (Sem Docker)
                           </span>
-                          <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">120 MB RAM</span>
+                          <span className="text-[10px] bg-slate-800 text-emerald-400 px-2 py-0.5 rounded font-mono font-bold">~40 MB RAM</span>
                         </div>
                         <p className="text-[11px] text-slate-400">
-                          Execute no terminal da sua máquina ou VPS onde está o projeto:
+                          Execute no terminal do seu computador (PowerShell) na pasta do projeto:
                         </p>
                         <div className="p-2 bg-black/60 rounded-lg font-mono text-[11px] text-emerald-300 flex items-center justify-between select-all">
-                          <code>docker compose -f docker-compose.waha.yml up -d</code>
+                          <code>npm run whatsapp</code>
                           <button
                             type="button"
                             onClick={() => {
-                              navigator.clipboard.writeText("docker compose -f docker-compose.waha.yml up -d");
+                              navigator.clipboard.writeText("npm run whatsapp");
                               toast({ title: "Comando Copiado!" });
                             }}
-                            className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded ml-2"
+                            className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded ml-2 font-bold"
                           >
                             Copiar
                           </button>
