@@ -24,8 +24,10 @@ import {
   CheckCircle2,
   Clock,
   Building2,
-  DollarSign
+  DollarSign,
+  ArrowLeft
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { WhatsAppIcon } from "@/components/SocialIcons";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -51,6 +53,8 @@ export default function WhatsAppInbox() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [waMode, setWaMode] = useState<WhatsAppMode>(() => getWhatsAppMode());
+  const isMobile = useIsMobile();
+  const [mobileShowChat, setMobileShowChat] = useState(false);
 
   const fetchLeads = async (silent = false) => {
     if (!profile?.organizacao_id) return;
@@ -193,55 +197,57 @@ export default function WhatsAppInbox() {
   const activeConversasCount = allLeads.filter(l => l.has_chat_history).length;
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col bg-white dark:bg-zinc-950 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-zinc-800">
+    <div className="h-[calc(100dvh-115px)] md:h-[calc(100vh-140px)] flex flex-col bg-white dark:bg-zinc-950 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-zinc-800">
       {/* BARRA SUPERIOR DE STATUS & CONTROLE GLOBAL WHATSAPP */}
-      <div className="px-6 py-3.5 bg-slate-900 text-white flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
-            <WhatsAppIcon className="h-5 w-5" />
+      <div className="px-3.5 py-2.5 sm:px-6 sm:py-3.5 bg-slate-900 text-white flex items-center justify-between flex-wrap gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
+            <WhatsAppIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-black tracking-tight">WhatsApp CRM Hub</h1>
-              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[9px] font-black uppercase px-2 py-0.5">
+              <h1 className="text-sm sm:text-base font-black tracking-tight">WhatsApp CRM Hub</h1>
+              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[9px] font-black uppercase px-1.5 sm:px-2 py-0.5">
                 Multi-Atendimento
               </Badge>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[10px] sm:text-[11px] text-slate-400 hidden sm:block">
               Sincronização em tempo real entre o banco de dados do CRM e as conversas de WhatsApp dos seus clientes.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={toggleWhatsAppMode}
-            className={`px-3 py-1.5 text-xs font-black uppercase rounded-xl border transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 text-[11px] sm:text-xs font-black uppercase rounded-xl border transition-all flex items-center gap-1.5 ${
               waMode === "waha"
                 ? "bg-indigo-900/60 border-indigo-500 text-indigo-200"
                 : "bg-emerald-900/60 border-emerald-500 text-emerald-200"
             }`}
           >
-            <Zap className="h-3.5 w-3.5 text-amber-400" />
-            <span>Modo: {waMode === "waha" ? "WhatsApp Direto (WAHA)" : "WhatsApp Web"}</span>
+            <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-400" />
+            <span>{waMode === "waha" ? "Modo: WAHA" : "Modo: Web"}</span>
           </button>
 
           <Button
             size="sm"
             variant="outline"
             onClick={() => fetchLeads()}
-            className="h-8 px-2.5 border-slate-700 bg-slate-800 hover:bg-slate-700 text-white text-xs rounded-xl gap-1"
+            className="h-7 sm:h-8 px-2 sm:px-2.5 border-slate-700 bg-slate-800 hover:bg-slate-700 text-white text-[11px] sm:text-xs rounded-xl gap-1"
           >
             <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-            Atualizar
+            <span className="hidden sm:inline">Atualizar</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* SIDEBAR: LISTA DE CONVERSAS E LEADS DO CRM */}
-        <div className="w-full sm:w-80 lg:w-96 border-r border-slate-200 dark:border-zinc-800 flex flex-col bg-slate-50/70 dark:bg-zinc-900/40 shrink-0">
+        <div className={`${
+          isMobile && mobileShowChat ? "hidden" : "flex"
+        } w-full md:w-80 lg:w-96 border-r border-slate-200 dark:border-zinc-800 flex-col bg-slate-50/70 dark:bg-zinc-900/40 shrink-0`}>
           
           {/* ABAS: CONVERSAS ATIVAS VS TODOS OS LEADS DO CRM */}
           <div className="p-4 space-y-3 border-b border-slate-200/80 dark:border-zinc-800">
@@ -344,7 +350,12 @@ export default function WhatsAppInbox() {
                   return (
                     <button
                       key={lead.id}
-                      onClick={() => setSelectedLead(lead)}
+                      onClick={() => {
+                        setSelectedLead(lead);
+                        if (isMobile) {
+                          setMobileShowChat(true);
+                        }
+                      }}
                       className={`w-full p-3 rounded-2xl flex gap-3 transition-all text-left relative ${
                         isSelected 
                           ? "bg-white dark:bg-zinc-900 shadow-md ring-1 ring-emerald-500/30 border border-emerald-500/20" 
@@ -409,34 +420,48 @@ export default function WhatsAppInbox() {
         </div>
 
         {/* ÁREA PRINCIPAL: CONVERSA SELECIONADA + CHAT INTEGRADO */}
-        <div className="flex-1 flex flex-col bg-slate-100/50 dark:bg-zinc-950 overflow-hidden">
+        <div className={`${
+          isMobile && !mobileShowChat ? "hidden" : "flex"
+        } flex-1 flex-col bg-slate-100/50 dark:bg-zinc-950 overflow-hidden`}>
           {selectedLead ? (
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               
               {/* HEADER DO CLIENTE SELECIONADO */}
-              <div className="p-3.5 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-3 shadow-sm">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md">
+              <div className="p-2.5 sm:p-3.5 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2 sm:gap-3 shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  {isMobile && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setMobileShowChat(false)}
+                      className="h-8 px-2 -ml-1 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl gap-1 shrink-0"
+                      title="Voltar para a lista de conversas"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      <span className="text-xs font-bold">Voltar</span>
+                    </Button>
+                  )}
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md">
                     {selectedLead.nome ? selectedLead.nome.charAt(0).toUpperCase() : "?"}
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-black text-sm text-slate-900 dark:text-white truncate">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <h3 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-none">
                         {selectedLead.nome}
                       </h3>
-                      <Badge className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-bold border-none px-2 py-0">
+                      <Badge className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-bold border-none px-1.5 py-0">
                         {formatCurrency(Number(selectedLead.valor_credito || 0))}
                       </Badge>
                     </div>
-                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold flex items-center gap-2">
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold flex items-center gap-1.5 truncate">
                       <span>📱 {selectedLead.celular || "Sem celular"}</span>
-                      {selectedLead.cidade && <span>• 📍 {selectedLead.cidade}</span>}
+                      {selectedLead.cidade && <span className="hidden sm:inline">• 📍 {selectedLead.cidade}</span>}
                     </p>
                   </div>
                 </div>
 
                 {/* BOTÕES DE AÇÃO DO CONTATO */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {selectedLead.celular && (
                     <Button
                       size="sm"
@@ -445,10 +470,10 @@ export default function WhatsAppInbox() {
                         const webUrl = getWhatsAppDirectUrl(selectedLead.celular || "", `Olá ${selectedLead.nome}, como posso te ajudar com seu consórcio?`);
                         window.open(webUrl, "_blank");
                       }}
-                      className="h-8 px-3 text-xs font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 rounded-xl gap-1.5"
+                      className="h-7 sm:h-8 px-2 sm:px-3 text-xs font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 rounded-xl gap-1"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
-                      wa.me
+                      <span className="hidden sm:inline">wa.me</span>
                     </Button>
                   )}
 
@@ -456,18 +481,18 @@ export default function WhatsAppInbox() {
                     size="sm"
                     variant={showLeadDetails ? "default" : "outline"}
                     onClick={() => setShowLeadDetails(!showLeadDetails)}
-                    className="h-8 px-3 text-xs font-bold rounded-xl gap-1"
+                    className="h-7 sm:h-8 px-2 sm:px-3 text-xs font-bold rounded-xl gap-1"
                   >
                     <ClipboardList className="h-3.5 w-3.5" />
-                    {showLeadDetails ? "Ocultar Dados" : "Ficha do Lead"}
+                    <span className="hidden sm:inline">{showLeadDetails ? "Ocultar Dados" : "Ficha"}</span>
                   </Button>
                 </div>
               </div>
 
               {/* CONTEÚDO PRINCIPAL: CHAT + DOSSIÊ LATERAL OPCIONAL */}
               <div className="flex-1 flex overflow-hidden">
-                <div className="flex-1 p-4 overflow-hidden flex flex-col">
-                  <LeadChat lead={selectedLead} />
+                <div className="flex-1 p-1 sm:p-2 md:p-3 overflow-hidden flex flex-col">
+                  <LeadChat lead={selectedLead} className="h-full border-0 rounded-none sm:rounded-2xl shadow-none" />
                 </div>
 
                 {/* PAINEL LATERAL DE DETALHES DO LEAD (DOSSIÊ) */}

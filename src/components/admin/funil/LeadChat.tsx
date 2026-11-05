@@ -43,7 +43,7 @@ import {
   formatWhatsAppNumber,
   type WhatsAppMode
 } from "@/services/evolutionApiService";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 
 interface Message {
   id: string;
@@ -108,7 +108,7 @@ const QUICK_TEMPLATES: QuickTemplate[] = [
   }
 ];
 
-export function LeadChat({ lead }: { lead: Lead }) {
+export function LeadChat({ lead, className }: { lead: Lead; className?: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
@@ -299,7 +299,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
   };
 
   return (
-    <div className="flex flex-col h-[560px] bg-slate-50 dark:bg-zinc-950 rounded-2xl border border-slate-200 dark:border-zinc-800 overflow-hidden shadow-xl">
+    <div className={cn("flex flex-col h-full min-h-[460px] bg-slate-50 dark:bg-zinc-950 rounded-2xl border border-slate-200 dark:border-zinc-800 overflow-hidden shadow-xl", className)}>
       {/* HEADER DO CHAT: CONTROLE DE IA, STATUS E MODO DE ENVIO */}
       <div className="p-3.5 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2.5">
@@ -685,7 +685,7 @@ export function LeadChat({ lead }: { lead: Lead }) {
             size="icon" 
             className="rounded-2xl h-11 w-11 shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
             disabled={!newMessage.trim() || sending}
-            title={waMode === "evolution" ? "Enviar via Evolution API" : "Abrir no WhatsApp Web"}
+            title={waMode === "waha" ? "Enviar direto pelo CRM (WAHA)" : waMode === "evolution" ? "Enviar via Evolution API" : "Abrir no WhatsApp Web / wa.me"}
           >
             {sending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
