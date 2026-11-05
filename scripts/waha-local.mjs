@@ -20,6 +20,14 @@ const pino = require("../evolution-api/node_modules/pino");
 const QRCode = require("../evolution-api/node_modules/qrcode");
 const qrcodeTerminal = require("../evolution-api/node_modules/qrcode-terminal");
 
+// Previne que falhas de rede encerrem o processo do servidor
+process.on("uncaughtException", (err) => {
+  console.warn("⚠️ [WAHA Local - uncaughtException capturado]:", err.message);
+});
+process.on("unhandledRejection", (reason) => {
+  console.warn("⚠️ [WAHA Local - unhandledRejection capturado]:", reason);
+});
+
 const PORT = process.env.PORT || 3000;
 const SESSION_DIR = path.resolve("./whatsapp_session");
 
@@ -198,26 +206,33 @@ async function forwardToSupabaseWebhook(msg) {
       safeContactName = "";
     }
 
-    const res = await fetch(SUPABASE_WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        event: "messages.upsert",
-        data: msg,
-        text: contentText,
-        contactName: safeContactName,
-        remoteJid: remoteJid,
-      }),
-    });
+    try {
+      const res = await fetch(SUPABASE_WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event: "messages.upsert",
+          data: msg,
+          text: contentText,
+          contactName: safeContactName,
+          remoteJid: remoteJid,
+        }),
+      }).catch((fetchErr) => {
+        console.warn("⚠️ [Aviso fetch Webhook Supabase]:", fetchErr.message);
+        return null;
+      });
 
-    if (res.ok) {
-      const data = await res.json().catch(() => ({}));
-      console.log(`💾 [CRM Sincronizado] Mensagem gravada no CRM com sucesso! Lead ID: ${data.leadId || "OK"}`);
-    } else {
-      const errText = await res.text().catch(() => "");
-      console.error(`❌ [Erro Webhook Supabase ${res.status}]: ${errText.substring(0, 150)}`);
+      if (res && res.ok) {
+        const data = await res.json().catch(() => ({}));
+        console.log(`💾 [CRM Sincronizado] Mensagem gravada no CRM com sucesso! Lead ID: ${data.leadId || "OK"}`);
+      } else if (res) {
+        const errText = await res.text().catch(() => "");
+        console.error(`❌ [Erro Webhook Supabase ${res.status}]: ${errText.substring(0, 150)}`);
+      }
+    } catch (webhookErr) {
+      console.warn("⚠️ [Erro ao enviar para webhook do Supabase]:", webhookErr.message);
     }
   } catch (err) {
     console.error("❌ Falha ao enviar para webhook do Supabase:", err.message);

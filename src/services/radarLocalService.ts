@@ -210,8 +210,11 @@ function gerarEmpresasLote(
     const cnpjCheck = String(10 + (idx * 7) % 89).padStart(2, "0");
     const cnpjFormatado = `${cnpjRoot.slice(0, 2)}.${cnpjRoot.slice(2, 5)}.${cnpjRoot.slice(5, 8)}/${cnpjSuf}-${cnpjCheck}`;
 
+    // Gera número de celular brasileiro completo com 11 dígitos: DDD (2) + 9 + 4 dígitos + 4 dígitos
+    const dddClean = String(ddd).replace(/\D/g, "").slice(0, 2) || "41";
+    const telMeio = String(8100 + (idx * 173) % 1800).padStart(4, "0");
     const telFinal = String(1000 + (idx * 287) % 8900).padStart(4, "0");
-    const tel = `${ddd}99${idx % 9 + 1}${telFinal}`;
+    const tel = `${dddClean}9${telMeio}${telFinal}`;
 
     let gancho = "";
     if (segmento === "pesados") {

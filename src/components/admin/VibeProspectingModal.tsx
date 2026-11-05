@@ -542,7 +542,7 @@ function gerarVibeProspectsLote(
     empresa: item.empresa,
     cidade: item.cidade,
     uf: "PR",
-    telefone: `4199${(idx % 9) + 1}${String(1000 + (idx * 317) % 8900).padStart(4, "0")}`,
+    telefone: `419${String(8100 + (idx * 173) % 1800).padStart(4, "0")}${String(1000 + (idx * 317) % 8900).padStart(4, "0")}`,
     email: `${item.nome.split(" ")[0].toLowerCase()}@${item.empresa.toLowerCase().replace(/[^a-z0-9]/g, "")}.com.br`,
     segmento,
     valorCredito: item.cred,
