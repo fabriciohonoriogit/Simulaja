@@ -138,6 +138,15 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
           };
           setMessages((prev) => {
             if (prev.some((m) => m.id === msg.id)) return prev;
+            // Deduplica mensagem temporária otimista (temp_...)
+            const tempIndex = prev.findIndex(
+              (m) => m.id.startsWith("temp_") && m.content?.trim() === msg.content?.trim()
+            );
+            if (tempIndex !== -1) {
+              const updated = [...prev];
+              updated[tempIndex] = msg;
+              return updated;
+            }
             return [...prev, msg];
           });
         }
@@ -175,7 +184,22 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
         sender: msg.sender ? msg.sender : (msg.role === 'user' || msg.role === 'client' ? 'client' : msg.role === 'agent' ? 'agent' : 'ai'),
         status: 'read'
       }));
-      setMessages(formatted as Message[]);
+
+      // Filtra mensagens repetidas (mesmo conteúdo e emissor gravadas em intervalo de até 15s)
+      const deduplicated: Message[] = [];
+      for (const m of formatted) {
+        const isDupe = deduplicated.some(
+          (prev) =>
+            prev.sender === m.sender &&
+            prev.content?.trim() === m.content?.trim() &&
+            Math.abs(new Date(prev.created_at).getTime() - new Date(m.created_at).getTime()) < 15000
+        );
+        if (!isDupe) {
+          deduplicated.push(m);
+        }
+      }
+
+      setMessages(deduplicated);
     }
     if (!silent) setLoading(false);
   }
@@ -265,7 +289,12 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
       toast.error("Erro ao registrar mensagem no CRM: " + (error.message || ""));
     } else {
       if (insertedData) {
-        setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...insertedData, sender: 'agent', status: 'read' } : m)));
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === insertedData.id)) {
+            return prev.filter((m) => m.id !== tempId);
+          }
+          return prev.map((m) => (m.id === tempId ? { ...insertedData, sender: 'agent', status: 'read' } : m));
+        });
       }
 
       if (forceWeb || waMode === "web") {

@@ -131,16 +131,55 @@ serve(async (req) => {
         }
       }
 
+      // Fallback 1.5: Se a mensagem for sobre Google Maps / Meu Negócio, pertence exclusivamente ao perfil do consultor Fabrício Honório
+      const lowerText = incomingText.toLowerCase();
+      if (!matchedLead && (lowerText.includes("google maps") || lowerText.includes("business.google.com"))) {
+        const { data: honorioLead } = await supabaseAdmin
+          .from("leads")
+          .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
+          .ilike("nome", "%Honorio%")
+          .limit(1);
+
+        if (honorioLead && honorioLead.length > 0) {
+          matchedLead = honorioLead[0];
+        }
+      }
+
       // Fallback 2: Se não encontrou por telefone e temos pushName (ex: Dorys Pedrozo ou contato com LID)
       if (!matchedLead && pushName) {
         const cleanPushName = pushName.trim();
-        const firstName = cleanPushName.split(" ")[0];
-        if (firstName.length >= 3) {
+        const lowerPush = cleanPushName.toLowerCase();
+
+        // Diferenciação estrita entre Fabrício Honório (consultor) e Fabrício Loddi (cliente)
+        if (lowerPush.includes("honorio") || lowerPush.includes("honório")) {
+          const { data: honorioLeads } = await supabaseAdmin
+            .from("leads")
+            .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
+            .ilike("nome", "%Honorio%")
+            .limit(1);
+
+          if (honorioLeads && honorioLeads.length > 0) {
+            matchedLead = honorioLeads[0];
+          }
+        } else if (lowerPush.includes("loddi")) {
+          const { data: loddiLeads } = await supabaseAdmin
+            .from("leads")
+            .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
+            .ilike("nome", "%Loddi%")
+            .limit(1);
+
+          if (loddiLeads && loddiLeads.length > 0) {
+            matchedLead = loddiLeads[0];
+          }
+        } else if (cleanPushName.length >= 4 && !lowerPush.startsWith("fabricio")) {
+          // Busca com nome e sobrenome para evitar falsos positivos
+          const nameParts = cleanPushName.split(" ").filter(Boolean);
+          const searchPattern = nameParts.length >= 2 ? `${nameParts[0]}%${nameParts[1]}` : cleanPushName;
           const { data: nameLeads } = await supabaseAdmin
             .from("leads")
             .select("id, nome, celular, atendimento_ia, organizacao_id, responsavel_id")
-            .ilike("nome", `%${firstName}%`)
-            .limit(5);
+            .ilike("nome", `%${searchPattern}%`)
+            .limit(1);
 
           if (nameLeads && nameLeads.length > 0) {
             matchedLead = nameLeads[0];
@@ -210,6 +249,48 @@ serve(async (req) => {
 
       if (!matchedLead) {
         return new Response(JSON.stringify({ status: "ignored_failed_to_associate" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      // Auto-correção: Se existirem mensagens do Google Maps vinculadas indevidamente ao cliente Loddi, move para Fabrício Honório
+      try {
+        const { data: honorioLead } = await supabaseAdmin
+          .from("leads")
+          .select("id")
+          .ilike("nome", "%Honorio%")
+          .limit(1);
+        const { data: loddiLead } = await supabaseAdmin
+          .from("leads")
+          .select("id")
+          .ilike("nome", "%Loddi%")
+          .limit(1);
+
+        if (honorioLead?.[0]?.id && loddiLead?.[0]?.id) {
+          await supabaseAdmin
+            .from("chat_messages")
+            .update({ lead_id: honorioLead[0].id })
+            .eq("lead_id", loddiLead[0].id)
+            .or("content.ilike.%Google Maps%,content.ilike.%business.google.com%");
+        }
+      } catch (patchGoogleErr) {
+        // Silencioso
+      }
+
+      // 3.5. DEDUPLICAÇÃO: Não grava duplicatas se a mesma mensagem foi inserida nos últimos 15 segundos
+      const recentWindow = new Date(Date.now() - 15000).toISOString();
+      const { data: existingRecent } = await supabaseAdmin
+        .from("chat_messages")
+        .select("id")
+        .eq("lead_id", matchedLead.id)
+        .eq("content", incomingText)
+        .gte("created_at", recentWindow)
+        .limit(1);
+
+      if (existingRecent && existingRecent.length > 0) {
+        console.log(`[Deduplicação] Mensagem idêntica recente já existe no CRM para ${matchedLead.nome}. Ignorando duplicação.`);
+        return new Response(JSON.stringify({ status: "ignored_duplicate", leadId: matchedLead.id }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
         });

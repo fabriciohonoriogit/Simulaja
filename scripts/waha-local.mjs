@@ -34,10 +34,111 @@ let currentQrText = null;
 let currentQrPngBuffer = null;
 let currentQrDataUrl = null;
 const contactNameCache = new Map();
+const phoneToJidCache = new Map();
+const CACHE_FILE = path.join(SESSION_DIR, "phone_jid_cache.json");
 
 // Garante que a pasta de sessão existe
 if (!fs.existsSync(SESSION_DIR)) {
   fs.mkdirSync(SESSION_DIR, { recursive: true });
+}
+
+// Carrega cache de mapeamento JID persistente do disco
+try {
+  if (fs.existsSync(CACHE_FILE)) {
+    const raw = fs.readFileSync(CACHE_FILE, "utf-8");
+    const parsed = JSON.parse(raw);
+    for (const [k, v] of Object.entries(parsed)) {
+      phoneToJidCache.set(k, v);
+    }
+    console.log(`📋 [JID Cache] ${phoneToJidCache.size} números carregados da memória.`);
+  }
+} catch (e) {
+  console.warn("Aviso ao carregar phone_jid_cache.json:", e.message);
+}
+
+function saveJidCache() {
+  try {
+    const obj = Object.fromEntries(phoneToJidCache.entries());
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(obj, null, 2), "utf-8");
+  } catch (e) {
+    console.warn("Aviso ao salvar phone_jid_cache.json:", e.message);
+  }
+}
+
+function recordJidMapping(numberOrJid, realJid) {
+  if (!numberOrJid || !realJid) return;
+  const digits = String(numberOrJid).replace(/\D/g, "");
+  if (!digits) return;
+  phoneToJidCache.set(digits, realJid);
+  if (digits.length >= 8) {
+    phoneToJidCache.set(digits.slice(-8), realJid);
+  }
+  if (digits.startsWith("55") && digits.length >= 10) {
+    phoneToJidCache.set(digits.substring(2), realJid);
+  }
+  saveJidCache();
+}
+
+/**
+ * Resolve com precisão o JID correto no WhatsApp (gerenciando a variação do 9º dígito no Brasil).
+ */
+async function resolveTargetJid(chatId) {
+  if (!chatId) return chatId;
+  if (chatId.includes("@g.us")) return chatId;
+
+  let clean = chatId.replace(/@.*$/, "").replace(/\D/g, "");
+  if (!clean) return chatId;
+
+  const last8 = clean.slice(-8);
+
+  // 1. Verifica no cache local se já conversamos ou recebemos mensagem deste contato
+  if (phoneToJidCache.has(clean)) {
+    const cached = phoneToJidCache.get(clean);
+    console.log(`🎯 [WAHA Local] JID resolvido via cache para ${clean} -> ${cached}`);
+    return cached;
+  }
+  if (phoneToJidCache.has(last8)) {
+    const cached = phoneToJidCache.get(last8);
+    console.log(`🎯 [WAHA Local] JID resolvido via cache (8 dígitos) para ${clean} -> ${cached}`);
+    return cached;
+  }
+
+  // Se não começa com 55 e tem 10 ou 11 dígitos, adiciona DDI 55
+  if (!clean.startsWith("55") && (clean.length === 10 || clean.length === 11)) {
+    clean = "55" + clean;
+  }
+
+  // 2. Gera candidatos (com e sem 9º dígito para telefones do Brasil)
+  const candidates = [clean];
+  if (clean.startsWith("55")) {
+    if (clean.length === 13) {
+      // 55 + DDD (2) + 9 + 8 dígitos -> candidato sem o 9 (ex: 5541996316737 -> 554196316737)
+      const without9 = clean.slice(0, 4) + clean.slice(5);
+      candidates.push(without9);
+    } else if (clean.length === 12) {
+      // 55 + DDD (2) + 8 dígitos -> candidato com o 9 (ex: 554196316737 -> 5541996316737)
+      const with9 = clean.slice(0, 4) + "9" + clean.slice(4);
+      candidates.push(with9);
+    }
+  }
+
+  // 3. Consulta em tempo real na API do WhatsApp via sock.onWhatsApp
+  if (sock && typeof sock.onWhatsApp === "function") {
+    try {
+      console.log(`🔍 [WAHA Local] Verificando existência de JID no WhatsApp para: ${candidates.join(", ")}...`);
+      const results = await sock.onWhatsApp(...candidates);
+      console.log(`🔍 [WAHA Local] Resultado onWhatsApp:`, JSON.stringify(results));
+      const valid = results?.find(r => r && (r.exists || r.jid));
+      if (valid?.jid) {
+        recordJidMapping(clean, valid.jid);
+        return valid.jid;
+      }
+    } catch (e) {
+      console.warn("⚠️ [WAHA Local] Aviso ao checar onWhatsApp:", e.message);
+    }
+  }
+
+  return `${clean}@s.whatsapp.net`;
 }
 
 /**
@@ -50,6 +151,9 @@ async function forwardToSupabaseWebhook(msg) {
     if (!remoteJid || remoteJid.includes("@g.us") || remoteJid === "status@broadcast") {
       return; // Ignora grupos e status por enquanto
     }
+
+    // Registra mapeamento do JID real do contato no cache imediatamente
+    recordJidMapping(remoteJid, remoteJid);
 
     if (msg.pushName) {
       contactNameCache.set(remoteJid, msg.pushName);
@@ -224,6 +328,15 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 1.5. Verificação e resolução de JID para número (WhatsApp Brasil 8 vs 9 dígitos)
+  if (pathname === "/api/checkNumber") {
+    const phone = url.searchParams.get("phone") || "";
+    const resolved = await resolveTargetJid(phone);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ phone, resolved, cacheSize: phoneToJidCache.size }));
+    return;
+  }
+
   // 2. Status das Sessões
   if (pathname === "/api/sessions" || pathname.startsWith("/api/sessions/")) {
     res.writeHead(200, { "Content-Type": "application/json" });
@@ -305,12 +418,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    let targetJid = chatId;
-    if (!targetJid.includes("@")) {
-      targetJid = `${targetJid.replace(/\D/g, "")}@s.whatsapp.net`;
-    } else if (targetJid.endsWith("@c.us")) {
-      targetJid = targetJid.replace("@c.us", "@s.whatsapp.net");
-    }
+    const targetJid = await resolveTargetJid(chatId);
 
     try {
       const result = await sock.sendMessage(targetJid, { text });
@@ -348,12 +456,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    let targetJid = chatId;
-    if (!targetJid.includes("@")) {
-      targetJid = `${targetJid.replace(/\D/g, "")}@s.whatsapp.net`;
-    } else if (targetJid.endsWith("@c.us")) {
-      targetJid = targetJid.replace("@c.us", "@s.whatsapp.net");
-    }
+    const targetJid = await resolveTargetJid(chatId);
 
     try {
       const isPdf = (file.filename || "").toLowerCase().endsWith(".pdf") || file.url.toLowerCase().includes(".pdf");

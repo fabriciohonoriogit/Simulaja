@@ -352,6 +352,11 @@ export default function WhatsAppInbox() {
                       key={lead.id}
                       onClick={() => {
                         setSelectedLead(lead);
+                        try {
+                          const url = new URL(window.location.href);
+                          url.searchParams.set("leadId", lead.id);
+                          window.history.replaceState(null, "", url.toString());
+                        } catch {}
                         if (isMobile) {
                           setMobileShowChat(true);
                         }
@@ -492,7 +497,7 @@ export default function WhatsAppInbox() {
               {/* CONTEÚDO PRINCIPAL: CHAT + DOSSIÊ LATERAL OPCIONAL */}
               <div className="flex-1 flex overflow-hidden">
                 <div className="flex-1 p-1 sm:p-2 md:p-3 overflow-hidden flex flex-col">
-                  <LeadChat lead={selectedLead} className="h-full border-0 rounded-none sm:rounded-2xl shadow-none" />
+                  <LeadChat key={selectedLead.id} lead={selectedLead} className="h-full border-0 rounded-none sm:rounded-2xl shadow-none" />
                 </div>
 
                 {/* PAINEL LATERAL DE DETALHES DO LEAD (DOSSIÊ) */}
