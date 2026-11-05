@@ -2,6 +2,8 @@
  * WAHA Local Server (Node.js nativo sem necessidade de Docker)
  * Micro-servidor de WhatsApp compatível com a API do WAHA (devlikeapro/waha)
  * Desenvolvido para rodar direto no Windows / Node.js sem Docker Desktop.
+ * 
+ * Inclui SINCRONIZAÇÃO BIDIRECIONAL EM TEMPO REAL com o banco Supabase do CRM!
  */
 
 import http from "http";
@@ -11,12 +13,24 @@ import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 
-// Carrega Baileys e dependências já presentes no projeto
+// Carrega Baileys e dependências
 const baileys = require("../evolution-api/node_modules/baileys");
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = baileys;
 const pino = require("../evolution-api/node_modules/pino");
 const QRCode = require("../evolution-api/node_modules/qrcode");
 const qrcodeTerminal = require("../evolution-api/node_modules/qrcode-terminal");
+
+// Configura Supabase com WebSocket compatível com Node.js
+const { createClient } = require("@supabase/supabase-js");
+const ws = require("../evolution-api/node_modules/ws");
+globalThis.WebSocket = ws;
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://pfedvdqpnpbrlhfbzjcj.supabase.co";
+const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmZWR2ZHFwbnBicmxoZmJ6amNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MDAwMTgsImV4cCI6MjA4NjQ3NjAxOH0.5X19fj92_I5-ovCSobX0FCiHUMOVDUJBlrUkRXvhSsE";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: false },
+});
 
 const PORT = process.env.PORT || 3000;
 const SESSION_DIR = path.resolve("./whatsapp_session");
@@ -32,6 +46,110 @@ if (!fs.existsSync(SESSION_DIR)) {
   fs.mkdirSync(SESSION_DIR, { recursive: true });
 }
 
+/**
+ * Sincroniza mensagens recebidas e enviadas diretamente com a tabela chat_messages do CRM
+ */
+async function syncMessageToCRM(msg) {
+  try {
+    const remoteJid = msg.key?.remoteJid;
+    if (!remoteJid || remoteJid.includes("@g.us") || remoteJid === "status@broadcast") {
+      return; // Ignora mensagens de grupos e status por enquanto
+    }
+
+    const text =
+      msg.message?.conversation ||
+      msg.message?.extendedTextMessage?.text ||
+      msg.message?.imageMessage?.caption ||
+      msg.message?.documentMessage?.caption ||
+      "";
+
+    const isAudio = Boolean(msg.message?.audioMessage);
+    const isImage = Boolean(msg.message?.imageMessage);
+    const isDoc = Boolean(msg.message?.documentMessage);
+
+    if (!text && !isAudio && !isImage && !isDoc) {
+      return;
+    }
+
+    const contentText = text || (isAudio ? "🎤 [Áudio]" : isImage ? "📷 [Imagem]" : "📎 [Documento]");
+    const isFromMe = Boolean(msg.key?.fromMe);
+    const rawNumber = remoteJid.replace(/@.*$/, "").replace(/\D/g, "");
+    const last8 = rawNumber.slice(-8);
+
+    console.log(`📩 [WhatsApp ${isFromMe ? "Enviada" : "Recebida"} | ${rawNumber}]: ${contentText}`);
+
+    // 1. Busca o lead pelo telefone no Supabase
+    let lead = null;
+    const { data: leads, error: leadErr } = await supabase
+      .from("leads")
+      .select("id, nome, celular, organizacao_id")
+      .ilike("celular", `%${last8}%`)
+      .limit(1);
+
+    if (leads && leads.length > 0) {
+      lead = leads[0];
+    } else {
+      // Tenta buscar pelo nome push se disponível
+      if (msg.pushName) {
+        const { data: nameLeads } = await supabase
+          .from("leads")
+          .select("id, nome, celular, organizacao_id")
+          .ilike("nome", `%${msg.pushName}%`)
+          .limit(1);
+        if (nameLeads && nameLeads.length > 0) {
+          lead = nameLeads[0];
+        }
+      }
+    }
+
+    // Se não encontrou o lead, cadastra automaticamente para a conversa não sumir
+    if (!lead && !isFromMe) {
+      const contactName = msg.pushName || `Contato ${rawNumber.slice(-4)}`;
+      console.log(`✨ [WAHA Local] Criando lead automático para novo contato: ${contactName} (${rawNumber})`);
+      const { data: newLead, error: createLeadErr } = await supabase
+        .from("leads")
+        .insert({
+          nome: contactName,
+          celular: rawNumber,
+          origem: "WhatsApp Orgânico",
+          status: "novo",
+        })
+        .select()
+        .single();
+
+      if (!createLeadErr && newLead) {
+        lead = newLead;
+      }
+    }
+
+    if (lead) {
+      // 2. Grava a mensagem na tabela chat_messages do CRM
+      const role = isFromMe ? "assistant" : "user";
+      const { error: insertErr } = await supabase.from("chat_messages").insert({
+        lead_id: lead.id,
+        content: contentText,
+        role: role,
+        created_at: new Date(msg.messageTimestamp ? Number(msg.messageTimestamp) * 1000 : Date.now()).toISOString(),
+      });
+
+      if (!insertErr) {
+        console.log(`💾 [CRM Sincronizado] Mensagem vinculada com sucesso ao Lead: ${lead.nome} (${lead.id})`);
+        // Atualiza updated_at do lead para que ele suba para o topo no Kanban e no Inbox
+        await supabase
+          .from("leads")
+          .update({ updated_at: new Date().toISOString() })
+          .eq("id", lead.id);
+      } else {
+        console.error("❌ Erro ao gravar mensagem no Supabase:", insertErr.message);
+      }
+    } else {
+      console.log(`ℹ️ [WAHA Local] Mensagem de ${rawNumber} não vinculada a nenhum Lead.`);
+    }
+  } catch (err) {
+    console.error("❌ Erro ao sincronizar mensagem com o CRM:", err);
+  }
+}
+
 async function connectToWhatsApp() {
   currentStatus = "STARTING";
   console.log("\n🔄 [WAHA Local] Conectando ao WhatsApp...");
@@ -42,7 +160,7 @@ async function connectToWhatsApp() {
     const vInfo = await fetchLatestBaileysVersion();
     if (vInfo?.version) version = vInfo.version;
   } catch (err) {
-    // Fallback para versão padrão compatível
+    // Fallback
   }
 
   sock = makeWASocket({
@@ -106,12 +224,11 @@ async function connectToWhatsApp() {
     }
   });
 
+  // Escuta todas as mensagens recebidas e enviadas e sincroniza automaticamente com o Supabase
   sock.ev.on("messages.upsert", async (m) => {
-    const msg = m.messages[0];
-    if (!msg?.key?.fromMe && m.type === "notify") {
-      const from = msg.key.remoteJid;
-      const text = msg.message?.conversation || msg.message?.extendedTextMessage?.text || "";
-      console.log(`📩 [Mensagem Recebida de ${from}]: ${text}`);
+    for (const msg of m.messages) {
+      if (!msg?.message) continue;
+      await syncMessageToCRM(msg);
     }
   });
 }
@@ -320,5 +437,6 @@ server.listen(PORT, () => {
   console.log(`🔌 Status: http://localhost:${PORT}/api/sessions/default`);
   console.log(`📱 QR Code: http://localhost:${PORT}/api/default/auth/qr`);
   console.log(`🛡️  Modo: 100% Node.js nativo (Zero Docker necessário!)`);
+  console.log(`💾 Sincronização Automática: Supabase chat_messages Ativa!`);
   console.log(`======================================================\n`);
 });
