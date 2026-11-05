@@ -16,7 +16,8 @@
     "magalu:auditar": "node scripts/auditoria_inadimplentes_magalu.mjs",
     "mobile:sync": "npm run build && npx cap sync",
     "mobile:android": "npm run build && npx cap sync android && npx cap open android",
-    "mobile:ios": "npm run build && npx cap sync ios && npx cap open ios"
+    "mobile:ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "whatsapp": "node scripts/waha-local.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
