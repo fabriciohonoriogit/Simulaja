@@ -31,7 +31,9 @@ import {
   PhoneCall,
   CheckCircle2,
   Clock,
-  Car
+  Car,
+  MapPin,
+  Map
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { aiService } from "@/services/aiService";
@@ -44,6 +46,15 @@ interface ProspectLeadItem {
   id: string;
   nome: string;
   empresa: string;
+  razaoSocial?: string;
+  cnpj?: string;
+  bairro?: string;
+  endereco?: string;
+  googleMapsUrl?: string;
+  avaliacaoGoogle?: number;
+  totalAvaliacoes?: number;
+  decisorPrincipal?: string;
+  cargo?: string;
   telefone: string;
   email?: string;
   cidade: string;
@@ -74,7 +85,7 @@ interface LogEntry {
   };
   isProspectingCard?: boolean;
   prospectingData?: {
-    tipo: "whatsapp" | "email";
+    tipo: "whatsapp" | "email" | "google_maps";
     nicho: string;
     segmento: "pesados" | "imovel" | "veiculo";
     cidade: string;
@@ -312,10 +323,10 @@ export default function JarvisHUDPage() {
   };
 
   /**
-   * MOTOR DE PROSPECÇÃO & ALIMENTAÇÃO DIRETA NO FUNIL (WHATSAPP OU EMAIL)
+   * MOTOR DE PROSPECÇÃO & ALIMENTAÇÃO DIRETA NO FUNIL (WHATSAPP, EMAIL OU GOOGLE MAPS PJ)
    */
   const triggerProspecting = async (
-    tipo: "whatsapp" | "email",
+    tipo: "whatsapp" | "email" | "google_maps",
     options?: {
       nicho?: string;
       segmento?: "pesados" | "imovel" | "veiculo";
@@ -332,7 +343,7 @@ export default function JarvisHUDPage() {
     const cidade = options?.cidade || "Paranaguá";
     const nicho = options?.nicho || (segmento === "pesados" ? "transportes" : segmento === "imovel" ? "clinicas" : "frotas_leves");
 
-    // 1. Mineração inteligente de empresas (lote de 10 a 20 leads)
+    // 1. Mineração inteligente de empresas (lote de 10 a 20 leads) via Google Maps & Radar Local
     const rawProspects = await buscarEmpresasPorCidade({
       cidade,
       uf: "PR",
@@ -353,22 +364,29 @@ export default function JarvisHUDPage() {
       cidade: `${p.cidade} - ${p.uf}`,
       lead_temperatura: "quente",
       lead_score_valor: "alto",
-      origem: tipo === "whatsapp" ? "PROSPECCAO_JARVIS_WHATSAPP" : "PROSPECCAO_JARVIS_EMAIL",
+      origem: tipo === "google_maps" ? "GOOGLE_MAPS_PJ" : tipo === "whatsapp" ? "PROSPECCAO_JARVIS_WHATSAPP" : "PROSPECCAO_JARVIS_EMAIL",
       organizacao_id: "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4",
       responsavel_id: "107a58fc-e65c-459c-95e8-cdc524d72042",
       dados_cadastro: {
         empresa: p.nomeFantasia,
         razao_social: p.razaoSocial,
         cnpj: p.cnpj,
-        cargo: "Sócio-Administrador",
-        decisor: p.decisorPrincipal,
-        email: p.email,
+        endereco_completo: p.endereco,
+        bairro: p.bairro,
         cidade: p.cidade,
         uf: p.uf,
+        cargo: "Sócio-Administrador",
+        decisor: p.decisorPrincipal,
+        telefone: p.telefone,
+        email: p.email,
+        google_maps_url: p.googleMapsUrl,
+        avaliacao_google: p.avaliacaoGoogle,
+        total_avaliacoes_google: p.totalAvaliacoes,
+        fonte: tipo === "google_maps" ? "Google Maps Places & Radar Local B2B" : "Radar Local B2B",
         parcela_50_50: p.parcela5050,
         gancho_abordagem: p.ganchoAbordagem,
         data_prospeccao: new Date().toISOString(),
-        canal_entrada: tipo === "whatsapp" ? "Jarvis WhatsApp Engine" : "Prospera Plan E-mail Engine",
+        canal_entrada: tipo === "google_maps" ? "Google Maps PJ Hunter" : tipo === "whatsapp" ? "Jarvis WhatsApp Engine" : "Prospera Plan E-mail Engine",
       },
     }));
 
@@ -380,10 +398,10 @@ export default function JarvisHUDPage() {
 
     // 3. Monta a copy padrão com Meia Parcela 50/50 e condições autorizadas
     let defaultCopy = "";
-    if (tipo === "whatsapp") {
+    if (tipo === "whatsapp" || tipo === "google_maps") {
       defaultCopy = `Olá, {nome}! Tudo bem?
 Aqui é o Fabrício da Prospera / Consórcio Magalu.
-Vi que a {empresa} tem forte atuação em {cidade}.
+Vi a presença da {empresa} no polo de {cidade}.
 Liberamos uma condição especial de Meia Parcela (50/50) com lance embutido de até 30% sem taxas de juros bancárias para expansão e aquisição de ativos.
 Posso te enviar uma simulação de 2 minutos para você avaliar?`;
     } else {
@@ -404,9 +422,11 @@ gn_prosperaplan@consorciomagalu.com.br`;
     const logCard: LogEntry = {
       id: Date.now().toString(),
       time: timeStr,
-      tag: tipo === "whatsapp" ? "PROSPECÇÃO WHATSAPP" : "PROSPECÇÃO E-MAIL",
-      color: tipo === "whatsapp" ? "text-emerald-400 font-bold" : "text-amber-400 font-bold",
-      text: `🚀 ${rawProspects.length} novos clientes qualificados minerados em ${cidade} e alimentados na 1ª Coluna do Funil ("Novo Lead")!`,
+      tag: tipo === "google_maps" ? "GOOGLE MAPS PJ HUNTER" : tipo === "whatsapp" ? "PROSPECÇÃO WHATSAPP" : "PROSPECÇÃO E-MAIL",
+      color: tipo === "google_maps" ? "text-cyan-400 font-bold" : tipo === "whatsapp" ? "text-emerald-400 font-bold" : "text-amber-400 font-bold",
+      text: tipo === "google_maps"
+        ? `🗺️ ${rawProspects.length} Pessoas Jurídicas mapeadas via Google Maps em ${cidade} com Endereço Completo, Decisor e CNPJ! Alimentadas no Funil ("Novo Lead")!`
+        : `🚀 ${rawProspects.length} novos clientes qualificados minerados em ${cidade} e alimentados na 1ª Coluna do Funil ("Novo Lead")!`,
       isProspectingCard: true,
       prospectingData: {
         tipo,
@@ -417,6 +437,15 @@ gn_prosperaplan@consorciomagalu.com.br`;
           id: p.id,
           nome: p.decisorPrincipal,
           empresa: p.nomeFantasia,
+          razaoSocial: p.razaoSocial,
+          cnpj: p.cnpj,
+          bairro: p.bairro,
+          endereco: p.endereco,
+          googleMapsUrl: p.googleMapsUrl,
+          avaliacaoGoogle: p.avaliacaoGoogle,
+          totalAvaliacoes: p.totalAvaliacoes,
+          decisorPrincipal: p.decisorPrincipal,
+          cargo: "Sócio-Administrador",
           telefone: p.telefone,
           email: p.email,
           cidade: p.cidade,
@@ -436,7 +465,9 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
     setLogs((prev) => [logCard, ...prev]);
 
-    const speech = `Fabrício, minerei com sucesso ${rawProspects.length} leads qualificados em ${cidade} e já inseri todos na primeira coluna do seu funil de vendas. O card com a copy editável e o comando de envio automático já está disponível no seu feed!`;
+    const speech = tipo === "google_maps"
+      ? `Fabrício, mapeei via Google Maps ${rawProspects.length} empresas com CNPJ, endereço e telefone do decisor em ${cidade}. Todos foram inseridos na primeira coluna do seu funil e os dados já estão no feed para você disparar!`
+      : `Fabrício, minerei com sucesso ${rawProspects.length} leads qualificados em ${cidade} e já inseri todos na primeira coluna do seu funil de vendas. O card com a copy editável e o comando de envio automático já está disponível no seu feed!`;
     setLastJarvisReply(speech);
     speakResponse(speech);
     setIsProcessing(false);
@@ -460,7 +491,8 @@ gn_prosperaplan@consorciomagalu.com.br`;
     for (let i = 0; i < data.leads.length; i++) {
       const lead = data.leads[i];
       const personalizedText = data.copy
-        .replace(/{nome}/g, lead.nome.split(" ")[0])
+        .replace(/{nome}/g, (lead.decisorPrincipal || lead.nome).split(" ")[0])
+        .replace(/{decisor}/g, lead.decisorPrincipal || lead.nome)
         .replace(/{empresa}/g, lead.empresa)
         .replace(/{cidade}/g, data.cidade)
         .replace(/{segmento}/g, data.segmento);
@@ -683,8 +715,12 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
     const lowerPrompt = textToRun.toLowerCase();
 
-    // INTERCEPTADOR DE PROSPECÇÃO PARA WHATSAPP OU EMAIL VIA CAMPO DE ESCRITA
+    // INTERCEPTADOR DE PROSPECÇÃO PARA GOOGLE MAPS, WHATSAPP OU EMAIL VIA CAMPO DE ESCRITA
     if (
+      lowerPrompt.includes("google maps") ||
+      lowerPrompt.includes("google map") ||
+      lowerPrompt.includes("maps") ||
+      lowerPrompt.includes("radar local") ||
       lowerPrompt.includes("prospect") ||
       lowerPrompt.includes("prospecção") ||
       lowerPrompt.includes("prospeccao") ||
@@ -692,7 +728,16 @@ gn_prosperaplan@consorciomagalu.com.br`;
       lowerPrompt.includes("disparar email") ||
       lowerPrompt.includes("disparar e-mail")
     ) {
-      const isEmail = lowerPrompt.includes("email") || lowerPrompt.includes("e-mail") || lowerPrompt.includes("prospera");
+      const isGoogleMaps =
+        lowerPrompt.includes("maps") ||
+        lowerPrompt.includes("radar local") ||
+        lowerPrompt.includes("pj") ||
+        lowerPrompt.includes("pessoa jurídica") ||
+        lowerPrompt.includes("pessoas juridicas") ||
+        lowerPrompt.includes("endereço") ||
+        lowerPrompt.includes("endereco");
+
+      const isEmail = !isGoogleMaps && (lowerPrompt.includes("email") || lowerPrompt.includes("e-mail") || lowerPrompt.includes("prospera"));
       const isImovel = lowerPrompt.includes("imóve") || lowerPrompt.includes("imove") || lowerPrompt.includes("clínica") || lowerPrompt.includes("clinica") || lowerPrompt.includes("constru");
       const isVeiculo = lowerPrompt.includes("veículo") || lowerPrompt.includes("veiculo") || lowerPrompt.includes("carro") || lowerPrompt.includes("frota leve");
       const segmento = isImovel ? "imovel" : isVeiculo ? "veiculo" : "pesados";
@@ -703,7 +748,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
         qtd = Math.min(Math.max(parseInt(numMatch[1], 10), 10), 20);
       }
 
-      await triggerProspecting(isEmail ? "email" : "whatsapp", {
+      await triggerProspecting(isGoogleMaps ? "google_maps" : isEmail ? "email" : "whatsapp", {
         segmento,
         quantidade: qtd,
         cidade: "Paranaguá",
@@ -991,10 +1036,54 @@ gn_prosperaplan@consorciomagalu.com.br`;
           ) : (
             /* CONTEÚDO DA ABA 2: CENTRAL DE SOLICITAÇÕES (PROSPECÇÃO & ATALHOS) */
             <div className="flex-1 flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-0.5">
-              {/* Grupo: Prospecção WhatsApp */}
+              {/* Grupo: Google Maps PJ Hunter (Endereço, Decisor, CNPJ e Telefone) */}
               <div className="space-y-1.5">
+                <span className="text-[9px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin className="h-3 w-3 text-cyan-400" /> Google Maps PJ Hunter (10-20 Leads)
+                </span>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => triggerProspecting("google_maps", { segmento: "pesados", quantidade: 15, nicho: "transportes" })}
+                    disabled={isProcessing}
+                    className="p-2.5 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/40 text-cyan-300 rounded-xl text-[10px] font-bold flex items-center justify-between text-left transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Truck className="h-3.5 w-3.5 text-cyan-400" /> 15 Transportadoras (Maps PJ)
+                    </span>
+                    <span className="text-[8px] bg-cyan-900/80 px-1.5 py-0.5 rounded text-cyan-200">Maps PJ</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => triggerProspecting("google_maps", { segmento: "imovel", quantidade: 12, nicho: "clinicas" })}
+                    disabled={isProcessing}
+                    className="p-2.5 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/40 text-cyan-300 rounded-xl text-[10px] font-bold flex items-center justify-between text-left transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 text-cyan-400" /> 12 Clínicas & Obras (Maps PJ)
+                    </span>
+                    <span className="text-[8px] bg-cyan-900/80 px-1.5 py-0.5 rounded text-cyan-200">Maps PJ</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => triggerProspecting("google_maps", { segmento: "veiculo", quantidade: 10, nicho: "frotas_leves" })}
+                    disabled={isProcessing}
+                    className="p-2.5 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/40 text-cyan-300 rounded-xl text-[10px] font-bold flex items-center justify-between text-left transition-all cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Car className="h-3.5 w-3.5 text-cyan-400" /> 10 Frotas & Utilitários (Maps PJ)
+                    </span>
+                    <span className="text-[8px] bg-cyan-900/80 px-1.5 py-0.5 rounded text-cyan-200">Maps PJ</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Grupo: Prospecção WhatsApp */}
+              <div className="space-y-1.5 pt-2 border-t border-slate-800">
                 <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <MessageSquare className="h-3 w-3" /> Prospecção WhatsApp (10-20 Leads)
+                  <MessageSquare className="h-3 w-3" /> Prospecção WhatsApp Direto
                 </span>
                 <div className="grid grid-cols-1 gap-1.5">
                   <button
@@ -1221,7 +1310,9 @@ gn_prosperaplan@consorciomagalu.com.br`;
                   key={log.id}
                   className={`p-3 rounded-xl border space-y-2 animate-in fade-in transition-all ${
                     log.isProspectingCard
-                      ? log.prospectingData?.tipo === "whatsapp"
+                      ? log.prospectingData?.tipo === "google_maps"
+                        ? "bg-cyan-950/30 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                        : log.prospectingData?.tipo === "whatsapp"
                         ? "bg-emerald-950/30 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                         : "bg-amber-950/30 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
                       : log.isBoletoCard
@@ -1250,25 +1341,68 @@ gn_prosperaplan@consorciomagalu.com.br`;
                         </p>
                       </div>
 
-                      {/* Preview dos Leads */}
-                      <div className="space-y-1 max-h-36 overflow-y-auto custom-scrollbar pr-1">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                          Leads Inseridos no Funil:
+                      {/* Preview dos Leads (com Razão Social, CNPJ, Decisor, Endereço e Google Maps) */}
+                      <div className="space-y-1.5 max-h-52 overflow-y-auto custom-scrollbar pr-1">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center justify-between">
+                          <span>Leads Inseridos no Funil:</span>
+                          <span className="text-[9px] text-slate-500 font-normal">Exibindo 5 de {log.prospectingData.leads.length}</span>
                         </span>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {log.prospectingData.leads.slice(0, 5).map((l, lIdx) => (
-                            <div key={lIdx} className="p-1.5 rounded bg-slate-950 border border-slate-800 text-[10px] flex items-center justify-between">
-                              <span className="text-slate-300 truncate max-w-[150px]">
-                                👤 {l.nome} ({l.empresa})
-                              </span>
-                              <span className="text-cyan-400 font-mono text-[9px]">
-                                {log.prospectingData?.tipo === "whatsapp" ? l.telefone : l.email}
-                              </span>
+                            <div key={lIdx} className="p-2 rounded-lg bg-slate-950/90 border border-slate-800 text-[10px] space-y-1">
+                              <div className="flex items-center justify-between gap-1">
+                                <div className="font-bold text-slate-200 truncate max-w-[170px] flex items-center gap-1">
+                                  <Building2 className="h-3 w-3 text-cyan-400 shrink-0" />
+                                  <span className="truncate">{l.empresa}</span>
+                                </div>
+                                {l.googleMapsUrl && (
+                                  <a
+                                    href={l.googleMapsUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[9px] text-cyan-400 hover:text-cyan-300 underline flex items-center gap-0.5 shrink-0"
+                                  >
+                                    <Map className="h-2.5 w-2.5" /> Maps ↗
+                                  </a>
+                                )}
+                              </div>
+
+                              {l.razaoSocial && (
+                                <div className="text-[9px] text-slate-400 truncate">
+                                  <strong className="text-slate-300">Razão:</strong> {l.razaoSocial}
+                                </div>
+                              )}
+
+                              <div className="flex items-center justify-between text-[9px] text-slate-300">
+                                <span><strong className="text-amber-400">Decisor:</strong> {l.decisorPrincipal || l.nome}</span>
+                                {l.cnpj && <span className="text-slate-400 font-mono text-[8.5px]">CNPJ: {l.cnpj}</span>}
+                              </div>
+
+                              {l.endereco && (
+                                <div className="text-[9px] text-slate-400 flex items-start gap-1">
+                                  <MapPin className="h-3 w-3 text-rose-400 shrink-0 mt-0.5" />
+                                  <span className="truncate">{l.endereco}</span>
+                                </div>
+                              )}
+
+                              <div className="flex items-center justify-between pt-1 border-t border-slate-900 text-[9px]">
+                                <span className="text-emerald-400 font-mono font-bold flex items-center gap-1">
+                                  <MessageSquare className="h-2.5 w-2.5" />
+                                  {l.telefone.length === 11
+                                    ? `(${l.telefone.slice(0, 2)}) ${l.telefone.slice(2, 7)}-${l.telefone.slice(7)}`
+                                    : l.telefone}
+                                </span>
+                                {l.avaliacaoGoogle && (
+                                  <span className="text-amber-300 font-bold">
+                                    ★ {l.avaliacaoGoogle} ({l.totalAvaliacoes || 15})
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           ))}
                           {log.prospectingData.leads.length > 5 && (
                             <p className="text-[9px] text-slate-500 italic text-center">
-                              + {log.prospectingData.leads.length - 5} outros leads no Funil
+                              + {log.prospectingData.leads.length - 5} outras empresas salvas na 1ª coluna do Funil
                             </p>
                           )}
                         </div>
@@ -1290,8 +1424,48 @@ gn_prosperaplan@consorciomagalu.com.br`;
                         />
                       </div>
 
-                      {/* Botão de Envio Automático */}
-                      {log.prospectingData.tipo === "whatsapp" ? (
+                      {/* Botões de Envio Automático */}
+                      {log.prospectingData.tipo === "google_maps" ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleStartWhatsAppDispatch(log.id)}
+                            disabled={log.prospectingData.enviando}
+                            className="py-2 px-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-slate-950 font-black text-[10px] uppercase rounded-xl transition-all shadow-[0_0_12px_rgba(16,185,129,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            {log.prospectingData.enviando ? (
+                              <>
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                Enviando...
+                              </>
+                            ) : (
+                              <>
+                                <SendHorizontal className="h-3 w-3" />
+                                WhatsApp ({log.prospectingData.enviadosCount || 0}/{log.prospectingData.leads.length})
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStartEmailDispatch(log.id)}
+                            disabled={log.prospectingData.enviando}
+                            className="py-2 px-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-black text-[10px] uppercase rounded-xl transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            {log.prospectingData.enviando ? (
+                              <>
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                Enviando...
+                              </>
+                            ) : (
+                              <>
+                                <Mail className="h-3 w-3" />
+                                E-mails ({log.prospectingData.enviadosCount || 0}/{log.prospectingData.leads.length})
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      ) : log.prospectingData.tipo === "whatsapp" ? (
                         <button
                           type="button"
                           onClick={() => handleStartWhatsAppDispatch(log.id)}
