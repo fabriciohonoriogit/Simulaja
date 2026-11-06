@@ -119,20 +119,84 @@ export function normalizeTextForSpeech(text: string): string {
  * Sintetizador Jarvis com respiração fluida e cadência contínua
  * Sem cortes secos entre frases, mantendo a melodia vocal humana.
  */
+let currentAudioPlayer: HTMLAudioElement | null = null;
+
+/**
+ * Sintetizador Jarvis com áudio Neural HD (Edge-TTS) e Fallback Instantâneo
+ * Proporciona voz humana de cinema com timbre barítono natural, respiração e modulação.
+ */
 export function speakJarvisText(
   text: string,
   onStart?: () => void,
   onEnd?: () => void,
   customVoice?: SpeechSynthesisVoice | null
 ) {
-  if (typeof window === "undefined" || !window.speechSynthesis) {
+  const cleanText = normalizeTextForSpeech(text);
+
+  if (!cleanText || cleanText.length < 2) {
     if (onEnd) onEnd();
     return;
   }
 
-  const cleanText = normalizeTextForSpeech(text);
+  // Interrompe reproduções anteriores
+  stopVoice();
 
-  if (!cleanText || cleanText.length < 2) {
+  // Tentativa 1: Motor Neural HD via Servidor Local (/api/tts - Microsoft Antonio Neural)
+  // Se o servidor local estiver ativo, reproduz com qualidade cinematográfica
+  const tryNeuralTTS = async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+      const url = `http://localhost:3000/api/tts?voice=pt-BR-AntonioNeural&text=${encodeURIComponent(cleanText.slice(0, 1000))}`;
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) throw new Error("TTS endpoint não retornou 200");
+
+      const blob = await res.blob();
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+      currentAudioPlayer = audio;
+
+      audio.onplay = () => {
+        if (onStart) onStart();
+      };
+
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        currentAudioPlayer = null;
+        if (onEnd) onEnd();
+      };
+
+      audio.onerror = () => {
+        URL.revokeObjectURL(audioUrl);
+        currentAudioPlayer = null;
+        speakJarvisLocalSpeech(cleanText, onStart, onEnd, customVoice);
+      };
+
+      await audio.play();
+      return true;
+    } catch (e) {
+      // Se der timeout ou o servidor local não estiver rodando, faz fallback instantâneo
+      speakJarvisLocalSpeech(cleanText, onStart, onEnd, customVoice);
+      return false;
+    }
+  };
+
+  tryNeuralTTS();
+}
+
+/**
+ * Fallback local nativo de síntese vocal para garantir que nunca fique mudo
+ */
+export function speakJarvisLocalSpeech(
+  cleanText: string,
+  onStart?: () => void,
+  onEnd?: () => void,
+  customVoice?: SpeechSynthesisVoice | null
+) {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
     if (onEnd) onEnd();
     return;
   }
@@ -143,9 +207,6 @@ export function speakJarvisText(
 
   const voice = customVoice || getBestPtBrVoice();
 
-  // Dividimos em parágrafos ou blocos de pensamento grandes (em vez de quebrar em cada ponto),
-  // para que o navegador mantenha a prosódia contínua e a entonação humana natural.
-  // Quebramos em blocos de até 220 caracteres apenas em vírgulas ou pontos para evitar truncamento em navegadores antigos.
   const chunks: string[] = [];
   const words = cleanText.split(" ");
   let currentChunk = "";
@@ -183,11 +244,8 @@ export function speakJarvisText(
       utterance.voice = voice;
     }
 
-    // Parâmetros humanizados:
-    // Rate 1.0 = velocidade natural de uma conversa confortável (não apressada nem lenta)
-    // Pitch 0.98 = timbre barítono aquecido, seguro e expressivo
-    utterance.rate = 1.0;
-    utterance.pitch = 0.98;
+    utterance.rate = 1.02;
+    utterance.pitch = 0.96;
 
     if (index === 0 && onStart) {
       utterance.onstart = () => onStart();
@@ -195,7 +253,6 @@ export function speakJarvisText(
 
     utterance.onend = () => {
       index++;
-      // Transição suave e imperceptível entre blocos
       playChunk();
     };
 
@@ -215,6 +272,14 @@ export function speakJarvisText(
 }
 
 export function stopVoice() {
+  if (currentAudioPlayer) {
+    try {
+      currentAudioPlayer.pause();
+      currentAudioPlayer.currentTime = 0;
+    } catch (e) {}
+    currentAudioPlayer = null;
+  }
+
   if (typeof window !== "undefined" && window.speechSynthesis) {
     try {
       window.speechSynthesis.cancel();

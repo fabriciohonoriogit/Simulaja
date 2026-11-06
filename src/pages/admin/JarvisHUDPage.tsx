@@ -33,7 +33,9 @@ import {
   Clock,
   Car,
   MapPin,
-  Map
+  Map,
+  Palette,
+  Bot
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { aiService } from "@/services/aiService";
@@ -41,6 +43,7 @@ import { speakText } from "@/lib/voiceService";
 import { fetchDailyNews, getNewsAnswerForJarvis } from "@/services/newsService";
 import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
 import { buscarEmpresasPorCidade, calcularConsorcioRadar } from "@/services/radarLocalService";
+import { JarvisAICoreDeck, AI_CORE_PROVIDERS, AICoreProvider } from "@/components/admin/JarvisAICoreDeck";
 
 interface ProspectLeadItem {
   id: string;
@@ -71,6 +74,8 @@ interface LogEntry {
   tag: string;
   text: string;
   color: string;
+  aiCoreName?: string;
+  imageUrl?: string;
   isBoletoCard?: boolean;
   boletoInfo?: {
     cliente: string;
@@ -108,6 +113,26 @@ export default function JarvisHUDPage() {
   const [isVoiceCloneOpen, setIsVoiceCloneOpen] = useState(false);
   const [lateralTab, setLateralTab] = useState<"nucleo" | "solicitacoes">("nucleo");
   const [lastJarvisReply, setLastJarvisReply] = useState<string | null>(null);
+  const [selectedCore, setSelectedCore] = useState<AICoreProvider>(AI_CORE_PROVIDERS[0]);
+  const [autoFallback, setAutoFallback] = useState(true);
+
+  const handleSelectAICore = (core: AICoreProvider) => {
+    setSelectedCore(core);
+    setLogs((prev) => [
+      {
+        id: Date.now().toString(),
+        time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        tag: `CORE: ${core.name.toUpperCase()}`,
+        text: `⚡ Conexão ativa com ${core.provider} (${core.model}). Latência: ${core.speed}. ${core.description}`,
+        color: core.color + " font-bold",
+        aiCoreName: core.name,
+      },
+      ...prev,
+    ]);
+    if (audioEnabled) {
+      speakResponse(`Motor ${core.name} ativado.`);
+    }
+  };
 
   // Feed do Cofre: inicia limpo sem dados estáticos residuais
   const [logs, setLogs] = useState<LogEntry[]>([
@@ -756,6 +781,40 @@ gn_prosperaplan@consorciomagalu.com.br`;
       return;
     }
 
+    // INTERCEPTADOR DE GERAÇÃO DE IMAGENS FLUX.1 / POLLINATIONS
+    if (
+      lowerPrompt.includes("gerar imagem") ||
+      lowerPrompt.includes("gere uma imagem") ||
+      lowerPrompt.includes("crie uma imagem") ||
+      lowerPrompt.includes("criar imagem") ||
+      lowerPrompt.includes("desenhe") ||
+      lowerPrompt.includes("foto de") ||
+      selectedCore.id === "flux"
+    ) {
+      const cleanPrompt = textToRun
+        .replace(/gerar imagem|gere uma imagem|crie uma imagem|criar imagem|desenhe|foto de/gi, "")
+        .trim() || textToRun;
+
+      const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?model=flux&width=1024&height=768&nologo=true`;
+
+      const imgLog: LogEntry = {
+        id: Date.now().toString(),
+        time: timeStr,
+        tag: "FLUX.1 GERADOR VISUAL",
+        text: `🎨 Imagem gerada com sucesso via motor neural FLUX.1: "${cleanPrompt}"`,
+        color: "text-pink-400 font-bold",
+        imageUrl: imgUrl,
+        aiCoreName: "FLUX.1",
+      };
+
+      setLogs((prev) => [imgLog, ...prev]);
+      const reply = `Fabrício, gerei a imagem com o modelo neural FLUX.1 em alta definição e ela já está disponível no seu feed!`;
+      setLastJarvisReply(reply);
+      speakResponse(reply);
+      setIsProcessing(false);
+      return;
+    }
+
     const smartResponse = processSmartCommand(lowerPrompt, textToRun);
 
     if (smartResponse) {
@@ -824,7 +883,14 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
       setChatHistory([...currentHistory, { role: "assistant", text: responseText }]);
       setLogs((prev) => [
-        { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: responseText, color: "text-cyan-400 font-semibold" },
+        {
+          id: (Date.now() + 1).toString(),
+          time: timeStr,
+          tag: "JARVIS AI",
+          text: responseText,
+          color: "text-cyan-400 font-semibold",
+          aiCoreName: selectedCore.name,
+        },
         ...prev,
       ]);
       setLastJarvisReply(responseText);
@@ -928,6 +994,16 @@ gn_prosperaplan@consorciomagalu.com.br`;
           </span>
         </div>
       </header>
+
+      {/* ======================================================== */}
+      {/* QUANTUM AI MATRIX // SELETOR DE MOTORES NEURAIS (Awesome FreeLLM) */}
+      {/* ======================================================== */}
+      <JarvisAICoreDeck
+        selectedCoreId={selectedCore.id}
+        onSelectCore={handleSelectAICore}
+        autoFallback={autoFallback}
+        onToggleAutoFallback={() => setAutoFallback((prev) => !prev)}
+      />
 
       {/* Main HUD Grid */}
       <div className="grid grid-cols-12 gap-6 flex-1 relative z-10">
@@ -1209,14 +1285,25 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
           {/* O MAJESTOSO JARVIS ORB */}
           <div className="my-auto w-[320px] h-[320px] sm:w-[440px] sm:h-[440px] md:w-[500px] md:h-[500px] lg:w-[540px] lg:h-[540px] flex items-center justify-center relative transition-all duration-700 hover:scale-105">
-            <JarvisOrb state={orbState} theme="cobalt" />
+            <JarvisOrb
+              state={orbState}
+              theme={
+                selectedCore.id === "groq" || selectedCore.id === "cerebras"
+                  ? "flame"
+                  : selectedCore.id === "nvidia"
+                  ? "emerald"
+                  : "cobalt"
+              }
+              statusText={selectedCore.name}
+              subStatusText={`${selectedCore.provider} • ${selectedCore.speed}`}
+            />
           </div>
 
           {/* Status de Processamento da IA */}
           {isProcessing && (
             <div className="my-2 text-xs text-cyan-300 font-mono flex items-center gap-2 animate-pulse bg-cyan-950/80 px-4 py-1.5 rounded-full border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
               <RefreshCw className="h-3.5 w-3.5 animate-spin text-cyan-400" />
-              Jarvis está processando dados neurais e executando a ação...
+              Processando via {selectedCore.name} ({selectedCore.speed})...
             </div>
           )}
 
@@ -1227,8 +1314,8 @@ gn_prosperaplan@consorciomagalu.com.br`;
                 <span className="flex items-center gap-1.5">
                   <Sparkles className="h-3 w-3 text-cyan-400 animate-pulse" /> Jarvis AI // Resposta Recente
                 </span>
-                <span className="text-[8px] px-1.5 py-0.5 rounded bg-cyan-900/60 border border-cyan-500/20 text-cyan-300">
-                  ONLINE
+                <span className={`text-[8.5px] px-2 py-0.5 rounded font-mono font-bold ${selectedCore.badgeBg} ${selectedCore.borderColor} ${selectedCore.color} border`}>
+                  {selectedCore.name}
                 </span>
               </div>
               <p className="text-[11px] text-slate-200 leading-relaxed font-sans line-clamp-3">
@@ -1321,7 +1408,14 @@ gn_prosperaplan@consorciomagalu.com.br`;
                   }`}
                 >
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className={`font-black uppercase tracking-wider ${log.color}`}>{log.tag}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`font-black uppercase tracking-wider ${log.color}`}>{log.tag}</span>
+                      {log.aiCoreName && (
+                        <span className="text-[7.5px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300 font-mono font-bold">
+                          {log.aiCoreName}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-slate-500">{log.time}</span>
                   </div>
 
@@ -1559,6 +1653,29 @@ gn_prosperaplan@consorciomagalu.com.br`;
                           </p>
                         );
                       })}
+
+                      {log.imageUrl && (
+                        <div className="rounded-xl overflow-hidden border border-pink-500/40 shadow-[0_0_15px_rgba(236,72,153,0.25)] mt-2">
+                          <img
+                            src={log.imageUrl}
+                            alt="Visual IA Gerado"
+                            className="w-full h-44 object-cover hover:scale-105 transition-all duration-300"
+                          />
+                          <div className="p-2 bg-slate-950 flex items-center justify-between text-[10px]">
+                            <span className="text-pink-300 font-mono flex items-center gap-1 font-bold">
+                              <Palette className="h-3 w-3 text-pink-400" /> FLUX.1 Neural Engine
+                            </span>
+                            <a
+                              href={log.imageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-cyan-400 hover:text-cyan-300 underline font-bold"
+                            >
+                              Abrir em alta resolução ↗
+                            </a>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

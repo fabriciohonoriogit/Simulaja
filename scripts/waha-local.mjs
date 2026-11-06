@@ -10,6 +10,7 @@ import http from "http";
 import fs from "fs";
 import path from "path";
 import { createRequire } from "module";
+import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 
 const require = createRequire(import.meta.url);
 
@@ -524,6 +525,66 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: err.message }));
     }
+    return;
+  }
+
+  // 8. Síntese de Voz Neural HD do Jarvis (GET ou POST /api/tts - Microsoft Edge Neural)
+  if (pathname === "/api/tts" && (req.method === "GET" || req.method === "POST")) {
+    let text = "";
+    let voice = "pt-BR-AntonioNeural";
+
+    if (req.method === "GET") {
+      text = parsedUrl.searchParams.get("text") || "";
+      voice = parsedUrl.searchParams.get("voice") || "pt-BR-AntonioNeural";
+    } else {
+      const body = await readBody();
+      text = body.text || "";
+      voice = body.voice || "pt-BR-AntonioNeural";
+    }
+
+    if (!text.trim()) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Parâmetro 'text' é obrigatório" }));
+      return;
+    }
+
+    try {
+      const tts = new MsEdgeTTS();
+      await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      const { audioStream } = tts.toStream(text);
+
+      res.writeHead(200, {
+        "Content-Type": "audio/mpeg",
+        "Cache-Control": "public, max-age=86400",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      });
+      audioStream.pipe(res);
+    } catch (err) {
+      console.error("Erro na síntese TTS:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 9. Geração Gratuita de Imagens FLUX.1 / Pollinations (POST /api/generate-image)
+  if (pathname === "/api/generate-image" && req.method === "POST") {
+    const body = await readBody();
+    const prompt = body.prompt || "";
+    if (!prompt.trim()) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Prompt é obrigatório" }));
+      return;
+    }
+    const cleanPrompt = encodeURIComponent(prompt.trim());
+    const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?model=flux&width=1024&height=1024&nologo=true`;
+    res.writeHead(200, {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+    });
+    res.end(JSON.stringify({ success: true, url: imageUrl, prompt }));
     return;
   }
 
