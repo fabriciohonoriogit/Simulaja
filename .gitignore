@@ -39,6 +39,7 @@ evolution-api/
 agency-agents/
 hermes-agent/
 omniroute-gateway/
+harvey/
 scripts/logs/
 scripts/run_background.bat
 wa-akg/

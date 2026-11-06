@@ -44,6 +44,7 @@ import { fetchDailyNews, getNewsAnswerForJarvis } from "@/services/newsService";
 import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
 import { buscarEmpresasPorCidade, calcularConsorcioRadar } from "@/services/radarLocalService";
 import { JarvisAICoreDeck, AI_CORE_PROVIDERS, AICoreProvider } from "@/components/admin/JarvisAICoreDeck";
+import { HarveyAutonomousModal } from "@/components/admin/HarveyAutonomousModal";
 
 interface ProspectLeadItem {
   id: string;
@@ -111,6 +112,7 @@ export default function JarvisHUDPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<Array<{ role: string; text: string }>>([]);
   const [isVoiceCloneOpen, setIsVoiceCloneOpen] = useState(false);
+  const [isHarveyModalOpen, setIsHarveyModalOpen] = useState(false);
   const [lateralTab, setLateralTab] = useState<"nucleo" | "solicitacoes">("nucleo");
   const [lastJarvisReply, setLastJarvisReply] = useState<string | null>(null);
   const [selectedCore, setSelectedCore] = useState<AICoreProvider>(AI_CORE_PROVIDERS[0]);
@@ -740,6 +742,37 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
     const lowerPrompt = textToRun.toLowerCase();
 
+    // INTERCEPTADOR DO HARVEY AUTONOMOUS SDR ENGINE (5 SUBAGENTES)
+    if (
+      lowerPrompt.includes("harvey") ||
+      lowerPrompt.includes("ciclo completo") ||
+      lowerPrompt.includes("ciclo de negociação") ||
+      lowerPrompt.includes("ciclo de negociacao") ||
+      lowerPrompt.includes("subagentes") ||
+      lowerPrompt.includes("stop on reply") ||
+      lowerPrompt.includes("stop-on-reply") ||
+      lowerPrompt.includes("autonomo de vendas") ||
+      lowerPrompt.includes("autônomo de vendas")
+    ) {
+      setIsHarveyModalOpen(true);
+      const harveyReply = `Com certeza, Fabrício! Inicializei o Cockpit do Harvey Autonomous SDR Engine com os 5 subagentes autônomos (Scout, Writer, Sender, Handler e Analyst) e circuito Stop-on-Reply pronto para disparar e negociar em lote de 10 a 20 leads.`;
+      setLogs((prev) => [
+        {
+          id: Date.now().toString(),
+          time: timeStr,
+          tag: "HARVEY AUTONOMOUS SDR",
+          color: "text-cyan-400 font-bold",
+          text: `🤖 Cockpit Harvey Autonomous SDR aberto.\n• 1. The Scout: Google Maps PJ + CNPJ + QSA Decisores.\n• 2. The Writer: Copy anti-IA (< 55 palavras) com Meia Parcela 50/50.\n• 3. The Sender: Cadência humana com delay dinâmico (3.5s - 5s).\n• 4. The Handler: Stop-on-Reply e negociação de objeções em tempo real.\n• 5. The Analyst: Sincronização direta no Kanban Supabase.`,
+          aiCoreName: "Harvey Engine",
+        },
+        ...prev,
+      ]);
+      setLastJarvisReply(harveyReply);
+      speakResponse(harveyReply);
+      setIsProcessing(false);
+      return;
+    }
+
     // INTERCEPTADOR DE PROSPECÇÃO PARA GOOGLE MAPS, WHATSAPP OU EMAIL VIA CAMPO DE ESCRITA
     if (
       lowerPrompt.includes("google maps") ||
@@ -1112,6 +1145,29 @@ gn_prosperaplan@consorciomagalu.com.br`;
           ) : (
             /* CONTEÚDO DA ABA 2: CENTRAL DE SOLICITAÇÕES (PROSPECÇÃO & ATALHOS) */
             <div className="flex-1 flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-0.5">
+              {/* Destaque: Harvey Autonomous SDR Engine (Ciclo Fechado de 5 Subagentes) */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/80 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.25)] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Bot className="h-3.5 w-3.5 text-cyan-400 animate-pulse" /> Harvey Autonomous SDR
+                  </span>
+                  <span className="text-[8px] bg-emerald-950 border border-emerald-500/50 text-emerald-300 font-mono font-bold px-1.5 py-0.5 rounded">
+                    5 SUBAGENTES
+                  </span>
+                </div>
+                <p className="text-[9.5px] text-slate-300 leading-tight">
+                  Prospecção no Maps, Copy anti-IA (&lt; 55 palavras), Stop-on-Reply e negociação de objeções 100% autônoma.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsHarveyModalOpen(true)}
+                  className="w-full py-2 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer"
+                >
+                  <Zap className="h-3 w-3 fill-slate-950" />
+                  <span>ABRIR COCKPIT HARVEY (10-20 LEADS)</span>
+                </button>
+              </div>
+
               {/* Grupo: Google Maps PJ Hunter (Endereço, Decisor, CNPJ e Telefone) */}
               <div className="space-y-1.5">
                 <span className="text-[9px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1697,6 +1753,25 @@ gn_prosperaplan@consorciomagalu.com.br`;
         isOpen={isVoiceCloneOpen}
         onClose={() => setIsVoiceCloneOpen(false)}
         userName="Fabrício Honório"
+      />
+
+      <HarveyAutonomousModal
+        open={isHarveyModalOpen}
+        onClose={() => setIsHarveyModalOpen(false)}
+        onCycleComplete={(metrics) => {
+          const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+          setLogs((prev) => [
+            {
+              id: Date.now().toString(),
+              time,
+              tag: "HARVEY SDR CICLO CONCLUÍDO",
+              color: "text-emerald-400 font-bold",
+              text: `🚀 Ciclo de Prospecção e Negociação Harvey concluído!\n• Contatos acionados: ${metrics.successCount} de ${metrics.total}\n• Vigilância Stop-on-Reply ativada no WhatsApp\n• Kanban CRM alimentado na etapa 'novo_lead'`,
+              aiCoreName: "Harvey Engine",
+            },
+            ...prev,
+          ]);
+        }}
       />
     </div>
   );
