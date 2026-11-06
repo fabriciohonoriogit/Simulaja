@@ -43,6 +43,7 @@ import {
   formatWhatsAppNumber,
   type WhatsAppMode
 } from "@/services/evolutionApiService";
+import { generateBudgetProposal } from "@/services/proposalService";
 import { formatCurrency, cn } from "@/lib/utils";
 
 interface Message {
@@ -242,6 +243,20 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
     const enhanced = `Olá, ${firstName}! Tudo bem? ${newMessage.trim()} Estou à total disposição para te apoiar e facilitar cada etapa. Conte comigo!`;
     setNewMessage(enhanced);
     toast.success("✨ Mensagem refinada com o tom executivo Jarvis!");
+  };
+
+  const handleGenerateOfficialProposal = () => {
+    const credNum = Number(lead.valor_credito) || 150000;
+    const seg = (lead.tipo_consorcio as any) || "imovel";
+    const proposal = generateBudgetProposal({
+      clienteNome: lead.nome,
+      telefone: lead.celular || undefined,
+      email: lead.email || undefined,
+      valorCredito: credNum,
+      segmento: seg === "veiculo" ? "veiculo" : seg === "pesados" ? "pesados" : seg === "servicos" ? "servicos" : "imovel",
+    });
+    setNewMessage(proposal.scriptWhatsApp);
+    toast.success("📋 Orçamento oficial com emoticons carregado no chat!");
   };
 
   const handleSendMessage = async (e?: React.FormEvent, forceWeb = false) => {
@@ -638,6 +653,17 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
         {/* CHIPS DE ACESSO RÁPIDO: GATILHOS, HUMANIZAR COM IA E GRAVAÇÃO DE VOZ */}
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 text-xs">
           <div className="flex items-center gap-1.5 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateOfficialProposal}
+              className="h-7 px-2.5 text-[10px] font-black uppercase tracking-wider rounded-lg border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 gap-1 shadow-sm"
+              title="Gera o orçamento oficial com emoticons para este lead"
+            >
+              <FileText className="h-3 w-3 text-emerald-600" /> Orçamento 50/50
+            </Button>
+
             <Button
               type="button"
               variant="outline"

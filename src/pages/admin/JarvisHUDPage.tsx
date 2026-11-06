@@ -52,6 +52,7 @@ import { HarveyAutonomousModal } from "@/components/admin/HarveyAutonomousModal"
 import {
   parseProposalRequestFromPrompt,
   generateBudgetProposal,
+  sendProposalViaWhatsAppInbox,
   GeneratedBudgetProposal,
   fmtBrlCompact,
 } from "@/services/proposalService";
@@ -1091,27 +1092,51 @@ gn_prosperaplan@consorciomagalu.com.br`;
       return;
     }
 
-    // INTERCEPTADOR DE SIMULAÇÃO E ORÇAMENTO PARA WHATSAPP / E-MAIL
+    // INTERCEPTADOR DE SIMULAÇÃO E ORÇAMENTO PARA WHATSAPP / E-MAIL COM DISPARO AUTOMÁTICO
     const proposalCheck = await parseProposalRequestFromPrompt(textToRun);
     if (proposalCheck.isMatch && proposalCheck.proposal) {
       const p = proposalCheck.proposal;
+      const isWhats = p.canal === "whatsapp" || p.canal === "ambos";
+
+      let autoDispatchResult: { success: boolean; sentDirect: boolean; leadId?: string } | null = null;
+
+      // Disparo AUTOMÁTICO pela operação Inbox WhatsApp do CRM
+      if (isWhats) {
+        autoDispatchResult = await sendProposalViaWhatsAppInbox(p);
+      }
+
       const canalStr = p.canal === "ambos" ? "WhatsApp & E-mail" : p.canal === "email" ? "E-mail" : "WhatsApp";
+
+      const dispatchStatusLine = autoDispatchResult?.sentDirect
+        ? "🟢 ENVIADO AUTOMATICAMENTE VIA INBOX WHATSAPP (WAHA/Evolution)!"
+        : autoDispatchResult?.success && p.telefone
+        ? "📱 Sincronizado no Inbox WhatsApp. Pronto para envio imediato."
+        : autoDispatchResult?.success
+        ? "📱 Registrado no Inbox WhatsApp. Clique abaixo para enviar ou informe o telefone."
+        : "";
 
       const proposalLog: LogEntry = {
         id: Date.now().toString(),
         time: timeStr,
         tag: `ORÇAMENTO // ${canalStr.toUpperCase()}`,
-        text: `📋 Proposta oficial gerada para ${p.clienteNome} (${p.creditoFmt}): Parcela Atual ${p.parcelaAtualFmt} | Pós-Contemplação ${p.parcelaPosFmt} | Prazo ${p.prazo} meses.`,
+        text: `📋 Proposta oficial para ${p.clienteNome} (${p.creditoFmt}): Parcela Atual ${p.parcelaAtualFmt} | Pós-Contemplação ${p.parcelaPosFmt} | Prazo ${p.prazo} meses.${
+          dispatchStatusLine ? `\n• ${dispatchStatusLine}` : ""
+        }`,
         color: "text-emerald-400 font-bold",
         isProposalCard: true,
         proposalData: p,
-        aiCoreName: "Simulador Engine",
+        aiCoreName: "Inbox WhatsApp Engine",
       };
 
       setLogs((prev) => [proposalLog, ...prev]);
 
-      // Regra de Humanização: falar APENAS o valor das parcelas e o prazo! Proibido detalhes do grupo.
-      const voiceReply = `Fabrício, para o crédito de ${p.creditoFmt} da cliente ${p.clienteNome}, a parcela atual é de ${p.parcelaAtualFmt} no prazo de ${p.prazo} meses, e a parcela pós-contemplação fica ${p.parcelaPosFmt}. O script com emoticons já está no seu feed para disparo no WhatsApp e E-mail!`;
+      // Regra de Humanização: falar APENAS o valor das parcelas e o prazo!
+      let voiceReply = "";
+      if (autoDispatchResult?.sentDirect) {
+        voiceReply = `Fabrício, enviei o orçamento de ${p.creditoFmt} automaticamente para a cliente ${p.clienteNome} pelo Inbox WhatsApp. A parcela atual é de ${p.parcelaAtualFmt} no prazo de ${p.prazo} meses e a parcela pós-contemplação fica ${p.parcelaPosFmt}.`;
+      } else {
+        voiceReply = `Fabrício, para o crédito de ${p.creditoFmt} da cliente ${p.clienteNome}, a parcela atual é de ${p.parcelaAtualFmt} no prazo de ${p.prazo} meses e a parcela pós-contemplação fica ${p.parcelaPosFmt}. O orçamento foi registrado no seu Inbox WhatsApp e está pronto no feed!`;
+      }
 
       setLastJarvisReply(voiceReply);
       speakResponse(voiceReply);
@@ -2118,6 +2143,33 @@ gn_prosperaplan@consorciomagalu.com.br`;
                         </div>
                       </div>
 
+                      {/* Status de Disparo Inbox WhatsApp */}
+                      {log.proposalData.statusEnvioWhatsApp === "enviado_automatico" ? (
+                        <div className="p-2 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 text-[10px] font-bold flex items-center justify-between shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                          <span className="flex items-center gap-1.5">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+                            Disparado Automaticamente pelo Inbox WhatsApp
+                          </span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 uppercase font-mono border border-emerald-500/30">
+                            WAHA / CRM
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-[10px] flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-slate-400">
+                            <Clock className="h-3.5 w-3.5 text-amber-400" />
+                            Sincronizado na Operação Inbox WhatsApp
+                          </span>
+                          {log.proposalData.telefone ? (
+                            <span className="text-emerald-400 font-mono text-[9px] font-bold">
+                              {log.proposalData.telefone}
+                            </span>
+                          ) : (
+                            <span className="text-amber-400 text-[9px]">Telefone pendente</span>
+                          )}
+                        </div>
+                      )}
+
                       {/* Script Formatado com Emoticons */}
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
@@ -2157,7 +2209,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
                           onClick={() => handleSendProposalWhatsApp(log.proposalData!)}
                           className="py-2 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-[10px] uppercase rounded-xl transition-all shadow-[0_0_12px_rgba(16,185,129,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <SendHorizontal className="h-3.5 w-3.5" /> Disparar WhatsApp
+                          <SendHorizontal className="h-3.5 w-3.5" /> Reenviar WhatsApp
                         </button>
                         <button
                           type="button"
@@ -2165,6 +2217,13 @@ gn_prosperaplan@consorciomagalu.com.br`;
                           className="py-2 px-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[10px] uppercase rounded-xl transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <Mail className="h-3.5 w-3.5" /> Disparar E-mail
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => window.open("/admin/whatsapp-inbox", "_blank")}
+                          className="col-span-2 py-1.5 px-2 bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-300 text-[10px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 text-indigo-400" /> Abrir no Inbox WhatsApp (CRM)
                         </button>
                       </div>
                     </div>

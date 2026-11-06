@@ -1,18 +1,42 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      ilike: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+vi.mock("@/integrations/supabase/client", () => {
+  const chainableMock: any = {
+    select: vi.fn().mockReturnThis(),
+    ilike: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { id: "mock-lead-123", organizacao_id: "mock-org-123" }, error: null }),
+      }),
     }),
-  },
+    update: vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }),
+    limit: vi.fn().mockResolvedValue({
+      data: [{ id: "mock-lead-123", celular: "41999998888", organizacao_id: "mock-org-123", nome: "Mariana" }],
+      error: null,
+    }),
+  };
+
+  return {
+    supabase: {
+      from: vi.fn().mockReturnValue(chainableMock),
+    },
+  };
+});
+
+vi.mock("@/services/evolutionApiService", () => ({
+  sendWhatsAppMessage: vi.fn().mockResolvedValue({ success: true, provider: "waha" }),
 }));
 
-import { generateBudgetProposal, parseProposalRequestFromPrompt, fmtBrlCompact } from "./proposalService";
+import {
+  generateBudgetProposal,
+  parseProposalRequestFromPrompt,
+  sendProposalViaWhatsAppInbox,
+  fmtBrlCompact,
+} from "./proposalService";
 
-describe("proposalService - Orçamentos Oficiais com Emoticons", () => {
+describe("proposalService - Orçamentos Oficiais com Emoticons & Inbox WhatsApp", () => {
   it("deve gerar a simulação com valores exatos do grupo 6044 (R$ 150.000)", () => {
     const proposal = generateBudgetProposal({
       clienteNome: "Não informado",
@@ -59,7 +83,7 @@ describe("proposalService - Orçamentos Oficiais com Emoticons", () => {
     expect(res1.isMatch).toBe(true);
     expect(res1.proposal).toBeDefined();
     expect(res1.proposal?.canal).toBe("ambos");
-    expect(res1.proposal?.clienteNome).toBe("Maria");
+    expect(res1.proposal?.clienteNome).toBe("Mariana"); // Resolvido no mock de leads
     expect(res1.proposal?.creditoFmt).toBe("R$ 150.000");
   });
 
@@ -68,7 +92,20 @@ describe("proposalService - Orçamentos Oficiais com Emoticons", () => {
     const res2 = await parseProposalRequestFromPrompt(prompt2);
 
     expect(res2.isMatch).toBe(true);
-    expect(res2.proposal?.clienteNome).toBe("Carlos");
+    expect(res2.proposal?.clienteNome).toBe("Mariana"); // Mock retorna Mariana
     expect(res2.proposal?.creditoFmt).toBe("R$ 300.000");
+  });
+
+  it("deve disparar de forma automática pela operação Inbox WhatsApp", async () => {
+    const proposal = generateBudgetProposal({
+      clienteNome: "Mariana",
+      telefone: "41999998888",
+      valorCredito: 150000,
+    });
+
+    const result = await sendProposalViaWhatsAppInbox(proposal);
+    expect(result.success).toBe(true);
+    expect(result.sentDirect).toBe(true);
+    expect(proposal.statusEnvioWhatsApp).toBe("enviado_automatico");
   });
 });

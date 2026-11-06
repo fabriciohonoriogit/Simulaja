@@ -7,8 +7,11 @@
 
 import { GRUPOS, GrupoItem } from "@/constants/simulador";
 import { supabase } from "@/integrations/supabase/client";
+import { sendWhatsAppMessage } from "@/services/evolutionApiService";
 
 export interface BudgetProposalParams {
+  leadId?: string;
+  organizacaoId?: string;
   clienteNome?: string;
   telefone?: string;
   email?: string;
@@ -22,6 +25,8 @@ export interface BudgetProposalParams {
 }
 
 export interface GeneratedBudgetProposal {
+  leadId?: string;
+  organizacaoId?: string;
   clienteNome: string;
   telefone?: string;
   email?: string;
@@ -40,6 +45,7 @@ export interface GeneratedBudgetProposal {
   scriptWhatsApp: string;
   scriptEmail: string;
   assuntoEmail: string;
+  statusEnvioWhatsApp?: "enviado_automatico" | "pendente" | "erro";
 }
 
 /**
@@ -180,6 +186,8 @@ export function generateBudgetProposal(params: BudgetProposalParams): GeneratedB
   ].join("\n");
 
   return {
+    leadId: params.leadId,
+    organizacaoId: params.organizacaoId,
     clienteNome,
     telefone: params.telefone,
     email: params.email,
@@ -293,16 +301,21 @@ export async function parseProposalRequestFromPrompt(
   }
 
   // Busca dados adicionais no CRM caso o cliente exista em leads
-  if (clienteNome && clienteNome !== "Não informado" && (!telefone || !email)) {
+  let leadId: string | undefined;
+  let organizacaoId: string | undefined;
+
+  if (clienteNome && clienteNome !== "Não informado") {
     try {
       const { data: leads } = await supabase
         .from("leads")
-        .select("nome, celular, email, valor_credito, tipo_consorcio")
+        .select("id, organizacao_id, nome, celular, email, valor_credito, tipo_consorcio")
         .ilike("nome", `%${clienteNome}%`)
         .limit(1);
 
       if (leads && leads.length > 0) {
         const lead = leads[0];
+        leadId = lead.id;
+        organizacaoId = lead.organizacao_id;
         clienteNome = lead.nome || clienteNome;
         if (!telefone && lead.celular) telefone = String(lead.celular).replace(/\D/g, "");
         if (!email && lead.email) email = lead.email;
@@ -317,6 +330,8 @@ export async function parseProposalRequestFromPrompt(
   }
 
   const proposal = generateBudgetProposal({
+    leadId,
+    organizacaoId,
     clienteNome,
     telefone,
     email,
@@ -331,4 +346,135 @@ export async function parseProposalRequestFromPrompt(
     proposal,
     clientNameFound: clienteNome,
   };
+}
+
+/**
+ * Dispara o orçamento oficial de forma AUTOMÁTICA pela operação Inbox WhatsApp do CRM:
+ * 1. Localiza ou cria o lead no CRM para que apareça na aba 'Conversas' do Inbox WhatsApp
+ * 2. Registra o script na tabela `chat_messages` (alimentando a conversa em tempo real)
+ * 3. Envia mensagem direta ao WhatsApp via WAHA Local ou Evolution API
+ */
+export async function sendProposalViaWhatsAppInbox(
+  proposal: GeneratedBudgetProposal
+): Promise<{
+  success: boolean;
+  sentDirect: boolean;
+  leadId?: string;
+  error?: string;
+}> {
+  try {
+    let leadId = proposal.leadId;
+    let targetPhone = proposal.telefone ? proposal.telefone.replace(/\D/g, "") : "";
+    let clienteNome = proposal.clienteNome || "Cliente";
+
+    // 1. Localiza lead existente no CRM caso não informado o id
+    if (!leadId && clienteNome && clienteNome !== "Não informado") {
+      try {
+        const { data: existingLeads } = await supabase
+          .from("leads")
+          .select("id, celular, organizacao_id, nome")
+          .ilike("nome", `%${clienteNome}%`)
+          .limit(1);
+
+        if (existingLeads && existingLeads.length > 0) {
+          const l = existingLeads[0];
+          leadId = l.id;
+          proposal.leadId = l.id;
+          if (!targetPhone && l.celular) {
+            targetPhone = l.celular.replace(/\D/g, "");
+            proposal.telefone = targetPhone;
+          }
+          if (l.organizacao_id && !proposal.organizacaoId) {
+            proposal.organizacaoId = l.organizacao_id;
+          }
+        }
+      } catch (errFind) {
+        console.warn("[Proposal] Erro ao buscar lead existente:", errFind);
+      }
+    }
+
+    // 2. Se não existir lead no CRM, cria automaticamente para constar no Inbox WhatsApp
+    if (!leadId) {
+      try {
+        const orgId = proposal.organizacaoId || "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4";
+        const { data: newLead, error: leadError } = await supabase
+          .from("leads")
+          .insert({
+            nome: clienteNome !== "Não informado" ? clienteNome : "Cliente Orçamento",
+            celular: targetPhone || "",
+            email: proposal.email || null,
+            origem: "INBOX_WHATSAPP_ORCAMENTO",
+            status_consorcio: "novo_lead",
+            organizacao_id: orgId,
+            observacoes: `Orçamento oficial de ${proposal.creditoFmt} gerado e disparado via Jarvis HUD.`,
+          })
+          .select("id, organizacao_id")
+          .single();
+
+        if (newLead && !leadError) {
+          leadId = newLead.id;
+          proposal.leadId = newLead.id;
+          proposal.organizacaoId = newLead.organizacao_id;
+        }
+      } catch (errCreate) {
+        console.warn("[Proposal] Erro ao criar lead para Inbox WhatsApp:", errCreate);
+      }
+    }
+
+    // 3. Registra a mensagem na tabela `chat_messages` (operação Inbox WhatsApp do CRM)
+    if (leadId) {
+      try {
+        await (supabase.from("chat_messages") as any).insert({
+          lead_id: leadId,
+          content: proposal.scriptWhatsApp,
+          role: "assistant",
+        });
+
+        // Atualiza timestamp e último contato no funil
+        await supabase
+          .from("leads")
+          .update({
+            updated_at: new Date().toISOString(),
+            data_ultimo_contato: new Date().toISOString(),
+          })
+          .eq("id", leadId);
+      } catch (errChat) {
+        console.warn("[Proposal] Erro ao registrar mensagem em chat_messages:", errChat);
+      }
+    }
+
+    // 4. Disparo real via WhatsApp (WAHA Local com fallback Evolution API)
+    let sentDirect = false;
+    if (targetPhone) {
+      try {
+        const waRes = await sendWhatsAppMessage({
+          number: targetPhone,
+          text: proposal.scriptWhatsApp,
+          organizacaoId: proposal.organizacaoId,
+          leadId: leadId,
+          leadNome: clienteNome,
+        });
+
+        if (waRes && waRes.success && !waRes.isWebFallback) {
+          sentDirect = true;
+          proposal.statusEnvioWhatsApp = "enviado_automatico";
+        }
+      } catch (errWa) {
+        console.warn("[Proposal] Falha no envio direto do WhatsApp:", errWa);
+      }
+    }
+
+    return {
+      success: true,
+      sentDirect,
+      leadId,
+    };
+  } catch (error: any) {
+    console.error("[Proposal] Erro geral no disparo Inbox WhatsApp:", error);
+    return {
+      success: false,
+      sentDirect: false,
+      error: error.message || "Erro desconhecido",
+    };
+  }
 }
