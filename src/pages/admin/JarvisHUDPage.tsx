@@ -1188,7 +1188,8 @@ gn_prosperaplan@consorciomagalu.com.br`;
         `Painel Jarvis HUD Executivo - Assistente de Vendas e Consórcios. ${fileToSend ? `[ARQUIVO ANEXADO PELO GESTOR: ${fileToSend.name} (${fileToSend.type})]` : ""}`,
         "Fabrício",
         chatHistory,
-        fileToSend?.base64Data
+        fileToSend?.base64Data,
+        selectedCore
       );
 
       let responseText = aiResult?.answer;

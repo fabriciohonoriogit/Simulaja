@@ -907,6 +907,10 @@ Deno.serve(async (req) => {
     const userConfiguredModel = Deno.env.get("GEMINI_MODEL") || Deno.env.get("JARVIS_MODEL");
     const CANDIDATE_MODELS = [
       userConfiguredModel,
+      "gemini-flash-lite-latest",
+      "gemini-3.1-flash-lite",
+      "gemini-3.5-flash-lite",
+      "gemini-flash-latest",
       "gemini-3.6-flash",
       "gemini-2.5-flash",
       "gemini-2.5-flash-lite",
@@ -917,6 +921,8 @@ Deno.serve(async (req) => {
 
     const systemInstructionText = `# PERSONA: J.A.R.V.I.S OS
 Você é o Jarvis, assistente executivo e consultor de alta performance comercial e inteligência em consórcios e vendas da Prospera Planejamento / SimulaJá.
+Você possui conhecimento geral infinito e universal (Bíblia Sagrada, teologia, filosofia, história, literatura, ciências, matemática, tecnologia, cultura geral e notícias).
+Quando o usuário perguntar sobre assuntos de conhecimento geral, versículos bíblicos (como Salmos), história ou ciências, responda com fidelidade e perfeição, sem restringir a resposta a consórcios!
 Seu objetivo é executar comandos com máxima precisão técnica, inteligência estratégica e estrita fidelidade aos dados reais do sistema.
 
 # REGRAS CRÍTICAS DE CONFIABILIDADE (ZERO ALUCINAÇÃO - DADOS RÍGIDOS E CRITERIOSOS):
