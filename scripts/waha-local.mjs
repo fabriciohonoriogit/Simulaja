@@ -451,7 +451,8 @@ const server = http.createServer(async (req, res) => {
   // 6. Enviar Mensagem de Texto (POST /api/sendText)
   if (pathname === "/api/sendText" && req.method === "POST") {
     const body = await readBody();
-    let { chatId, text } = body;
+    let chatId = body.chatId || body.phone || body.number;
+    let text = body.text || body.message;
 
     if (!chatId || !text) {
       res.writeHead(400, { "Content-Type": "application/json" });

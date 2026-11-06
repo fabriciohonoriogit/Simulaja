@@ -27,7 +27,22 @@ vi.mock("@/integrations/supabase/client", () => {
 
 vi.mock("@/services/evolutionApiService", () => ({
   sendWhatsAppMessage: vi.fn().mockResolvedValue({ success: true, provider: "waha" }),
+  isEvolutionConfigured: vi.fn().mockReturnValue(false),
+  getEvolutionConfig: vi.fn().mockReturnValue({ apiUrl: "", apiKey: "", instanceName: "" }),
 }));
+
+global.fetch = vi.fn().mockImplementation((url: string) => {
+  if (String(url).includes("api/sendText")) {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ success: true, id: "msg_mock_123" }),
+    });
+  }
+  return Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+  });
+});
 
 import {
   generateBudgetProposal,

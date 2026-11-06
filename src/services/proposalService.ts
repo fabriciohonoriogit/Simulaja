@@ -7,7 +7,7 @@
 
 import { GRUPOS, GrupoItem } from "@/constants/simulador";
 import { supabase } from "@/integrations/supabase/client";
-import { sendWhatsAppMessage } from "@/services/evolutionApiService";
+import { getEvolutionConfig, isEvolutionConfigured } from "@/services/evolutionApiService";
 
 export interface BudgetProposalParams {
   leadId?: string;
@@ -306,11 +306,18 @@ export async function parseProposalRequestFromPrompt(
 
   if (clienteNome && clienteNome !== "Não informado") {
     try {
-      const { data: leads } = await supabase
+      const digits = clienteNome.replace(/\D/g, "");
+      let query = supabase
         .from("leads")
-        .select("id, organizacao_id, nome, celular, email, valor_credito, tipo_consorcio")
-        .ilike("nome", `%${clienteNome}%`)
-        .limit(1);
+        .select("id, organizacao_id, nome, celular, email, valor_credito, tipo_consorcio");
+
+      if (digits.length >= 4) {
+        query = query.or(`nome.ilike.%${clienteNome}%,celular.ilike.%${digits}%`);
+      } else {
+        query = query.ilike("nome", `%${clienteNome}%`);
+      }
+
+      const { data: leads } = await query.limit(1);
 
       if (leads && leads.length > 0) {
         const lead = leads[0];
@@ -352,7 +359,7 @@ export async function parseProposalRequestFromPrompt(
  * Dispara o orçamento oficial de forma AUTOMÁTICA pela operação Inbox WhatsApp do CRM:
  * 1. Localiza ou cria o lead no CRM para que apareça na aba 'Conversas' do Inbox WhatsApp
  * 2. Registra o script na tabela `chat_messages` (alimentando a conversa em tempo real)
- * 3. Envia mensagem direta ao WhatsApp via WAHA Local ou Evolution API
+ * 3. Envia mensagem direta ao WhatsApp via WAHA Local ou Evolution API (SEM NUNCA ABRIR WHATSAPP WEB)
  */
 export async function sendProposalViaWhatsAppInbox(
   proposal: GeneratedBudgetProposal
@@ -370,11 +377,18 @@ export async function sendProposalViaWhatsAppInbox(
     // 1. Localiza lead existente no CRM caso não informado o id
     if (!leadId && clienteNome && clienteNome !== "Não informado") {
       try {
-        const { data: existingLeads } = await supabase
+        const digits = clienteNome.replace(/\D/g, "");
+        let query = supabase
           .from("leads")
-          .select("id, celular, organizacao_id, nome")
-          .ilike("nome", `%${clienteNome}%`)
-          .limit(1);
+          .select("id, celular, organizacao_id, nome, valor_credito");
+
+        if (digits.length >= 4) {
+          query = query.or(`nome.ilike.%${clienteNome}%,celular.ilike.%${digits}%`);
+        } else {
+          query = query.ilike("nome", `%${clienteNome}%`);
+        }
+
+        const { data: existingLeads } = await query.limit(1);
 
         if (existingLeads && existingLeads.length > 0) {
           const l = existingLeads[0];
@@ -422,6 +436,7 @@ export async function sendProposalViaWhatsAppInbox(
     }
 
     // 3. Registra a mensagem na tabela `chat_messages` (operação Inbox WhatsApp do CRM)
+    // Isso garante que a conversa apareça instantaneamente na aba 'Conversas' do Inbox WhatsApp!
     if (leadId) {
       try {
         await (supabase.from("chat_messages") as any).insert({
@@ -444,23 +459,58 @@ export async function sendProposalViaWhatsAppInbox(
     }
 
     // 4. Disparo real via WhatsApp (WAHA Local com fallback Evolution API)
+    // NUNCA abre janela externa ou WhatsApp Web (wa.me)
     let sentDirect = false;
     if (targetPhone) {
+      // 4.1. Tenta envio direto pelo microservidor WAHA Local nativo (Porta 3000)
       try {
-        const waRes = await sendWhatsAppMessage({
-          number: targetPhone,
-          text: proposal.scriptWhatsApp,
-          organizacaoId: proposal.organizacaoId,
-          leadId: leadId,
-          leadNome: clienteNome,
+        const cleanNumber = targetPhone.startsWith("55") ? targetPhone : `55${targetPhone}`;
+        const wahaRes = await fetch("http://localhost:3000/api/sendText", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chatId: `${cleanNumber}@c.us`,
+            text: proposal.scriptWhatsApp,
+          }),
         });
 
-        if (waRes && waRes.success && !waRes.isWebFallback) {
-          sentDirect = true;
-          proposal.statusEnvioWhatsApp = "enviado_automatico";
+        if (wahaRes.ok) {
+          const wahaData = await wahaRes.json().catch(() => ({}));
+          if (wahaData.success || wahaData.id) {
+            sentDirect = true;
+            proposal.statusEnvioWhatsApp = "enviado_automatico";
+          }
         }
-      } catch (errWa) {
-        console.warn("[Proposal] Falha no envio direto do WhatsApp:", errWa);
+      } catch (errWaha) {
+        console.warn("[Proposal] WAHA local inacessível:", errWaha);
+      }
+
+      // 4.2. Se WAHA não enviou, tenta Evolution API direta se configurada
+      if (!sentDirect) {
+        try {
+          if (isEvolutionConfigured()) {
+            const evolutionConfig = getEvolutionConfig();
+            const cleanNumber = targetPhone.startsWith("55") ? targetPhone : `55${targetPhone}`;
+            const epRes = await fetch(`${evolutionConfig.apiUrl}/message/sendText/${evolutionConfig.instanceName}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: evolutionConfig.apiKey,
+              },
+              body: JSON.stringify({
+                number: cleanNumber,
+                text: proposal.scriptWhatsApp,
+                delay: 1200,
+              }),
+            });
+            if (epRes.ok) {
+              sentDirect = true;
+              proposal.statusEnvioWhatsApp = "enviado_automatico";
+            }
+          }
+        } catch (errEvo) {
+          console.warn("[Proposal] Evolution API direta inacessível:", errEvo);
+        }
       }
     }
 

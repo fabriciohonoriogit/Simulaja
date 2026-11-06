@@ -336,38 +336,22 @@ export default function JarvisHUDPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Disparo de proposta oficial via WhatsApp (WAHA Local com fallback wa.me)
+  // Disparo de proposta oficial diretamente pela operação Inbox WhatsApp (sem abrir WhatsApp Web)
   const handleSendProposalWhatsApp = async (proposal: GeneratedBudgetProposal) => {
     if (!proposal) return;
-    const phone = proposal.telefone ? proposal.telefone.replace(/\D/g, "") : "";
 
-    if (phone) {
-      try {
-        const res = await fetch("http://localhost:3000/api/sendText", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            phone,
-            message: proposal.scriptWhatsApp,
-          }),
-        });
-        if (res.ok) {
-          toast.success(`Orçamento enviado com sucesso para ${proposal.clienteNome} (${phone}) via WAHA!`);
-          const sentNotice = `Orçamento disparado com sucesso no WhatsApp de ${proposal.clienteNome}!`;
-          setLastJarvisReply(sentNotice);
-          speakResponse(sentNotice);
-          return;
-        }
-      } catch (err) {
-        console.warn("Falha no disparo direto WAHA, abrindo wa.me:", err);
-      }
+    const res = await sendProposalViaWhatsAppInbox(proposal);
+    if (res.sentDirect) {
+      toast.success(`Orçamento enviado com sucesso para ${proposal.clienteNome} via Inbox WhatsApp!`);
+      const sentNotice = `Orçamento disparado com sucesso no Inbox WhatsApp de ${proposal.clienteNome}!`;
+      setLastJarvisReply(sentNotice);
+      speakResponse(sentNotice);
+    } else {
+      toast.success(`Orçamento registrado com sucesso no Inbox WhatsApp de ${proposal.clienteNome}!`);
+      const regNotice = `Orçamento registrado na conversa de ${proposal.clienteNome} no Inbox WhatsApp!`;
+      setLastJarvisReply(regNotice);
+      speakResponse(regNotice);
     }
-
-    const targetUrl = phone
-      ? `https://wa.me/55${phone}?text=${encodeURIComponent(proposal.scriptWhatsApp)}`
-      : `https://wa.me/?text=${encodeURIComponent(proposal.scriptWhatsApp)}`;
-    window.open(targetUrl, "_blank");
-    toast.info("Encaminhando script com emoticons para o WhatsApp...");
   };
 
   // Disparo de proposta oficial via E-mail
