@@ -27,22 +27,45 @@ serve(async (req) => {
       const msg = messages[0];
       
       const isFromMe = !!msg.key?.fromMe;
-      const remoteJid = body.remoteJid || msg.key?.remoteJidAlt || msg.key?.participant || msg.participant || msg.key?.remoteJid || msg.remoteJid || "";
-      // Quando isFromMe é true, o msg.pushName é do próprio usuário (Fabrício Honório)! O nome do contato externo vem em body.contactName.
-      const contactDisplayName = body.contactName || (!isFromMe ? (msg.pushName || msg.verifiedBizName) : "") || "";
+      
+      // 1. Identificação segura do JID do chat
+      const chatJid = msg.key?.remoteJid || body.remoteJid || msg.remoteJid || "";
+      const senderParticipant = msg.key?.participant || msg.participant || "";
 
-      // 2. Ignorar mensagens de grupos (@g.us) ou status
-      if (!remoteJid || remoteJid.includes("@g.us") || remoteJid.includes("status@broadcast")) {
-        return new Response(JSON.stringify({ status: "ignored_group_or_status" }), {
+      // 2. REGRA ABSOLUTA DO CRM: NUNCA REGISTRAR CARD NEM MENSAGENS DE GRUPOS NO FUNIL!
+      const isGroup = 
+        chatJid.includes("@g.us") ||
+        Boolean(body.isGroup) ||
+        Boolean(msg.isGroup) ||
+        Boolean(senderParticipant) || // Mensagens com participante pertencem exclusivamente a GRUPOS no WhatsApp/Baileys
+        Boolean(msg.key?.participant);
+
+      const isBroadcastOrChannel =
+        chatJid.includes("@broadcast") ||
+        chatJid.includes("@newsletter") ||
+        chatJid === "status@broadcast";
+
+      if (isGroup || isBroadcastOrChannel || !chatJid) {
+        console.log(`[Filtro Anti-Grupo] Mensagem descartada (grupo/canal/status): ${chatJid} (participante: ${senderParticipant})`);
+        return new Response(JSON.stringify({ status: "ignored_group_or_broadcast" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
         });
       }
 
+      // Em chats diretos 1-a-1, o contato é sempre o chatJid
+      const remoteJid = chatJid;
+      // Quando isFromMe é true, o msg.pushName é do próprio usuário (Fabrício Honório)! O nome do contato externo vem em body.contactName.
+      const contactDisplayName = body.contactName || (!isFromMe ? (msg.pushName || msg.verifiedBizName) : "") || "";
+
       // Extrair o número limpo e os últimos 8 dígitos (para lidar com variação de 8 e 9 dígitos no Brasil e @lid)
       const rawNumber = remoteJid.replace("@s.whatsapp.net", "").replace("@c.us", "").replace("@lid", "").replace(/\D/g, "");
       const shortNumber = rawNumber.startsWith("55") ? rawNumber.substring(2) : rawNumber;
       const last8Digits = rawNumber.length >= 8 ? rawNumber.slice(-8) : rawNumber;
+
+      // Validação: Telefones reais no Brasil possuem de 10 a 13 dígitos.
+      // Hashes de LID (como 88034062151769) possuem 14+ dígitos e nunca devem criar leads.
+      const isValidPhoneNumber = rawNumber.length >= 10 && rawNumber.length <= 13 && !remoteJid.includes("@lid");
 
       // Extrair o conteúdo do texto ou tipo de mídia (nunca descartar áudio, foto, anexo ou figurinha!)
       const incomingText = 
@@ -204,7 +227,15 @@ serve(async (req) => {
           matchedLead.responsavel_id = matchedLead.responsavel_id || targetRespId;
         }
       } else {
-        // Se o número NÃO pertence a nenhum lead existente no CRM, CRIA AUTOMATICAMENTE o lead no CRM
+        // Se o número NÃO pertence a nenhum lead existente no CRM, valida se é um telefone real
+        if (!isValidPhoneNumber) {
+          console.log(`[Filtro Anti-LID] Identificador inválido ou hash LID (${rawNumber}), não será criado card no funil.`);
+          return new Response(JSON.stringify({ status: "ignored_invalid_phone_or_lid" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+
         let displayName = contactDisplayName ? contactDisplayName.replace(/^Lead\s+/i, "").trim() : `Contato WhatsApp (${rawNumber.slice(-4)})`;
         if (displayName.toLowerCase().includes("honorio") || displayName.toLowerCase().startsWith("fabricio")) {
           displayName = `Contato WhatsApp (${rawNumber.slice(-4)})`;
@@ -237,6 +268,16 @@ serve(async (req) => {
         } catch (autoErr) {
           console.error("Exceção ao auto-criar lead:", autoErr);
         }
+      }
+
+      // Auto-correção: Remove card indevido criado por LID de grupo ("DEUS É MARAVILHOSO 😉" / 88034062151769)
+      try {
+        await supabaseAdmin
+          .from("leads")
+          .delete()
+          .or("celular.eq.88034062151769,nome.ilike.%DEUS É MARAVILHOSO%");
+      } catch (cleanErr) {
+        // Silencioso
       }
 
       // Auto-correção: Remove mensagens indevidas vinculadas à Karina (como "tarde nardo")

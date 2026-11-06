@@ -103,6 +103,16 @@ export function FinanciamentoImobiliarioTab() {
   const [projetarINCC, setProjetarINCC] = useState<boolean>(true);
   const [mostrarConfigConsorcio, setMostrarConfigConsorcio] = useState<boolean>(true);
 
+  // ==========================================
+  // PARÂMETROS DA CARTA CONTEMPLADA (MODALIDADE 3)
+  // ==========================================
+  const [mostrarCartaContemplada, setMostrarCartaContemplada] = useState<boolean>(true);
+  const [creditoCartaInput, setCreditoCartaInput] = useState<string>("518.773,34");
+  const [agioCartaInput, setAgioCartaInput] = useState<string>("150.000");
+  const [prazoCartaInput, setPrazoCartaInput] = useState<string>("221");
+  const [parcelaCartaInput, setParcelaCartaInput] = useState<string>("3.006,91");
+  const [administradoraCartaInput, setAdministradoraCartaInput] = useState<string>("Magalu");
+
   // Cálculo da data de nascimento oficial Caixa
   const infoNascimento = useMemo(() => {
     if (!dataNascimentoInput.trim()) return null;
@@ -259,6 +269,35 @@ export function FinanciamentoImobiliarioTab() {
     };
   }, [creditoConsorcio, prazoConsorcio, taxaAdmConsorcio, taxaINCCAnual, resultado]);
 
+  // CÁLCULO ESTRATÉGICO DA CARTA CONTEMPLADA (MODALIDADE 3)
+  const cartaEstimada = useMemo(() => {
+    const cred = parseMoeda(creditoCartaInput) || valorImovel;
+    const agio = parseMoeda(agioCartaInput);
+    const n = Math.max(1, parseInt(prazoCartaInput) || 221);
+    const pmt = parseMoeda(parcelaCartaInput) || 3006.91;
+    // REGRA DE CARTA CONTEMPLADA: O valor do ágio (entrada) NÃO abate o valor financiado!
+    // O valor financiado permanece o próprio crédito integral do consórcio (PV = cred)
+    const pv = cred;
+    const somaParcelas = n * pmt;
+    const totalPago = agio + somaParcelas;
+    const custoExtra = totalPago - cred;
+    const totalDesembolsoCaixa = resultado.valorEntrada + resultado.totalFinanciamentoPago;
+    const economiaVsCaixa = totalDesembolsoCaixa - totalPago;
+
+    return {
+      credito: cred,
+      agio,
+      pv,
+      prazo: n,
+      parcela: pmt,
+      somaParcelas,
+      totalPago,
+      custoExtra,
+      economiaVsCaixa: Math.max(0, economiaVsCaixa),
+      administradora: administradoraCartaInput || "Magalu"
+    };
+  }, [creditoCartaInput, agioCartaInput, prazoCartaInput, parcelaCartaInput, administradoraCartaInput, valorImovel, resultado]);
+
   // Compartilhar proposta no WhatsApp
   const handleShareWhatsApp = () => {
     let msg = `🏠 *ESTUDO COMPARATIVO DE CRÉDITO IMOBILIÁRIO*\n`;
@@ -287,10 +326,22 @@ export function FinanciamentoImobiliarioTab() {
     if (projetarINCC) {
       msg += `• Correção Anual INCC: *~${consorcioEstimado.taxaINCC.toFixed(2)}% a.a.* (Valoriza a sua carta de crédito na mesma proporção)\n`;
     }
-    msg += `• Custo Total do Consórcio: *${formatCurrency(consorcioEstimado.totalPago)}*\n\n`;
-
+    msg += `• Custo Total do Consórcio: *${formatCurrency(consorcioEstimado.totalPago)}*\n`;
     msg += `💰 *ECONOMIA REAL NO CONSÓRCIO:* *${formatCurrency(consorcioEstimado.economiaVsCaixa)}* poupados de juros bancários!\n`;
     msg += `🚀 *Estratégia de Lance:* A entrada de ${formatCurrency(resultado.valorEntrada)} vira um Lance Livre de *${consorcioEstimado.percentualLanceEntrada.toFixed(1)}%* para contemplar rapidamente!\n\n`;
+
+    if (mostrarCartaContemplada) {
+      msg += `─────────────────────\n`;
+      msg += `⚡ *MODALIDADE 3: CARTA CONTEMPLADA (${cartaEstimada.administradora.toUpperCase()})*\n`;
+      msg += `• Crédito Liberado Imediato: *${formatCurrency(cartaEstimada.credito)}* (Chave na mão / sem esperar sorteio)\n`;
+      msg += `• Entrada / Ágio da Carta: *${formatCurrency(cartaEstimada.agio)}*\n`;
+      msg += `• Valor Financiado (PV): *${formatCurrency(cartaEstimada.pv)}* (O ágio não abate o crédito financiado!)\n`;
+      msg += `• Prazo Restante: *${cartaEstimada.prazo} meses*\n`;
+      msg += `• Parcela Mensal: *${formatCurrency(cartaEstimada.parcela)}/mês*\n`;
+      msg += `• Total Pago Final: *${formatCurrency(cartaEstimada.totalPago)}*\n`;
+      msg += `💰 *ECONOMIA VS CAIXA:* *${formatCurrency(cartaEstimada.economiaVsCaixa)}* economizados em juros!\n\n`;
+    }
+
     msg += `💬 _Gerado via Análise do Crédito — SimulaJá / Jarvis_`;
 
     const encoded = encodeURIComponent(msg);
@@ -298,7 +349,10 @@ export function FinanciamentoImobiliarioTab() {
   };
 
   const handleCopyResumo = () => {
-    const texto = `Comparativo Caixa vs Consórcio (${formatCurrency(resultado.valorImovel)}): Caixa 1ª Parcela ${formatCurrency(resultado.primeiraParcela)} em ${resultado.prazoMeses}m (Total ${formatCurrency(resultado.totalFinanciamentoPago)}). Consórcio ${formatCurrency(consorcioEstimado.credito)} em ${consorcioEstimado.prazo}m (Taxa ${consorcioEstimado.taxaAdmTotal}%, Parcela ${formatCurrency(consorcioEstimado.parcelaLinear)}). Economia Real: ${formatCurrency(consorcioEstimado.economiaVsCaixa)}.`;
+    let texto = `Comparativo Caixa vs Consórcio (${formatCurrency(resultado.valorImovel)}): Caixa 1ª Parcela ${formatCurrency(resultado.primeiraParcela)} em ${resultado.prazoMeses}m (Total ${formatCurrency(resultado.totalFinanciamentoPago)}). Consórcio ${formatCurrency(consorcioEstimado.credito)} em ${consorcioEstimado.prazo}m (Taxa ${consorcioEstimado.taxaAdmTotal}%, Parcela ${formatCurrency(consorcioEstimado.parcelaLinear)}). Economia Real: ${formatCurrency(consorcioEstimado.economiaVsCaixa)}.`;
+    if (mostrarCartaContemplada) {
+      texto += ` Carta Contemplada ${cartaEstimada.administradora} (${formatCurrency(cartaEstimada.credito)}): Entrada/Ágio ${formatCurrency(cartaEstimada.agio)} + ${cartaEstimada.prazo}x de ${formatCurrency(cartaEstimada.parcela)} (Total ${formatCurrency(cartaEstimada.totalPago)}). Economia vs Caixa: ${formatCurrency(cartaEstimada.economiaVsCaixa)}.`;
+    }
     navigator.clipboard.writeText(texto);
     toast.success("Resumo copiado para a área de transferência!");
   };
@@ -1058,11 +1112,79 @@ export function FinanciamentoImobiliarioTab() {
                     </div>
 
                   </div>
+
+                  {/* Seção Parâmetros da Carta Contemplada */}
+                  <div className="border-t border-indigo-100 pt-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-cyan-950 uppercase tracking-wide flex items-center gap-1.5">
+                        <FileCheck2 className="h-4 w-4 text-cyan-600" /> Parâmetros da Carta Contemplada (Chave na Mão)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setMostrarCartaContemplada(!mostrarCartaContemplada)}
+                        className={cn(
+                          "text-[9px] font-bold px-2 py-0.5 rounded border transition-all",
+                          mostrarCartaContemplada ? "bg-cyan-100 text-cyan-800 border-cyan-300" : "bg-slate-100 text-slate-600 border-slate-200"
+                        )}
+                      >
+                        {mostrarCartaContemplada ? "✓ Ativa no Comparativo" : "+ Incluir no Comparativo"}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase">Administradora</label>
+                        <Input 
+                          value={administradoraCartaInput}
+                          onChange={e => setAdministradoraCartaInput(e.target.value)}
+                          placeholder="Magalu"
+                          className="h-8 text-xs font-bold text-slate-900 bg-slate-50/50 rounded-lg"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase">Crédito da Carta</label>
+                        <Input 
+                          value={creditoCartaInput}
+                          onChange={e => setCreditoCartaInput(e.target.value)}
+                          placeholder="518.773,34"
+                          className="h-8 text-xs font-black text-slate-900 bg-slate-50/50 rounded-lg"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase">Entrada / Ágio</label>
+                        <Input 
+                          value={agioCartaInput}
+                          onChange={e => setAgioCartaInput(e.target.value)}
+                          placeholder="150.000"
+                          className="h-8 text-xs font-black text-slate-900 bg-slate-50/50 rounded-lg"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase">Prazo Restante</label>
+                        <Input 
+                          type="number"
+                          value={prazoCartaInput}
+                          onChange={e => setPrazoCartaInput(e.target.value)}
+                          placeholder="221"
+                          className="h-8 text-xs font-black text-slate-900 bg-slate-50/50 rounded-lg"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase">Parcela Mensal</label>
+                        <Input 
+                          value={parcelaCartaInput}
+                          onChange={e => setParcelaCartaInput(e.target.value)}
+                          placeholder="3.006,91"
+                          className="h-8 text-xs font-black text-slate-900 bg-slate-50/50 rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Tabela de Contraste Direto Clean */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={cn("grid gap-4", mostrarCartaContemplada ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1 md:grid-cols-2")}>
                 
                 {/* Lado Caixa Clean */}
                 <div className="bg-white border border-slate-200/90 rounded-2xl p-5 space-y-3 shadow-xs">
@@ -1159,6 +1281,50 @@ export function FinanciamentoImobiliarioTab() {
                     </p>
                   </div>
                 </div>
+
+                {/* Lado Carta Contemplada Clean (Chave na Mão) */}
+                {mostrarCartaContemplada && (
+                  <div className="bg-gradient-to-b from-cyan-50/50 via-white to-blue-50/20 border border-cyan-200/80 rounded-2xl p-5 space-y-3 shadow-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-black uppercase text-cyan-800 flex items-center gap-1.5">
+                        <FileCheck2 className="h-4 w-4 text-cyan-600" /> Carta Contemplada ({cartaEstimada.administradora})
+                      </span>
+                      <Badge className="bg-cyan-100 text-cyan-800 border border-cyan-300/60 font-black text-[9px]">
+                        {cartaEstimada.prazo}m · Chave na Mão
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2 text-xs text-slate-600">
+                      <div className="flex justify-between items-center py-1 border-b border-cyan-100/60">
+                        <span className="text-slate-600">Crédito Contemplado:</span>
+                        <strong className="text-slate-900 text-sm font-black">{formatCurrency(cartaEstimada.credito)}</strong>
+                      </div>
+                      <div className="flex justify-between items-center py-1 border-b border-cyan-100/60">
+                        <span className="text-slate-600">Entrada / Ágio (Cessão):</span>
+                        <strong className="text-cyan-700 font-bold">{formatCurrency(cartaEstimada.agio)}</strong>
+                      </div>
+                      <div className="flex justify-between items-center py-1 border-b border-cyan-100/60 bg-cyan-50/60 px-1.5 py-0.5 rounded">
+                        <span className="text-cyan-900 font-bold">Financiado (PV):</span>
+                        <strong className="text-cyan-700 text-sm font-black">{formatCurrency(cartaEstimada.pv)}</strong>
+                      </div>
+                      <div className="flex justify-between items-center py-1 border-b border-cyan-100/60">
+                        <span className="text-slate-600">Parcelas Mensais:</span>
+                        <strong className="text-slate-900 font-bold">{cartaEstimada.prazo} × {formatCurrency(cartaEstimada.parcela)}</strong>
+                      </div>
+                      <div className="flex justify-between items-center py-1 border-b border-cyan-100/60">
+                        <span className="text-slate-600">Disponibilidade:</span>
+                        <strong className="text-emerald-700 font-bold">Liberação Imediata</strong>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 text-sm">
+                        <span className="text-cyan-900 font-bold">Total Pago (Ágio + Parcelas):</span>
+                        <strong className="text-cyan-700 font-black text-base">{formatCurrency(cartaEstimada.totalPago)}</strong>
+                      </div>
+                      <p className="text-[10px] text-cyan-700/80 italic text-right font-medium">
+                        O ágio não abate o crédito financiado ({formatCurrency(cartaEstimada.credito)} integral).
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Banner de Economia Clean e Estratégia de Lance */}
@@ -1388,14 +1554,20 @@ export function FinanciamentoImobiliarioTab() {
           <table className="w-full border-collapse border border-slate-300 text-left text-[11px]">
             <thead>
               <tr className="bg-slate-100 text-slate-900 border-b border-slate-300">
-                <th className="p-2 font-bold w-[28%] border-r border-slate-300">Parâmetro / Indicador</th>
-                <th className="p-2 font-bold w-[24%] border-r border-slate-300 text-slate-900">
+                <th className="p-2 font-bold w-[22%] border-r border-slate-300">Parâmetro / Indicador</th>
+                <th className="p-2 font-bold w-[26%] border-r border-slate-300 text-slate-900">
                   Financiamento Caixa ({resultado.sistema})
                 </th>
-                <th className="p-2 font-bold w-[24%] border-r border-slate-300 text-emerald-900 bg-emerald-50/60">
+                <th className="p-2 font-bold w-[26%] border-r border-slate-300 text-emerald-900 bg-emerald-50/60">
                   Consórcio Imobiliário
                 </th>
-                <th className="p-2 font-bold w-[24%] text-slate-700">Diferencial Estratégico</th>
+                {mostrarCartaContemplada ? (
+                  <th className="p-2 font-bold w-[26%] text-cyan-900 bg-cyan-50/60">
+                    Carta Contemplada ({cartaEstimada.administradora})
+                  </th>
+                ) : (
+                  <th className="p-2 font-bold w-[26%] text-slate-700">Diferencial Estratégico</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -1403,54 +1575,58 @@ export function FinanciamentoImobiliarioTab() {
                 <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Crédito Disponível</td>
                 <td className="p-1.5 font-bold text-slate-900 border-r border-slate-200">{formatCurrency(resultado.valorFinanciado)} <span className="text-[9px] text-slate-500 block font-normal">Teto máximo 80%</span></td>
                 <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{formatCurrency(consorcioEstimado.credito)} <span className="text-[9px] text-emerald-700 block font-normal">100% integral do imóvel</span></td>
-                <td className="p-1.5 text-slate-600 text-[10px]">Poder de compra total sem desvalorização</td>
+                {mostrarCartaContemplada ? (
+                  <td className="p-1.5 font-bold text-cyan-900 bg-cyan-50/30">{formatCurrency(cartaEstimada.credito)} <span className="text-[9px] text-cyan-700 block font-normal">Financiado (PV): {formatCurrency(cartaEstimada.pv)}</span></td>
+                ) : (
+                  <td className="p-1.5 text-slate-600 text-[10px]">Poder de compra total sem desvalorização</td>
+                )}
               </tr>
 
               <tr className="border-b border-slate-200 bg-slate-50/30">
-                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Entrada Exigida à Vista</td>
+                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Entrada / Ágio Exigido</td>
                 <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">{formatCurrency(resultado.valorEntrada)} <span className="text-[9px] text-slate-500 block font-normal">{((resultado.valorEntrada / (resultado.valorImovel || 1)) * 100).toFixed(1)}% obrigatório</span></td>
                 <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">R$ 0,00 obrigatório <span className="text-[9px] text-emerald-700 block font-normal">Lance livre facultativo</span></td>
-                <td className="p-1.5 text-slate-600 text-[10px]">A entrada vira Lance Livre de {consorcioEstimado.percentualLanceEntrada.toFixed(1)}% para contemplação rápida</td>
+                {mostrarCartaContemplada ? (
+                  <td className="p-1.5 font-bold text-cyan-900 bg-cyan-50/30">{formatCurrency(cartaEstimada.agio)} <span className="text-[9px] text-cyan-700 block font-normal">Ágio da cessão (não abate crédito)</span></td>
+                ) : (
+                  <td className="p-1.5 text-slate-600 text-[10px]">A entrada vira Lance Livre de {consorcioEstimado.percentualLanceEntrada.toFixed(1)}% para contemplação rápida</td>
+                )}
               </tr>
 
               <tr className="border-b border-slate-200">
                 <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Prazo de Pagamento</td>
-                <td className="p-1.5 font-bold text-slate-900 border-r border-slate-200">{resultado.prazoMeses} meses <span className="text-[9px] text-slate-500 block font-normal">({(resultado.prazoMeses / 12).toFixed(1)} anos - teto pela idade)</span></td>
+                <td className="p-1.5 font-bold text-slate-900 border-r border-slate-200">{resultado.prazoMeses} meses <span className="text-[9px] text-slate-500 block font-normal">({(resultado.prazoMeses / 12).toFixed(1)} anos)</span></td>
                 <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{consorcioEstimado.prazo} meses <span className="text-[9px] text-emerald-700 block font-normal">({(consorcioEstimado.prazo / 12).toFixed(1)} anos)</span></td>
-                <td className="p-1.5 text-slate-600 text-[10px]">{Math.max(0, resultado.prazoMeses - consorcioEstimado.prazo)} meses a menos pagando parcelas</td>
+                {mostrarCartaContemplada ? (
+                  <td className="p-1.5 font-bold text-cyan-900 bg-cyan-50/30">{cartaEstimada.prazo} meses <span className="text-[9px] text-cyan-700 block font-normal">({(cartaEstimada.prazo / 12).toFixed(1)} anos)</span></td>
+                ) : (
+                  <td className="p-1.5 text-slate-600 text-[10px]">{Math.max(0, resultado.prazoMeses - consorcioEstimado.prazo)} meses a menos pagando parcelas</td>
+                )}
               </tr>
 
               <tr className="border-b border-slate-200 bg-slate-50/30">
                 <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Taxa de Juros / Custo</td>
-                <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">{(resultado.taxaJurosAnual || 0).toFixed(2)}% a.a. <span className="text-[9px] text-slate-500 block font-normal">Juros compostos (CET {(resultado.cetAnual || 0).toFixed(2)}%)</span></td>
+                <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">{(resultado.taxaJurosAnual || 0).toFixed(2)}% a.a. <span className="text-[9px] text-slate-500 block font-normal">Juros compostos bancários</span></td>
                 <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{(consorcioEstimado.taxaAdmTotal || 0).toFixed(2)}% no total <span className="text-[9px] text-emerald-700 block font-normal">ZERO JUROS BANCÁRIOS</span></td>
-                <td className="p-1.5 text-slate-600 text-[10px]">Sem cobrança de juros compostos ou efeito cascata</td>
+                {mostrarCartaContemplada ? (
+                  <td className="p-1.5 font-bold text-cyan-900 bg-cyan-50/30">Zero Juros <span className="text-[9px] text-cyan-700 block font-normal">Custo no ágio pré-fixado</span></td>
+                ) : (
+                  <td className="p-1.5 text-slate-600 text-[10px]">Sem cobrança de juros compostos ou efeito cascata</td>
+                )}
               </tr>
 
               <tr className="border-b border-slate-200">
-                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">1ª Parcela Mensal</td>
+                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Parcela Mensal</td>
                 <td className="p-1.5 font-black text-slate-900 border-r border-slate-200">{formatCurrency(resultado.primeiraParcela)}</td>
                 <td className="p-1.5 font-black text-emerald-900 border-r border-slate-200 bg-emerald-50/30">
                   {formatCurrency(consorcioEstimado.parcelaLinear)}
-                  <span className="text-[9px] text-emerald-700 block font-medium">({formatCurrency(consorcioEstimado.parcela5050)} na 1/2 parcela)</span>
+                  <span className="text-[9px] text-emerald-700 block font-medium">({formatCurrency(consorcioEstimado.parcela5050)} na 1/2)</span>
                 </td>
-                <td className="p-1.5 text-slate-600 text-[10px]">Parcela linear até {formatCurrency(resultado.primeiraParcela - consorcioEstimado.parcelaLinear)} menor</td>
-              </tr>
-
-              {resultado.sistema === "SAC" && (
-                <tr className="border-b border-slate-200 bg-slate-50/30">
-                  <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">Última Parcela Estimada</td>
-                  <td className="p-1.5 font-bold text-slate-700 border-r border-slate-200">{formatCurrency(resultado.ultimaParcela)}</td>
-                  <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">{formatCurrency(consorcioEstimado.parcelaLinear)}</td>
-                  <td className="p-1.5 text-slate-600 text-[10px]">Previsibilidade orçamentária para a família</td>
-                </tr>
-              )}
-
-              <tr className="border-b border-slate-200">
-                <td className="p-1.5 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/50">ITBI, Escritura e Registro</td>
-                <td className="p-1.5 font-bold text-rose-700 border-r border-slate-200">~{formatCurrency(itbiDespesas)} <span className="text-[9px] text-slate-500 block font-normal">À vista do bolso (~5%)</span></td>
-                <td className="p-1.5 font-bold text-emerald-900 border-r border-slate-200 bg-emerald-50/30">Embutido na Carta <span className="text-[9px] text-emerald-700 block font-normal">Até 10% do crédito</span></td>
-                <td className="p-1.5 text-slate-600 text-[10px]">Não descapitaliza o patrimônio inicial</td>
+                {mostrarCartaContemplada ? (
+                  <td className="p-1.5 font-black text-cyan-900 bg-cyan-50/30">{formatCurrency(cartaEstimada.parcela)}</td>
+                ) : (
+                  <td className="p-1.5 text-slate-600 text-[10px]">Parcela linear até {formatCurrency(resultado.primeiraParcela - consorcioEstimado.parcelaLinear)} menor</td>
+                )}
               </tr>
 
               <tr className="bg-slate-100 font-bold border-t-2 border-slate-300">
@@ -1461,12 +1637,21 @@ export function FinanciamentoImobiliarioTab() {
                 </td>
                 <td className="p-2 text-emerald-900 text-xs border-r border-slate-300 bg-emerald-100/70">
                   {formatCurrency(consorcioEstimado.totalPago)}
-                  <span className="text-[9px] text-emerald-800 block font-normal">({((consorcioEstimado.totalPago / (resultado.valorImovel || 1)) * 100).toFixed(0)}% do imóvel)</span>
+                  <span className="text-[9px] text-emerald-800 block font-normal">Economia: {formatCurrency(consorcioEstimado.economiaVsCaixa)}</span>
                 </td>
-                <td className="p-2 text-emerald-900 text-xs bg-emerald-50">
-                  ECONOMIA DE {formatCurrency(consorcioEstimado.economiaVsCaixa)}
-                </td>
+                {mostrarCartaContemplada ? (
+                  <td className="p-2 text-cyan-900 text-xs bg-cyan-100/70">
+                    {formatCurrency(cartaEstimada.totalPago)}
+                    <span className="text-[9px] text-cyan-800 block font-normal">Economia: {formatCurrency(cartaEstimada.economiaVsCaixa)}</span>
+                  </td>
+                ) : (
+                  <td className="p-2 text-emerald-900 text-xs bg-emerald-50">
+                    ECONOMIA DE {formatCurrency(consorcioEstimado.economiaVsCaixa)}
+                  </td>
+                )}
               </tr>
+            </tbody>
+          </table>
             </tbody>
           </table>
         </div>

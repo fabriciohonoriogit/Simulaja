@@ -156,9 +156,25 @@ async function resolveTargetJid(chatId) {
  */
 async function forwardToSupabaseWebhook(msg) {
   try {
-    const remoteJid = msg.key?.remoteJid;
-    if (!remoteJid || remoteJid.includes("@g.us") || remoteJid === "status@broadcast") {
-      return; // Ignora grupos e status por enquanto
+    const remoteJid = msg.key?.remoteJid || "";
+    const participant = msg.key?.participant || msg.participant || "";
+
+    // NUNCA processar mensagens de grupos (@g.us), canais, transmissões ou que tenham participant
+    if (
+      !remoteJid ||
+      remoteJid.includes("@g.us") ||
+      remoteJid.includes("@broadcast") ||
+      remoteJid.includes("@newsletter") ||
+      remoteJid === "status@broadcast" ||
+      Boolean(participant)
+    ) {
+      return; // Ignora grupos e transmissões
+    }
+
+    // Ignora LIDs de privacidade/aparelho (>13 dígitos ou @lid) para não criar contatos falsos
+    const cleanNum = remoteJid.replace(/@.*$/, "").replace(/\D/g, "");
+    if (remoteJid.includes("@lid") || cleanNum.length > 13) {
+      return;
     }
 
     // Registra mapeamento do JID real do contato no cache imediatamente

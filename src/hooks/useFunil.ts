@@ -169,10 +169,26 @@ export function useFunil() {
       (v: Lead, i: number, a: Lead[]) => a.findIndex((t: Lead) => t.id === v.id) === i
     );
 
+    // Regra CRM: NUNCA exibir nem registrar cards de grupos (@g.us), canais ou LIDs inválidos (>13 dígitos) no funil
+    const validLeadsRaw = uniqueRaw.filter((lead: Lead) => {
+      const cleanPhone = (lead.celular || lead.telefone || "").replace(/\D/g, "");
+      const isInvalidGroupOrLid =
+        cleanPhone === "88034062151769" ||
+        cleanPhone.length > 13 ||
+        (lead.nome && (lead.nome.includes("DEUS É MARAVILHOSO") || lead.nome.includes("@g.us")));
+
+      if (isInvalidGroupOrLid) {
+        // Exclui automaticamente registros espúrios do banco para manter o funil limpo
+        supabase.from("leads").delete().eq("id", lead.id).then();
+        return false;
+      }
+      return true;
+    });
+
     const now = new Date();
     const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
-    const fetchedLeads: Lead[] = uniqueRaw.map((lead) => {
+    const fetchedLeads: Lead[] = validLeadsRaw.map((lead) => {
       let currentStatus = normalizeStatus(lead.status);
       const lastActive = new Date(lead.last_interaction_at || lead.updated_at || lead.status_updated_at || lead.created_at || 0).getTime();
       

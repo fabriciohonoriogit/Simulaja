@@ -298,7 +298,8 @@ export default function CartaAnalise() {
   useEffect(() => {
     const bem = parseCurrency(formData.bem);
     const entrada = parseCurrency(formData.entrada);
-    const pv = bem - entrada;
+    // Na carta contemplada, o ágio/entrada não abate o valor financiado: o valor financiado permanece o próprio crédito integral
+    const pv = bem;
 
     if (pv <= 0) {
       setPreviewTaxa(null);
@@ -390,6 +391,22 @@ export default function CartaAnalise() {
     toast.success("Exemplo de 4 faixas (Crédito R$ 624k) carregado com sucesso!");
   };
 
+  // Carregar exemplo Magalu R$ 518k (221x R$ 3.006,91)
+  const handleCarregarExemploMagalu = () => {
+    setFormData({
+      nome: "MAGALU",
+      codigo: "518K",
+      bem: "518.773,34",
+      entrada: "150.000,00",
+      n: "221",
+      pmt: "3.006,91",
+      proximoVencimento: "20/11"
+    });
+    setTipoParcela("fixa");
+    setFaixas([]);
+    toast.success("Exemplo Magalu (Crédito R$ 518.773,34 · 221x) carregado!");
+  };
+
   // Processar texto colado no modal
   const handleApplyPastedText = () => {
     if (!pasteInputText.trim()) {
@@ -427,15 +444,16 @@ export default function CartaAnalise() {
   const handleAddSimulacao = () => {
     const bem = parseCurrency(formData.bem);
     const entrada = parseCurrency(formData.entrada);
-    const pv = bem - entrada;
+    // Na carta contemplada, o valor financiado é o próprio crédito (o ágio/entrada não abate)
+    const pv = bem;
 
     if (!formData.nome.trim()) {
       toast.error("Informe a administradora ou nome da simulação.");
       return;
     }
 
-    if (bem <= 0 || entrada <= 0 || pv <= 0) {
-      toast.error("Valor do bem e entrada devem ser válidos (Bem > Entrada).");
+    if (bem <= 0) {
+      toast.error("Valor do crédito deve ser maior que zero.");
       return;
     }
 
@@ -527,7 +545,7 @@ export default function CartaAnalise() {
     msg += `🏷️ *Segmento:* Consórcio de ${s.tipo}\n\n`;
     msg += `💰 *Crédito Contemplado:* ${formatCurrency(s.bem)}\n`;
     msg += `💵 *Entrada (Ágio):* ${formatCurrency(s.entrada)}\n`;
-    msg += `📉 *Saldo a Amortizar:* ${formatCurrency(s.pv)}\n`;
+    msg += `📉 *Valor Financiado (PV):* ${formatCurrency(s.pv)} (Crédito Integral)\n`;
     if (s.proximoVencimento) {
       msg += `📅 *Próximo Vencimento:* ${s.proximoVencimento}\n`;
     }
@@ -643,15 +661,25 @@ export default function CartaAnalise() {
 
           <CardContent className="p-4 space-y-4">
             {/* Quick Actions Bar */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setIsPasteModalOpen(true)}
-                className="flex-1 text-[11px] font-bold h-8 border-dashed border-slate-300 hover:border-cyan-500 hover:bg-cyan-50/50 text-slate-700 gap-1.5"
+                className="flex-1 min-w-[110px] text-[11px] font-bold h-8 border-dashed border-slate-300 hover:border-cyan-500 hover:bg-cyan-50/50 text-slate-700 gap-1.5"
               >
                 <ClipboardPaste className="h-3.5 w-3.5 text-cyan-600" /> Colar Proposta
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCarregarExemploMagalu}
+                className="text-[11px] font-bold h-8 border-cyan-300 hover:border-cyan-500 hover:bg-cyan-50 text-cyan-800 gap-1"
+                title="Carregar exemplo Magalu R$ 518k (221x R$ 3.006,91)"
+              >
+                <BadgeCheck className="h-3.5 w-3.5 text-cyan-600" /> Magalu 518k
               </Button>
               <Button
                 type="button"
@@ -661,7 +689,7 @@ export default function CartaAnalise() {
                 className="text-[11px] font-bold h-8 border-slate-300 hover:border-amber-500 hover:bg-amber-50 text-amber-700 gap-1"
                 title="Carregar exemplo R$ 624k com 4 faixas de parcelas"
               >
-                <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Exemplo 4 Faixas
+                <Sparkles className="h-3.5 w-3.5 text-amber-500" /> 4 Faixas
               </Button>
             </div>
 
