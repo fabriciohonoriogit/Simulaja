@@ -239,6 +239,7 @@ export default function JarvisHUDPage() {
   const [isVoiceCloneOpen, setIsVoiceCloneOpen] = useState(false);
   const [isHarveyModalOpen, setIsHarveyModalOpen] = useState(false);
   const [lateralTab, setLateralTab] = useState<"nucleo" | "solicitacoes">("nucleo");
+  const [mobileActiveTab, setMobileActiveTab] = useState<"chat" | "models" | "actions" | "logs">("chat");
   const [lastJarvisReply, setLastJarvisReply] = useState<string | null>(null);
   const [selectedCore, setSelectedCore] = useState<AICoreProvider>(AI_CORE_PROVIDERS[0]);
   const [autoFallback, setAutoFallback] = useState(true);
@@ -302,6 +303,10 @@ export default function JarvisHUDPage() {
     ]);
     if (audioEnabled) {
       speakResponse(`Motor ${core.name} ativado.`);
+    }
+    // No celular ou tablet, ao escolher um modelo, volta imediatamente para a aba de chat
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setMobileActiveTab("chat");
     }
   };
 
@@ -1262,7 +1267,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
   };
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden bg-slate-950 text-slate-100 font-mono p-2.5 sm:p-3 md:p-3.5 flex flex-col gap-2.5 select-none relative">
+    <div className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 font-mono p-2 sm:p-3 md:p-3.5 flex flex-col gap-1.5 sm:gap-2.5 select-none relative">
       {/* Background Tech Image & Neon Grid Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-15 pointer-events-none mix-blend-screen"
@@ -1271,51 +1276,51 @@ gn_prosperaplan@consorciomagalu.com.br`;
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#06b6d410_1px,transparent_1px),linear-gradient(to_bottom,#06b6d410_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
 
       {/* Top Header / Status bar */}
-      <header className="flex-shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-cyan-900/40 pb-2 relative z-10 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-cyan-950/90 border border-cyan-500/40 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-            <Sparkles className="h-5 w-5 text-cyan-400 animate-pulse" />
+      <header className="flex-shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-1.5 sm:gap-2 border-b border-cyan-900/40 pb-1.5 sm:pb-2 relative z-10 backdrop-blur-sm">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 bg-cyan-950/90 border border-cyan-500/40 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400 animate-pulse" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-black tracking-widest text-cyan-400 uppercase drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">
-              J.A.R.V.I.S  OS // QUANTUM SPHERE HUD
+            <h1 className="text-base sm:text-xl md:text-2xl font-black tracking-widest text-cyan-400 uppercase drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">
+              J.A.R.V.I.S  OS // QUANTUM HUD
             </h1>
-            <p className="text-[9.5px] text-cyan-600 uppercase tracking-widest font-bold">
-              Interface Quântica de Órbita Expandida & Engine Tecnológica
+            <p className="text-[8.5px] sm:text-[9.5px] text-cyan-600 uppercase tracking-widest font-bold">
+              Interface Quântica & Engine Tecnológica
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-400">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-[10px] sm:text-xs text-slate-400">
           <button
             onClick={() => setIsVoiceCloneOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold transition-all border border-purple-500/50 bg-purple-950/70 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)] hover:bg-purple-900/60 cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold transition-all border border-purple-500/50 bg-purple-950/70 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)] hover:bg-purple-900/60 cursor-pointer text-[9.5px] sm:text-xs"
             title="Abrir Estúdio para Clonar Sua Voz com Arquivo ou Microfone"
           >
-            <Mic className="h-3.5 w-3.5 text-purple-400" /> Clonar Minha Voz (Voice Studio)
+            <Mic className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-400" /> <span className="hidden sm:inline">Clonar Minha Voz</span><span className="sm:hidden">Voz Clone</span>
           </button>
           <button
             onClick={() => setAudioEnabled(!audioEnabled)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold transition-all border shadow-lg ${
+            className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold transition-all border shadow-lg text-[9.5px] sm:text-xs ${
               audioEnabled
                 ? "bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                 : "bg-slate-900 text-slate-500 border-slate-800"
             }`}
           >
-            {audioEnabled ? <Volume2 className="h-3.5 w-3.5 text-cyan-400" /> : <VolumeX className="h-3.5 w-3.5 text-slate-500" />}
-            {audioEnabled ? "Voz Sintetizada Ativa" : "Mudo"}
+            {audioEnabled ? <Volume2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-cyan-400" /> : <VolumeX className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-500" />}
+            {audioEnabled ? "Áudio Ativo" : "Mudo"}
           </button>
-          <span className="flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1.5 rounded-full text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-            <Radio className="h-3 w-3 animate-pulse" /> ÓRBITA EXPANDIDA
+          <span className="flex items-center gap-1 bg-emerald-950/60 border border-emerald-500/30 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)] text-[9px] sm:text-xs">
+            <Radio className="h-2.5 w-2.5 sm:h-3 sm:w-3 animate-pulse" /> ON
           </span>
-          <span className="font-black text-cyan-300 bg-slate-900/90 border border-cyan-800/50 px-3 py-1.5 rounded-full text-xs">
-            {new Date().toLocaleTimeString("pt-BR")}
+          <span className="font-black text-cyan-300 bg-slate-900/90 border border-cyan-800/50 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[9.5px] sm:text-xs">
+            {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
           </span>
         </div>
       </header>
 
-      {/* QUANTUM AI MATRIX // SELETOR DE MOTORES NEURAIS */}
-      <div className="flex-shrink-0 relative z-10">
+      {/* QUANTUM AI MATRIX // SELETOR DE MOTORES NEURAIS (DESKTOP) */}
+      <div className="hidden lg:block flex-shrink-0 relative z-10">
         <JarvisAICoreDeck
           selectedCoreId={selectedCore.id}
           onSelectCore={handleSelectAICore}
@@ -1324,12 +1329,81 @@ gn_prosperaplan@consorciomagalu.com.br`;
         />
       </div>
 
+      {/* BARRA DE NAVEGAÇÃO MOBILE (Celular e iPad) */}
+      <div className="lg:hidden flex-shrink-0 z-20 bg-slate-900/90 border border-cyan-500/40 rounded-xl p-1 flex items-center justify-between gap-1 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+        <button
+          type="button"
+          onClick={() => setMobileActiveTab("chat")}
+          className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            mobileActiveTab === "chat"
+              ? "bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+              : "text-slate-400 hover:text-cyan-300"
+          }`}
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          <span>Chat / Voz</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileActiveTab("models")}
+          className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            mobileActiveTab === "models"
+              ? "bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+              : "text-slate-400 hover:text-cyan-300"
+          }`}
+        >
+          <Cpu className="h-3.5 w-3.5" />
+          <span>IAs ({selectedCore.name.split(" ")[0]})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileActiveTab("actions")}
+          className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            mobileActiveTab === "actions"
+              ? "bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+              : "text-slate-400 hover:text-cyan-300"
+          }`}
+        >
+          <Zap className="h-3.5 w-3.5" />
+          <span>Ações</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileActiveTab("logs")}
+          className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            mobileActiveTab === "logs"
+              ? "bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+              : "text-slate-400 hover:text-cyan-300"
+          }`}
+        >
+          <Database className="h-3.5 w-3.5" />
+          <span>Cofre</span>
+        </button>
+      </div>
+
+      {/* SELETOR DE IAs NO MOBILE (Quando aba 'models' for clicada) */}
+      {mobileActiveTab === "models" && (
+        <div className="lg:hidden flex-1 min-h-0 overflow-y-auto custom-scrollbar z-10 p-1">
+          <JarvisAICoreDeck
+            selectedCoreId={selectedCore.id}
+            onSelectCore={handleSelectAICore}
+            autoFallback={autoFallback}
+            onToggleAutoFallback={() => setAutoFallback((prev) => !prev)}
+          />
+        </div>
+      )}
+
       {/* Main HUD Grid (Locked exactly to remaining screen height) */}
-      <div className="grid grid-cols-12 gap-3 flex-1 min-h-0 relative z-10 overflow-hidden">
+      <div className={`grid grid-cols-12 gap-3 flex-1 min-h-0 relative z-10 overflow-hidden ${mobileActiveTab === "models" ? "hidden lg:grid" : ""}`}>
         {/* ======================================================== */}
         {/* COLUNA LATERAL ESQUERDA: ABA DE NÚCLEO & CENTRAL DE SOLICITAÇÕES */}
         {/* ======================================================== */}
-        <div className="col-span-12 lg:col-span-3 h-full max-h-full bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-3 flex flex-col gap-2.5 backdrop-blur-md shadow-2xl relative overflow-hidden">
+        <div className={`col-span-12 lg:col-span-3 h-full max-h-full bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-3 flex-col gap-2.5 backdrop-blur-md shadow-2xl relative overflow-hidden ${
+          mobileActiveTab === "actions" ? "flex" : "hidden lg:flex"
+        }`}>
           {/* Seletor de Abas Superior na Lateral */}
           <div className="flex-shrink-0 flex items-center gap-1.5 p-1 bg-slate-950/90 rounded-xl border border-slate-800">
             <button
@@ -1617,7 +1691,9 @@ gn_prosperaplan@consorciomagalu.com.br`;
         {/* ======================================================== */}
         {/* COLUNA CENTRAL: DEDICADA EXCLUSIVAMENTE AO JARVIS */}
         {/* ======================================================== */}
-        <div className="col-span-12 lg:col-span-6 h-full max-h-full bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-3 flex flex-col justify-between overflow-hidden relative backdrop-blur-md shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+        <div className={`col-span-12 lg:col-span-6 h-full max-h-full bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-2.5 sm:p-3 flex-col justify-between overflow-hidden relative backdrop-blur-md shadow-[0_0_30px_rgba(6,182,212,0.1)] ${
+          mobileActiveTab === "chat" ? "flex" : "hidden lg:flex"
+        }`}>
           <div className="flex-shrink-0 text-center space-y-0.5">
             <span className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center justify-center gap-2 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">
               <Zap className="h-4 w-4 fill-cyan-400 text-cyan-400 animate-bounce" /> ÓRBITA QUÂNTICA EXPANDIDA // JARVIS AI
@@ -1625,10 +1701,10 @@ gn_prosperaplan@consorciomagalu.com.br`;
             <p className="text-[10px] text-slate-400 font-mono">Consciência Executiva e Sintetizador Quântico</p>
           </div>
 
-          {/* ÁREA CENTRAL ROLÁVEL // ORB E RESPOSTAS RECENTES */}
+          {/* ÁREA CENTRAL ROLÁVEL // ORB NO DESKTOP, ÁUDIO COMPACTO NO MOBILE */}
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center overflow-y-auto custom-scrollbar py-1 w-full gap-1.5">
-            {/* O JARVIS ORB - DIMENSIONAMENTO ELEGANTE E EQUILIBRADO */}
-            <div className="w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] md:w-[180px] md:h-[180px] lg:w-[200px] lg:h-[200px] flex-shrink-0 flex items-center justify-center relative transition-all duration-700 hover:scale-105">
+            {/* O JARVIS ORB - EXCLUSIVO PARA DESKTOP (No celular/iPad fica oculto por solicitação do usuário) */}
+            <div className="hidden lg:flex w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] md:w-[180px] md:h-[180px] lg:w-[200px] lg:h-[200px] flex-shrink-0 items-center justify-center relative transition-all duration-700 hover:scale-105">
               <JarvisOrb
                 state={orbState}
                 theme={
@@ -1643,6 +1719,58 @@ gn_prosperaplan@consorciomagalu.com.br`;
               />
             </div>
 
+            {/* BARRA DE ÁUDIO & STATUS EXCLUSIVA MOBILE (Leve, sem o Three.js Orb pesado) */}
+            <div className="flex lg:hidden w-full items-center justify-between p-2 rounded-xl bg-cyan-950/60 border border-cyan-500/40 flex-shrink-0 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer border ${
+                    orbState === "listening"
+                      ? "bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.8)]"
+                      : "bg-slate-900 text-slate-200 border-slate-700 hover:border-cyan-500/40"
+                  }`}
+                >
+                  <Mic className="h-4 w-4 text-cyan-400" />
+                  <span className="text-[10px] font-mono">{orbState === "listening" ? "Gravando..." : "Falar"}</span>
+                </button>
+
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-cyan-300 flex items-center gap-1">
+                    {orbState === "speaking" ? (
+                      <span className="flex items-center gap-1 text-emerald-400">
+                        <Volume2 className="h-3 w-3 animate-bounce" /> Jarvis Falando
+                      </span>
+                    ) : orbState === "thinking" ? (
+                      <span className="flex items-center gap-1 text-amber-400">
+                        <RefreshCw className="h-3 w-3 animate-spin" /> Processando...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-slate-300">
+                        <Bot className="h-3 w-3 text-cyan-400" /> Jarvis Online
+                      </span>
+                    )}
+                  </span>
+                  <span className={`text-[9px] font-mono font-bold ${selectedCore.color}`}>
+                    {selectedCore.name} ({selectedCore.speed})
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setAudioEnabled(!audioEnabled)}
+                  className={`p-1.5 rounded-lg border text-xs cursor-pointer ${
+                    audioEnabled ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300" : "bg-slate-900 border-slate-800 text-slate-500"
+                  }`}
+                  title="Ativar/Desativar Voz Sintetizada"
+                >
+                  {audioEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+            </div>
+
             {/* Status de Processamento da IA */}
             {isProcessing && (
               <div className="flex-shrink-0 my-1 text-xs text-cyan-300 font-mono flex items-center gap-2 animate-pulse bg-cyan-950/80 px-3.5 py-1 rounded-full border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
@@ -1653,7 +1781,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
             {/* Caixa de Diálogo / Resposta Holográfica do Jarvis */}
             {lastJarvisReply && !isProcessing && (
-              <div className="w-full max-w-xl mx-auto my-1 p-2.5 rounded-xl bg-cyan-950/50 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-1 max-h-24 overflow-y-auto custom-scrollbar flex-shrink-0 animate-in fade-in">
+              <div className="w-full max-w-xl mx-auto my-1 p-2.5 rounded-xl bg-cyan-950/50 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-1 max-h-56 sm:max-h-64 lg:max-h-28 overflow-y-auto custom-scrollbar flex-shrink-0 animate-in fade-in">
                 <div className="flex items-center justify-between text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
                   <span className="flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3 text-cyan-400 animate-pulse" /> Jarvis AI // Resposta Recente
@@ -1864,7 +1992,9 @@ gn_prosperaplan@consorciomagalu.com.br`;
         {/* ======================================================== */}
         {/* COLUNA LATERAL DIREITA: FEED DO COFRE (SEM ARMAZENAMENTO RESIDUAL) */}
         {/* ======================================================== */}
-        <div className="col-span-12 lg:col-span-3 h-full max-h-full bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-3 flex flex-col gap-2.5 backdrop-blur-md shadow-2xl relative overflow-hidden">
+        <div className={`col-span-12 lg:col-span-3 h-full max-h-full bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-3 flex-col gap-2.5 backdrop-blur-md shadow-2xl relative overflow-hidden ${
+          mobileActiveTab === "logs" ? "flex" : "hidden lg:flex"
+        }`}>
           <div className="flex-shrink-0 flex items-center justify-between border-b border-slate-800/80 pb-1.5">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Database className="h-4 w-4 text-emerald-400" /> Feed do Cofre
