@@ -1339,14 +1339,14 @@ gn_prosperaplan@consorciomagalu.com.br`;
             <p className="text-xs text-slate-400 font-mono">Consciência Executiva e Sintetizador Quântico</p>
           </div>
 
-          {/* O MAJESTOSO JARVIS ORB */}
-          <div className="my-auto w-[320px] h-[320px] sm:w-[440px] sm:h-[440px] md:w-[500px] md:h-[500px] lg:w-[540px] lg:h-[540px] flex items-center justify-center relative transition-all duration-700 hover:scale-105">
+          {/* O JARVIS ORB - DIMENSIONAMENTO ELEGANTE E EQUILIBRADO */}
+          <div className="my-auto w-[200px] h-[200px] sm:w-[230px] sm:h-[230px] md:w-[260px] md:h-[260px] lg:w-[280px] lg:h-[280px] flex items-center justify-center relative transition-all duration-700 hover:scale-105">
             <JarvisOrb
               state={orbState}
               theme={
                 selectedCore.id === "groq" || selectedCore.id === "cerebras"
                   ? "flame"
-                  : selectedCore.id === "nvidia"
+                  : selectedCore.id === "nvidia" || selectedCore.id === "chatgpt"
                   ? "emerald"
                   : "cobalt"
               }
@@ -1380,37 +1380,129 @@ gn_prosperaplan@consorciomagalu.com.br`;
             </div>
           )}
 
-          {/* Campo de Comando de Texto & Disparos */}
-          <div className="w-full space-y-2 mt-auto">
-            <div className="w-full relative">
-              <input
-                type="text"
-                placeholder="Solicite prospecção WhatsApp/Email, análise de funil, simulação ou comando..."
+          {/* CONSOLE DE COMANDO EXPANDIDO COM ATALHOS RÁPIDOS */}
+          <div className="w-full space-y-2.5 mt-auto pt-2">
+            {/* Chips de Atalhos Rápidos */}
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-[10px]">
+              <button
+                type="button"
+                onClick={() => handleSendCommand("Jarvis, prospectar 15 transportadoras em Paranaguá via Google Maps com meia parcela para caminhões pesados.")}
+                className="px-2.5 py-1 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <Zap className="h-3 w-3 text-cyan-400" /> 15 Maps PJ
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsHarveyModalOpen(true)}
+                className="px-2.5 py-1 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <Bot className="h-3 w-3 text-emerald-400" /> Harvey SDR (5 Subagentes)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendCommand("Baixar a segunda via do boleto do cliente Fabricio Rodrigues Honório do portal consorcio magalu")}
+                className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <FileText className="h-3 w-3 text-emerald-400" /> 2ª Via Magalu
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendCommand("Crie uma imagem de um caminhão extrapesado moderno na rodovia ao pôr do sol")}
+                className="px-2.5 py-1 rounded-lg bg-pink-950/70 hover:bg-pink-900 border border-pink-500/30 text-pink-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <Palette className="h-3 w-3 text-pink-400" /> Imagem FLUX.1
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendCommand("Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM.")}
+                className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <TrendingUp className="h-3 w-3 text-indigo-400" /> Analisar Funil
+              </button>
+            </div>
+
+            {/* Console de Escrita Amplo, Ergonômico e Tecnológico */}
+            <div className="w-full relative rounded-2xl bg-slate-950/95 border border-cyan-500/50 shadow-[0_0_25px_rgba(6,182,212,0.18)] focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-500/30 transition-all p-3 space-y-2">
+              <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono border-b border-slate-800/80 pb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 font-bold text-cyan-300">
+                    <Terminal className="h-3 w-3 text-cyan-400" /> CONSOLE EXECUTIVO
+                  </span>
+                  <span className="text-slate-600">|</span>
+                  <span className={`flex items-center gap-1 text-[9px] font-bold ${selectedCore.color}`}>
+                    {selectedCore.name}
+                  </span>
+                </div>
+                <span className="text-[9px] text-slate-500 hidden sm:inline">Pressione Enter para enviar (Shift+Enter para nova linha)</span>
+              </div>
+
+              <textarea
+                rows={3}
+                placeholder="Digite sua instrução para o Jarvis: prospecção WhatsApp/E-mail, análise do funil, simulação de meia parcela ou comando..."
                 value={command}
                 onChange={(e) => setCommand(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendCommand()}
-                className="w-full bg-slate-950/95 border border-cyan-500/40 text-cyan-200 placeholder:text-slate-500 rounded-xl px-4 py-4 text-sm focus:outline-none focus:border-cyan-400 pr-28 font-mono shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendCommand();
+                  }
+                }}
+                className="w-full bg-transparent text-cyan-100 placeholder:text-slate-500 text-sm sm:text-base focus:outline-none resize-none font-sans leading-relaxed custom-scrollbar"
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                <button
-                  onClick={toggleMic}
-                  className={`p-2.5 rounded-lg transition-all ${
-                    orbState === "listening"
-                      ? "bg-cyan-400 text-slate-950 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.8)]"
-                      : "bg-slate-800/90 text-slate-400 hover:text-cyan-300 border border-slate-700"
-                  }`}
-                  title="Ativar Voz"
-                >
-                  <Mic className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleSendCommand()}
-                  disabled={isProcessing || !command.trim()}
-                  className="p-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold rounded-lg transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer"
-                  title="Enviar Comando"
-                >
-                  {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </button>
+
+              <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleMic}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer border ${
+                      orbState === "listening"
+                        ? "bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.8)]"
+                        : "bg-slate-900 text-slate-300 hover:text-cyan-300 border-slate-700 hover:border-cyan-500/40"
+                    }`}
+                    title="Falar com o Jarvis pelo Microfone"
+                  >
+                    <Mic className="h-3.5 w-3.5" />
+                    <span className="text-[11px]">{orbState === "listening" ? "Ouvindo..." : "Voz"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAudioEnabled(!audioEnabled)}
+                    className={`p-1.5 rounded-xl border text-[11px] transition-all cursor-pointer ${
+                      audioEnabled
+                        ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
+                        : "bg-slate-900 border-slate-800 text-slate-500"
+                    }`}
+                    title={audioEnabled ? "Áudio Ativado" : "Áudio Desativado"}
+                  >
+                    {audioEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-500 font-mono hidden md:inline">
+                    {command.length} caracteres
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleSendCommand()}
+                    disabled={isProcessing || !command.trim()}
+                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 disabled:opacity-40 text-slate-950 font-black text-xs rounded-xl transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        <span>PROCESSANDO...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5 fill-slate-950" />
+                        <span>TRANSMITIR</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1737,14 +1829,6 @@ gn_prosperaplan@consorciomagalu.com.br`;
                 </div>
               ))
             )}
-          </div>
-
-          <div className="mt-auto relative rounded-xl overflow-hidden border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-            <img src="/images/jarvis_tech_orb.jpg" alt="Jarvis Orb Visual" className="w-full h-24 object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-            <div className="absolute bottom-2 left-2 text-[10px] font-bold text-cyan-300 uppercase tracking-widest flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-cyan-400" /> Holograma Ativo
-            </div>
           </div>
         </div>
       </div>
