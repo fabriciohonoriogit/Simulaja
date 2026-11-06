@@ -49,6 +49,12 @@ import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
 import { buscarEmpresasPorCidade, calcularConsorcioRadar } from "@/services/radarLocalService";
 import { JarvisAICoreDeck, AI_CORE_PROVIDERS, AICoreProvider } from "@/components/admin/JarvisAICoreDeck";
 import { HarveyAutonomousModal } from "@/components/admin/HarveyAutonomousModal";
+import {
+  parseProposalRequestFromPrompt,
+  generateBudgetProposal,
+  GeneratedBudgetProposal,
+  fmtBrlCompact,
+} from "@/services/proposalService";
 
 interface ProspectLeadItem {
   id: string;
@@ -106,6 +112,8 @@ interface LogEntry {
     enviando?: boolean;
     enviadosCount?: number;
   };
+  isProposalCard?: boolean;
+  proposalData?: GeneratedBudgetProposal;
 }
 
 /**
@@ -325,6 +333,48 @@ export default function JarvisHUDPage() {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // Disparo de proposta oficial via WhatsApp (WAHA Local com fallback wa.me)
+  const handleSendProposalWhatsApp = async (proposal: GeneratedBudgetProposal) => {
+    if (!proposal) return;
+    const phone = proposal.telefone ? proposal.telefone.replace(/\D/g, "") : "";
+
+    if (phone) {
+      try {
+        const res = await fetch("http://localhost:3000/api/sendText", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone,
+            message: proposal.scriptWhatsApp,
+          }),
+        });
+        if (res.ok) {
+          toast.success(`Orçamento enviado com sucesso para ${proposal.clienteNome} (${phone}) via WAHA!`);
+          const sentNotice = `Orçamento disparado com sucesso no WhatsApp de ${proposal.clienteNome}!`;
+          setLastJarvisReply(sentNotice);
+          speakResponse(sentNotice);
+          return;
+        }
+      } catch (err) {
+        console.warn("Falha no disparo direto WAHA, abrindo wa.me:", err);
+      }
+    }
+
+    const targetUrl = phone
+      ? `https://wa.me/55${phone}?text=${encodeURIComponent(proposal.scriptWhatsApp)}`
+      : `https://wa.me/?text=${encodeURIComponent(proposal.scriptWhatsApp)}`;
+    window.open(targetUrl, "_blank");
+    toast.info("Encaminhando script com emoticons para o WhatsApp...");
+  };
+
+  // Disparo de proposta oficial via E-mail
+  const handleSendProposalEmail = (proposal: GeneratedBudgetProposal) => {
+    if (!proposal) return;
+    const mailto = `mailto:${proposal.email || ""}?subject=${encodeURIComponent(proposal.assuntoEmail)}&body=${encodeURIComponent(proposal.scriptEmail)}`;
+    window.location.href = mailto;
+    toast.info("Abrindo cliente de e-mail com a simulação oficial...");
   };
 
   const handleClearLogs = () => {
@@ -1041,6 +1091,34 @@ gn_prosperaplan@consorciomagalu.com.br`;
       return;
     }
 
+    // INTERCEPTADOR DE SIMULAÇÃO E ORÇAMENTO PARA WHATSAPP / E-MAIL
+    const proposalCheck = await parseProposalRequestFromPrompt(textToRun);
+    if (proposalCheck.isMatch && proposalCheck.proposal) {
+      const p = proposalCheck.proposal;
+      const canalStr = p.canal === "ambos" ? "WhatsApp & E-mail" : p.canal === "email" ? "E-mail" : "WhatsApp";
+
+      const proposalLog: LogEntry = {
+        id: Date.now().toString(),
+        time: timeStr,
+        tag: `ORÇAMENTO // ${canalStr.toUpperCase()}`,
+        text: `📋 Proposta oficial gerada para ${p.clienteNome} (${p.creditoFmt}): Parcela Atual ${p.parcelaAtualFmt} | Pós-Contemplação ${p.parcelaPosFmt} | Prazo ${p.prazo} meses.`,
+        color: "text-emerald-400 font-bold",
+        isProposalCard: true,
+        proposalData: p,
+        aiCoreName: "Simulador Engine",
+      };
+
+      setLogs((prev) => [proposalLog, ...prev]);
+
+      // Regra de Humanização: falar APENAS o valor das parcelas e o prazo! Proibido detalhes do grupo.
+      const voiceReply = `Fabrício, para o crédito de ${p.creditoFmt} da cliente ${p.clienteNome}, a parcela atual é de ${p.parcelaAtualFmt} no prazo de ${p.prazo} meses, e a parcela pós-contemplação fica ${p.parcelaPosFmt}. O script com emoticons já está no seu feed para disparo no WhatsApp e E-mail!`;
+
+      setLastJarvisReply(voiceReply);
+      speakResponse(voiceReply);
+      setIsProcessing(false);
+      return;
+    }
+
     const smartResponse = processSmartCommand(lowerPrompt, textToRun);
 
     if (smartResponse) {
@@ -1587,6 +1665,13 @@ gn_prosperaplan@consorciomagalu.com.br`;
             <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-[10px]">
               <button
                 type="button"
+                onClick={() => handleSendCommand("Enviar um orçamento para a cliente Maria no WhatsApp e E-mail de 150 mil imóvel")}
+                className="px-2.5 py-1 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <SendHorizontal className="h-3 w-3 text-emerald-400" /> Orçamento WhatsApp
+              </button>
+              <button
+                type="button"
                 onClick={() => handleSendCommand("Jarvis, prospectar 15 transportadoras em Paranaguá via Google Maps com meia parcela para caminhões pesados.")}
                 className="px-2.5 py-1 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
               >
@@ -2004,6 +2089,84 @@ gn_prosperaplan@consorciomagalu.com.br`;
                           )}
                         </button>
                       )}
+                    </div>
+                  ) : log.isProposalCard && log.proposalData ? (
+                    <div className="space-y-2.5 text-[11px] font-sans">
+                      {/* Resumo da Simulação */}
+                      <div className="bg-gradient-to-br from-emerald-950/60 to-cyan-950/60 p-2.5 rounded-xl border border-emerald-500/40 space-y-1.5 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-emerald-300 text-xs flex items-center gap-1.5">
+                            👤 {log.proposalData.clienteNome}
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 uppercase">
+                            {log.proposalData.canal}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-300 pt-1 border-t border-emerald-500/20">
+                          <div>
+                            Crédito: <strong className="text-white font-bold">{log.proposalData.creditoFmt}</strong>
+                          </div>
+                          <div>
+                            Prazo: <strong className="text-white font-bold">{log.proposalData.prazo} meses</strong>
+                          </div>
+                          <div>
+                            Parcela Atual: <strong className="text-emerald-300 font-bold">{log.proposalData.parcelaAtualFmt}</strong>
+                          </div>
+                          <div>
+                            Pós-Contemplação: <strong className="text-cyan-300 font-bold">{log.proposalData.parcelaPosFmt}</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Script Formatado com Emoticons */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                          <span>Script Oficial de Envio:</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(log.proposalData!.scriptWhatsApp);
+                              setCopiedId(`wa_${log.id}`);
+                              setTimeout(() => setCopiedId(null), 2500);
+                              toast.success("Script do WhatsApp copiado!");
+                            }}
+                            className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            {copiedId === `wa_${log.id}` ? (
+                              <>
+                                <Check className="h-3 w-3 text-emerald-400" />
+                                <span className="text-emerald-400">Copiado!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copiar Script</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <pre className="p-2.5 bg-slate-950/90 rounded-xl border border-slate-800 text-[10px] text-slate-200 font-mono whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto custom-scrollbar select-text">
+                          {log.proposalData.scriptWhatsApp}
+                        </pre>
+                      </div>
+
+                      {/* Botões de Ação de Disparo */}
+                      <div className="grid grid-cols-2 gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSendProposalWhatsApp(log.proposalData!)}
+                          className="py-2 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-[10px] uppercase rounded-xl transition-all shadow-[0_0_12px_rgba(16,185,129,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <SendHorizontal className="h-3.5 w-3.5" /> Disparar WhatsApp
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSendProposalEmail(log.proposalData!)}
+                          className="py-2 px-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[10px] uppercase rounded-xl transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Mail className="h-3.5 w-3.5" /> Disparar E-mail
+                        </button>
+                      </div>
                     </div>
                   ) : log.isBoletoCard && log.boletoInfo ? (
                     <div className="space-y-2 text-[11px] font-sans">
