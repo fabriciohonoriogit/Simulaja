@@ -30,15 +30,15 @@ export function getBestPtBrVoice(): SpeechSynthesisVoice | null {
   if (ptVoices.length === 0) return null;
 
   // Prioridade para vozes com tecnologia Natural/Neural (Microsoft e Google)
-  // Tom barítono humano, seguro, caloroso e envolvente
+  // Tom barítono humano, seguro, caloroso, enérgico e envolvente
   const priorityVoices = [
     "antonio",                  // Microsoft Antonio Online (Natural) - PT-BR (Barítono Executivo Perfeito)
+    "fabio",                    // Microsoft Fabio Online (Natural) - PT-BR (Dinâmico e Confiante)
     "thomaz",                   // Microsoft Thomaz Online (Natural) - PT-BR (Aveludado e Suave)
-    "fabio",                    // Microsoft Fabio Online (Natural) - PT-BR
     "google português do brasil", // Google PT-BR (Natural Chrome)
+    "francisca",                // Microsoft Francisca Online (Natural)
     "daniel",                   // Voz Daniel (Windows SAPI)
     "ricardo",
-    "francisca",                // Microsoft Francisca Online (Natural)
     "thalita",
     "giovanna",
     "luciana",
@@ -141,14 +141,14 @@ export function speakJarvisText(
   // Interrompe reproduções anteriores
   stopVoice();
 
-  // Tentativa 1: Motor Neural HD via Servidor Local (/api/tts - Microsoft Antonio Neural)
-  // Se o servidor local estiver ativo, reproduz com qualidade cinematográfica
+  // Tentativa 1: Motor Neural HD via Servidor Local (/api/tts - Microsoft Antonio Neural com Modulação Dinâmica)
+  // Se o servidor local estiver ativo, reproduz com velocidade executiva (+18%) e tom dinâmico (+4Hz)
   const tryNeuralTTS = async () => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2500);
 
-      const url = `http://localhost:3000/api/tts?voice=pt-BR-AntonioNeural&text=${encodeURIComponent(cleanText.slice(0, 1000))}`;
+      const url = `http://localhost:3000/api/tts?voice=pt-BR-AntonioNeural&rate=%2B18%25&pitch=%2B4Hz&volume=%2B15%25&text=${encodeURIComponent(cleanText.slice(0, 1000))}`;
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
 
@@ -244,8 +244,9 @@ export function speakJarvisLocalSpeech(
       utterance.voice = voice;
     }
 
-    utterance.rate = 1.02;
-    utterance.pitch = 0.96;
+    // Taxa e tom ajustados para cadência ágil, confiante, expressiva e dinâmica (adeus lentidão e robotização!)
+    utterance.rate = 1.18;
+    utterance.pitch = 1.08;
 
     if (index === 0 && onStart) {
       utterance.onstart = () => onStart();

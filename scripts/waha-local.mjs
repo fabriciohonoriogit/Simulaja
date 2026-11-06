@@ -528,18 +528,27 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 8. Síntese de Voz Neural HD do Jarvis (GET ou POST /api/tts - Microsoft Edge Neural)
+  // 8. Síntese de Voz Neural HD do Jarvis (GET ou POST /api/tts - Microsoft Edge Neural com Modulação Prosódica Viva)
   if (pathname === "/api/tts" && (req.method === "GET" || req.method === "POST")) {
     let text = "";
     let voice = "pt-BR-AntonioNeural";
+    let rate = "+18%";
+    let pitch = "+4Hz";
+    let volume = "+15%";
 
     if (req.method === "GET") {
       text = parsedUrl.searchParams.get("text") || "";
       voice = parsedUrl.searchParams.get("voice") || "pt-BR-AntonioNeural";
+      rate = parsedUrl.searchParams.get("rate") || "+18%";
+      pitch = parsedUrl.searchParams.get("pitch") || "+4Hz";
+      volume = parsedUrl.searchParams.get("volume") || "+15%";
     } else {
       const body = await readBody();
       text = body.text || "";
       voice = body.voice || "pt-BR-AntonioNeural";
+      rate = body.rate || "+18%";
+      pitch = body.pitch || "+4Hz";
+      volume = body.volume || "+15%";
     }
 
     if (!text.trim()) {
@@ -551,7 +560,12 @@ const server = http.createServer(async (req, res) => {
     try {
       const tts = new MsEdgeTTS();
       await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-      const { audioStream } = tts.toStream(text);
+      // Modulação vocal expressiva, eliminando lentidão e tom robótico
+      const { audioStream } = tts.toStream(text, {
+        rate,
+        pitch,
+        volume,
+      });
 
       res.writeHead(200, {
         "Content-Type": "audio/mpeg",

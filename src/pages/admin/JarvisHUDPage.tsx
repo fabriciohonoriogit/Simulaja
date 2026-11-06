@@ -108,6 +108,118 @@ interface LogEntry {
   };
 }
 
+/**
+ * Tradutor e Otimizador de Prompts FLUX.1 Neural
+ * Evita alucinações (como caixas de papelão ao solicitar crédito ou imóveis)
+ * e gera fotografias arquitetônicas e comerciais de altíssimo padrão.
+ */
+function buildOptimizedFluxPrompt(rawPrompt: string): { prompt: string; title: string } {
+  const clean = rawPrompt
+    .replace(/gerar imagem|gere uma imagem|crie uma imagem|criar imagem|desenhe|foto de|faça uma imagem|quero uma imagem|solicitei uma imagem para|solicitei uma imagem|solicite uma imagem para|solicite uma imagem|uma imagem para|imagem para|imagem de|imagem/gi, "")
+    .trim();
+
+  const lower = (clean || rawPrompt).toLowerCase();
+
+  // Caso 1: Imóveis / Casa / Mansão / Terreno / Apartamento / Cobertura / Construção / 500 mil / 500k
+  const isRealEstate =
+    lower.includes("imóvel") ||
+    lower.includes("imovel") ||
+    lower.includes("casa") ||
+    lower.includes("apartamento") ||
+    lower.includes("mansion") ||
+    lower.includes("mansão") ||
+    lower.includes("terreno") ||
+    lower.includes("construção") ||
+    lower.includes("construcao") ||
+    lower.includes("cobertura") ||
+    lower.includes("500") ||
+    lower.includes("milhão") ||
+    lower.includes("milhao") ||
+    lower.includes("lote");
+
+  if (isRealEstate) {
+    let subject = "ultra-luxury modern contemporary architectural mansion";
+    if (lower.includes("apartamento") || lower.includes("cobertura")) {
+      subject = "breathtaking luxury penthouse apartment with panoramic city skyline view and designer glass terrace";
+    } else if (lower.includes("terreno") || lower.includes("construção") || lower.includes("lote")) {
+      subject = "luxurious modern architectural residence in a gated private community with manicured landscaping";
+    }
+
+    return {
+      prompt: `Breathtaking architectural photography of an ${subject}, floor-to-ceiling glass walls, warm ambient interior and exterior lighting, pristine infinity swimming pool, manicured lawn with minimalist palm trees, dramatic golden hour sunset, 8k resolution, architectural digest award-winning, photorealistic, cinematic masterpiece, elegant high-end living, no cardboard, no box, no carton, no packaging, no text`,
+      title: `Crédito Imobiliário ${clean.includes("500") || rawPrompt.includes("500") ? "R$ 500.000" : "Alto Padrão"} - Mansão Contemporânea`,
+    };
+  }
+
+  // Caso 2: Caminhões / Veículos Pesados / Carretas / Frotas / Scania / Volvo
+  const isHeavy =
+    lower.includes("pesado") ||
+    lower.includes("caminhão") ||
+    lower.includes("caminhao") ||
+    lower.includes("scania") ||
+    lower.includes("volvo") ||
+    lower.includes("carreta") ||
+    lower.includes("frota") ||
+    lower.includes("bitrem") ||
+    lower.includes("actros");
+
+  if (isHeavy) {
+    return {
+      prompt: `Brand new ultra-modern luxury heavy duty truck, Scania or Volvo aerodynamic semi-truck, metallic paint glistening under highway sunset, cinematic road photography, 8k resolution, commercial photoshoot, hyper-realistic, dramatic lighting, sharp focus, stunning details, photorealistic, no text`,
+      title: `Consórcio de Pesados - Caminhão Extrapesado Moderno`,
+    };
+  }
+
+  // Caso 3: Carros / Caminhonetes / SUVs / Hilux / RAM / Porsche / BMW
+  const isAuto =
+    lower.includes("carro") ||
+    lower.includes("veículo") ||
+    lower.includes("veiculo") ||
+    lower.includes("caminhonete") ||
+    lower.includes("hilux") ||
+    lower.includes("ram") ||
+    lower.includes("suv") ||
+    lower.includes("porsche") ||
+    lower.includes("bmw") ||
+    lower.includes("mercedes") ||
+    lower.includes("ranger");
+
+  if (isAuto) {
+    return {
+      prompt: `Stunning modern luxury SUV vehicle, sleek aerodynamic metallic finish, parked on a scenic mountain road during golden hour sunset, professional automotive commercial photography, 8k resolution, hyper-realistic, crystal clear reflections, dramatic lighting, photorealistic, no text`,
+      title: `Consórcio Automotivo - Veículo Premium`,
+    };
+  }
+
+  // Caso 4: Negócios / Finanças / Investimento / Contemplação
+  const isFinance =
+    lower.includes("crédito") ||
+    lower.includes("credito") ||
+    lower.includes("investimento") ||
+    lower.includes("planejamento") ||
+    lower.includes("contemplação") ||
+    lower.includes("consorcio") ||
+    lower.includes("consorciado");
+
+  if (isFinance) {
+    return {
+      prompt: `Cinematic ultra-luxury modern executive boardroom overlooking a thriving city skyline at sunset, high wealth investment planning atmosphere, architectural elegance, glass walls, 8k resolution, award winning architectural photography, hyper-realistic, no text`,
+      title: `Planejamento Financeiro & Carta de Crédito Contemplada`,
+    };
+  }
+
+  // Fallback: Sanitiza palavras em português que causam caixas e artefatos, adiciona modificadores de altíssima fidelidade
+  const sanitized = (clean || rawPrompt)
+    .replace(/\bcaixa\b/gi, "vault")
+    .replace(/\bde\b|\bda\b|\bdo\b|\bum\b|\buma\b|\bpara\b|\bcom\b/gi, " ")
+    .trim();
+
+  return {
+    prompt: `${sanitized}, ultra-detailed, 8k resolution, cinematic lighting, professional photography, hyper-realistic, award winning, masterpiece, sharp focus, no cardboard, no box, no packaging, no blur`,
+    title: clean || rawPrompt,
+  };
+}
+
 export default function JarvisHUDPage() {
   const [orbState, setOrbState] = useState<OrbState>("idle");
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -870,26 +982,30 @@ gn_prosperaplan@consorciomagalu.com.br`;
       lowerPrompt.includes("criar imagem") ||
       lowerPrompt.includes("desenhe") ||
       lowerPrompt.includes("foto de") ||
+      lowerPrompt.includes("solicitei uma imagem") ||
+      lowerPrompt.includes("solicite uma imagem") ||
+      lowerPrompt.includes("uma imagem para") ||
+      lowerPrompt.includes("imagem para") ||
+      lowerPrompt.includes("imagem de") ||
+      lowerPrompt.startsWith("imagem ") ||
       selectedCore.id === "flux"
     ) {
-      const cleanPrompt = textToRun
-        .replace(/gerar imagem|gere uma imagem|crie uma imagem|criar imagem|desenhe|foto de/gi, "")
-        .trim() || textToRun;
+      const { prompt: fluxPrompt, title: fluxTitle } = buildOptimizedFluxPrompt(textToRun);
 
-      const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?model=flux&width=1024&height=768&nologo=true`;
+      const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fluxPrompt)}?model=flux&width=1024&height=768&nologo=true`;
 
       const imgLog: LogEntry = {
         id: Date.now().toString(),
         time: timeStr,
         tag: "FLUX.1 GERADOR VISUAL",
-        text: `🎨 Imagem gerada com sucesso via motor neural FLUX.1: "${cleanPrompt}"`,
+        text: `🎨 Imagem gerada com sucesso via motor neural FLUX.1: "${fluxTitle}"`,
         color: "text-pink-400 font-bold",
         imageUrl: imgUrl,
         aiCoreName: "FLUX.1",
       };
 
       setLogs((prev) => [imgLog, ...prev]);
-      const reply = `Fabrício, gerei a imagem com o modelo neural FLUX.1 em alta definição e ela já está disponível no seu feed!`;
+      const reply = `Fabrício, gerei a imagem com o modelo neural FLUX.1 em altíssima definição para ${fluxTitle}. A fotografia já está disponível no seu feed!`;
       setLastJarvisReply(reply);
       speakResponse(reply);
       setIsProcessing(false);
@@ -1029,7 +1145,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-mono p-4 md:p-6 flex flex-col gap-6 select-none relative overflow-hidden">
+    <div className="h-screen max-h-screen overflow-hidden bg-slate-950 text-slate-100 font-mono p-2.5 sm:p-3 md:p-3.5 flex flex-col gap-2.5 select-none relative">
       {/* Background Tech Image & Neon Grid Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-15 pointer-events-none mix-blend-screen"
@@ -1038,67 +1154,67 @@ gn_prosperaplan@consorciomagalu.com.br`;
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#06b6d410_1px,transparent_1px),linear-gradient(to_bottom,#06b6d410_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
 
       {/* Top Header / Status bar */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-cyan-900/40 pb-4 relative z-10 backdrop-blur-sm">
+      <header className="flex-shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-cyan-900/40 pb-2 relative z-10 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-cyan-950/90 border border-cyan-500/40 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-            <Sparkles className="h-6 w-6 text-cyan-400 animate-pulse" />
+          <div className="p-2 bg-cyan-950/90 border border-cyan-500/40 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+            <Sparkles className="h-5 w-5 text-cyan-400 animate-pulse" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-widest text-cyan-400 uppercase drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">
+            <h1 className="text-xl md:text-2xl font-black tracking-widest text-cyan-400 uppercase drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">
               J.A.R.V.I.S  OS // QUANTUM SPHERE HUD
             </h1>
-            <p className="text-[10px] text-cyan-600 uppercase tracking-widest font-bold">
+            <p className="text-[9.5px] text-cyan-600 uppercase tracking-widest font-bold">
               Interface Quântica de Órbita Expandida & Engine Tecnológica
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+        <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-400">
           <button
             onClick={() => setIsVoiceCloneOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold transition-all border border-purple-500/50 bg-purple-950/70 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)] hover:bg-purple-900/60 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold transition-all border border-purple-500/50 bg-purple-950/70 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)] hover:bg-purple-900/60 cursor-pointer"
             title="Abrir Estúdio para Clonar Sua Voz com Arquivo ou Microfone"
           >
-            <Mic className="h-4 w-4 text-purple-400" /> Clonar Minha Voz (Voice Studio)
+            <Mic className="h-3.5 w-3.5 text-purple-400" /> Clonar Minha Voz (Voice Studio)
           </button>
           <button
             onClick={() => setAudioEnabled(!audioEnabled)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold transition-all border shadow-lg ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold transition-all border shadow-lg ${
               audioEnabled
                 ? "bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                 : "bg-slate-900 text-slate-500 border-slate-800"
             }`}
           >
-            {audioEnabled ? <Volume2 className="h-4 w-4 text-cyan-400" /> : <VolumeX className="h-4 w-4 text-slate-500" />}
+            {audioEnabled ? <Volume2 className="h-3.5 w-3.5 text-cyan-400" /> : <VolumeX className="h-3.5 w-3.5 text-slate-500" />}
             {audioEnabled ? "Voz Sintetizada Ativa" : "Mudo"}
           </button>
-          <span className="flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-            <Radio className="h-3.5 w-3.5 animate-pulse" /> ÓRBITA EXPANDIDA
+          <span className="flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1.5 rounded-full text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+            <Radio className="h-3 w-3 animate-pulse" /> ÓRBITA EXPANDIDA
           </span>
-          <span className="font-black text-cyan-300 bg-slate-900/90 border border-cyan-800/50 px-3.5 py-1.5 rounded-full">
+          <span className="font-black text-cyan-300 bg-slate-900/90 border border-cyan-800/50 px-3 py-1.5 rounded-full text-xs">
             {new Date().toLocaleTimeString("pt-BR")}
           </span>
         </div>
       </header>
 
-      {/* ======================================================== */}
-      {/* QUANTUM AI MATRIX // SELETOR DE MOTORES NEURAIS (Awesome FreeLLM) */}
-      {/* ======================================================== */}
-      <JarvisAICoreDeck
-        selectedCoreId={selectedCore.id}
-        onSelectCore={handleSelectAICore}
-        autoFallback={autoFallback}
-        onToggleAutoFallback={() => setAutoFallback((prev) => !prev)}
-      />
+      {/* QUANTUM AI MATRIX // SELETOR DE MOTORES NEURAIS */}
+      <div className="flex-shrink-0 relative z-10">
+        <JarvisAICoreDeck
+          selectedCoreId={selectedCore.id}
+          onSelectCore={handleSelectAICore}
+          autoFallback={autoFallback}
+          onToggleAutoFallback={() => setAutoFallback((prev) => !prev)}
+        />
+      </div>
 
-      {/* Main HUD Grid */}
-      <div className="grid grid-cols-12 gap-6 flex-1 relative z-10">
+      {/* Main HUD Grid (Locked exactly to remaining screen height) */}
+      <div className="grid grid-cols-12 gap-3 flex-1 min-h-0 relative z-10 overflow-hidden">
         {/* ======================================================== */}
         {/* COLUNA LATERAL ESQUERDA: ABA DE NÚCLEO & CENTRAL DE SOLICITAÇÕES */}
         {/* ======================================================== */}
-        <div className="col-span-12 lg:col-span-3 bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4 backdrop-blur-md shadow-2xl relative overflow-hidden">
+        <div className="col-span-12 lg:col-span-3 h-full max-h-full bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-3 flex flex-col gap-2.5 backdrop-blur-md shadow-2xl relative overflow-hidden">
           {/* Seletor de Abas Superior na Lateral */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-950/90 rounded-xl border border-slate-800">
+          <div className="flex-shrink-0 flex items-center gap-1.5 p-1 bg-slate-950/90 rounded-xl border border-slate-800">
             <button
               type="button"
               onClick={() => setLateralTab("nucleo")}
@@ -1125,12 +1241,12 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
           {lateralTab === "nucleo" ? (
             /* CONTEÚDO DA ABA 1: NÚCLEO TECH & DIAGNÓSTICO */
-            <div className="flex-1 flex flex-col gap-3.5">
-              <div className="relative rounded-xl overflow-hidden border border-cyan-500/30 group shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+            <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-y-auto custom-scrollbar pr-0.5">
+              <div className="relative rounded-xl overflow-hidden border border-cyan-500/30 group shadow-[0_0_20px_rgba(6,182,212,0.15)] flex-shrink-0">
                 <img
                   src="/images/jarvis_tech_core.jpg"
                   alt="Jarvis Technology Core"
-                  className="w-full h-40 object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-28 sm:h-32 object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] text-cyan-300 font-bold">
@@ -1177,18 +1293,18 @@ gn_prosperaplan@consorciomagalu.com.br`;
                 </div>
               </div>
 
-              <div className="mt-auto pt-3 border-t border-slate-800/80 space-y-2">
+              <div className="mt-auto pt-2 border-t border-slate-800/80 space-y-1.5 flex-shrink-0">
                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Ações Rápidas</span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={handleMorningBriefing}
-                    className="p-2 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 text-cyan-300 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1 transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)] cursor-pointer"
+                    className="p-1.5 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 text-cyan-300 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1 transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)] cursor-pointer"
                   >
                     <Sun className="h-3 w-3 text-amber-400" /> Briefing
                   </button>
                   <button
                     onClick={() => handleSendCommand("Baixar a segunda via do boleto do cliente Fabricio Rodrigues Honório do portal consorcio magalu")}
-                    className="p-2 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1 transition-all shadow-[0_0_10px_rgba(16,185,129,0.2)] cursor-pointer"
+                    className="p-1.5 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1 transition-all shadow-[0_0_10px_rgba(16,185,129,0.2)] cursor-pointer"
                   >
                     <FileText className="h-3 w-3 text-emerald-400" /> 2ª Via
                   </button>
@@ -1197,7 +1313,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
             </div>
           ) : (
             /* CONTEÚDO DA ABA 2: CENTRAL DE SOLICITAÇÕES (PROSPECÇÃO & ATALHOS) */
-            <div className="flex-1 flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-0.5">
+            <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-y-auto custom-scrollbar pr-0.5">
               {/* Destaque: Harvey Autonomous SDR Engine (Ciclo Fechado de 5 Subagentes) */}
               <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/80 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.25)] space-y-2">
                 <div className="flex items-center justify-between">
@@ -1384,57 +1500,60 @@ gn_prosperaplan@consorciomagalu.com.br`;
         {/* ======================================================== */}
         {/* COLUNA CENTRAL: DEDICADA EXCLUSIVAMENTE AO JARVIS */}
         {/* ======================================================== */}
-        <div className="col-span-12 lg:col-span-6 bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-6 flex flex-col items-center justify-between relative backdrop-blur-md min-h-[640px] shadow-[0_0_30px_rgba(6,182,212,0.1)]">
-          <div className="text-center space-y-1">
+        <div className="col-span-12 lg:col-span-6 h-full max-h-full bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-3 flex flex-col justify-between overflow-hidden relative backdrop-blur-md shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+          <div className="flex-shrink-0 text-center space-y-0.5">
             <span className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center justify-center gap-2 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">
               <Zap className="h-4 w-4 fill-cyan-400 text-cyan-400 animate-bounce" /> ÓRBITA QUÂNTICA EXPANDIDA // JARVIS AI
             </span>
-            <p className="text-xs text-slate-400 font-mono">Consciência Executiva e Sintetizador Quântico</p>
+            <p className="text-[10px] text-slate-400 font-mono">Consciência Executiva e Sintetizador Quântico</p>
           </div>
 
-          {/* O JARVIS ORB - DIMENSIONAMENTO ELEGANTE E EQUILIBRADO */}
-          <div className="my-auto w-[200px] h-[200px] sm:w-[230px] sm:h-[230px] md:w-[260px] md:h-[260px] lg:w-[280px] lg:h-[280px] flex items-center justify-center relative transition-all duration-700 hover:scale-105">
-            <JarvisOrb
-              state={orbState}
-              theme={
-                selectedCore.id === "groq" || selectedCore.id === "cerebras" || selectedCore.id === "claude"
-                  ? "flame"
-                  : selectedCore.id === "nvidia" || selectedCore.id === "chatgpt"
-                  ? "emerald"
-                  : "cobalt"
-              }
-              statusText={selectedCore.name}
-              subStatusText={`${selectedCore.provider} • ${selectedCore.speed}`}
-            />
-          </div>
-
-          {/* Status de Processamento da IA */}
-          {isProcessing && (
-            <div className="my-2 text-xs text-cyan-300 font-mono flex items-center gap-2 animate-pulse bg-cyan-950/80 px-4 py-1.5 rounded-full border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin text-cyan-400" />
-              Processando via {selectedCore.name} ({selectedCore.speed})...
+          {/* ÁREA CENTRAL ROLÁVEL // ORB E RESPOSTAS RECENTES */}
+          <div className="flex-1 min-h-0 flex flex-col items-center justify-center overflow-y-auto custom-scrollbar py-1 w-full gap-1.5">
+            {/* O JARVIS ORB - DIMENSIONAMENTO ELEGANTE E EQUILIBRADO */}
+            <div className="w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] md:w-[180px] md:h-[180px] lg:w-[200px] lg:h-[200px] flex-shrink-0 flex items-center justify-center relative transition-all duration-700 hover:scale-105">
+              <JarvisOrb
+                state={orbState}
+                theme={
+                  selectedCore.id === "groq" || selectedCore.id === "cerebras" || selectedCore.id === "claude"
+                    ? "flame"
+                    : selectedCore.id === "nvidia" || selectedCore.id === "chatgpt"
+                    ? "emerald"
+                    : "cobalt"
+                }
+                statusText={selectedCore.name}
+                subStatusText={`${selectedCore.provider} • ${selectedCore.speed}`}
+              />
             </div>
-          )}
 
-          {/* Caixa de Diálogo / Resposta Holográfica do Jarvis */}
-          {lastJarvisReply && !isProcessing && (
-            <div className="w-full max-w-xl mx-auto my-2 p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-1.5 animate-in fade-in">
-              <div className="flex items-center justify-between text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
-                <span className="flex items-center gap-1.5">
-                  <Sparkles className="h-3 w-3 text-cyan-400 animate-pulse" /> Jarvis AI // Resposta Recente
-                </span>
-                <span className={`text-[8.5px] px-2 py-0.5 rounded font-mono font-bold ${selectedCore.badgeBg} ${selectedCore.borderColor} ${selectedCore.color} border`}>
-                  {selectedCore.name}
-                </span>
+            {/* Status de Processamento da IA */}
+            {isProcessing && (
+              <div className="flex-shrink-0 my-1 text-xs text-cyan-300 font-mono flex items-center gap-2 animate-pulse bg-cyan-950/80 px-3.5 py-1 rounded-full border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                <RefreshCw className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+                Processando via {selectedCore.name} ({selectedCore.speed})...
               </div>
-              <p className="text-[11px] text-slate-200 leading-relaxed font-sans line-clamp-3">
-                {lastJarvisReply}
-              </p>
-            </div>
-          )}
+            )}
 
-          {/* CONSOLE DE COMANDO EXPANDIDO COM ATALHOS RÁPIDOS */}
-          <div className="w-full space-y-2.5 mt-auto pt-2">
+            {/* Caixa de Diálogo / Resposta Holográfica do Jarvis */}
+            {lastJarvisReply && !isProcessing && (
+              <div className="w-full max-w-xl mx-auto my-1 p-2.5 rounded-xl bg-cyan-950/50 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-1 max-h-24 overflow-y-auto custom-scrollbar flex-shrink-0 animate-in fade-in">
+                <div className="flex items-center justify-between text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-cyan-400 animate-pulse" /> Jarvis AI // Resposta Recente
+                  </span>
+                  <span className={`text-[8.5px] px-2 py-0.5 rounded font-mono font-bold ${selectedCore.badgeBg} ${selectedCore.borderColor} ${selectedCore.color} border`}>
+                    {selectedCore.name}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-200 leading-relaxed font-sans">
+                  {lastJarvisReply}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* CONSOLE DE COMANDO PERMANENTEMENTE FIXADO NO RODAPÉ */}
+          <div className="flex-shrink-0 w-full space-y-1.5 mt-auto pt-1 z-20">
             {/* Chips de Atalhos Rápidos */}
             <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-[10px]">
               <button
@@ -1460,10 +1579,10 @@ gn_prosperaplan@consorciomagalu.com.br`;
               </button>
               <button
                 type="button"
-                onClick={() => handleSendCommand("Crie uma imagem de um caminhão extrapesado moderno na rodovia ao pôr do sol")}
+                onClick={() => handleSendCommand("Crie uma imagem de um imóvel de alto padrão de 500 mil com arquitetura contemporânea")}
                 className="px-2.5 py-1 rounded-lg bg-pink-950/70 hover:bg-pink-900 border border-pink-500/30 text-pink-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
               >
-                <Palette className="h-3 w-3 text-pink-400" /> Imagem FLUX.1
+                <Palette className="h-3 w-3 text-pink-400" /> Imóvel 500k FLUX
               </button>
               <button
                 type="button"
@@ -1475,8 +1594,8 @@ gn_prosperaplan@consorciomagalu.com.br`;
             </div>
 
             {/* Console de Escrita Amplo, Ergonômico e Tecnológico */}
-            <div className="w-full relative rounded-2xl bg-slate-950/95 border border-cyan-500/50 shadow-[0_0_25px_rgba(6,182,212,0.18)] focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-500/30 transition-all p-3 space-y-2">
-              <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono border-b border-slate-800/80 pb-1.5">
+            <div className="w-full relative rounded-2xl bg-slate-950/95 border border-cyan-500/50 shadow-[0_0_25px_rgba(6,182,212,0.18)] focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-500/30 transition-all p-2.5 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono border-b border-slate-800/80 pb-1">
                 <div className="flex items-center gap-2">
                   <span className="flex items-center gap-1 font-bold text-cyan-300">
                     <Terminal className="h-3 w-3 text-cyan-400" /> CONSOLE EXECUTIVO
@@ -1486,29 +1605,29 @@ gn_prosperaplan@consorciomagalu.com.br`;
                     {selectedCore.name}
                   </span>
                 </div>
-                <span className="text-[9px] text-slate-500 hidden sm:inline">Pressione Enter para enviar (Shift+Enter para nova linha)</span>
+                <span className="text-[9px] text-slate-500 hidden sm:inline">Pressione Enter para enviar (Shift+Enter para linha)</span>
               </div>
 
               {/* Preview de Arquivo Anexado */}
               {attachedFile && (
-                <div className="p-2 rounded-xl bg-cyan-950/70 border border-cyan-500/50 flex items-center justify-between text-xs animate-in fade-in shadow-inner">
-                  <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-xl bg-cyan-950/70 border border-cyan-500/50 flex items-center justify-between text-xs animate-in fade-in shadow-inner">
+                  <div className="flex items-center gap-2">
                     {attachedFile.isImage ? (
                       <img
                         src={attachedFile.dataUrl}
                         alt={attachedFile.name}
-                        className="w-10 h-10 object-cover rounded-lg border border-cyan-400/60 shadow-sm"
+                        className="w-8 h-8 object-cover rounded-lg border border-cyan-400/60 shadow-sm"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-cyan-400">
-                        <FileText className="h-5 w-5" />
+                      <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-cyan-400">
+                        <FileText className="h-4 w-4" />
                       </div>
                     )}
                     <div className="space-y-0.5">
-                      <p className="text-[11px] font-bold text-slate-200 truncate max-w-[240px]">
+                      <p className="text-[10px] font-bold text-slate-200 truncate max-w-[200px]">
                         {attachedFile.name}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-mono">
+                      <p className="text-[8.5px] text-slate-400 font-mono">
                         {(attachedFile.size / 1024).toFixed(1)} KB • {attachedFile.isImage ? "Imagem Multimodal" : "Documento"}
                       </p>
                     </div>
@@ -1519,13 +1638,13 @@ gn_prosperaplan@consorciomagalu.com.br`;
                     className="p-1 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-900 transition-colors cursor-pointer"
                     title="Remover anexo"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               )}
 
               <textarea
-                rows={3}
+                rows={2}
                 placeholder="Digite sua instrução para o Jarvis: prospecção WhatsApp/E-mail, análise do funil, simulação de meia parcela ou comando..."
                 value={command}
                 onChange={(e) => setCommand(e.target.value)}
@@ -1535,7 +1654,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
                     handleSendCommand();
                   }
                 }}
-                className="w-full bg-transparent text-cyan-100 placeholder:text-slate-500 text-sm sm:text-base focus:outline-none resize-none font-sans leading-relaxed custom-scrollbar"
+                className="w-full bg-transparent text-cyan-100 placeholder:text-slate-500 text-xs sm:text-sm focus:outline-none resize-none font-sans leading-relaxed custom-scrollbar"
               />
 
               <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
@@ -1598,7 +1717,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
                     type="button"
                     onClick={() => handleSendCommand()}
                     disabled={isProcessing || !command.trim()}
-                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 disabled:opacity-40 text-slate-950 font-black text-xs rounded-xl transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-1.5 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 disabled:opacity-40 text-slate-950 font-black text-xs rounded-xl transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center gap-1.5 cursor-pointer"
                   >
                     {isProcessing ? (
                       <>
@@ -1621,8 +1740,8 @@ gn_prosperaplan@consorciomagalu.com.br`;
         {/* ======================================================== */}
         {/* COLUNA LATERAL DIREITA: FEED DO COFRE (SEM ARMAZENAMENTO RESIDUAL) */}
         {/* ======================================================== */}
-        <div className="col-span-12 lg:col-span-3 bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4 backdrop-blur-md max-h-[640px] shadow-2xl relative overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+        <div className="col-span-12 lg:col-span-3 h-full max-h-full bg-slate-900/70 border border-cyan-500/20 rounded-2xl p-3 flex flex-col gap-2.5 backdrop-blur-md shadow-2xl relative overflow-hidden">
+          <div className="flex-shrink-0 flex items-center justify-between border-b border-slate-800/80 pb-1.5">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Database className="h-4 w-4 text-emerald-400" /> Feed do Cofre
             </h2>
@@ -1642,7 +1761,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
           </div>
 
           {/* Feed Stream */}
-          <div className="flex-1 space-y-3 overflow-y-auto text-xs pr-1 custom-scrollbar">
+          <div className="flex-1 min-h-0 space-y-2.5 overflow-y-auto text-xs pr-1 custom-scrollbar">
             {logs.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 space-y-2">
                 <Database className="h-8 w-8 text-slate-700 animate-pulse" />
