@@ -1,6 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { JarvisOrb, OrbState } from "@/components/admin/JarvisOrb";
+import { JarvisOrb, OrbState, OrbEmotion } from "@/components/admin/JarvisOrb";
 import {
   Sparkles,
   Volume2,
@@ -39,11 +39,19 @@ import {
   Bot,
   Paperclip,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Activity,
+  Sliders
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { aiService, formatConciseBudgetQuote } from "@/services/aiService";
-import { speakText } from "@/lib/voiceService";
+import {
+  speakJarvisText,
+  speakFillerPhrase,
+  stopVoice,
+  stripEmotionTags,
+  registerSimulatedAudioListener
+} from "@/lib/voiceService";
 import { fetchDailyNews, getNewsAnswerForJarvis } from "@/services/newsService";
 import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
 import { buscarEmpresasPorCidade, calcularConsorcioRadar } from "@/services/radarLocalService";
@@ -244,6 +252,14 @@ export default function JarvisHUDPage() {
   const [selectedCore, setSelectedCore] = useState<AICoreProvider>(AI_CORE_PROVIDERS[0]);
   const [autoFallback, setAutoFallback] = useState(true);
 
+  // Estados da Expressividade Vocal e Modulação Quântica do Orb
+  const [voiceExpressiveness, setVoiceExpressiveness] = useState<"baixa" | "media" | "alta">("alta");
+  const [isExpressiveVoiceActive, setIsExpressiveVoiceActive] = useState<boolean>(true);
+  const [currentOrbEmotion, setCurrentOrbEmotion] = useState<OrbEmotion>("neutro");
+  const [audioBass, setAudioBass] = useState<number>(0);
+  const [audioTreble, setAudioTreble] = useState<number>(0);
+  const [audioAmplitude, setAudioAmplitude] = useState<number>(0);
+
   // Estado para Anexos Multimodais (Imagens, Boletos, Documentos ou PDFs)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachedFile, setAttachedFile] = useState<{
@@ -283,6 +299,29 @@ export default function JarvisHUDPage() {
 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  // Listener para envelope de áudio simulado (Fallback Web Speech) e Barge-in via tecla [Escape]
+  useEffect(() => {
+    registerSimulatedAudioListener((bass, treble, amp) => {
+      setAudioBass(bass);
+      setAudioTreble(treble);
+      setAudioAmplitude(amp);
+    });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && orbState === "speaking") {
+        stopVoice();
+        setOrbState("idle");
+        setCurrentOrbEmotion("neutro");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      registerSimulatedAudioListener(null);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [orbState]);
 
   const handleRemoveAttachedFile = () => {
     setAttachedFile(null);
@@ -542,10 +581,32 @@ export default function JarvisHUDPage() {
 
   const speakResponse = (text: string) => {
     if (!audioEnabled) return;
-    speakText(
+    speakJarvisText(
       text,
-      () => setOrbState("speaking"),
-      () => setOrbState("idle")
+      {
+        onStart: () => setOrbState("speaking"),
+        onEnd: () => {
+          setOrbState("idle");
+          setCurrentOrbEmotion("neutro");
+        },
+        onSegmentStart: (seg) => {
+          const normalized = seg.emotion
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") as OrbEmotion;
+          setCurrentOrbEmotion(normalized);
+        },
+        onEmotionChange: (emotion) => {
+          const normalized = emotion
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") as OrbEmotion;
+          setCurrentOrbEmotion(normalized);
+        },
+      },
+      undefined,
+      {
+        expressiveness: voiceExpressiveness,
+        isExpressiveActive: isExpressiveVoiceActive,
+      }
     );
   };
 
@@ -1187,6 +1248,18 @@ gn_prosperaplan@consorciomagalu.com.br`;
     const fileToSend = attachedFile;
     if (fileToSend) setAttachedFile(null);
 
+    // Barge-in: interrompe áudio em reprodução anterior
+    stopVoice();
+
+    // Fala de preenchimento aleatória se a resposta demorar mais de 1,2s
+    let fillerPlayed = false;
+    const fillerTimeout = setTimeout(() => {
+      if (audioEnabled) {
+        fillerPlayed = true;
+        speakFillerPhrase();
+      }
+    }, 1200);
+
     try {
       const aiResult = await aiService.askAssistant(
         textToRun,
@@ -1197,52 +1270,61 @@ gn_prosperaplan@consorciomagalu.com.br`;
         selectedCore
       );
 
+      clearTimeout(fillerTimeout);
+
       let responseText = aiResult?.answer;
       if (!responseText || responseText.trim() === "") {
         const isTarde = new Date().getHours() >= 12 && new Date().getHours() < 18;
         const saudacao = isTarde ? "Boa tarde" : new Date().getHours() < 12 ? "Bom dia" : "Boa noite";
-        responseText = `Olá, Fabrício! ${saudacao}! Estou à sua total disposição. Como prefere avançar na gestão dos clientes e na prospecção hoje?`;
+        responseText = `[emoção:alegre] Olá, Fabrício! ${saudacao}! [pausa] Estou à sua total disposição. Como prefere avançar na gestão dos clientes e na prospecção hoje?`;
       }
 
-      setChatHistory([...currentHistory, { role: "assistant", text: responseText }]);
+      // Remove tags emocionais para feed, histórico e logs
+      const cleanReplyForFeed = stripEmotionTags(responseText);
+
+      setChatHistory([...currentHistory, { role: "assistant", text: cleanReplyForFeed }]);
       setLogs((prev) => [
         {
           id: (Date.now() + 1).toString(),
           time: timeStr,
           tag: fileToSend ? `JARVIS AI // ${fileToSend.name.toUpperCase()}` : "JARVIS AI",
-          text: responseText,
+          text: cleanReplyForFeed,
           color: "text-cyan-400 font-semibold",
           aiCoreName: selectedCore.name,
           imageUrl: fileToSend?.isImage ? fileToSend.dataUrl : undefined,
         },
         ...prev,
       ]);
-      setLastJarvisReply(responseText);
+      setLastJarvisReply(cleanReplyForFeed);
       speakResponse(responseText);
     } catch (e: any) {
-      const fallbackMsg = `Olá, Fabrício! Tive uma oscilação na resposta externa, mas meus subagentes locais estão ativos. Pode solicitar prospecções, simulações ou consultas do funil que executo imediatamente!`;
+      clearTimeout(fillerTimeout);
+      const fallbackMsg = `[emoção:empático] Olá, Fabrício! Tive uma oscilação na resposta externa, [pausa] mas meus subagentes locais estão ativos. Pode solicitar prospecções, simulações ou consultas do funil que executo imediatamente!`;
+      const cleanFallback = stripEmotionTags(fallbackMsg);
       setLogs((prev) => [
-        { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: fallbackMsg, color: "text-amber-400 font-semibold" },
+        { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: cleanFallback, color: "text-amber-400 font-semibold" },
         ...prev,
       ]);
-      setLastJarvisReply(fallbackMsg);
+      setLastJarvisReply(cleanFallback);
       speakResponse(fallbackMsg);
       setOrbState("idle");
     } finally {
+      clearTimeout(fillerTimeout);
       setIsProcessing(false);
     }
   };
 
   const handleMorningBriefing = () => {
-    const briefingText = `Bom dia, Fabrício! Jarvis OS online. Órbita quântica expandida. Portal Consórcio Magalu autenticado e o motor de prospecção para WhatsApp e E-mail da Prospera estão prontos para gerar novos negócios hoje!`;
+    const briefingText = `[emoção:empolgado] Bom dia, Fabrício! [pausa] Jarvis OS online. Órbita quântica expandida. [respira] Portal Consórcio Magalu autenticado e o motor de prospecção para WhatsApp e E-mail da Prospera estão prontos para gerar novos negócios hoje!`;
+    const cleanBriefing = stripEmotionTags(briefingText);
     const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
     setLogs((prev) => [
-      { id: Date.now().toString(), time: timeStr, tag: "BRIEFING DIÁRIO", text: briefingText, color: "text-emerald-400 font-bold" },
+      { id: Date.now().toString(), time: timeStr, tag: "BRIEFING DIÁRIO", text: cleanBriefing, color: "text-emerald-400 font-bold" },
       ...prev,
     ]);
 
-    setLastJarvisReply(briefingText);
+    setLastJarvisReply(cleanBriefing);
     speakResponse(briefingText);
   };
 
@@ -1250,6 +1332,8 @@ gn_prosperaplan@consorciomagalu.com.br`;
     if (orbState === "listening") {
       setOrbState("idle");
     } else {
+      // Barge-in: se o Jarvis estiver falando ao clicar no mic, interrompe o áudio imediatamente
+      stopVoice();
       setOrbState("listening");
       if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -1484,6 +1568,62 @@ gn_prosperaplan@consorciomagalu.com.br`;
                 </div>
               </div>
 
+              {/* MINI VISUALIZADOR DE ÁUDIO & TELEMETRIA DO SISTEMA */}
+              <div className="bg-slate-950/90 p-2.5 rounded-xl border border-cyan-900/40 space-y-2 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Activity className="h-3 w-3 text-cyan-400 animate-pulse" /> Telemetria & Fluxo de Áudio
+                  </span>
+                  <span className="text-[9px] font-mono text-slate-400">48kHz • Neural</span>
+                </div>
+
+                {/* Equalizador Dinâmico com 12 bandas */}
+                <div className="flex items-end justify-between gap-1 h-8 px-1 py-1 rounded bg-slate-900/80 border border-slate-800/80">
+                  {[0.4, 0.7, 0.9, 0.5, 0.8, 1.0, 0.6, 0.85, 0.45, 0.75, 0.95, 0.6].map((baseHeight, idx) => {
+                    const isLive = orbState === "speaking" || orbState === "listening";
+                    const heightPercent = isLive
+                      ? Math.min(100, Math.max(15, baseHeight * 100 * (0.35 + (audioAmplitude || 0.4) * 0.75)))
+                      : orbState === "thinking"
+                      ? Math.min(100, Math.max(15, 30 + Math.sin(idx + Date.now() / 200) * 20))
+                      : 16;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex-1 rounded-sm transition-all duration-150 ${
+                          orbState === "speaking"
+                            ? "bg-gradient-to-t from-cyan-600 to-cyan-300 shadow-[0_0_6px_rgba(6,182,212,0.8)]"
+                            : orbState === "listening"
+                            ? "bg-gradient-to-t from-emerald-600 to-emerald-300 shadow-[0_0_6px_rgba(16,185,129,0.8)]"
+                            : orbState === "thinking"
+                            ? "bg-gradient-to-t from-purple-600 to-purple-300"
+                            : "bg-slate-800"
+                        }`}
+                        style={{ height: `${heightPercent}%` }}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Status do Sistema (Latência, Provedor Ativo e Fila) */}
+                <div className="grid grid-cols-3 gap-1 pt-1.5 border-t border-slate-900 text-[9.5px] font-mono">
+                  <div className="flex flex-col">
+                    <span className="text-slate-500 text-[8px] uppercase">Latência</span>
+                    <span className="text-cyan-300 font-bold">{selectedCore.speed.split(" ")[0]}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-slate-500 text-[8px] uppercase">Motor Ativo</span>
+                    <span className="text-emerald-300 font-bold truncate">{selectedCore.name.split(" ")[0]}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-slate-500 text-[8px] uppercase">Fila</span>
+                    <span className={isProcessing ? "text-amber-400 font-bold animate-pulse" : "text-slate-400 font-bold"}>
+                      {isProcessing ? "1 Ativa" : "0 Ocioso"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div className="mt-auto pt-2 border-t border-slate-800/80 space-y-1.5 flex-shrink-0">
                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Ações Rápidas</span>
                 <div className="grid grid-cols-2 gap-2">
@@ -1657,30 +1797,34 @@ gn_prosperaplan@consorciomagalu.com.br`;
                   <button
                     type="button"
                     onClick={() => handleSendCommand("Jarvis, quais são as principais notícias do dia, política e preços dos jornais hoje?")}
-                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[9px] font-bold text-slate-300 text-left transition-all cursor-pointer"
+                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[11px] font-bold text-slate-300 text-left transition-all cursor-pointer leading-tight flex items-center gap-1.5"
                   >
-                    📰 Notícias do Dia
+                    <span>📰</span>
+                    <span className="line-clamp-2">Notícias do Dia</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSendCommand("Jarvis, como estão os preços, inflação, gasolina, dólar e Selic hoje?")}
-                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[9px] font-bold text-slate-300 text-left transition-all cursor-pointer"
+                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[11px] font-bold text-slate-300 text-left transition-all cursor-pointer leading-tight flex items-center gap-1.5"
                   >
-                    📈 Preços & Selic
+                    <span>📈</span>
+                    <span className="line-clamp-2">Preços & Selic</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSendCommand("Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM.")}
-                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[9px] font-bold text-slate-300 text-left transition-all cursor-pointer"
+                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[11px] font-bold text-slate-300 text-left transition-all cursor-pointer leading-tight flex items-center gap-1.5"
                   >
-                    📊 Analisar Funil
+                    <span>📊</span>
+                    <span className="line-clamp-2">Analisar Funil</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSendCommand("Qual é a situação oficial de vendas realizadas e metas do Gestor e da Loja Paranaguá?")}
-                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[9px] font-bold text-slate-300 text-left transition-all cursor-pointer"
+                    className="p-2 bg-slate-950 hover:bg-cyan-950/80 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-[11px] font-bold text-slate-300 text-left transition-all cursor-pointer leading-tight flex items-center gap-1.5"
                   >
-                    🎯 Metas Paranaguá
+                    <span>🎯</span>
+                    <span className="line-clamp-2">Metas Paranaguá</span>
                   </button>
                 </div>
               </div>
@@ -1691,20 +1835,59 @@ gn_prosperaplan@consorciomagalu.com.br`;
         {/* ======================================================== */}
         {/* COLUNA CENTRAL: DEDICADA EXCLUSIVAMENTE AO JARVIS */}
         {/* ======================================================== */}
-        <div className={`col-span-12 lg:col-span-6 h-full max-h-full bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-2.5 sm:p-3 flex-col justify-between overflow-hidden relative backdrop-blur-md shadow-[0_0_30px_rgba(6,182,212,0.1)] ${
+        <div className={`col-span-12 lg:col-span-6 h-full max-h-full bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between overflow-hidden relative backdrop-blur-md shadow-[0_0_30px_rgba(6,182,212,0.1)] ${
           mobileActiveTab === "chat" ? "flex" : "hidden lg:flex"
         }`}>
-          <div className="flex-shrink-0 text-center space-y-0.5">
-            <span className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center justify-center gap-2 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">
-              <Zap className="h-4 w-4 fill-cyan-400 text-cyan-400 animate-bounce" /> ÓRBITA QUÂNTICA EXPANDIDA // JARVIS AI
-            </span>
-            <p className="text-[10px] text-slate-400 font-mono">Consciência Executiva e Sintetizador Quântico</p>
+          {/* Header Superior da Consciência & Controles de Voz */}
+          <div className="flex-shrink-0 flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+            <div className="text-left space-y-0.5">
+              <span className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)] font-mono">
+                <Zap className="h-4 w-4 fill-cyan-400 text-cyan-400 animate-bounce" /> J.A.R.V.I.S OS // QUANTUM SPHERE HUD
+              </span>
+              <p className="text-[11px] text-slate-400 font-mono">Consciência Executiva & Esfera Quântica de Partículas</p>
+            </div>
+
+            {/* Controles de Expressividade da Voz (Desktop) */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-800">
+              <span className="text-[10px] text-slate-400 font-mono font-bold flex items-center gap-1">
+                <Sliders className="h-3 w-3 text-cyan-400" /> Expressividade:
+              </span>
+              <div className="flex items-center gap-0.5 text-[9.5px] font-mono">
+                {(["baixa", "media", "alta"] as const).map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => setVoiceExpressiveness(level)}
+                    className={`px-1.5 py-0.5 rounded transition-all capitalize cursor-pointer ${
+                      voiceExpressiveness === level
+                        ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
+                        : "text-slate-500 hover:text-slate-300"
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsExpressiveVoiceActive(!isExpressiveVoiceActive)}
+                className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border transition-all cursor-pointer ${
+                  isExpressiveVoiceActive
+                    ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
+                    : "bg-slate-900 text-slate-500 border-slate-800"
+                }`}
+                title="Ativar/Desativar inflexão emocional na síntese vocal"
+              >
+                {isExpressiveVoiceActive ? "Emoção ON" : "Emoção OFF"}
+              </button>
+            </div>
           </div>
 
-          {/* ÁREA CENTRAL ROLÁVEL // ORB NO DESKTOP, ÁUDIO COMPACTO NO MOBILE */}
-          <div className="flex-1 min-h-0 flex flex-col items-center justify-center overflow-y-auto custom-scrollbar py-1 w-full gap-1.5">
-            {/* O JARVIS ORB - EXCLUSIVO PARA DESKTOP (No celular/iPad fica oculto por solicitação do usuário) */}
-            <div className="hidden lg:flex w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] md:w-[180px] md:h-[180px] lg:w-[200px] lg:h-[200px] flex-shrink-0 items-center justify-center relative transition-all duration-700 hover:scale-105">
+          {/* ÁREA CENTRAL // PROTAGONISTA: ORB QUÂNTICO (55-60% DA ALTURA) */}
+          <div className="flex-1 min-h-0 flex flex-col items-center justify-center overflow-y-auto custom-scrollbar py-1 w-full gap-2">
+            {/* O JARVIS ORB - EXCLUSIVO PARA DESKTOP (Ocupa 58% da coluna com presença e profundidade) */}
+            <div className="hidden lg:flex w-full h-[58%] min-h-[300px] max-h-[440px] flex-shrink-0 items-center justify-center relative transition-all duration-500">
               <JarvisOrb
                 state={orbState}
                 theme={
@@ -1714,12 +1897,16 @@ gn_prosperaplan@consorciomagalu.com.br`;
                     ? "emerald"
                     : "cobalt"
                 }
+                emotion={currentOrbEmotion}
+                audioBass={audioBass}
+                audioTreble={audioTreble}
+                audioAmplitude={audioAmplitude}
                 statusText={selectedCore.name}
                 subStatusText={`${selectedCore.provider} • ${selectedCore.speed}`}
               />
             </div>
 
-            {/* BARRA DE ÁUDIO & STATUS EXCLUSIVA MOBILE (Leve, sem o Three.js Orb pesado) */}
+            {/* BARRA DE ÁUDIO & STATUS EXCLUSIVA MOBILE */}
             <div className="flex lg:hidden w-full items-center justify-between p-2 rounded-xl bg-cyan-950/60 border border-cyan-500/40 flex-shrink-0 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
               <div className="flex items-center gap-2">
                 <button
@@ -1779,19 +1966,36 @@ gn_prosperaplan@consorciomagalu.com.br`;
               </div>
             )}
 
-            {/* Caixa de Diálogo / Resposta Holográfica do Jarvis */}
+            {/* Caixa de Diálogo / Resposta Holográfica do Jarvis (Abaixo do Orb, sem cobri-lo) */}
             {lastJarvisReply && !isProcessing && (
-              <div className="w-full max-w-xl mx-auto my-1 p-2.5 rounded-xl bg-cyan-950/50 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-1 max-h-56 sm:max-h-64 lg:max-h-28 overflow-y-auto custom-scrollbar flex-shrink-0 animate-in fade-in">
-                <div className="flex items-center justify-between text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
+              <div className="w-full max-w-xl mx-auto my-1 p-3 rounded-xl bg-slate-950/85 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-1 max-h-32 sm:max-h-36 overflow-y-auto custom-scrollbar flex-shrink-0 animate-in fade-in">
+                <div className="flex items-center justify-between text-[11px] text-cyan-400 font-bold uppercase tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    <Sparkles className="h-3 w-3 text-cyan-400 animate-pulse" /> Jarvis AI // Resposta Recente
+                    <Sparkles className="h-3.5 w-3.5 text-cyan-400 animate-pulse" /> Jarvis AI // Resposta Recente
                   </span>
-                  <span className={`text-[8.5px] px-2 py-0.5 rounded font-mono font-bold ${selectedCore.badgeBg} ${selectedCore.borderColor} ${selectedCore.color} border`}>
-                    {selectedCore.name}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {orbState === "speaking" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          stopVoice();
+                          setOrbState("idle");
+                          setCurrentOrbEmotion("neutro");
+                        }}
+                        className="text-[9px] text-emerald-300 hover:text-red-400 bg-emerald-950/80 hover:bg-red-950/80 border border-emerald-500/40 hover:border-red-500/40 px-2 py-0.5 rounded font-mono flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                        title="Interromper fala imediatamente (Barge-in)"
+                      >
+                        <Volume2 className="h-3 w-3 animate-bounce text-emerald-400" />
+                        <span>Falando • Parar [Esc]</span>
+                      </button>
+                    )}
+                    <span className={`text-[8.5px] px-2 py-0.5 rounded font-mono font-bold ${selectedCore.badgeBg} ${selectedCore.borderColor} ${selectedCore.color} border`}>
+                      {selectedCore.name}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-200 leading-relaxed font-sans">
-                  {lastJarvisReply}
+                <p className="text-[12px] text-slate-200 leading-relaxed font-sans">
+                  {lastJarvisReply.replace(/\[(?:pausa|pausa longa|respira|emoção:[^\]]+)\]/gi, "").trim()}
                 </p>
               </div>
             )}
@@ -1799,50 +2003,52 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
           {/* CONSOLE DE COMANDO PERMANENTEMENTE FIXADO NO RODAPÉ */}
           <div className="flex-shrink-0 w-full space-y-1.5 mt-auto pt-1 z-20">
-            {/* Chips de Atalhos Rápidos */}
-            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-[10px]">
-              <button
-                type="button"
-                onClick={() => handleSendCommand("Enviar um orçamento para a cliente Maria no WhatsApp e E-mail de 150 mil imóvel")}
-                className="px-2.5 py-1 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <SendHorizontal className="h-3 w-3 text-emerald-400" /> Orçamento WhatsApp
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSendCommand("Jarvis, prospectar 15 transportadoras em Paranaguá via Google Maps com meia parcela para caminhões pesados.")}
-                className="px-2.5 py-1 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <Zap className="h-3 w-3 text-cyan-400" /> 15 Maps PJ
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsHarveyModalOpen(true)}
-                className="px-2.5 py-1 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <Bot className="h-3 w-3 text-emerald-400" /> Harvey SDR (5 Subagentes)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSendCommand("Baixar a segunda via do boleto do cliente Fabricio Rodrigues Honório do portal consorcio magalu")}
-                className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <FileText className="h-3 w-3 text-emerald-400" /> 2ª Via Magalu
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSendCommand("Crie uma imagem de um imóvel de alto padrão de 500 mil com arquitetura contemporânea")}
-                className="px-2.5 py-1 rounded-lg bg-pink-950/70 hover:bg-pink-900 border border-pink-500/30 text-pink-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <Palette className="h-3 w-3 text-pink-400" /> Imóvel 500k FLUX
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSendCommand("Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM.")}
-                className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <TrendingUp className="h-3 w-3 text-indigo-400" /> Analisar Funil
-              </button>
+            {/* Chips de Atalhos Rápidos com Scroll Suave e Fade Lateral */}
+            <div className="relative w-full overflow-hidden">
+              <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-[10.5px] pr-8">
+                <button
+                  type="button"
+                  onClick={() => handleSendCommand("Enviar um orçamento para a cliente Maria no WhatsApp e E-mail de 150 mil imóvel")}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <SendHorizontal className="h-3 w-3 text-emerald-400" /> Orçamento WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendCommand("Jarvis, prospectar 15 transportadoras em Paranaguá via Google Maps com meia parcela para caminhões pesados.")}
+                  className="px-2.5 py-1 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <Zap className="h-3 w-3 text-cyan-400" /> 15 Maps PJ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsHarveyModalOpen(true)}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <Bot className="h-3 w-3 text-emerald-400" /> Harvey SDR (5 Subagentes)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendCommand("Baixar a segunda via do boleto do cliente Fabricio Rodrigues Honório do portal consorcio magalu")}
+                  className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <FileText className="h-3 w-3 text-emerald-400" /> 2ª Via Magalu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendCommand("Crie uma imagem de um imóvel de alto padrão de 500 mil com arquitetura contemporânea")}
+                  className="px-2.5 py-1 rounded-lg bg-pink-950/70 hover:bg-pink-900 border border-pink-500/30 text-pink-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <Palette className="h-3 w-3 text-pink-400" /> Imóvel 500k FLUX
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendCommand("Faça uma análise executiva completa do meu funil de clientes e oportunidades no CRM.")}
+                  className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <TrendingUp className="h-3 w-3 text-indigo-400" /> Analisar Funil
+                </button>
+              </div>
             </div>
 
             {/* Console de Escrita Amplo, Ergonômico e Tecnológico */}

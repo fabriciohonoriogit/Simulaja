@@ -1,83 +1,149 @@
-// Helper de voz humana ultra-natural (Neural/Natural) com modulação prosódica e respiração fluida para o Jarvis
+// Motor de Síntese Vocal Humana com Emoção, Prosódia Adaptativa e Áudio Segmentado
+// J.A.R.V.I.S OS // Neural Audio Pipeline
 
-let availableVoices: SpeechSynthesisVoice[] = [];
+export type VoiceEmotion =
+  | "neutro"
+  | "alegre"
+  | "empolgado"
+  | "calmo"
+  | "sério"
+  | "empático"
+  | "curioso"
+  | "surpreso";
 
-export function initVoices(onLoaded?: (voices: SpeechSynthesisVoice[]) => void) {
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
+export type ExpressivenessLevel = "baixa" | "media" | "alta";
 
-  const load = () => {
-    availableVoices = window.speechSynthesis.getVoices();
-    if (onLoaded) onLoaded(availableVoices);
-  };
-
-  load();
-  if (window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = load;
-  }
+export interface SpeechSegment {
+  id: string;
+  text: string;
+  rawText: string;
+  emotion: VoiceEmotion;
+  pauseAfterMs: number;
 }
 
-export function getBestPtBrVoice(): SpeechSynthesisVoice | null {
-  if (typeof window === "undefined" || !window.speechSynthesis) return null;
-  
-  if (availableVoices.length === 0) {
-    availableVoices = window.speechSynthesis.getVoices();
-  }
-
-  const ptVoices = availableVoices.filter((v) =>
-    v.lang.toLowerCase().replace("_", "-").startsWith("pt")
-  );
-
-  if (ptVoices.length === 0) return null;
-
-  // Prioridade para vozes com tecnologia Natural/Neural (Microsoft e Google)
-  // Tom barítono humano, seguro, caloroso, enérgico e envolvente
-  const priorityVoices = [
-    "antonio",                  // Microsoft Antonio Online (Natural) - PT-BR (Barítono Executivo Perfeito)
-    "fabio",                    // Microsoft Fabio Online (Natural) - PT-BR (Dinâmico e Confiante)
-    "thomaz",                   // Microsoft Thomaz Online (Natural) - PT-BR (Aveludado e Suave)
-    "google português do brasil", // Google PT-BR (Natural Chrome)
-    "francisca",                // Microsoft Francisca Online (Natural)
-    "daniel",                   // Voz Daniel (Windows SAPI)
-    "ricardo",
-    "thalita",
-    "giovanna",
-    "luciana",
-  ];
-
-  for (const keyword of priorityVoices) {
-    const found = ptVoices.find((v) => v.name.toLowerCase().includes(keyword));
-    if (found) return found;
-  }
-
-  return ptVoices[0] || null;
+export interface VoicePlaybackCallbacks {
+  onStart?: () => void;
+  onEnd?: () => void;
+  onSegmentStart?: (segment: SpeechSegment, index: number, total: number) => void;
+  onEmotionChange?: (emotion: VoiceEmotion) => void;
+  onError?: (err: any) => void;
 }
 
-export function getBestFemaleVoice(): SpeechSynthesisVoice | null {
-  return getBestPtBrVoice();
+// Prosódia padrão do Edge TTS por emoção
+export const EMOTION_PROSODY: Record<
+  VoiceEmotion,
+  { rateDelta: number; pitchHz: number; volumePct: number }
+> = {
+  neutro: { rateDelta: 15, pitchHz: 0, volumePct: 10 },
+  alegre: { rateDelta: 20, pitchHz: 6, volumePct: 15 },
+  empolgado: { rateDelta: 25, pitchHz: 10, volumePct: 20 },
+  calmo: { rateDelta: 5, pitchHz: -4, volumePct: 0 },
+  sério: { rateDelta: 10, pitchHz: -6, volumePct: 10 },
+  empático: { rateDelta: 8, pitchHz: -2, volumePct: 5 },
+  curioso: { rateDelta: 18, pitchHz: 8, volumePct: 10 },
+  surpreso: { rateDelta: 22, pitchHz: 12, volumePct: 18 },
+};
+
+// Falas de preenchimento (filler phrases) sem repetição consecutiva
+export const FILLER_PHRASES = [
+  "Um instante, consultando os dados...",
+  "Processando com o motor neural...",
+  "Analisando os indicadores...",
+  "Um momento, cruzando as informações...",
+  "Acessando o banco de dados...",
+];
+
+let lastFillerIndex = -1;
+
+export function getRandomFillerPhrase(): string {
+  let index = Math.floor(Math.random() * FILLER_PHRASES.length);
+  if (index === lastFillerIndex) {
+    index = (index + 1) % FILLER_PHRASES.length;
+  }
+  lastFillerIndex = index;
+  return FILLER_PHRASES[index];
+}
+
+// Cache em memória para AudioBuffers de frases curtas e preenchimento
+const audioBufferCache = new Map<string, AudioBuffer>();
+
+// Singleton de Web Audio Context e AnalyserNode
+let audioCtx: AudioContext | null = null;
+let globalAnalyser: AnalyserNode | null = null;
+let currentSourceNode: AudioBufferSourceNode | null = null;
+let currentGainNode: GainNode | null = null;
+
+// Controle de sessão e barge-in
+let activePlaybackSessionId = 0;
+let isPlaybackRunning = false;
+
+// Fallback simulated audio envelope animation
+let simulatedEnvelopeAnim: number | null = null;
+let simulatedFrequencyListener: ((bass: number, treble: number, amp: number) => void) | null = null;
+
+export function registerSimulatedAudioListener(
+  listener: ((bass: number, treble: number, amp: number) => void) | null
+) {
+  simulatedFrequencyListener = listener;
+}
+
+export function getAudioContext(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  if (!audioCtx) {
+    const AudioContextClass =
+      window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+export function getGlobalAnalyser(): AnalyserNode | null {
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+  if (!globalAnalyser) {
+    globalAnalyser = ctx.createAnalyser();
+    globalAnalyser.fftSize = 128;
+    globalAnalyser.smoothingTimeConstant = 0.8;
+    globalAnalyser.connect(ctx.destination);
+  }
+  return globalAnalyser;
+}
+
+// Limpa todas as tags de fala para exibição no front-end, cópia ou WhatsApp
+export function stripEmotionTags(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/\[(?:pausa|pausa longa|respira|emoção:[^\]]+)\]/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
- * Normaliza o texto para que a pronúncia soe 100% como uma pessoa conversando ao vivo
- * Eliminando jargões truncados, siglas estranhas e pausas artificiais.
+ * Normaliza o texto para pronúncia conversacional brasileira perfeita
  */
 export function normalizeTextForSpeech(text: string): string {
   if (!text) return "";
 
-  let cleaned = text
+  let cleaned = stripEmotionTags(text)
     // Remove blocos de código e markdown
     .replace(/```json[\s\S]*?```/g, "")
     .replace(/```[\s\S]*?```/g, "")
     .replace(/\{[\s\S]*?\}/g, "")
     .replace(/[*_#`~{}]/g, "")
     .replace(/https?:\/\/\S+/g, "")
-    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F300}-\u{1F5FF}]/gu, "")
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}]/gu, "")
     .replace(/🚀|✨|🏆|💡|📊|🤖|✴|●|🟢|⚠️|📌|🏛️|📈|📰|🎯|[\u2000-\u3300]/g, "")
     .replace(/API key|INVALID_ARGUMENT|Indisponibilidade|Erro interno|status 500/gi, "")
-    // Remove marcadores de lista que causam pausas secas
+    // Remove marcadores de lista
     .replace(/^[•\-\*]\s+/gm, "")
     .replace(/\n[•\-\*]\s+/g, ", ")
-    .replace(/["“”«»]/g, "") // aspas causam pausas duras
-    .replace(/\s*:\s*/g, ", "); // dois pontos substituídos por vírgula para fluidez
+    .replace(/["“”«»]/g, "")
+    .replace(/\s*:\s*/g, ", ");
 
   // Conversão de números e unidades para fala espontânea
   cleaned = cleaned
@@ -111,181 +177,559 @@ export function normalizeTextForSpeech(text: string): string {
     .replace(/\bCNPJ\b/gi, "C-N-P-J")
     .replace(/\bQSA\b/gi, "quadro societário");
 
-  // Limpa espaços duplicados
   return cleaned.replace(/\s+/g, " ").trim();
 }
 
 /**
- * Sintetizador Jarvis com respiração fluida e cadência contínua
- * Sem cortes secos entre frases, mantendo a melodia vocal humana.
+ * Heurística local para detecção de emoção quando o LLM não enviar tags
  */
-let currentAudioPlayer: HTMLAudioElement | null = null;
+export function inferEmotionFromText(text: string): VoiceEmotion {
+  const lower = text.toLowerCase();
 
-/**
- * Sintetizador Jarvis com áudio Neural HD (Edge-TTS) e Fallback Instantâneo
- * Proporciona voz humana de cinema com timbre barítono natural, respiração e modulação.
- */
-export function speakJarvisText(
-  text: string,
-  onStart?: () => void,
-  onEnd?: () => void,
-  customVoice?: SpeechSynthesisVoice | null
-) {
-  const cleanText = normalizeTextForSpeech(text);
-
-  if (!cleanText || cleanText.length < 2) {
-    if (onEnd) onEnd();
-    return;
+  if (lower.includes("desculp") || lower.includes("sinto muito") || lower.includes("compreendo") || lower.includes("entendo você") || lower.includes("infelizmente")) {
+    return "empático";
   }
-
-  // Interrompe reproduções anteriores
-  stopVoice();
-
-  // Tentativa 1: Motor Neural HD via Servidor Local (/api/tts - Microsoft Antonio Neural com Modulação Dinâmica)
-  // Se o servidor local estiver ativo, reproduz com velocidade executiva (+18%) e tom dinâmico (+4Hz)
-  const tryNeuralTTS = async () => {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
-
-      const url = `http://localhost:3000/api/tts?voice=pt-BR-AntonioNeural&rate=%2B18%25&pitch=%2B4Hz&volume=%2B15%25&text=${encodeURIComponent(cleanText.slice(0, 1000))}`;
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (!res.ok) throw new Error("TTS endpoint não retornou 200");
-
-      const blob = await res.blob();
-      const audioUrl = URL.createObjectURL(blob);
-      const audio = new Audio(audioUrl);
-      currentAudioPlayer = audio;
-
-      audio.onplay = () => {
-        if (onStart) onStart();
-      };
-
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        currentAudioPlayer = null;
-        if (onEnd) onEnd();
-      };
-
-      audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        currentAudioPlayer = null;
-        speakJarvisLocalSpeech(cleanText, onStart, onEnd, customVoice);
-      };
-
-      await audio.play();
-      return true;
-    } catch (e) {
-      // Se der timeout ou o servidor local não estiver rodando, faz fallback instantâneo
-      speakJarvisLocalSpeech(cleanText, onStart, onEnd, customVoice);
-      return false;
-    }
-  };
-
-  tryNeuralTTS();
+  if (lower.includes("atenção") || lower.includes("urgente") || lower.includes("alerta") || lower.includes("crítico") || lower.includes("cuidado")) {
+    return "sério";
+  }
+  if (text.includes("?")) {
+    return "curioso";
+  }
+  if (text.includes("!") || lower.includes("excelente") || lower.includes("ótimo") || lower.includes("fantástico") || lower.includes("sensacional")) {
+    return "empolgado";
+  }
+  if (lower.includes("calma") || lower.includes("tranquil") || lower.includes("sem pressa")) {
+    return "calmo";
+  }
+  return "neutro";
 }
 
 /**
- * Fallback local nativo de síntese vocal para garantir que nunca fique mudo
+ * Parser de texto em segmentos de fala com emoção, pausas orgânicas e prosódia
  */
-export function speakJarvisLocalSpeech(
-  cleanText: string,
-  onStart?: () => void,
-  onEnd?: () => void,
-  customVoice?: SpeechSynthesisVoice | null
-) {
-  if (typeof window === "undefined" || !window.speechSynthesis) {
-    if (onEnd) onEnd();
-    return;
+export function parseSpeechSegments(
+  rawText: string,
+  expressiveness: ExpressivenessLevel = "alta",
+  isExpressiveActive: boolean = true
+): SpeechSegment[] {
+  if (!rawText || !rawText.trim()) return [];
+
+  const segments: SpeechSegment[] = [];
+
+  // Divide o texto respeitando tags [pausa], [respira], [emoção:...] e pontuação
+  // Regex que captura tags ou trechos de frases terminados em pontuação ou quebras
+  const regex = /\[(pausa|pausa longa|respira|emoção:[^\]]+)\]|([^\[]+)/gi;
+  let match: RegExpExecArray | null;
+
+  let currentEmotion: VoiceEmotion = "neutro";
+  let pendingPause = 0;
+  let buffer = "";
+
+  const flushBuffer = (pauseAfter: number) => {
+    const trimmed = buffer.trim();
+    if (!trimmed) return;
+
+    const normalizedText = normalizeTextForSpeech(trimmed);
+    if (normalizedText.length >= 2) {
+      // Se expressividade estiver desligada, força neutro
+      const finalEmotion = isExpressiveActive
+        ? currentEmotion || inferEmotionFromText(trimmed)
+        : "neutro";
+
+      // Variação humana leve de ±15% na pausa
+      const jitter = 0.85 + Math.random() * 0.3;
+      const finalPause = Math.round((pauseAfter || 350) * jitter);
+
+      segments.push({
+        id: `seg_${Date.now()}_${segments.length}`,
+        text: normalizedText,
+        rawText: trimmed,
+        emotion: finalEmotion,
+        pauseAfterMs: finalPause,
+      });
+    }
+    buffer = "";
+  };
+
+  while ((match = regex.exec(rawText)) !== null) {
+    const tag = match[1];
+    const textChunk = match[2];
+
+    if (tag) {
+      const lowerTag = tag.toLowerCase();
+      if (lowerTag === "pausa") {
+        pendingPause += 220;
+      } else if (lowerTag === "pausa longa") {
+        pendingPause += 600;
+      } else if (lowerTag === "respira") {
+        pendingPause += 320;
+      } else if (lowerTag.startsWith("emoção:")) {
+        const emoName = lowerTag.replace("emoção:", "").trim();
+        const validEmotions: VoiceEmotion[] = [
+          "neutro",
+          "alegre",
+          "empolgado",
+          "calmo",
+          "sério",
+          "empático",
+          "curioso",
+          "surpreso",
+        ];
+        const normalizedEmo = validEmotions.find(
+          (e) => e.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === emoName.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        );
+        if (normalizedEmo) {
+          currentEmotion = normalizedEmo;
+        }
+      }
+    } else if (textChunk) {
+      // Divide o bloco em sentenças baseadas em pontuação
+      const sentences = textChunk.split(/([.!?;]+|\n+)/g);
+      for (let i = 0; i < sentences.length; i += 2) {
+        const s = sentences[i];
+        const punc = sentences[i + 1] || "";
+
+        if (s && s.trim()) {
+          buffer += (buffer ? " " : "") + s;
+        }
+
+        if (punc) {
+          let basePause = 350;
+          if (punc.includes("...")) {
+            basePause = 600;
+          } else if (punc.includes("?") || punc.includes("!")) {
+            basePause = 400;
+          } else if (punc.includes("\n")) {
+            basePause = 700;
+          } else if (punc.includes(",")) {
+            basePause = 180;
+          } else if (punc.includes(";")) {
+            basePause = 280;
+          }
+
+          const totalPause = (pendingPause > 0 ? pendingPause : basePause);
+          pendingPause = 0;
+          flushBuffer(totalPause);
+        }
+      }
+    }
   }
+
+  // Descarrega o que sobrou
+  if (buffer.trim()) {
+    flushBuffer(pendingPause || 350);
+  }
+
+  return segments;
+}
+
+/**
+ * Calcula a prosódia para o Edge TTS com modulação de expressividade e variação humana
+ */
+export function computeProsody(
+  emotion: VoiceEmotion,
+  expressiveness: ExpressivenessLevel = "alta"
+): { rate: string; pitch: string; volume: string } {
+  const base = EMOTION_PROSODY[emotion] || EMOTION_PROSODY.neutro;
+
+  // Fator de escala da expressividade
+  const scale = expressiveness === "baixa" ? 0.35 : expressiveness === "media" ? 0.65 : 1.0;
+
+  // Micro-variação orgânica entre frases (±2% rate, ±1Hz pitch)
+  const rateJitter = (Math.random() * 4 - 2) * scale;
+  const pitchJitter = (Math.random() * 2 - 1) * scale;
+
+  const finalRateDelta = Math.round(base.rateDelta * scale + rateJitter);
+  const finalPitchHz = Math.round(base.pitchHz * scale + pitchJitter);
+  const finalVolumePct = Math.round(base.volumePct * scale);
+
+  const rateStr = finalRateDelta >= 0 ? `+${finalRateDelta}%` : `${finalRateDelta}%`;
+  const pitchStr = finalPitchHz >= 0 ? `+${finalPitchHz}Hz` : `${finalPitchHz}Hz`;
+  const volumeStr = finalVolumePct >= 0 ? `+${finalVolumePct}%` : `${finalVolumePct}%`;
+
+  return { rate: rateStr, pitch: pitchStr, volume: volumeStr };
+}
+
+/**
+ * Busca e decodifica o áudio de um segmento via Edge TTS no servidor local
+ */
+async function fetchAndDecodeSegmentAudio(
+  segment: SpeechSegment,
+  voice: string,
+  expressiveness: ExpressivenessLevel
+): Promise<AudioBuffer | null> {
+  const cacheKey = `${voice}_${segment.emotion}_${expressiveness}_${segment.text}`;
+  if (audioBufferCache.has(cacheKey)) {
+    return audioBufferCache.get(cacheKey)!;
+  }
+
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+
+  const prosody = computeProsody(segment.emotion, expressiveness);
+  const url = `http://localhost:3000/api/tts?voice=${encodeURIComponent(
+    voice
+  )}&rate=${encodeURIComponent(prosody.rate)}&pitch=${encodeURIComponent(
+    prosody.pitch
+  )}&volume=${encodeURIComponent(prosody.volume)}&emotion=${encodeURIComponent(
+    segment.emotion
+  )}&text=${encodeURIComponent(segment.text)}`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
 
   try {
-    window.speechSynthesis.cancel();
-  } catch (e) {}
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
 
-  const voice = customVoice || getBestPtBrVoice();
+    if (!res.ok) throw new Error(`Status ${res.status}`);
 
-  const chunks: string[] = [];
-  const words = cleanText.split(" ");
-  let currentChunk = "";
+    const arrayBuffer = await res.arrayBuffer();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
 
-  for (const word of words) {
-    if ((currentChunk + " " + word).length > 200 && /[.,;!?]$/.test(currentChunk)) {
-      chunks.push(currentChunk.trim());
-      currentChunk = word;
-    } else {
-      currentChunk += (currentChunk ? " " : "") + word;
+    // Salva no cache se for frase curta (< 80 caracteres)
+    if (segment.text.length < 80) {
+      audioBufferCache.set(cacheKey, audioBuffer);
     }
+
+    return audioBuffer;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    return null;
   }
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-
-  if (chunks.length === 0) {
-    if (onEnd) onEnd();
-    return;
-  }
-
-  let index = 0;
-
-  const playChunk = () => {
-    if (index >= chunks.length) {
-      if (onEnd) onEnd();
-      return;
-    }
-
-    const chunkText = chunks[index];
-    const utterance = new SpeechSynthesisUtterance(chunkText);
-    utterance.lang = "pt-BR";
-
-    if (voice) {
-      utterance.voice = voice;
-    }
-
-    // Taxa e tom ajustados para cadência ágil, confiante, expressiva e dinâmica (adeus lentidão e robotização!)
-    utterance.rate = 1.18;
-    utterance.pitch = 1.08;
-
-    if (index === 0 && onStart) {
-      utterance.onstart = () => onStart();
-    }
-
-    utterance.onend = () => {
-      index++;
-      playChunk();
-    };
-
-    utterance.onerror = () => {
-      index++;
-      playChunk();
-    };
-
-    try {
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      if (onEnd) onEnd();
-    }
-  };
-
-  playChunk();
 }
 
+/**
+ * Toca um AudioBuffer via AudioContext com crossfade e conexões de análise
+ */
+function playAudioBufferWithCrossfade(
+  buffer: AudioBuffer,
+  ctx: AudioContext,
+  analyser: AnalyserNode
+): Promise<void> {
+  return new Promise((resolve) => {
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    currentSourceNode = source;
+
+    const gain = ctx.createGain();
+    currentGainNode = gain;
+
+    // Crossfade suave de 20ms
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(1.0, now + 0.02);
+
+    const fadeOutStart = Math.max(now + 0.02, now + buffer.duration - 0.02);
+    gain.gain.setValueAtTime(1.0, fadeOutStart);
+    gain.gain.linearRampToValueAtTime(0.001, now + buffer.duration);
+
+    source.connect(gain);
+    gain.connect(analyser);
+
+    source.onended = () => {
+      try {
+        source.disconnect();
+        gain.disconnect();
+      } catch {}
+      if (currentSourceNode === source) {
+        currentSourceNode = null;
+        currentGainNode = null;
+      }
+      resolve();
+    };
+
+    source.start(now);
+  });
+}
+
+/**
+ * BARGE-IN: Interrompe imediatamente qualquer áudio em reprodução com fade-out
+ */
 export function stopVoice() {
-  if (currentAudioPlayer) {
+  activePlaybackSessionId++;
+  isPlaybackRunning = false;
+
+  // Fade-out imediato se houver nó tocando
+  if (currentGainNode && audioCtx) {
     try {
-      currentAudioPlayer.pause();
-      currentAudioPlayer.currentTime = 0;
-    } catch (e) {}
-    currentAudioPlayer = null;
+      const now = audioCtx.currentTime;
+      currentGainNode.gain.cancelScheduledValues(now);
+      currentGainNode.gain.setValueAtTime(currentGainNode.gain.value, now);
+      currentGainNode.gain.linearRampToValueAtTime(0.001, now + 0.04);
+    } catch {}
+  }
+
+  if (currentSourceNode) {
+    try {
+      setTimeout(() => {
+        try {
+          currentSourceNode?.stop();
+          currentSourceNode?.disconnect();
+        } catch {}
+        currentSourceNode = null;
+      }, 45);
+    } catch {}
+  }
+
+  if (simulatedEnvelopeAnim) {
+    cancelAnimationFrame(simulatedEnvelopeAnim);
+    simulatedEnvelopeAnim = null;
   }
 
   if (typeof window !== "undefined" && window.speechSynthesis) {
     try {
       window.speechSynthesis.cancel();
-    } catch (e) {}
+    } catch {}
   }
+}
+
+/**
+ * Simula um envelope de áudio orgânico caso o fallback Web Speech API seja usado
+ */
+function startSimulatedAudioEnvelope(onEndCheck: () => boolean) {
+  let phase = 0;
+  const loop = () => {
+    if (!onEndCheck() || !isPlaybackRunning) {
+      if (simulatedFrequencyListener) {
+        simulatedFrequencyListener(0, 0, 0);
+      }
+      return;
+    }
+
+    phase += 0.15;
+    const amp = 0.35 + Math.sin(phase) * 0.2 + (Math.random() * 0.15);
+    const bass = 0.3 + Math.cos(phase * 0.8) * 0.25;
+    const treble = 0.25 + Math.sin(phase * 1.4) * 0.2;
+
+    if (simulatedFrequencyListener) {
+      simulatedFrequencyListener(bass, treble, amp);
+    }
+
+    simulatedEnvelopeAnim = requestAnimationFrame(loop);
+  };
+
+  loop();
+}
+
+/**
+ * Fallback Web Speech API quando o servidor local de Edge TTS não estiver ativo
+ */
+function playWebSpeechFallback(
+  segments: SpeechSegment[],
+  callbacks?: VoicePlaybackCallbacks,
+  customVoice?: SpeechSynthesisVoice | null
+) {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    callbacks?.onEnd?.();
+    return;
+  }
+
+  stopVoice();
+  const sessionId = ++activePlaybackSessionId;
+  isPlaybackRunning = true;
+  callbacks?.onStart?.();
+
+  let index = 0;
+
+  const playNext = () => {
+    if (activePlaybackSessionId !== sessionId || index >= segments.length) {
+      isPlaybackRunning = false;
+      callbacks?.onEnd?.();
+      return;
+    }
+
+    const seg = segments[index];
+    callbacks?.onSegmentStart?.(seg, index, segments.length);
+    callbacks?.onEmotionChange?.(seg.emotion);
+
+    const utterance = new SpeechSynthesisUtterance(seg.text);
+    utterance.lang = "pt-BR";
+    const voice = customVoice || getBestPtBrVoice();
+    if (voice) utterance.voice = voice;
+
+    // Modulação de rate e pitch na Web Speech API
+    const prosody = computeProsody(seg.emotion);
+    const rateNum = 1.05 + (parseInt(prosody.rate) || 0) * 0.005;
+    const pitchNum = 1.0 + (parseInt(prosody.pitch) || 0) * 0.015;
+
+    utterance.rate = Math.max(0.8, Math.min(1.4, rateNum));
+    utterance.pitch = Math.max(0.8, Math.min(1.3, pitchNum));
+
+    let utteranceActive = true;
+    startSimulatedAudioEnvelope(() => utteranceActive);
+
+    utterance.onend = () => {
+      utteranceActive = false;
+      index++;
+      setTimeout(playNext, seg.pauseAfterMs);
+    };
+
+    utterance.onerror = () => {
+      utteranceActive = false;
+      index++;
+      playNext();
+    };
+
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      callbacks?.onEnd?.();
+    }
+  };
+
+  playNext();
+}
+
+/**
+ * Sintetizador Principal com Pipeline Segmentado, Pré-busca e Web Audio API
+ */
+export async function speakJarvisText(
+  rawText: string,
+  callbacks?: VoicePlaybackCallbacks | (() => void),
+  onEndLegacy?: () => void,
+  options?: {
+    expressiveness?: ExpressivenessLevel;
+    isExpressiveActive?: boolean;
+    customVoice?: SpeechSynthesisVoice | null;
+  }
+) {
+  // Compatibilidade com callbacks legado: (text, onStart, onEnd)
+  const cb: VoicePlaybackCallbacks =
+    typeof callbacks === "function"
+      ? { onStart: callbacks, onEnd: onEndLegacy }
+      : callbacks || {};
+
+  const expressiveness = options?.expressiveness || "alta";
+  const isExpressiveActive = options?.isExpressiveActive ?? true;
+  const customVoice = options?.customVoice || null;
+
+  const segments = parseSpeechSegments(rawText, expressiveness, isExpressiveActive);
+  if (segments.length === 0) {
+    cb.onEnd?.();
+    return;
+  }
+
+  // Interrompe reproduções anteriores (barge-in)
+  stopVoice();
+  const sessionId = ++activePlaybackSessionId;
+  isPlaybackRunning = true;
+
+  const ctx = getAudioContext();
+  const analyser = getGlobalAnalyser();
+
+  if (!ctx || !analyser) {
+    playWebSpeechFallback(segments, cb, customVoice);
+    return;
+  }
+
+  cb.onStart?.();
+
+  // Fila de pré-busca de AudioBuffers
+  const prefetchQueue: Array<Promise<AudioBuffer | null>> = [];
+  const voice = "pt-BR-AntonioNeural";
+
+  // Inicia a pré-busca do primeiro e segundo segmentos imediatamente
+  for (let i = 0; i < Math.min(2, segments.length); i++) {
+    prefetchQueue[i] = fetchAndDecodeSegmentAudio(segments[i], voice, expressiveness);
+  }
+
+  for (let i = 0; i < segments.length; i++) {
+    if (activePlaybackSessionId !== sessionId || !isPlaybackRunning) break;
+
+    const segment = segments[i];
+
+    // Dispara a pré-busca do próximo segmento à frente (lookahead)
+    const nextIdx = i + 2;
+    if (nextIdx < segments.length && !prefetchQueue[nextIdx]) {
+      prefetchQueue[nextIdx] = fetchAndDecodeSegmentAudio(segments[nextIdx], voice, expressiveness);
+    }
+
+    cb.onSegmentStart?.(segment, i, segments.length);
+    cb.onEmotionChange?.(segment.emotion);
+
+    // Aguarda o buffer do segmento atual
+    let buffer: AudioBuffer | null = null;
+    try {
+      buffer = await (prefetchQueue[i] || fetchAndDecodeSegmentAudio(segment, voice, expressiveness));
+    } catch {}
+
+    if (activePlaybackSessionId !== sessionId || !isPlaybackRunning) break;
+
+    if (buffer) {
+      // Reproduz via AudioContext com crossfade de 20ms
+      await playAudioBufferWithCrossfade(buffer, ctx, analyser);
+
+      // Aplica a pausa calculada (silêncio sincronizado)
+      if (segment.pauseAfterMs > 0 && i < segments.length - 1) {
+        await new Promise((r) => setTimeout(r, segment.pauseAfterMs));
+      }
+    } else {
+      // Se falhar a síntese neural, faz fallback do restante para Web Speech API
+      const remainingSegments = segments.slice(i);
+      playWebSpeechFallback(remainingSegments, cb, customVoice);
+      return;
+    }
+  }
+
+  if (activePlaybackSessionId === sessionId) {
+    isPlaybackRunning = false;
+    cb.onEnd?.();
+  }
+}
+
+/**
+ * Toca uma fala de preenchimento (filler phrase) quando a resposta demorar > 1.2s
+ */
+export async function speakFillerPhrase(onStart?: () => void, onEnd?: () => void) {
+  const phrase = getRandomFillerPhrase();
+  return speakJarvisText(phrase, { onStart, onEnd });
+}
+
+// Suporte e inicialização de vozes
+let availableVoices: SpeechSynthesisVoice[] = [];
+
+export function initVoices(onLoaded?: (voices: SpeechSynthesisVoice[]) => void) {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+  const load = () => {
+    availableVoices = window.speechSynthesis.getVoices();
+    if (onLoaded) onLoaded(availableVoices);
+  };
+
+  load();
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = load;
+  }
+}
+
+export function getBestPtBrVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  if (availableVoices.length === 0) {
+    availableVoices = window.speechSynthesis.getVoices();
+  }
+
+  const ptVoices = availableVoices.filter((v) =>
+    v.lang.toLowerCase().replace("_", "-").startsWith("pt")
+  );
+
+  if (ptVoices.length === 0) return null;
+
+  const priorityVoices = [
+    "antonio",
+    "fabio",
+    "thomaz",
+    "google português do brasil",
+    "francisca",
+    "daniel",
+  ];
+
+  for (const keyword of priorityVoices) {
+    const found = ptVoices.find((v) => v.name.toLowerCase().includes(keyword));
+    if (found) return found;
+  }
+
+  return ptVoices[0] || null;
 }
 
 export const speakText = speakJarvisText;

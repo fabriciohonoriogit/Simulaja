@@ -529,28 +529,47 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 8. Síntese de Voz Neural HD do Jarvis (GET ou POST /api/tts - Microsoft Edge Neural com Modulação Prosódica Viva)
+  // 8. Síntese de Voz Neural HD do Jarvis (GET ou POST /api/tts - Microsoft Edge Neural com Modulação Prosódica Viva e Emoções)
   if (pathname === "/api/tts" && (req.method === "GET" || req.method === "POST")) {
     let text = "";
     let voice = "pt-BR-AntonioNeural";
-    let rate = "+18%";
-    let pitch = "+4Hz";
-    let volume = "+15%";
+    let emotion = "neutro";
+    let rate = "";
+    let pitch = "";
+    let volume = "";
+
+    const EMOTION_PROSODY = {
+      neutro: { rate: "+15%", pitch: "+0Hz", volume: "+10%" },
+      alegre: { rate: "+20%", pitch: "+6Hz", volume: "+15%" },
+      empolgado: { rate: "+25%", pitch: "+10Hz", volume: "+20%" },
+      calmo: { rate: "+5%", pitch: "-4Hz", volume: "+0%" },
+      serio: { rate: "+10%", pitch: "-6Hz", volume: "+10%" },
+      empatico: { rate: "+8%", pitch: "-2Hz", volume: "+5%" },
+      curioso: { rate: "+18%", pitch: "+8Hz", volume: "+10%" },
+      surpreso: { rate: "+22%", pitch: "+12Hz", volume: "+18%" },
+    };
 
     if (req.method === "GET") {
       text = parsedUrl.searchParams.get("text") || "";
       voice = parsedUrl.searchParams.get("voice") || "pt-BR-AntonioNeural";
-      rate = parsedUrl.searchParams.get("rate") || "+18%";
-      pitch = parsedUrl.searchParams.get("pitch") || "+4Hz";
-      volume = parsedUrl.searchParams.get("volume") || "+15%";
+      emotion = (parsedUrl.searchParams.get("emotion") || "neutro").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      rate = parsedUrl.searchParams.get("rate") || "";
+      pitch = parsedUrl.searchParams.get("pitch") || "";
+      volume = parsedUrl.searchParams.get("volume") || "";
     } else {
       const body = await readBody();
       text = body.text || "";
       voice = body.voice || "pt-BR-AntonioNeural";
-      rate = body.rate || "+18%";
-      pitch = body.pitch || "+4Hz";
-      volume = body.volume || "+15%";
+      emotion = (body.emotion || "neutro").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      rate = body.rate || "";
+      pitch = body.pitch || "";
+      volume = body.volume || "";
     }
+
+    const defaultProsody = EMOTION_PROSODY[emotion] || EMOTION_PROSODY.neutro;
+    if (!rate) rate = defaultProsody.rate;
+    if (!pitch) pitch = defaultProsody.pitch;
+    if (!volume) volume = defaultProsody.volume;
 
     if (!text.trim()) {
       res.writeHead(400, { "Content-Type": "application/json" });
@@ -561,7 +580,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const tts = new MsEdgeTTS();
       await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-      // Modulação vocal expressiva, eliminando lentidão e tom robótico
+      // Modulação vocal expressiva por emoção e prosódia humana
       const { audioStream } = tts.toStream(text, {
         rate,
         pitch,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Zap,
   Cpu,
@@ -11,7 +11,9 @@ import {
   CheckCircle2,
   RefreshCw,
   Layers,
-  Radio
+  Radio,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 
 export interface AICoreProvider {
@@ -196,118 +198,138 @@ export function JarvisAICoreDeck({
   autoFallback,
   onToggleAutoFallback,
 }: JarvisAICoreDeckProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const currentCore = AI_CORE_PROVIDERS.find((c) => c.id === selectedCoreId) || AI_CORE_PROVIDERS[0];
 
   return (
-    <div className="w-full bg-slate-950/90 border border-cyan-500/30 rounded-2xl p-3 backdrop-blur-xl shadow-[0_0_30px_rgba(6,182,212,0.12)] space-y-2.5">
+    <div className="w-full bg-slate-950/90 border border-cyan-500/30 rounded-2xl p-2 sm:p-2.5 backdrop-blur-xl shadow-[0_0_25px_rgba(6,182,212,0.1)] space-y-1.5 transition-all duration-300">
       {/* Top Header do Hub Neural */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-slate-800/80 pb-1.5">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-cyan-950/80 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.3)]">
-            <Cpu className="h-4 w-4 text-cyan-400 animate-pulse" />
+          <div className="p-1 rounded-lg bg-cyan-950/80 border border-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.25)]">
+            <Cpu className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black tracking-widest text-slate-200 uppercase flex items-center gap-1.5 font-mono">
-                QUANTUM AI MATRIX // FREELLM ECOSYSTEM
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10.5px] font-black tracking-widest text-slate-200 uppercase flex items-center gap-1.5 font-mono">
+                QUANTUM AI MATRIX
               </span>
-              <span className="text-[8.5px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-bold flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                10 MOTORES CONECTADOS
+              <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-bold flex items-center gap-1">
+                <span className="h-1 w-1 rounded-full bg-emerald-400 animate-ping" />
+                10 MOTORES
               </span>
             </div>
-            <p className="text-[9.5px] text-slate-400">
-              Provedores abertos, sem custo e integrados em cascata com tolerância zero a quedas.
-            </p>
+            {isCollapsed ? (
+              <p className="text-[9px] text-cyan-300 font-mono flex items-center gap-1.5">
+                <span>Motor Ativo:</span>
+                <span className={`font-bold ${currentCore.color}`}>{currentCore.name}</span>
+                <span className="text-slate-500">• {currentCore.speed}</span>
+              </p>
+            ) : (
+              <p className="text-[9px] text-slate-400">
+                Provedores abertos, sem custo e integrados em cascata com tolerância zero a quedas.
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Botão de Auto-Fallback */}
-        <div className="flex items-center gap-2">
+        {/* Botão de Auto-Fallback e Recolher/Expandir */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={onToggleAutoFallback}
-            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border cursor-pointer ${
+            className={`px-2.5 py-1 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border cursor-pointer ${
               autoFallback
-                ? "bg-cyan-950 text-cyan-300 border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                ? "bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
                 : "bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200"
             }`}
             title="Alterna automaticamente de provedor se houver qualquer limite de taxa ou oscilação"
           >
-            <RefreshCw className={`h-3 w-3 ${autoFallback ? "animate-spin text-cyan-400" : ""}`} />
-            {autoFallback ? "Auto-Fallback Ativo" : "Modo Manual Fixo"}
+            <RefreshCw className={`h-2.5 w-2.5 ${autoFallback ? "animate-spin text-cyan-400" : ""}`} />
+            {autoFallback ? "Fallback Ativo" : "Modo Fixo"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-all cursor-pointer"
+            title={isCollapsed ? "Expandir Provedores" : "Recolher Provedores (Liberar Espaço para o Orb)"}
+          >
+            {isCollapsed ? <ChevronDown className="h-3.5 w-3.5 text-cyan-400" /> : <ChevronUp className="h-3.5 w-3.5 text-slate-400" />}
           </button>
         </div>
       </div>
 
-      {/* Grid de Ícones das IAs Mapeadas */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-1.5">
-        {AI_CORE_PROVIDERS.map((core) => {
-          const isSelected = core.id === selectedCoreId;
+      {/* Grid Compacto de Ícones das IAs Mapeadas (Oculto se recolhido) */}
+      {!isCollapsed && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-1 animate-in fade-in duration-200">
+          {AI_CORE_PROVIDERS.map((core) => {
+            const isSelected = core.id === selectedCoreId;
 
-          return (
-            <button
-              key={core.id}
-              type="button"
-              onClick={() => onSelectCore(core)}
-              className={`p-2 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between gap-1.5 group cursor-pointer relative overflow-hidden ${
-                isSelected
-                  ? `${core.badgeBg} ${core.borderColor} shadow-[0_0_20px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/50`
-                  : "bg-slate-900/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900"
-              }`}
-            >
-              {isSelected && (
-                <div
-                  className="absolute top-0 right-0 w-8 h-8 opacity-20 pointer-events-none rounded-bl-full"
-                  style={{ backgroundColor: core.accentHex }}
-                />
-              )}
-
-              {/* Ícone e Nome */}
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-1.5">
+            return (
+              <button
+                key={core.id}
+                type="button"
+                onClick={() => onSelectCore(core)}
+                className={`p-1.5 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between gap-1 group cursor-pointer relative overflow-hidden ${
+                  isSelected
+                    ? `${core.badgeBg} ${core.borderColor} shadow-[0_0_15px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/50`
+                    : "bg-slate-900/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900"
+                }`}
+              >
+                {isSelected && (
                   <div
-                    className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs border ${
-                      isSelected
-                        ? "bg-slate-950 text-white border-white/20"
-                        : "bg-slate-950/80 text-slate-300 border-slate-800 group-hover:scale-105"
-                    }`}
-                  >
-                    {core.id === "gemini" && <span className="text-purple-400">✦</span>}
-                    {core.id === "chatgpt" && (
-                      <svg className="h-3.5 w-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1683a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4947zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1683a.0757.0757 0 0 1-.071 0l-4.8303-2.7866A4.504 4.504 0 0 1 2.3408 7.8956zm16.0993 3.8558L12.5973 8.3829l2.0201-1.1635a.0804.0804 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.3921-.6813zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L8.907 9.2297V6.8974a.0662.0662 0 0 1 .0331-.0615l4.8777-2.8151a4.504 4.504 0 0 1 6.6343 4.6738zM12 14.7756l-3.3685-1.9443 3.3685-1.9443 3.3685 1.9443z"/>
-                      </svg>
-                    )}
-                    {core.id === "claude" && <span className="text-amber-500 font-black text-sm">✳</span>}
-                    {core.id === "groq" && <Zap className="h-3 w-3 text-amber-400 fill-amber-400" />}
-                    {core.id === "deepseek" && <span className="text-blue-400 font-black">🐋</span>}
-                    {core.id === "cerebras" && <span className="text-rose-400 font-bold">⚡</span>}
-                    {core.id === "nvidia" && <span className="text-emerald-400 font-black">👁️</span>}
-                    {core.id === "mistral" && <span className="text-orange-400 font-bold">🌪️</span>}
-                    {core.id === "flux" && <Palette className="h-3 w-3 text-pink-400" />}
-                    {core.id === "edge_voice" && <Mic className="h-3 w-3 text-cyan-400" />}
+                    className="absolute top-0 right-0 w-6 h-6 opacity-20 pointer-events-none rounded-bl-full"
+                    style={{ backgroundColor: core.accentHex }}
+                  />
+                )}
+
+                {/* Ícone e Nome */}
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-1">
+                    <div
+                      className={`w-5 h-5 rounded-md flex items-center justify-center font-bold text-[10px] border ${
+                        isSelected
+                          ? "bg-slate-950 text-white border-white/20"
+                          : "bg-slate-950/80 text-slate-300 border-slate-800 group-hover:scale-105"
+                      }`}
+                    >
+                      {core.id === "gemini" && <span className="text-purple-400">✦</span>}
+                      {core.id === "chatgpt" && (
+                        <svg className="h-3 w-3 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1683a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4947zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1683a.0757.0757 0 0 1-.071 0l-4.8303-2.7866A4.504 4.504 0 0 1 2.3408 7.8956zm16.0993 3.8558L12.5973 8.3829l2.0201-1.1635a.0804.0804 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.3921-.6813zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L8.907 9.2297V6.8974a.0662.0662 0 0 1 .0331-.0615l4.8777-2.8151a4.504 4.504 0 0 1 6.6343 4.6738zM12 14.7756l-3.3685-1.9443 3.3685-1.9443 3.3685 1.9443z"/>
+                        </svg>
+                      )}
+                      {core.id === "claude" && <span className="text-amber-500 font-black text-xs">✳</span>}
+                      {core.id === "groq" && <Zap className="h-2.5 w-2.5 text-amber-400 fill-amber-400" />}
+                      {core.id === "deepseek" && <span className="text-blue-400 font-black text-[9px]">🐋</span>}
+                      {core.id === "cerebras" && <span className="text-rose-400 font-bold text-[9px]">⚡</span>}
+                      {core.id === "nvidia" && <span className="text-emerald-400 font-black text-[9px]">👁️</span>}
+                      {core.id === "mistral" && <span className="text-orange-400 font-bold text-[9px]">🌪️</span>}
+                      {core.id === "flux" && <Palette className="h-2.5 w-2.5 text-pink-400" />}
+                      {core.id === "edge_voice" && <Mic className="h-2.5 w-2.5 text-cyan-400" />}
+                    </div>
+                    <span className={`text-[9.5px] font-bold truncate ${isSelected ? "text-white" : "text-slate-300"}`}>
+                      {core.name.split(" ")[0]}
+                    </span>
                   </div>
-                  <span className={`text-[10px] font-bold truncate ${isSelected ? "text-white" : "text-slate-300"}`}>
-                    {core.name.split(" ")[0]}
-                  </span>
+
+                  {isSelected && <CheckCircle2 className="h-2.5 w-2.5 text-cyan-400 shrink-0" />}
                 </div>
 
-                {isSelected && <CheckCircle2 className="h-3 w-3 text-cyan-400 shrink-0" />}
-              </div>
-
-              {/* Subtítulo / Provedor */}
-              <div className="space-y-0.5">
-                <p className="text-[8px] text-slate-400 truncate">{core.provider}</p>
-                <div className="flex items-center justify-between text-[7.5px] font-mono">
-                  <span className={core.color}>{core.speed.split(" ")[0]}</span>
-                  <span className="text-slate-500">FREE</span>
+                {/* Subtítulo / Provedor */}
+                <div className="space-y-0.5">
+                  <p className="text-[7.5px] text-slate-400 truncate">{core.provider}</p>
+                  <div className="flex items-center justify-between text-[7px] font-mono">
+                    <span className={core.color}>{core.speed.split(" ")[0]}</span>
+                    <span className="text-slate-500">FREE</span>
+                  </div>
                 </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Telemetria da IA Ativa no Momento */}
       <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[10px]">
