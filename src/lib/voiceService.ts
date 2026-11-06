@@ -145,17 +145,18 @@ export function normalizeTextForSpeech(text: string): string {
     .replace(/["“”«»]/g, "")
     .replace(/\s*:\s*/g, ", ");
 
-  // Conversão de números e unidades para fala espontânea
+  // Normalização de valores monetários e números para fala humana 100% fluida
   cleaned = cleaned
-    // 1. Abreviações de milhares com 'mil' ou 'k' (ex: "100mil", "100 mil", "100k", "R$ 100 mil")
-    .replace(/R\$\s*([\d\.,]+)\s*(?:mil|k)\b/gi, (_, val) => `${val} mil reais`)
-    .replace(/\b(\d+)\s*mil\s*(?:de\s*)?reais\b/gi, (_, val) => `${val} mil reais`)
-    .replace(/\b(\d+)\s*mil\b/gi, (_, val) => `${val} mil reais`)
-    .replace(/\b(\d+)mil\b/gi, (_, val) => `${val} mil reais`)
-    .replace(/\b(\d+)\s*k\b/gi, (_, val) => `${val} mil reais`)
-    .replace(/\b(\d+)k\b/gi, (_, val) => `${val} mil reais`)
+    // 1. Abreviações de milhares com 'mil' ou 'k' (ex: "100mil", "100 mil", "100k", "R$ 100 mil", "100 mil reais")
+    .replace(/R\$\s*([\d\.,]+)\s*(?:mil|k)\s*(?:de\s*)?reais\b/gi, "$1 mil reais")
+    .replace(/R\$\s*([\d\.,]+)\s*(?:mil|k)\b/gi, "$1 mil reais")
+    .replace(/\b(\d+)\s*mil\s*(?:de\s*)?reais\b/gi, "$1 mil reais")
+    .replace(/\b(\d+)\s*mil\b/gi, "$1 mil reais")
+    .replace(/\b(\d+)mil\b/gi, "$1 mil reais")
+    .replace(/\b(\d+)\s*k\b/gi, "$1 mil reais")
+    .replace(/\b(\d+)k\b/gi, "$1 mil reais")
 
-    // 2. Valores monetários completos: R$ 100.000,00 ou R$ 100.000 (converte múltiplos de mil para "X mil reais")
+    // 2. Valores monetários completos: R$ 100.000,00 ou R$ 100.000 (múltiplos de mil viram "X mil reais", ex: 100 mil reais)
     .replace(/R\$\s*([\d\.]+),(\d{2})/gi, (_, intVal, cents) => {
       const rawNum = parseInt(intVal.replace(/\./g, ""), 10);
       let numStr = `${rawNum}`;
@@ -177,12 +178,16 @@ export function normalizeTextForSpeech(text: string): string {
       }
       return `${numStr} reais`;
     })
+    // 3. Previne duplicação acidental "reais reais"
+    .replace(/\breais\s+reais\b/gi, "reais")
     .replace(/(\d+),(\d+)%/g, "$1 vírgula $2 por cento")
     .replace(/(\d+)%/g, "$1 por cento")
     .replace(/\ba\.a\./gi, "ao ano")
     .replace(/\ba\.a\b/gi, "ao ano")
     .replace(/\ba\.m\./gi, "ao mês")
     .replace(/\ba\.m\b/gi, "ao mês")
+    .replace(/\/mês\b/gi, " por mês")
+    .replace(/\/mes\b/gi, " por mês")
     .replace(/\/L\b/gi, " por litro")
     .replace(/50\/50/gi, "cinquenta por cinquenta, meia parcela")
     .replace(/\bIPCA\b/gi, "I-P-C-A")
@@ -534,10 +539,10 @@ function startSimulatedAudioEnvelope(onEndCheck: () => boolean) {
 }
 
 /**
- * Fallback Web Speech API quando o servidor local de Edge TTS não estiver ativo
+ * Fallback nativo do navegador (SpeechSynthesis) caso o servidor local de Edge TTS não esteja ativo
  */
-function playWebSpeechFallback(
-  segments: SpeechSegment[],
+export function speakJarvisLocalSpeech(
+  cleanText: string,
   callbacks?: VoicePlaybackCallbacks,
   customVoice?: SpeechSynthesisVoice | null
 ) {
@@ -551,31 +556,38 @@ function playWebSpeechFallback(
   isPlaybackRunning = true;
   callbacks?.onStart?.();
 
-  let index = 0;
+  const voice = customVoice || getBestPtBrVoice();
+  const words = cleanText.split(" ");
+  const chunks: string[] = [];
+  let currentChunk = "";
 
-  const playNext = () => {
-    if (activePlaybackSessionId !== sessionId || index >= segments.length) {
+  for (const word of words) {
+    if ((currentChunk + " " + word).length > 200 && /[.,;!?]$/.test(currentChunk)) {
+      chunks.push(currentChunk.trim());
+      currentChunk = word;
+    } else {
+      currentChunk += (currentChunk ? " " : "") + word;
+    }
+  }
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  let index = 0;
+  const playChunk = () => {
+    if (activePlaybackSessionId !== sessionId || index >= chunks.length) {
       isPlaybackRunning = false;
       callbacks?.onEnd?.();
       return;
     }
 
-    const seg = segments[index];
-    callbacks?.onSegmentStart?.(seg, index, segments.length);
-    callbacks?.onEmotionChange?.(seg.emotion);
-
-    const utterance = new SpeechSynthesisUtterance(seg.text);
+    const chunkText = chunks[index];
+    const utterance = new SpeechSynthesisUtterance(chunkText);
     utterance.lang = "pt-BR";
-    const voice = customVoice || getBestPtBrVoice();
     if (voice) utterance.voice = voice;
 
-    // Modulação de rate e pitch na Web Speech API
-    const prosody = computeProsody(seg.emotion);
-    const rateNum = 1.05 + (parseInt(prosody.rate) || 0) * 0.005;
-    const pitchNum = 1.0 + (parseInt(prosody.pitch) || 0) * 0.015;
-
-    utterance.rate = Math.max(0.8, Math.min(1.4, rateNum));
-    utterance.pitch = Math.max(0.8, Math.min(1.3, pitchNum));
+    utterance.rate = 1.18;
+    utterance.pitch = 1.08;
 
     let utteranceActive = true;
     startSimulatedAudioEnvelope(() => utteranceActive);
@@ -583,13 +595,13 @@ function playWebSpeechFallback(
     utterance.onend = () => {
       utteranceActive = false;
       index++;
-      setTimeout(playNext, seg.pauseAfterMs);
+      playChunk();
     };
 
     utterance.onerror = () => {
       utteranceActive = false;
       index++;
-      playNext();
+      playChunk();
     };
 
     try {
@@ -599,11 +611,25 @@ function playWebSpeechFallback(
     }
   };
 
-  playNext();
+  playChunk();
 }
 
 /**
- * Sintetizador Principal com Pipeline Segmentado, Pré-busca e Web Audio API
+ * Fallback Web Speech API quando o servidor local de Edge TTS não estiver ativo (mantido para compatibilidade)
+ */
+function playWebSpeechFallback(
+  segments: SpeechSegment[],
+  callbacks?: VoicePlaybackCallbacks,
+  customVoice?: SpeechSynthesisVoice | null
+) {
+  const fullText = segments.map((s) => s.text).join(" ");
+  speakJarvisLocalSpeech(fullText, callbacks, customVoice);
+}
+
+/**
+ * Sintetizador Jarvis com Voz Humana Ultra-Natural (Microsoft Antonio Neural)
+ * Proporciona a fala contínua, executiva, quente e envolvente que o usuário aprovou,
+ * eliminando fragmentações artificiais, travamentos ou falhas em números e moedas.
  */
 export async function speakJarvisText(
   rawText: string,
@@ -621,82 +647,65 @@ export async function speakJarvisText(
       ? { onStart: callbacks, onEnd: onEndLegacy }
       : callbacks || {};
 
-  const expressiveness = options?.expressiveness || "alta";
-  const isExpressiveActive = options?.isExpressiveActive ?? true;
-  const customVoice = options?.customVoice || null;
-
-  const segments = parseSpeechSegments(rawText, expressiveness, isExpressiveActive);
-  if (segments.length === 0) {
+  const cleanText = normalizeTextForSpeech(rawText);
+  if (!cleanText || cleanText.length < 2) {
     cb.onEnd?.();
     return;
   }
 
-  // Interrompe reproduções anteriores (barge-in)
+  // Interrompe reproduções anteriores (barge-in instantâneo)
   stopVoice();
   const sessionId = ++activePlaybackSessionId;
   isPlaybackRunning = true;
 
+  const emotion = inferEmotionFromText(cleanText);
+  cb.onEmotionChange?.(emotion);
+
   const ctx = getAudioContext();
   const analyser = getGlobalAnalyser();
 
-  if (!ctx || !analyser) {
-    playWebSpeechFallback(segments, cb, customVoice);
-    return;
-  }
-
-  cb.onStart?.();
-
-  // Fila de pré-busca de AudioBuffers
-  const prefetchQueue: Array<Promise<AudioBuffer | null>> = [];
-  const voice = "pt-BR-AntonioNeural";
-
-  // Inicia a pré-busca do primeiro e segundo segmentos imediatamente
-  for (let i = 0; i < Math.min(2, segments.length); i++) {
-    prefetchQueue[i] = fetchAndDecodeSegmentAudio(segments[i], voice, expressiveness);
-  }
-
-  for (let i = 0; i < segments.length; i++) {
-    if (activePlaybackSessionId !== sessionId || !isPlaybackRunning) break;
-
-    const segment = segments[i];
-
-    // Dispara a pré-busca do próximo segmento à frente (lookahead)
-    const nextIdx = i + 2;
-    if (nextIdx < segments.length && !prefetchQueue[nextIdx]) {
-      prefetchQueue[nextIdx] = fetchAndDecodeSegmentAudio(segments[nextIdx], voice, expressiveness);
-    }
-
-    cb.onSegmentStart?.(segment, i, segments.length);
-    cb.onEmotionChange?.(segment.emotion);
-
-    // Aguarda o buffer do segmento atual
-    let buffer: AudioBuffer | null = null;
+  // Tentativa 1: Motor Neural HD Contínuo via Edge TTS (Microsoft Antonio Neural)
+  // Velocidade executiva fluida (+18%), tom firme (+4Hz) e volume encorpado (+15%)
+  const tryNeuralTTS = async (): Promise<boolean> => {
     try {
-      buffer = await (prefetchQueue[i] || fetchAndDecodeSegmentAudio(segment, voice, expressiveness));
-    } catch {}
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-    if (activePlaybackSessionId !== sessionId || !isPlaybackRunning) break;
+      const url = `http://localhost:3000/api/tts?voice=pt-BR-AntonioNeural&rate=%2B18%25&pitch=%2B4Hz&volume=%2B15%25&text=${encodeURIComponent(
+        cleanText.slice(0, 1500)
+      )}`;
 
-    if (buffer) {
-      // Reproduz via AudioContext com crossfade de 20ms
-      await playAudioBufferWithCrossfade(buffer, ctx, analyser);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
 
-      // Aplica a pausa calculada (silêncio sincronizado)
-      if (segment.pauseAfterMs > 0 && i < segments.length - 1) {
-        await new Promise((r) => setTimeout(r, segment.pauseAfterMs));
+      if (!res.ok) throw new Error(`TTS endpoint retornou status ${res.status}`);
+
+      const arrayBuffer = await res.arrayBuffer();
+      if (!ctx || !analyser) throw new Error("AudioContext indisponível");
+
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      if (activePlaybackSessionId !== sessionId || !isPlaybackRunning) return true;
+
+      cb.onStart?.();
+
+      // Toca o áudio completo via AudioBufferSourceNode conectado ao AnalyserNode
+      await playAudioBufferWithCrossfade(audioBuffer, ctx, analyser);
+
+      if (activePlaybackSessionId === sessionId) {
+        isPlaybackRunning = false;
+        cb.onEnd?.();
       }
-    } else {
-      // Se falhar a síntese neural, faz fallback do restante para Web Speech API
-      const remainingSegments = segments.slice(i);
-      playWebSpeechFallback(remainingSegments, cb, customVoice);
-      return;
+      return true;
+    } catch (err) {
+      // Se o servidor local estiver offline ou der timeout, fallback instantâneo sem mudo
+      if (activePlaybackSessionId === sessionId && isPlaybackRunning) {
+        speakJarvisLocalSpeech(cleanText, cb, options?.customVoice);
+      }
+      return false;
     }
-  }
+  };
 
-  if (activePlaybackSessionId === sessionId) {
-    isPlaybackRunning = false;
-    cb.onEnd?.();
-  }
+  tryNeuralTTS();
 }
 
 /**
