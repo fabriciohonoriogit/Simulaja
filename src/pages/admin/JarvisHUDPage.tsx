@@ -42,7 +42,7 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { aiService } from "@/services/aiService";
+import { aiService, formatConciseBudgetQuote } from "@/services/aiService";
 import { speakText } from "@/lib/voiceService";
 import { fetchDailyNews, getNewsAnswerForJarvis } from "@/services/newsService";
 import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
@@ -790,7 +790,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
     const timeStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const normalized = lowerPrompt.trim().replace(/[.,!?;:]/g, "");
 
-    // 1. Saudações Simples e Isoladas
+    // 1. Saudações Simples e Isoladas (Direto e sem enrolação)
     const exactGreetings = ["boa tarde", "bom dia", "boa noite", "ola", "olá", "oi", "oi jarvis", "ola jarvis", "olá jarvis"];
     if (exactGreetings.includes(normalized)) {
       const periodo = normalized.includes("dia") ? "Bom dia" : normalized.includes("noite") ? "Boa noite" : "Boa tarde";
@@ -799,7 +799,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
         time: timeStr,
         tag: "JARVIS AI",
         color: "text-emerald-400 font-bold",
-        text: `Oi Fabrício, ${periodo.toLowerCase()}! Tudo excelente por aqui. Como posso acelerar o seu dia hoje? Posso realizar prospecções para WhatsApp ou e-mail, analisar métricas do funil ou simular consórcios.`,
+        text: `${periodo}, Fabrício! Em que posso ajudar hoje?`,
       };
     }
 
@@ -863,7 +863,36 @@ gn_prosperaplan@consorciomagalu.com.br`;
       };
     }
 
-    // 5. Comando de Clonagem de Voz / Voice Studio
+    // 5. Interceptador de Orçamento, Simulação e Parcela (Conciso: Apenas Valores e Prazo, zero detalhes de grupo)
+    const isBudgetCommand =
+      (lowerPrompt.includes("orçamento") ||
+        lowerPrompt.includes("orcamento") ||
+        lowerPrompt.includes("quanto fica") ||
+        lowerPrompt.includes("qual a parcela") ||
+        lowerPrompt.includes("qual o valor da parcela") ||
+        lowerPrompt.includes("valor da parcela") ||
+        lowerPrompt.includes("simular") ||
+        lowerPrompt.includes("simule") ||
+        lowerPrompt.includes("simulação") ||
+        lowerPrompt.includes("simulacao")) &&
+      !lowerPrompt.includes("imagem") &&
+      !lowerPrompt.includes("foto") &&
+      !lowerPrompt.includes("desenhe");
+
+    if (isBudgetCommand) {
+      const concise = formatConciseBudgetQuote(originalText);
+      if (concise) {
+        return {
+          id: Date.now().toString(),
+          time: timeStr,
+          tag: "ORÇAMENTO SIMULAJÁ",
+          color: "text-cyan-300 font-bold",
+          text: concise,
+        };
+      }
+    }
+
+    // 6. Comando de Clonagem de Voz / Voice Studio
     if (
       lowerPrompt.includes("clonar voz") ||
       lowerPrompt.includes("minha voz") ||

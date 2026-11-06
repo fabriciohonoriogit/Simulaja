@@ -137,6 +137,104 @@ ${formattedList}
   return suggestions;
 }
 
+/**
+ * Formata um orçamento conciso, direto e sem jargões para o usuário ou para fala TTS.
+ * Retorna ESTRITAMENTE o valor das parcelas e o prazo em meses,
+ * eliminando qualquer menção a grupo, taxa de administração ou burocracia.
+ */
+export function formatConciseBudgetQuote(query: string): string | null {
+  if (!query) return null;
+  const lower = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // Extrai número do crédito
+  let targetCredit = 0;
+
+  const millionMatch = lower.match(/(\d+[\d.,]*)\s*(?:milh[aã]o|milh[oõ]es|mi\b)/);
+  if (millionMatch) {
+    const val = parseFloat(millionMatch[1].replace(/\./g, "").replace(",", "."));
+    if (!isNaN(val)) targetCredit = val * 1000000;
+  }
+
+  if (!targetCredit) {
+    const thousandMatch = lower.match(/(\d+[\d.,]*)\s*(?:mil\b|k\b)/);
+    if (thousandMatch) {
+      const val = parseFloat(thousandMatch[1].replace(/\./g, "").replace(",", "."));
+      if (!isNaN(val)) targetCredit = val * 1000;
+    }
+  }
+
+  if (!targetCredit) {
+    const rawNumbers = query.match(/\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b|\b\d{4,7}\b/g);
+    if (rawNumbers && rawNumbers.length > 0) {
+      const parsed = parseFloat(rawNumbers[0].replace(/\./g, "").replace(",", "."));
+      if (!isNaN(parsed) && parsed >= 5000) targetCredit = parsed;
+    }
+  }
+
+  if (!targetCredit) return null;
+
+  // Detecta segmento pretendido
+  const isImovel = lower.includes("imov") || lower.includes("casa") || lower.includes("apto") || lower.includes("apartamento") || lower.includes("terreno") || lower.includes("construcao");
+  const isMoto = lower.includes("moto");
+  const isPesado = lower.includes("pesad") || lower.includes("caminha") || lower.includes("trator") || lower.includes("agricola") || lower.includes("onibus");
+  const isServico = lower.includes("servi") || lower.includes("eletro") || lower.includes("cirurgia") || lower.includes("plastica") || lower.includes("plástica");
+  const isVeiculo = !isImovel && !isPesado && !isServico && (lower.includes("carro") || lower.includes("auto") || lower.includes("veic") || isMoto);
+
+  let targetCat = "imovel";
+  if (isPesado) targetCat = "pesados";
+  else if (isServico) targetCat = "servicos";
+  else if (isVeiculo) targetCat = "veiculo";
+  else {
+    if (targetCredit <= 30000) targetCat = "veiculo";
+    else if (targetCredit >= 180000 && targetCredit <= 400000 && lower.includes("pesad")) targetCat = "pesados";
+    else targetCat = "imovel";
+  }
+
+  const list: GrupoItem[] = (GRUPOS as any)[targetCat] || GRUPOS.imovel;
+  const exactMatches = list.filter(g => Math.abs(g.credito - targetCredit) < 1);
+
+  const formatShort = (g: GrupoItem) => {
+    const credFmt = g.credito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const taxaSeguro = g.seguro ?? 0.0252;
+    const taxaSeguroDecimal = taxaSeguro > 0.001 ? taxaSeguro / 100 : taxaSeguro;
+    const valSeguro = g.credito * taxaSeguroDecimal;
+
+    const r50Com = g.r50 || 0;
+    const r50Sem = g.r50SemSeguro ?? Math.max(0, r50Com - valSeguro);
+    const r100Com = g.r100 || (r50Com * 2);
+    const r100Sem = g.r100SemSeguro ?? Math.max(0, r100Com - valSeguro);
+
+    const r50SemFmt = r50Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const r50ComFmt = r50Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const r100SemFmt = r100Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const r100ComFmt = r100Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    return `Para o crédito de ${credFmt}, em ${g.prazo} meses:\n• Meia Parcela (50/50): ${r50SemFmt}/mês (ou ${r50ComFmt} com seguro)\n• Parcela Integral: ${r100SemFmt}/mês (ou ${r100ComFmt} com seguro)\nPrazo: ${g.prazo} meses.`;
+  };
+
+  if (exactMatches.length > 0) {
+    return formatShort(exactMatches[0]);
+  }
+
+  // Se não encontrar correspondência exata, busca o valor mais próximo
+  const sorted = [...list].sort((a, b) => a.credito - b.credito);
+  let closest = sorted[0];
+  let minDiff = Math.abs(sorted[0].credito - targetCredit);
+  for (const item of sorted) {
+    const diff = Math.abs(item.credito - targetCredit);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = item;
+    }
+  }
+
+  if (closest) {
+    return formatShort(closest);
+  }
+
+  return null;
+}
+
 async function callDirectGemini(prompt: string, apiKey: string): Promise<string | null> {
   const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro"];
   for (const m of models) {
@@ -389,9 +487,13 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
     return `Oi ${firstName}, como posso lhe ajudar?`;
   }
 
-  // 2. Cotações e Simulações Oficiais do Simulador SimulaJá
-  const isSimulationQuery = lower.includes("credito") || lower.includes("simula") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear") || lower.includes("gold") || lower.includes("mil") || lower.includes("lance");
+  // 2. Cotações e Simulações Oficiais do Simulador SimulaJá (Conciso: Apenas Parcelas e Prazo, sem burocracia de grupo)
+  const isSimulationQuery = lower.includes("credito") || lower.includes("crédito") || lower.includes("simula") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear") || lower.includes("gold") || lower.includes("mil") || lower.includes("orcamento") || lower.includes("orçamento") || lower.includes("quanto fica") || lower.includes("lance");
   if (isSimulationQuery) {
+    const conciseQuote = formatConciseBudgetQuote(userQuery);
+    if (conciseQuote) {
+      return conciseQuote;
+    }
     const quote = findAuthoritativeSimulatorQuote(userQuery);
     if (quote) {
       return quote;
@@ -599,13 +701,21 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
 NOME DO INTERLOCUTOR: "${userName}"
 ${newsContext}
 
-# PERSONA E REGRAS DE OURO (JARVIS)
-- Responda como uma LLM analítica de nível mundial (estilo Claude 3.5 Sonnet / ChatGPT 4o), altamente articulada, estratégica, empática e orientada a conversão.
-- Chame o usuário pelo primeiro nome (${firstName}) de modo cortês e executivo.
-- Quando o usuário pedir análises do funil de clientes, leads, conversões ou métricas, analise os dados fornecidos em tempo real abaixo, aponte gargalos, prioridades e estratégias práticas de fechamento.
-- Organize suas respostas com formatação limpa (tópicos, divisões claras, valores monetários em R$ e negritos).
-- Em saudações simples ("boa tarde", "bom dia", "olá"), responda de forma simples, amigável e direta: "Oi ${firstName}, boa tarde! Como posso acelerar seus resultados comerciais hoje?".
+# REGRAS CRÍTICAS E OBRIGATÓRIAS DE OBJETIVIDADE (O JARVIS NÃO FALA MUITO):
+- RESPONDA APENAS E ESTRITAMENTE O QUE FOI PERGUNTADO, EM QUALQUER SITUAÇÃO.
+- Seja cirúrgico, direto ao ponto e conciso. Para perguntas pontuais, responda em 1 a 2 frases curtas.
+- NUNCA faça introduções protocolares ("Com base nos dados...", "É um prazer atender...", etc.).
+- NUNCA dê dicas ou conselhos que não foram solicitados. Se perguntaram X, responda APENAS X.
 - NUNCA repita a pergunta do usuário de volta para ele.
+
+# REGRA DE OURO PARA ORÇAMENTOS E VALORES DE CRÉDITO:
+- AO PERGUNTAR O ORÇAMENTO OU VALOR, VOCÊ DEVE FALAR APENAS E EXCLUSIVAMENTE O VALOR DAS PARCELAS E O PRAZO!
+- NADA DE FICAR FALANDO DETALHES DO GRUPO (NÃO mencione número de grupo, taxa de administração, fundo de reserva, regras de assembleia, lances médios ou lance embutido, a não ser que o usuário pergunte expressamente).
+- Formato OBRIGATÓRIO de resposta de orçamento:
+  "Para o crédito de [Crédito], em [Prazo] meses:
+  • Meia Parcela (50/50): R$ [Valor] (sem seguro) ou R$ [Valor] (com seguro)
+  • Parcela Integral: R$ [Valor] (sem seguro) ou R$ [Valor] (com seguro)
+  Prazo: [Prazo] meses."
 
 # REGRAS CRÍTICAS DE CONFIABILIDADE (ZERO ALUCINAÇÃO - DADOS RÍGIDOS E CRITERIOSOS):
 1. SIMULADOR E CRÉDITOS:
@@ -621,7 +731,7 @@ ${newsContext}
    - A cliente Doroty foi venda do MÊS PASSADO (Setembro/2026), e foi da Loja Paranaguá. NUNCA diga que Doroty é venda de Outubro nem venda do Gestor.
    - Nunca invente nomes de leads, vendas fantasiosas ou métricas inexistentes.
 
-${dynamicQuote ? `\n--- COTAÇÃO IDENTIFICADA DO SIMULADOR PARA ESTA CONSULTA ---\n${dynamicQuote}\n------------------------------------------------------------\n` : ""}
+${dynamicQuote ? `\n--- COTAÇÃO IDENTIFICADA DO SIMULADOR (ATENÇÃO: FALE APENAS AS PARCELAS E O PRAZO, NUNCA DETALHES DO GRUPO!) ---\n${dynamicQuote}\n------------------------------------------------------------\n` : ""}
 
 ${funnelSnapshot}
 
@@ -631,7 +741,7 @@ CONTEXTO ADICIONAL DO SISTEMA: ${context}
 PERGUNTA DO USUÁRIO / ESTRATEGISTA: "${question}"
 ${localContext ? `INSIGHTS ADICIONAIS: ${localContext}` : ""}`;
 
-    const { text, error } = await callAI(prompt, 950, history, imageBase64);
+    const { text, error } = await callAI(prompt, 380, history, imageBase64);
 
     return {
       answer: text || (await generateSmartLocalResponse(prompt, userName)),

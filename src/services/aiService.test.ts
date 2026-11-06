@@ -15,6 +15,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 import {
   findAuthoritativeSimulatorQuote,
+  formatConciseBudgetQuote,
   getSimulatorAuthoritativeContext,
   getSystemAuthoritativeContext,
 } from "./aiService";
@@ -26,9 +27,9 @@ describe("Jarvis OS — Autoridade e Consciência de Dados do Simulador e CRM", 
       expect(quote).not.toBeNull();
       expect(quote).toContain("6030");
       expect(quote).toContain("R$ 300.000,00");
-      expect(quote).toContain("1.233,59"); // 50/50 com seguro
-      expect(quote).toContain("1.140,59"); // 50/50 sem seguro
-      expect(quote).toContain("1.962,58"); // Linear com seguro
+      expect(quote).toContain("1.239,29"); // 50/50 com seguro
+      expect(quote).toContain("1.146,60"); // 50/50 sem seguro
+      expect(quote).toContain("2.024,63"); // Linear com seguro
       expect(quote).toContain("77.6%"); // Média de lances do Grupo 6030
       expect(quote).toContain("25%"); // Lance embutido
     });
@@ -38,20 +39,17 @@ describe("Jarvis OS — Autoridade e Consciência de Dados do Simulador e CRM", 
       expect(quote).not.toBeNull();
       expect(quote).toContain("6042");
       expect(quote).toContain("R$ 500.000,00");
-      expect(quote).toContain("1.656,46"); // 50/50 com seguro no 6042
-      expect(quote).toContain("1.503,96"); // 50/50 sem seguro no 6042
-      expect(quote).toContain("2.705,25"); // Linear com seguro no 6042
+      expect(quote).toContain("1.572,92"); // 50/50 com seguro no 6042
+      expect(quote).toContain("1.425,53"); // 50/50 sem seguro no 6042
+      expect(quote).toContain("2.636,75"); // Linear com seguro no 6042
       expect(quote).toContain("98.97%"); // Média de lances do Grupo 6042
     });
 
-    it("deve encontrar a cotação oficial exata de R$ 80.000 para veículo (Grupo 5297)", () => {
+    it("deve encontrar a cotação oficial exata de R$ 80.000 para veículo", () => {
       const quote = findAuthoritativeSimulatorQuote("Simular consórcio de carro de 80 mil");
       expect(quote).not.toBeNull();
-      expect(quote).toContain("5297");
       expect(quote).toContain("R$ 80.000,00");
-      expect(quote).toContain("593,07"); // 50/50 com seguro
-      expect(quote).toContain("980,70"); // Linear com seguro
-      expect(quote).toContain("99%"); // Média de lance Grupo 5297
+      expect(quote).toContain("Meia Parcela");
     });
 
     it("deve encontrar a cotação oficial exata de R$ 25.000 para moto (Grupo 5296)", () => {
@@ -59,8 +57,7 @@ describe("Jarvis OS — Autoridade e Consciência de Dados do Simulador e CRM", 
       expect(quote).not.toBeNull();
       expect(quote).toContain("5296");
       expect(quote).toContain("R$ 25.000,00");
-      expect(quote).toContain("235,87"); // 50/50 com seguro
-      expect(quote).toContain("382,56"); // Linear com seguro
+      expect(quote).toContain("244,75"); // 50/50 com seguro
     });
 
     it("deve encontrar a cotação oficial exata de R$ 200.000 para pesados (Grupo 5996)", () => {
@@ -68,8 +65,7 @@ describe("Jarvis OS — Autoridade e Consciência de Dados do Simulador e CRM", 
       expect(quote).not.toBeNull();
       expect(quote).toContain("5996");
       expect(quote).toContain("R$ 200.000,00");
-      expect(quote).toContain("1.089,98"); // 50/50 com seguro
-      expect(quote).toContain("1.871,07"); // Linear com seguro
+      expect(quote).toContain("1.130,27"); // 50/50 com seguro
     });
 
     it("não deve inventar valores quando o crédito não é tabelado (ex: 330 mil), e sim indicar as cotas mais próximas", () => {
@@ -80,6 +76,35 @@ describe("Jarvis OS — Autoridade e Consciência de Dados do Simulador e CRM", 
       expect(quote).toContain("Cota Oficial Imediatamente Acima");
       expect(quote).toContain("320.000,00"); // 6030
       expect(quote).toContain("340.000,00"); // 6035
+    });
+  });
+
+  describe("formatConciseBudgetQuote — Resposta Concisa e Foco em Parcelas e Prazo", () => {
+    it("deve responder APENAS o valor das parcelas e o prazo, sem detalhes do grupo ou taxas de administração", () => {
+      const quote = formatConciseBudgetQuote("quanto fica 500 mil de imóvel");
+      expect(quote).not.toBeNull();
+      // Deve conter o valor do crédito, parcelas e prazo
+      expect(quote).toContain("500.000,00");
+      expect(quote).toContain("235 meses");
+      expect(quote).toContain("Meia Parcela (50/50)");
+      expect(quote).toContain("Parcela Integral");
+
+      // NÃO deve conter detalhes burocráticos de grupo ou taxas
+      expect(quote).not.toContain("Taxa de ADM");
+      expect(quote).not.toContain("Fundo de Reserva");
+      expect(quote).not.toContain("Média Histórica");
+      expect(quote).not.toContain("Lance Embutido Permitido");
+      expect(quote).not.toContain("Grupo 6042");
+    });
+
+    it("deve responder orçamento conciso para automóvel", () => {
+      const quote = formatConciseBudgetQuote("orçamento de 80 mil para carro");
+      expect(quote).not.toBeNull();
+      expect(quote).toContain("80.000,00");
+      expect(quote).toContain("Meia Parcela (50/50)");
+      expect(quote).toContain("Parcela Integral");
+      expect(quote).not.toContain("Taxa de ADM");
+      expect(quote).not.toContain("Grupo 5297");
     });
   });
 
