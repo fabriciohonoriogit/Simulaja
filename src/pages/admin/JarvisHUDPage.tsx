@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { toast } from "sonner";
 import { JarvisOrb, OrbState } from "@/components/admin/JarvisOrb";
 import {
   Sparkles,
@@ -35,7 +36,10 @@ import {
   MapPin,
   Map,
   Palette,
-  Bot
+  Bot,
+  Paperclip,
+  X,
+  Image as ImageIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { aiService } from "@/services/aiService";
@@ -117,6 +121,50 @@ export default function JarvisHUDPage() {
   const [lastJarvisReply, setLastJarvisReply] = useState<string | null>(null);
   const [selectedCore, setSelectedCore] = useState<AICoreProvider>(AI_CORE_PROVIDERS[0]);
   const [autoFallback, setAutoFallback] = useState(true);
+
+  // Estado para Anexos Multimodais (Imagens, Boletos, Documentos ou PDFs)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedFile, setAttachedFile] = useState<{
+    name: string;
+    type: string;
+    size: number;
+    dataUrl: string;
+    base64Data: string;
+    isImage: boolean;
+  } | null>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("O arquivo excede o limite máximo de 15MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64Data = result.split(",")[1] || "";
+      const isImage = file.type.startsWith("image/");
+      setAttachedFile({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        dataUrl: result,
+        base64Data,
+        isImage,
+      });
+      toast.success(`"${file.name}" anexado com sucesso para análise do Jarvis!`);
+    };
+    reader.readAsDataURL(file);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveAttachedFile = () => {
+    setAttachedFile(null);
+  };
 
   const handleSelectAICore = (core: AICoreProvider) => {
     setSelectedCore(core);
@@ -899,12 +947,16 @@ gn_prosperaplan@consorciomagalu.com.br`;
       }
     }
 
+    const fileToSend = attachedFile;
+    if (fileToSend) setAttachedFile(null);
+
     try {
       const aiResult = await aiService.askAssistant(
         textToRun,
-        "Painel Jarvis HUD Executivo - Assistente de Vendas e Consórcios",
+        `Painel Jarvis HUD Executivo - Assistente de Vendas e Consórcios. ${fileToSend ? `[ARQUIVO ANEXADO PELO GESTOR: ${fileToSend.name} (${fileToSend.type})]` : ""}`,
         "Fabrício",
-        chatHistory
+        chatHistory,
+        fileToSend?.base64Data
       );
 
       let responseText = aiResult?.answer;
@@ -919,10 +971,11 @@ gn_prosperaplan@consorciomagalu.com.br`;
         {
           id: (Date.now() + 1).toString(),
           time: timeStr,
-          tag: "JARVIS AI",
+          tag: fileToSend ? `JARVIS AI // ${fileToSend.name.toUpperCase()}` : "JARVIS AI",
           text: responseText,
           color: "text-cyan-400 font-semibold",
           aiCoreName: selectedCore.name,
+          imageUrl: fileToSend?.isImage ? fileToSend.dataUrl : undefined,
         },
         ...prev,
       ]);
@@ -1436,6 +1489,41 @@ gn_prosperaplan@consorciomagalu.com.br`;
                 <span className="text-[9px] text-slate-500 hidden sm:inline">Pressione Enter para enviar (Shift+Enter para nova linha)</span>
               </div>
 
+              {/* Preview de Arquivo Anexado */}
+              {attachedFile && (
+                <div className="p-2 rounded-xl bg-cyan-950/70 border border-cyan-500/50 flex items-center justify-between text-xs animate-in fade-in shadow-inner">
+                  <div className="flex items-center gap-2.5">
+                    {attachedFile.isImage ? (
+                      <img
+                        src={attachedFile.dataUrl}
+                        alt={attachedFile.name}
+                        className="w-10 h-10 object-cover rounded-lg border border-cyan-400/60 shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-cyan-400">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                    )}
+                    <div className="space-y-0.5">
+                      <p className="text-[11px] font-bold text-slate-200 truncate max-w-[240px]">
+                        {attachedFile.name}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-mono">
+                        {(attachedFile.size / 1024).toFixed(1)} KB • {attachedFile.isImage ? "Imagem Multimodal" : "Documento"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveAttachedFile}
+                    className="p-1 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-900 transition-colors cursor-pointer"
+                    title="Remover anexo"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+
               <textarea
                 rows={3}
                 placeholder="Digite sua instrução para o Jarvis: prospecção WhatsApp/E-mail, análise do funil, simulação de meia parcela ou comando..."
@@ -1464,6 +1552,28 @@ gn_prosperaplan@consorciomagalu.com.br`;
                   >
                     <Mic className="h-3.5 w-3.5" />
                     <span className="text-[11px]">{orbState === "listening" ? "Ouvindo..." : "Voz"}</span>
+                  </button>
+
+                  {/* Botão de Anexo (Imagem ou Documento) */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*,.pdf,.doc,.docx,.txt"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer border ${
+                      attachedFile
+                        ? "bg-cyan-950 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-900 border-slate-700 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40"
+                    }`}
+                    title="Anexar Imagem, CNH, Boleto ou Documento para o Jarvis analisar"
+                  >
+                    <Paperclip className="h-3.5 w-3.5 text-cyan-400" />
+                    <span className="text-[11px]">{attachedFile ? "1 Anexo" : "Anexar"}</span>
                   </button>
 
                   <button
