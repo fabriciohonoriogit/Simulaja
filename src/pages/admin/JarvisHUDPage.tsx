@@ -1397,7 +1397,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
             <JarvisOrb
               state={orbState}
               theme={
-                selectedCore.id === "groq" || selectedCore.id === "cerebras"
+                selectedCore.id === "groq" || selectedCore.id === "cerebras" || selectedCore.id === "claude"
                   ? "flame"
                   : selectedCore.id === "nvidia" || selectedCore.id === "chatgpt"
                   ? "emerald"
