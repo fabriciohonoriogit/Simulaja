@@ -12,6 +12,48 @@ export interface LeadContext {
   cidade: string;
 }
 
+export interface ActiveBudgetMemory {
+  credito: number;
+  creditoFormatado: string;
+  categoria: string;
+  prazo: number;
+  meiaParcelaSemSeguro: number;
+  meiaParcelaComSeguro: number;
+  parcelaIntegralSemSeguro: number;
+  parcelaIntegralComSeguro: number;
+  grupo: string;
+  taxaAdm: number;
+  fundoReserva: number;
+  mediaLance: string;
+  lanceEmbutido: string;
+  updatedAt: number;
+}
+
+let currentActiveBudgetMemory: ActiveBudgetMemory | null = null;
+
+export function setActiveBudgetMemory(memory: ActiveBudgetMemory) {
+  currentActiveBudgetMemory = memory;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("jarvis_active_budget_memory", JSON.stringify(memory));
+    } catch {}
+  }
+}
+
+export function getActiveBudgetMemory(): ActiveBudgetMemory | null {
+  if (currentActiveBudgetMemory) return currentActiveBudgetMemory;
+  if (typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem("jarvis_active_budget_memory");
+      if (saved) {
+        currentActiveBudgetMemory = JSON.parse(saved);
+        return currentActiveBudgetMemory;
+      }
+    } catch {}
+  }
+  return null;
+}
+
 /**
  * Localizador autoritário de cotações do Simulador Oficial SimulaJá / Magalu.
  * Encontra a cota exata ou as faixas oficiais mais próximas com tolerância zero para alucinações.
@@ -209,7 +251,26 @@ export function formatConciseBudgetQuote(query: string): string | null {
     const r100SemFmt = r100Sem.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     const r100ComFmt = r100Com.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-    return `Para o crédito de ${credFmt}, em ${g.prazo} meses:\n• Meia Parcela (50/50): ${r50SemFmt}/mês (ou ${r50ComFmt} com seguro)\n• Parcela Integral: ${r100SemFmt}/mês (ou ${r100ComFmt} com seguro)\nPrazo: ${g.prazo} meses.`;
+    // Registra na memória ativa do Jarvis para perguntas subsequentes do gestor
+    setActiveBudgetMemory({
+      credito: g.credito,
+      creditoFormatado: credFmt,
+      categoria: targetCat,
+      prazo: g.prazo,
+      meiaParcelaSemSeguro: r50Sem,
+      meiaParcelaComSeguro: r50Com,
+      parcelaIntegralSemSeguro: r100Sem,
+      parcelaIntegralComSeguro: r100Com,
+      grupo: g.grupo,
+      taxaAdm: g.txLinear || g.tx5050 || g.tx || 18,
+      fundoReserva: g.frLinear || g.fr5050 || g.fr || 1,
+      mediaLance: MEDIA_LANCES_GRUPOS[g.grupo] ? `${MEDIA_LANCES_GRUPOS[g.grupo]}%` : "Consulte histórico",
+      lanceEmbutido: "25%",
+      updatedAt: Date.now(),
+    });
+
+    // Fala APENAS o valor da meia parcela, conforme determinação expressa do gestor
+    return `Para o crédito de ${credFmt}, a meia parcela é de ${r50SemFmt}/mês (ou ${r50ComFmt} com seguro), em ${g.prazo} meses.`;
   };
 
   if (exactMatches.length > 0) {
@@ -514,13 +575,49 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
     return `Oi ${firstName}, como posso lhe ajudar?`;
   }
 
-  // 2. Cotações e Simulações Oficiais do Simulador SimulaJá (Conciso: Apenas Parcelas e Prazo, sem burocracia de grupo)
+  // 2. Cotações e Simulações Oficiais do Simulador SimulaJá (Conciso: Apenas Meia Parcela e Prazo)
   const isSimulationQuery = lower.includes("credito") || lower.includes("crédito") || lower.includes("simula") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear") || lower.includes("gold") || lower.includes("mil") || lower.includes("orcamento") || lower.includes("orçamento") || lower.includes("quanto fica") || lower.includes("lance");
   if (isSimulationQuery) {
     const conciseQuote = formatConciseBudgetQuote(userQuery);
     if (conciseQuote) {
       return conciseQuote;
     }
+  }
+
+  // 2.1 Memória Ativa de Orçamento: Respostas a perguntas subsequentes (sem precisar digitar tudo de novo)
+  const activeMemory = getActiveBudgetMemory();
+  if (activeMemory) {
+    // Pergunta sobre Parcela Integral / Cheia / 100%
+    if (lower.includes("integral") || lower.includes("cheia") || lower.includes("inteira") || lower.includes("100%") || lower.includes("sem ser meia") || lower.includes("parcela normal")) {
+      const semFmt = activeMemory.parcelaIntegralSemSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const comFmt = activeMemory.parcelaIntegralComSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      return `Para o crédito de ${activeMemory.creditoFormatado}, a parcela integral é de ${semFmt}/mês (ou ${comFmt} com seguro), em ${activeMemory.prazo} meses.`;
+    }
+
+    // Pergunta sobre Grupo, Taxa de Administração ou Fundo de Reserva
+    if (lower.includes("grupo") || lower.includes("qual grupo") || lower.includes("numero do grupo")) {
+      return `O crédito de ${activeMemory.creditoFormatado} pertence ao Grupo ${activeMemory.grupo}, com taxa de administração de ${activeMemory.taxaAdm}% e fundo de reserva de ${activeMemory.fundoReserva}%.`;
+    }
+
+    // Pergunta sobre Taxa de Administração
+    if (lower.includes("taxa") || lower.includes("taxa de adm")) {
+      return `A taxa de administração para o crédito de ${activeMemory.creditoFormatado} (Grupo ${activeMemory.grupo}) é de ${activeMemory.taxaAdm}% linear.`;
+    }
+
+    // Pergunta sobre Lance / Média Histórica / Lance Embutido
+    if (lower.includes("lance") || lower.includes("lance medio") || lower.includes("media de lance") || lower.includes("embutido")) {
+      return `No Grupo ${activeMemory.grupo} (${activeMemory.creditoFormatado}), a média histórica de lance é de ${activeMemory.mediaLance}, permitindo lance embutido de até ${activeMemory.lanceEmbutido}.`;
+    }
+
+    // Pergunta sobre Seguro ou Meia Parcela novamente
+    if (lower.includes("meia") || lower.includes("50/50") || lower.includes("com seguro")) {
+      const semFmt = activeMemory.meiaParcelaSemSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const comFmt = activeMemory.meiaParcelaComSeguro.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      return `Para ${activeMemory.creditoFormatado}, a meia parcela é de ${semFmt}/mês (ou ${comFmt} com seguro), em ${activeMemory.prazo} meses.`;
+    }
+  }
+
+  if (isSimulationQuery) {
     const quote = findAuthoritativeSimulatorQuote(userQuery);
     if (quote) {
       return quote;
@@ -766,9 +863,23 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
       } catch (e) {}
     }
 
+    const activeBudget = getActiveBudgetMemory();
+    const budgetMemoryContext = activeBudget
+      ? `\n--- ORÇAMENTO ATIVO EM MEMÓRIA (ÚLTIMO CONSULTADO PELO USUÁRIO) ---
+Crédito: ${activeBudget.creditoFormatado} (R$ ${activeBudget.credito.toLocaleString("pt-BR")})
+Prazo: ${activeBudget.prazo} meses | Categoria: ${activeBudget.categoria}
+Meia Parcela: R$ ${activeBudget.meiaParcelaSemSeguro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês (sem seguro) | R$ ${activeBudget.meiaParcelaComSeguro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês (com seguro)
+Parcela Integral: R$ ${activeBudget.parcelaIntegralSemSeguro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês (sem seguro) | R$ ${activeBudget.parcelaIntegralComSeguro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês (com seguro)
+Grupo: ${activeBudget.grupo} | Taxa Adm: ${activeBudget.taxaAdm}% | Fundo de Reserva: ${activeBudget.fundoReserva}%
+Média Histórica de Lance: ${activeBudget.mediaLance} | Lance Embutido Permitido: ${activeBudget.lanceEmbutido}
+*Instrução: Se o usuário fizer perguntas subsequentes (ex: 'e a integral?', 'qual o grupo?', 'qual o lance?'), responda diretamente usando estes dados sem pedir para ele digitar tudo de novo.*
+--------------------------------------------------------------------\n`
+      : "";
+
     const prompt = `Você é o Jarvis, assistente executivo e consultor de alta performance comercial e inteligência em consórcios e vendas da Prospera Planejamento / SimulaJá.
 NOME DO INTERLOCUTOR: "${userName}"
 ${newsContext}
+${budgetMemoryContext}
 
 # DIRETRIZ DE CONHECIMENTO AMPLO E INFINITO (SEM LIMITAÇÕES):
 - Você possui inteligência e conhecimento geral universal (Bíblia Sagrada, teologia, filosofia, história, literatura, ciências, matemática, tecnologia, cultura geral e notícias).
@@ -797,13 +908,11 @@ ${selectedCore ? `\n# NÚCLEO COGNITIVO ATIVO NO PAINEL:\nVocê está atuando co
   3. Mantenha a resposta limpa e elegante.
 
 # REGRA DE OURO PARA ORÇAMENTOS E VALORES DE CRÉDITO:
-- AO PERGUNTAR O ORÇAMENTO OU VALOR, VOCÊ DEVE FALAR APENAS E EXCLUSIVAMENTE O VALOR DAS PARCELAS E O PRAZO!
-- NADA DE FICAR FALANDO DETALHES DO GRUPO (NÃO mencione número de grupo, taxa de administração, fundo de reserva, regras de assembleia, lances médios ou lance embutido, a não ser que o usuário pergunte expressamente).
-- Formato OBRIGATÓRIO de resposta de orçamento:
-  "Para o crédito de [Crédito], em [Prazo] meses:
-  • Meia Parcela (50/50): R$ [Valor] (sem seguro) ou R$ [Valor] (com seguro)
-  • Parcela Integral: R$ [Valor] (sem seguro) ou R$ [Valor] (com seguro)
-  Prazo: [Prazo] meses."
+- AO PERGUNTAR O ORÇAMENTO OU VALOR, VOCÊ DEVE FALAR APENAS E EXCLUSIVAMENTE O VALOR DA MEIA PARCELA E O PRAZO!
+- NADA DE FICAR FALANDO DETALHES DO GRUPO, PARCELA INTEGRAL, TAXAS OU LANCES, a não ser que o usuário pergunte expressamente em seguida.
+- Formato OBRIGATÓRIO de resposta ao pedir orçamento:
+  "Para o crédito de [Crédito], a meia parcela é de R$ [Valor Sem Seguro]/mês (ou R$ [Valor Com Seguro] com seguro), em [Prazo] meses."
+- MEMÓRIA ATIVA DO ORÇAMENTO: O crédito, grupo, prazos, parcela integral, lances e taxas ficam gravados na memória ativa do sistema. Quando o usuário fizer perguntas subsequentes ("e a integral?", "qual o grupo?", "qual o lance?", "com seguro?"), responda diretamente usando o orçamento gravado na memória, sem pedir para ele digitar o valor do crédito novamente!
 
 # REGRAS CRÍTICAS DE CONFIABILIDADE (ZERO ALUCINAÇÃO - DADOS RÍGIDOS E CRITERIOSOS):
 1. SIMULADOR E CRÉDITOS:

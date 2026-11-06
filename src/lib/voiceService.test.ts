@@ -21,9 +21,16 @@ describe("Voice Pipeline - J.A.R.V.I.S OS", () => {
   it("normalizeTextForSpeech deve converter valores monetários e siglas para fala", () => {
     const raw = "O crédito de R$ 300.000,00 no consórcio com IPCA a 4,5%.";
     const normalized = normalizeTextForSpeech(raw);
-    expect(normalized).toContain("300000 reais");
+    expect(normalized).toContain("300 mil reais");
     expect(normalized).toContain("I-P-C-A");
     expect(normalized).toContain("4 vírgula 5 por cento");
+
+    // Validações do bug relatado pelo usuário: 100mil, 100k, R$ 100 mil
+    expect(normalizeTextForSpeech("crédito de 100mil")).toContain("100 mil reais");
+    expect(normalizeTextForSpeech("orçamento de 100 mil")).toContain("100 mil reais");
+    expect(normalizeTextForSpeech("valor de 100k")).toContain("100 mil reais");
+    expect(normalizeTextForSpeech("R$ 100 mil")).toContain("100 mil reais");
+    expect(normalizeTextForSpeech("R$ 100.000,00")).toContain("100 mil reais");
   });
 
   it("inferEmotionFromText deve inferir emoção por pontuação e semântica", () => {

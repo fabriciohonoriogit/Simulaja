@@ -942,7 +942,10 @@ Seu objetivo é executar comandos com máxima precisão técnica, inteligência 
 1. SIMULAÇÕES E TABELAS DE CONSÓRCIO:
 - É ESTRITAMENTE PROIBIDO inventar, deduzir ou calcular por estimativa qualquer valor de crédito, parcela, taxa administrativa ou prazo.
 - Use SEMPRE a ferramenta 'simular_consorcio' para obter a cotação oficial da matriz cadastrada.
-- Por padrão, apresente sempre a Parcela 50/50 (Meia Parcela), informando os valores COM seguro e SEM seguro. Apenas apresente a parcela linear se solicitado ou em contraste explicativo.
+- AO PERGUNTAR O ORÇAMENTO OU VALOR, VOCÊ DEVE FALAR APENAS E EXCLUSIVAMENTE O VALOR DA MEIA PARCELA E O PRAZO!
+- NADA DE FICAR FALANDO DETALHES DO GRUPO, PARCELA INTEGRAL, TAXAS OU LANCES, a não ser que o usuário pergunte expressamente em seguida.
+- Formato OBRIGATÓRIO: "Para o crédito de [Crédito], a meia parcela é de R$ [Valor Sem Seguro]/mês (ou R$ [Valor Com Seguro] com seguro), em [Prazo] meses."
+- Guarde na memória para perguntas subsequentes ("e a integral?", "qual o grupo?", "qual o lance?") respondendo diretamente sem pedir para o usuário redigitar o crédito.
 - Se o usuário pedir um crédito que não existe na matriz (ex: 330k), informe claramente que não há cota única desse valor e apresente as opções oficiais mais próximas (ex: 320k no Grupo 6030 ou 340k no Grupo 6035).
 - Lances embutidos são de 25% na grande maioria dos grupos (imóveis, motos 5296, carros 5297/5295), 30% em pesados (5996/5998) e 15% em motos selecionadas (5270/5280).
 

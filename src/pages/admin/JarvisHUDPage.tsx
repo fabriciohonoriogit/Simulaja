@@ -50,7 +50,8 @@ import {
   speakFillerPhrase,
   stopVoice,
   stripEmotionTags,
-  registerSimulatedAudioListener
+  registerSimulatedAudioListener,
+  getGlobalAnalyser
 } from "@/lib/voiceService";
 import { fetchDailyNews, getNewsAnswerForJarvis } from "@/services/newsService";
 import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
@@ -300,8 +301,77 @@ export default function JarvisHUDPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Listener para envelope de áudio simulado (Fallback Web Speech) e Barge-in via tecla [Escape]
+  // Loop de Análise de Áudio em Tempo Real (Web Audio AnalyserNode + Microfone + Fallback)
   useEffect(() => {
+    let animId: number | null = null;
+    let micStream: MediaStream | null = null;
+    let micCtx: AudioContext | null = null;
+
+    if (orbState === "speaking") {
+      const analyser = getGlobalAnalyser();
+      if (analyser) {
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const loop = () => {
+          analyser.getByteFrequencyData(dataArray);
+          // Graves (bins 0-4): modula escala e pulso
+          const bass = (dataArray[0] + dataArray[1] + dataArray[2] + dataArray[3]) / (4 * 255);
+          // Agudos (bins 16-32): modula vibração de superfície
+          let tSum = 0;
+          const endBin = Math.min(32, dataArray.length);
+          for (let i = 16; i < endBin; i++) tSum += dataArray[i];
+          const treble = tSum / (Math.max(1, endBin - 16) * 255);
+          // Amplitude geral:
+          let allSum = 0;
+          for (let i = 0; i < dataArray.length; i++) allSum += dataArray[i];
+          const amp = allSum / (dataArray.length * 255);
+
+          setAudioBass(bass);
+          setAudioTreble(treble);
+          setAudioAmplitude(amp);
+
+          animId = requestAnimationFrame(loop);
+        };
+        loop();
+      }
+    } else if (orbState === "listening") {
+      // Conecta o microfone ao Web Audio para o Orb reagir à voz do usuário
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            micStream = stream;
+            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioCtx) {
+              micCtx = new AudioCtx();
+              const source = micCtx.createMediaStreamSource(stream);
+              const micAnalyser = micCtx.createAnalyser();
+              micAnalyser.fftSize = 64;
+              source.connect(micAnalyser);
+
+              const micData = new Uint8Array(micAnalyser.frequencyBinCount);
+              const micLoop = () => {
+                micAnalyser.getByteFrequencyData(micData);
+                let sum = 0;
+                for (let i = 0; i < micData.length; i++) sum += micData[i];
+                const amp = Math.min(1.0, (sum / (micData.length * 255)) * 2.8);
+                setAudioAmplitude(amp);
+                setAudioBass(amp * 0.85);
+                setAudioTreble(amp * 0.6);
+
+                animId = requestAnimationFrame(micLoop);
+              };
+              micLoop();
+            }
+          })
+          .catch(() => {});
+      }
+    } else {
+      setAudioBass(0);
+      setAudioTreble(0);
+      setAudioAmplitude(0);
+    }
+
+    // Listener para o envelope simulado caso o Edge TTS / Web Audio não estejam disponíveis
     registerSimulatedAudioListener((bass, treble, amp) => {
       setAudioBass(bass);
       setAudioTreble(treble);
@@ -318,6 +388,13 @@ export default function JarvisHUDPage() {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      if (animId) cancelAnimationFrame(animId);
+      if (micStream) {
+        micStream.getTracks().forEach((t) => t.stop());
+      }
+      if (micCtx && micCtx.state !== "closed") {
+        micCtx.close().catch(() => {});
+      }
       registerSimulatedAudioListener(null);
       window.removeEventListener("keydown", handleKeyDown);
     };

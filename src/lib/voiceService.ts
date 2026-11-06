@@ -147,14 +147,35 @@ export function normalizeTextForSpeech(text: string): string {
 
   // Conversão de números e unidades para fala espontânea
   cleaned = cleaned
+    // 1. Abreviações de milhares com 'mil' ou 'k' (ex: "100mil", "100 mil", "100k", "R$ 100 mil")
+    .replace(/R\$\s*([\d\.,]+)\s*(?:mil|k)\b/gi, (_, val) => `${val} mil reais`)
+    .replace(/\b(\d+)\s*mil\s*(?:de\s*)?reais\b/gi, (_, val) => `${val} mil reais`)
+    .replace(/\b(\d+)\s*mil\b/gi, (_, val) => `${val} mil reais`)
+    .replace(/\b(\d+)mil\b/gi, (_, val) => `${val} mil reais`)
+    .replace(/\b(\d+)\s*k\b/gi, (_, val) => `${val} mil reais`)
+    .replace(/\b(\d+)k\b/gi, (_, val) => `${val} mil reais`)
+
+    // 2. Valores monetários completos: R$ 100.000,00 ou R$ 100.000 (converte múltiplos de mil para "X mil reais")
     .replace(/R\$\s*([\d\.]+),(\d{2})/gi, (_, intVal, cents) => {
-      const num = intVal.replace(/\./g, "");
-      if (cents === "00") return `${num} reais`;
-      return `${num} reais e ${cents} centavos`;
+      const rawNum = parseInt(intVal.replace(/\./g, ""), 10);
+      let numStr = `${rawNum}`;
+      if (rawNum >= 1000 && rawNum % 1000 === 0 && rawNum < 1000000) {
+        numStr = `${rawNum / 1000} mil`;
+      } else if (rawNum >= 1000000 && rawNum % 1000000 === 0) {
+        numStr = `${rawNum / 1000000} milhão`;
+      }
+      if (cents === "00") return `${numStr} reais`;
+      return `${numStr} reais e ${cents} centavos`;
     })
     .replace(/R\$\s*([\d\.]+)/gi, (_, intVal) => {
-      const num = intVal.replace(/\./g, "");
-      return `${num} reais`;
+      const rawNum = parseInt(intVal.replace(/\./g, ""), 10);
+      let numStr = `${rawNum}`;
+      if (rawNum >= 1000 && rawNum % 1000 === 0 && rawNum < 1000000) {
+        numStr = `${rawNum / 1000} mil`;
+      } else if (rawNum >= 1000000 && rawNum % 1000000 === 0) {
+        numStr = `${rawNum / 1000000} milhão`;
+      }
+      return `${numStr} reais`;
     })
     .replace(/(\d+),(\d+)%/g, "$1 vírgula $2 por cento")
     .replace(/(\d+)%/g, "$1 por cento")
