@@ -299,18 +299,6 @@ async function connectToWhatsApp() {
     } catch (e) {}
   }
 
-  // Verifica se creds.json tem sessão quebrada/desregistrada antes de tentar subir
-  const credsPath = path.join(SESSION_DIR, "creds.json");
-  if (fs.existsSync(credsPath)) {
-    try {
-      const c = JSON.parse(fs.readFileSync(credsPath, "utf8"));
-      if (c && c.registered === false) {
-        console.log("🧹 [WAHA Local] Sessão anterior não registrada detectada. Limpando credenciais antigas...");
-        clearSessionFiles();
-      }
-    } catch (e) {}
-  }
-
   const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
   let version = [2, 3000, 1053716622];
   try {
@@ -361,6 +349,12 @@ async function connectToWhatsApp() {
       currentQrText = null;
       currentQrPngBuffer = null;
       currentQrDataUrl = null;
+
+      if (statusCode === DisconnectReason.restartRequired || statusCode === 515) {
+        console.log("🔄 [WAHA Local] Celular pareado com sucesso! Concluindo autenticação em segundo plano...");
+        setTimeout(connectToWhatsApp, 500);
+        return;
+      }
 
       if (statusCode === 408) {
         console.log("⏳ [WAHA Local] Tempo de leitura do QR Code expirado. Renovando...");
