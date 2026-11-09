@@ -72,6 +72,8 @@ const menuGroups: MenuGroup[] = [
         label: "SUPORTE / IA",
         items: [
             { icon: Zap, label: "Jarvis OS", path: "/admin/jarvis", color: "text-cyan-400" },
+            { icon: Sparkles, label: "Jarvis HUD", path: "/admin/jarvis-hud", color: "text-amber-400" },
+            { icon: Users, label: "Esquadrão Jarvis (11 IAs)", path: "/admin/squad", color: "text-indigo-400" },
         ]
     }
 ];

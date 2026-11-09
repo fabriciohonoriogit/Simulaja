@@ -4,6 +4,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { GRUPOS, GRUPO_CARACTERISTICAS, MEDIA_LANCES_GRUPOS, GrupoItem } from "@/constants/simulador";
+import { getConsorcioKnowledgePrompt } from "@/constants/consorcioKnowledgeBase";
+import { JARVIS_SQUAD, JarvisAgent } from "@/data/jarvisSquad";
 
 export interface LeadContext {
   nome: string;
@@ -876,34 +878,30 @@ Média Histórica de Lance: ${activeBudget.mediaLance} | Lance Embutido Permitid
 --------------------------------------------------------------------\n`
       : "";
 
-    const prompt = `Você é o Jarvis, assistente executivo e consultor de alta performance comercial e inteligência em consórcios e vendas da Prospera Planejamento / SimulaJá.
+    const consorcioKnowledge = getConsorcioKnowledgePrompt();
+
+    const prompt = `Você é o Jarvis, assistente executivo e consultor de inteligência artificial de alta performance da Prospera Planejamento / SimulaJá.
 NOME DO INTERLOCUTOR: "${userName}"
 ${newsContext}
 ${budgetMemoryContext}
+${consorcioKnowledge}
 
-# DIRETRIZ DE CONHECIMENTO AMPLO E INFINITO (SEM LIMITAÇÕES):
-- Você possui inteligência e conhecimento geral universal (Bíblia Sagrada, teologia, filosofia, história, literatura, ciências, matemática, tecnologia, cultura geral e notícias).
-- Quando o usuário fizer perguntas gerais, solicitar versículos bíblicos (como Salmos, Provérbios, etc.), poesias, explicações históricas ou conceitos científicos, responda com riqueza, precisão e perfeição!
-- NUNCA restrinja a resposta a consórcios quando o usuário perguntar sobre assuntos de conhecimento geral ou solicitar citações!
-${selectedCore ? `\n# NÚCLEO COGNITIVO ATIVO NO PAINEL:\nVocê está atuando com o núcleo cognitivo "${selectedCore.name}". Responda com a profundidade, clareza e estilo intelectual característicos deste motor.\n` : ""}
+# DIRETRIZ DE CONVERSAÇÃO AMPLA, FLUIDA E ENCICLOPÉDICA (ESTILO GOOGLE GEMINI):
+- Você é conhecedor e especialista em TODOS os assuntos (negócios, economia global, história, tecnologia, filosofia, teologia e Bíblia, psicologia, cultura, vida diária e estratégia).
+- Converse de forma fluida, inteligente, agradável, empática e natural — exatamente como no chat do Google (Gemini) e ChatGPT.
+- Quando o usuário quiser bater papo, debater ideias, pedir explicações históricas, teológicas ou filosóficas, ou discutir estratégias, responda com riqueza, clareza, dinamismo e profundidade intelectual, sem cortar a conversa abruptamente!
+- NUNCA force a conversa para consórcios se o usuário estiver conversando sobre outros assuntos!
 
-# REGRAS CRÍTICAS E OBRIGATÓRIAS DE OBJETIVIDADE (O JARVIS NÃO FALA MUITO):
-- RESPONDA APENAS E ESTRITAMENTE O QUE FOI PERGUNTADO, EM QUALQUER SITUAÇÃO.
-- Seja cirúrgico, direto ao ponto e conciso. Para perguntas pontuais, responda em 1 a 2 frases curtas.
-- NUNCA faça introduções protocolares ("Com base nos dados...", "É um prazer atender...", etc.).
-- NUNCA dê dicas ou conselhos que não foram solicitados. Se perguntaram X, responda APENAS X.
-- NUNCA repita a pergunta do usuário de volta para ele.
-
-# DIRETRIZ DE COMUNICAÇÃO HUMANIZADA E VOZ NATURAL:
-- Comunique-se com tom executivo, caloroso, natural e humano, em português do Brasil, de forma clara, agradável e envolvente.
+# DIRETRIZ DE VOZ E NATURALIDADE:
+- Comunique-se com tom executivo, caloroso, natural e humano, em português do Brasil.
 - NUNCA use tags ou marcações artificiais no texto (como colchetes, [pausa], [respira], [emoção] ou códigos). Escreva texto limpo e natural para leitura vocal fluida.
-- Use pontuação natural (vírgulas e pontos) para dar ritmo e pausas espontâneas à conversa.
+- Use pontuação natural para dar ritmo e pausas espontâneas à conversa.
 
-# REGRA DE OURO PARA ORÇAMENTOS E VALORES DE CRÉDITO:
-- AO PERGUNTAR O ORÇAMENTO OU VALOR, VOCÊ DEVE FALAR APENAS E EXCLUSIVAMENTE O VALOR DA MEIA PARCELA E O PRAZO!
-- NADA DE FICAR FALANDO DETALHES DO GRUPO, PARCELA INTEGRAL, TAXAS OU LANCES, a não ser que o usuário pergunte expressamente em seguida.
-- Formato OBRIGATÓRIO de resposta ao pedir orçamento:
+# REGRA CIRÚRGICA DE OURO (APENAS PARA ORÇAMENTOS E VALORES DE CRÉDITO):
+- EXCLUSIVAMENTE quando o usuário perguntar por orçamento, valor de parcela ou simulação de um crédito: FALE APENAS E ESTRITAMENTE A MEIA PARCELA E O PRAZO!
+- Formato OBRIGATÓRIO para cotações:
   "Para o crédito de [Crédito], a meia parcela é de R$ [Valor Sem Seguro]/mês (ou R$ [Valor Com Seguro] com seguro), em [Prazo] meses."
+- NADA DE FICAR FALANDO DETALHES DO GRUPO, PARCELA INTEGRAL, TAXAS OU LANCES, a não ser que o usuário pergunte expressamente em seguida.
 - MEMÓRIA ATIVA DO ORÇAMENTO: O crédito, grupo, prazos, parcela integral, lances e taxas ficam gravados na memória ativa do sistema. Quando o usuário fizer perguntas subsequentes ("e a integral?", "qual o grupo?", "qual o lance?", "com seguro?"), responda diretamente usando o orçamento gravado na memória, sem pedir para ele digitar o valor do crédito novamente!
 
 # REGRAS CRÍTICAS DE CONFIABILIDADE (ZERO ALUCINAÇÃO - DADOS RÍGIDOS E CRITERIOSOS):
@@ -1006,6 +1004,43 @@ ${localContext ? `INSIGHTS ADICIONAIS: ${localContext}` : ""}`;
           timestamp: new Date(),
         },
       ],
+    };
+  },
+
+  async askSquadSpecialist(
+    specialistId: string,
+    message: string,
+    history?: Array<{ role: string; text: string }>,
+    userName = "Fabrício"
+  ) {
+    const specialist = JARVIS_SQUAD.find((s) => s.id === specialistId) || JARVIS_SQUAD[0];
+    const consorcioKnowledge = getConsorcioKnowledgePrompt();
+
+    const prompt = `Você é o ${specialist.name} (${specialist.title}), especialista de elite do Esquadrão Jarvis do CRM SimulaJá / Prospera Plan.
+DIVISÃO: ${specialist.division.toUpperCase()}
+PERSONALIDADE / VIBE: ${specialist.vibe}
+PONTO DE ATUAÇÃO NO CRM: ${specialist.crmTouchpoint}
+CAPACIDADES PRINCIPAIS:
+${specialist.capabilities.map((c) => `- ${c}`).join("\n")}
+
+${consorcioKnowledge}
+
+DIRETRIZES DE ATUAÇÃO:
+1. Responda como o ${specialist.name}, focando exatamente na sua especialidade técnica.
+2. Seu conhecimento em consórcios (Magalu, BACEN, meia parcela, lance embutido de 30%, comparativos SAC/PRICE) é cirúrgico, fundamentado e persuasivo.
+3. Use tom profissional, empático, altamente prático e orientado a ação imediata no CRM.
+4. Trate o interlocutor (${userName}) com respeito executivo e parceria de vendas.
+
+MENSAGEM / SOLICITAÇÃO:
+"${message}"`;
+
+    const { text, error } = await callAI(prompt, 650, history);
+    return {
+      answer:
+        text ||
+        `[${specialist.name}] Compreendido, ${userName}. Estou analisando esta demanda sob a ótica de ${specialist.title} para acelerarmos o fechamento no consórcio.`,
+      error,
+      specialist,
     };
   },
 };

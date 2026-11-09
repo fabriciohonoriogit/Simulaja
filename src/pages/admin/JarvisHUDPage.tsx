@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { JarvisOrb, OrbState, OrbEmotion } from "@/components/admin/JarvisOrb";
 import {
@@ -37,6 +38,7 @@ import {
   Map,
   Palette,
   Bot,
+  Users,
   Paperclip,
   X,
   Image as ImageIcon,
@@ -241,6 +243,7 @@ function buildOptimizedFluxPrompt(rawPrompt: string): { prompt: string; title: s
 }
 
 export default function JarvisHUDPage() {
+  const navigate = useNavigate();
   const [orbState, setOrbState] = useState<OrbState>("idle");
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [command, setCommand] = useState("");
@@ -1481,6 +1484,13 @@ gn_prosperaplan@consorciomagalu.com.br`;
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-[10px] sm:text-xs text-slate-400">
+          <button
+            onClick={() => navigate("/admin/squad")}
+            className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold transition-all border border-indigo-500/50 bg-indigo-950/70 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.25)] hover:bg-indigo-900/60 cursor-pointer text-[9.5px] sm:text-xs"
+            title="Abrir o Esquadrão Especializado Jarvis (11 IAs Especialistas de Consórcio)"
+          >
+            <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-indigo-400" /> <span className="hidden sm:inline">Esquadrão (11 IAs)</span><span className="sm:hidden">Squad</span>
+          </button>
           <button
             onClick={() => setIsVoiceCloneOpen(true)}
             className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold transition-all border border-purple-500/50 bg-purple-950/70 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)] hover:bg-purple-900/60 cursor-pointer text-[9.5px] sm:text-xs"
