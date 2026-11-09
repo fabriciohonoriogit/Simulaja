@@ -728,6 +728,65 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 10. Templates Customizados de E-mail (GET / POST /api/email/templates)
+  if (pathname === "/api/email/templates") {
+    const templatesPath = path.resolve("./scripts/templates_cadencia.json");
+    if (req.method === "GET") {
+      let data = {};
+      if (fs.existsSync(templatesPath)) {
+        try {
+          data = JSON.parse(fs.readFileSync(templatesPath, "utf-8"));
+        } catch (e) {}
+      }
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(JSON.stringify({ success: true, templates: data }));
+      return;
+    }
+    if (req.method === "POST") {
+      const body = await readBody();
+      fs.writeFileSync(templatesPath, JSON.stringify(body, null, 2), "utf-8");
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(JSON.stringify({ success: true, message: "Templates salvos com sucesso!" }));
+      return;
+    }
+  }
+
+  // 11. Leads Excluídos da Prospecção (GET / POST /api/email/excluded-leads)
+  if (pathname === "/api/email/excluded-leads") {
+    const excludedPath = path.resolve("./scripts/excluded_leads.json");
+    if (req.method === "GET") {
+      let ids = [];
+      if (fs.existsSync(excludedPath)) {
+        try {
+          ids = JSON.parse(fs.readFileSync(excludedPath, "utf-8"));
+        } catch (e) {}
+      }
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(JSON.stringify({ success: true, excludedIds: ids }));
+      return;
+    }
+    if (req.method === "POST") {
+      const body = await readBody();
+      const list = Array.isArray(body) ? body : (body.excludedIds || []);
+      fs.writeFileSync(excludedPath, JSON.stringify(list, null, 2), "utf-8");
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(JSON.stringify({ success: true, message: "Leads excluídos gravados com sucesso!" }));
+      return;
+    }
+  }
+
   // Rota padrão 404
   res.writeHead(404, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ error: "Endpoint não encontrado", path: pathname }));

@@ -34,7 +34,7 @@ Faria sentido nos falarmos rapidamente por 5 minutinhos nesta semana para eu te 
 {Um grande abraço|Atenciosamente},
 Fabrício Honorio
 Gestor de Planejamento Patrimonial | Prospera Plan & Consórcio Magalu
-WhatsApp: (11) 98765-4321
+WhatsApp: (41) 99792-5357
 E-mail: gn_prosperaplan@consorciomagalu.com.br`,
   },
   2: {
@@ -56,7 +56,8 @@ Preparei uma lâmina executiva de 1 página com esse comparativo passo a passo. 
 {Um grande abraço|Cordialmente},
 Fabrício Honorio
 Prospera Plan | Consórcio Magalu
-(11) 98765-4321`,
+WhatsApp: (41) 99792-5357
+E-mail: gn_prosperaplan@consorciomagalu.com.br`,
   },
   3: {
     name: "Passo 3: Break-up Elegante & Última Tentativa",
@@ -77,9 +78,96 @@ Se mais adiante fizer sentido analisar uma compra planejada de imóvel, veículo
 Atenciosamente,
 Fabrício Honorio
 Gestor Comercial | Prospera Plan & Consórcio Magalu
-gn_prosperaplan@consorciomagalu.com.br`,
+WhatsApp: (41) 99792-5357
+E-mail: gn_prosperaplan@consorciomagalu.com.br`,
   },
 };
+
+const TEMPLATES_STORAGE_KEY = "prospeccao_email_templates";
+const EXCLUDED_LEADS_STORAGE_KEY = "prospeccao_excluded_lead_ids";
+
+/**
+ * Recupera os templates customizados pelo usuário (ou padrão)
+ */
+export function getCustomEmailTemplates(): Record<number, CadenciaStep> {
+  if (typeof window === "undefined") return { ...CADENCIA_EMAIL_STEPS };
+  try {
+    const raw = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+    if (!raw) return { ...CADENCIA_EMAIL_STEPS };
+    const parsed = JSON.parse(raw);
+    return {
+      1: parsed[1] ? { ...CADENCIA_EMAIL_STEPS[1], ...parsed[1] } : CADENCIA_EMAIL_STEPS[1],
+      2: parsed[2] ? { ...CADENCIA_EMAIL_STEPS[2], ...parsed[2] } : CADENCIA_EMAIL_STEPS[2],
+      3: parsed[3] ? { ...CADENCIA_EMAIL_STEPS[3], ...parsed[3] } : CADENCIA_EMAIL_STEPS[3],
+    };
+  } catch (e) {
+    return { ...CADENCIA_EMAIL_STEPS };
+  }
+}
+
+/**
+ * Salva templates customizados no localStorage e sincroniza com o servidor local
+ */
+export function saveCustomEmailTemplates(templates: Record<number, CadenciaStep>): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
+    // Sincronização opcional com backend local
+    fetch("http://localhost:3000/api/email/templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(templates),
+    }).catch(() => {});
+  } catch (e) {
+    console.error("Erro ao salvar templates de e-mail:", e);
+  }
+}
+
+/**
+ * Restaura templates para a cópia padrão original
+ */
+export function resetCustomEmailTemplates(step?: number): Record<number, CadenciaStep> {
+  const current = getCustomEmailTemplates();
+  if (step && CADENCIA_EMAIL_STEPS[step]) {
+    current[step] = { ...CADENCIA_EMAIL_STEPS[step] };
+    saveCustomEmailTemplates(current);
+    return current;
+  }
+  saveCustomEmailTemplates({ ...CADENCIA_EMAIL_STEPS });
+  return { ...CADENCIA_EMAIL_STEPS };
+}
+
+/**
+ * Obtém a lista de IDs ou e-mails de leads excluídos da prospecção
+ */
+export function getExcludedLeadIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(EXCLUDED_LEADS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * Salva a lista de leads excluídos
+ */
+export function saveExcludedLeadIds(ids: string[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(EXCLUDED_LEADS_STORAGE_KEY, JSON.stringify(ids));
+    fetch("http://localhost:3000/api/email/excluded-leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ids),
+    }).catch(() => {});
+  } catch (e) {
+    console.error("Erro ao salvar leads excluídos:", e);
+  }
+}
 
 export function parseSpintaxClient(text: string): string {
   if (!text) return "";
@@ -113,17 +201,27 @@ export function renderOutreachEmail(template: string, lead: Lead): string {
 }
 
 /**
- * Calcula a fila de prospecção com base nos leads fornecidos
+ * Calcula a fila de prospecção com base nos leads fornecidos, desconsiderando excluídos
  */
-export function calculateOutreachQueue(leads: Lead[]) {
+export function calculateOutreachQueue(leads: Lead[], excludedIds: string[] = []) {
   const step1: Lead[] = [];
   const step2: Lead[] = [];
   const step3: Lead[] = [];
   const completed: Lead[] = [];
 
+  const excludedSet = new Set(excludedIds.map((id) => String(id).toLowerCase().trim()));
+
   for (const lead of leads) {
     if (!lead.email || !lead.email.includes("@")) continue;
     if (["venda_fechada", "fechado", "perdido", "descartado"].includes(lead.status || "")) continue;
+
+    // Ignora se estiver na lista de exclusão manual
+    if (
+      (lead.id && excludedSet.has(String(lead.id).toLowerCase())) ||
+      (lead.email && excludedSet.has(lead.email.toLowerCase().trim()))
+    ) {
+      continue;
+    }
 
     // Se não tem último contato registrado, entra no Passo 1
     if (!lead.ultimo_contato) {
@@ -149,8 +247,15 @@ export function calculateOutreachQueue(leads: Lead[]) {
 /**
  * Exporta a lista de leads em formato CSV para a pasta de automação diária
  */
-export function exportLeadsToCSV(leads: Lead[]): string {
-  const valid = leads.filter((l) => l.email && l.email.includes("@"));
+export function exportLeadsToCSV(leads: Lead[], excludedIds: string[] = []): string {
+  const excludedSet = new Set(excludedIds.map((id) => String(id).toLowerCase().trim()));
+  const valid = leads.filter(
+    (l) =>
+      l.email &&
+      l.email.includes("@") &&
+      !excludedSet.has(String(l.id).toLowerCase()) &&
+      !excludedSet.has(String(l.email).toLowerCase().trim())
+  );
   const header = "nome,email,cidade,valor_credito,tipo_consorcio,celular\n";
   const rows = valid
     .map((l) => {

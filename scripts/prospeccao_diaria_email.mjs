@@ -225,6 +225,18 @@ gn_prosperaplan@consorciomagalu.com.br`,
   }
 };
 
+// Carrega templates customizados salvos pelo CRM se existirem
+const CUSTOM_TEMPLATES_FILE = path.join(__dirname, 'templates_cadencia.json');
+if (fs.existsSync(CUSTOM_TEMPLATES_FILE)) {
+  try {
+    const custom = JSON.parse(fs.readFileSync(CUSTOM_TEMPLATES_FILE, 'utf-8'));
+    for (const s of [1, 2, 3]) {
+      if (custom[s]?.subject) CADENCIA_TEMPLATES[s].subject = custom[s].subject;
+      if (custom[s]?.body) CADENCIA_TEMPLATES[s].buildText = () => custom[s].body;
+    }
+  } catch (e) {}
+}
+
 // 5. Interpolar variáveis no texto
 function renderTemplate(content, lead) {
   const nomePrimeiro = getFirstName(lead.nome);
@@ -313,6 +325,24 @@ function getLeadsToProspect() {
     } catch (e) {
       log(`Erro ao ler JSON: ${e.message}`, 'WARN');
     }
+  }
+
+  // 3. Filtrar leads excluídos manualmente pelo CRM
+  const EXCLUDED_LEADS_FILE = path.join(__dirname, 'excluded_leads.json');
+  if (fs.existsSync(EXCLUDED_LEADS_FILE)) {
+    try {
+      const rawExcluded = fs.readFileSync(EXCLUDED_LEADS_FILE, 'utf-8');
+      const excludedList = JSON.parse(rawExcluded);
+      if (Array.isArray(excludedList)) {
+        const excludedSet = new Set(excludedList.map(item => String(item).toLowerCase().trim()));
+        for (const [email, lead] of Array.from(leadsMap.entries())) {
+          if (excludedSet.has(email) || (lead.id && excludedSet.has(String(lead.id).toLowerCase()))) {
+            leadsMap.delete(email);
+          }
+        }
+        log(`Filtro de exclusão ativo: ${excludedSet.size} itens excluídos.`);
+      }
+    } catch (e) {}
   }
 
   return Array.from(leadsMap.values());
