@@ -6,6 +6,8 @@
  * Integração 100% direta via Webhook Supabase com privilégio de gravação no CRM!
  */
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 import http from "http";
 import fs from "fs";
 import path from "path";
@@ -16,7 +18,15 @@ const require = createRequire(import.meta.url);
 
 // Carrega Baileys e dependências
 const baileys = require("../evolution-api/node_modules/baileys");
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = baileys;
+const {
+  default: makeWASocket,
+  useMultiFileAuthState,
+  DisconnectReason,
+  fetchLatestWaWebVersion,
+  fetchLatestBaileysVersion,
+  makeCacheableSignalKeyStore,
+  Browsers,
+} = baileys;
 const pino = require("../evolution-api/node_modules/pino");
 const QRCode = require("../evolution-api/node_modules/qrcode");
 const qrcodeTerminal = require("../evolution-api/node_modules/qrcode-terminal");
@@ -31,6 +41,26 @@ process.on("unhandledRejection", (reason) => {
 
 const PORT = process.env.PORT || 3000;
 const SESSION_DIR = path.resolve("./whatsapp_session");
+
+/**
+ * Limpa arquivos de sessão antigos/quebrados para permitir um pareamento 100% novo e limpo.
+ * Preserva o arquivo phone_jid_cache.json para manter o histórico de números mapeados.
+ */
+function clearSessionFiles() {
+  if (!fs.existsSync(SESSION_DIR)) return;
+  try {
+    const files = fs.readdirSync(SESSION_DIR);
+    for (const file of files) {
+      if (file === "phone_jid_cache.json") continue;
+      try {
+        fs.unlinkSync(path.join(SESSION_DIR, file));
+      } catch {}
+    }
+    console.log("🧹 [WAHA Local] Arquivos residuais de sessão limpos com sucesso.");
+  } catch (err) {
+    console.warn("⚠️ [WAHA Local] Aviso ao limpar pasta de sessão:", err.message);
+  }
+}
 
 // URL da Edge Function do Supabase (ignora RLS e grava direto em chat_messages e leads)
 const SUPABASE_WEBHOOK_URL =
@@ -260,20 +290,51 @@ async function connectToWhatsApp() {
   currentStatus = "STARTING";
   console.log("\n🔄 [WAHA Local] Conectando ao WhatsApp...");
 
+  if (sock) {
+    try {
+      sock.ev.removeAllListeners("connection.update");
+      sock.ev.removeAllListeners("creds.update");
+      sock.ev.removeAllListeners("messages.upsert");
+      sock.end(undefined);
+    } catch (e) {}
+  }
+
+  // Verifica se creds.json tem sessão quebrada/desregistrada antes de tentar subir
+  const credsPath = path.join(SESSION_DIR, "creds.json");
+  if (fs.existsSync(credsPath)) {
+    try {
+      const c = JSON.parse(fs.readFileSync(credsPath, "utf8"));
+      if (c && c.registered === false) {
+        console.log("🧹 [WAHA Local] Sessão anterior não registrada detectada. Limpando credenciais antigas...");
+        clearSessionFiles();
+      }
+    } catch (e) {}
+  }
+
   const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
-  let version = [2, 3000, 1015901307];
+  let version = [2, 3000, 1053716622];
   try {
-    const vInfo = await fetchLatestBaileysVersion();
+    const vInfo = await fetchLatestWaWebVersion({});
     if (vInfo?.version) version = vInfo.version;
   } catch (err) {
-    // Fallback
+    try {
+      const bInfo = await fetchLatestBaileysVersion();
+      if (bInfo?.version) version = bInfo.version;
+    } catch (e2) {}
   }
 
   sock = makeWASocket({
     version,
-    auth: state,
+    auth: {
+      creds: state.creds,
+      keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
+    },
     logger: pino({ level: "silent" }),
-    browser: ["Simulajá CRM", "Chrome", "1.0.0"],
+    browser: ["Mac OS", "Chrome", "14.4.1"],
+    printQRInTerminal: false,
+    connectTimeoutMs: 30000,
+    defaultQueryTimeoutMs: 30000,
+    keepAliveIntervalMs: 30000,
   });
 
   sock.ev.on("creds.update", saveCreds);
@@ -290,13 +351,7 @@ async function connectToWhatsApp() {
       } catch (e) {
         console.error("Erro ao gerar imagem QR Code:", e);
       }
-      console.log("\n📱 [WAHA Local] Escaneie o QR Code abaixo no seu WhatsApp > Aparelhos Conectados:\n");
-      try {
-        qrcodeTerminal.generate(qr, { small: true });
-      } catch (err) {
-        console.log("QR Code String:", qr);
-      }
-      console.log("👉 Ou acesse o Simulajá > Configurações > Conexão WhatsApp para escanear pela tela do CRM.\n");
+      console.log("\n📱 [WAHA Local] QR Code pronto para leitura no WhatsApp > Aparelhos Conectados ou via Código de Pareamento no CRM.\n");
     }
 
     if (connection === "close") {
@@ -308,7 +363,7 @@ async function connectToWhatsApp() {
       currentQrDataUrl = null;
 
       if (statusCode === 408) {
-        console.log("⏳ [WAHA Local] Tempo de leitura do QR Code expirado. Gerando novo código em 2 segundos...");
+        console.log("⏳ [WAHA Local] Tempo de leitura do QR Code expirado. Renovando...");
       } else {
         console.log(`⚠️ [WAHA Local] Conexão encerrada (status: ${statusCode}). Reconectando: ${shouldReconnect}`);
       }
@@ -316,7 +371,8 @@ async function connectToWhatsApp() {
       if (shouldReconnect) {
         setTimeout(connectToWhatsApp, 2500);
       } else {
-        console.log("❌ [WAHA Local] Desconectado. Exclua a pasta ./whatsapp_session para novo pareamento.");
+        console.log("❌ [WAHA Local] Desconectado pelo WhatsApp. Limpando sessão para novo pareamento limpo...");
+        clearSessionFiles();
       }
     } else if (connection === "open") {
       currentStatus = "WORKING";
@@ -435,18 +491,58 @@ const server = http.createServer(async (req, res) => {
   // 4. Solicitação de Código de Pareamento de 8 dígitos (sem escanear QR Code)
   if (pathname.includes("/auth/request-code") && req.method === "POST") {
     const body = await readBody();
-    const cleanPhone = (body.phoneNumber || "").replace(/\D/g, "");
+    let cleanPhone = (body.phoneNumber || "").replace(/\D/g, "");
+    if (!cleanPhone.startsWith("55") && cleanPhone.length >= 10 && cleanPhone.length <= 11) {
+      cleanPhone = `55${cleanPhone}`;
+    }
     if (!cleanPhone) {
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "phoneNumber é obrigatório" }));
+      res.end(JSON.stringify({ error: "phoneNumber é obrigatório (ex: 41999999999 ou 5541999999999)" }));
       return;
     }
 
     try {
-      if (!sock) throw new Error("Socket não inicializado");
+      if (!sock) {
+        await connectToWhatsApp();
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      if (currentStatus === "WORKING" && sock?.user) {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: true, connected: true, message: "WhatsApp já está conectado!" }));
+        return;
+      }
       const code = await sock.requestPairingCode(cleanPhone);
+      console.log(`\n🔑 [WAHA Local - Código de Pareamento Gerado para ${cleanPhone}]: ${code}\n`);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ success: true, code }));
+    } catch (err) {
+      console.error("Erro ao solicitar código de pareamento:", err.message);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 4.1 Reiniciar Sessão / Limpar Cache (POST /api/sessions/default/restart ou DELETE /api/sessions/default)
+  if (
+    (pathname === "/api/sessions/default/restart" && req.method === "POST") ||
+    (pathname === "/api/sessions/default" && req.method === "DELETE") ||
+    (pathname === "/api/sessions/restart" && req.method === "POST")
+  ) {
+    try {
+      if (sock) {
+        try { sock.end(); } catch {}
+        sock = null;
+      }
+      clearSessionFiles();
+      currentStatus = "STOPPED";
+      currentQrText = null;
+      currentQrPngBuffer = null;
+      currentQrDataUrl = null;
+      console.log("🧹 [WAHA Local] Sessão resetada e limpa a pedido do CRM.");
+      setTimeout(connectToWhatsApp, 1200);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true, message: "Sessão limpa com sucesso. Pronto para novo pareamento." }));
     } catch (err) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: err.message }));

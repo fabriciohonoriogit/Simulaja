@@ -58,6 +58,8 @@ import { VoiceCloningModal } from "@/components/admin/VoiceCloningModal";
 import { buscarEmpresasPorCidade, calcularConsorcioRadar } from "@/services/radarLocalService";
 import { JarvisAICoreDeck, AI_CORE_PROVIDERS, AICoreProvider } from "@/components/admin/JarvisAICoreDeck";
 import { HarveyAutonomousModal } from "@/components/admin/HarveyAutonomousModal";
+import { WhatsAppConnectionModal } from "@/components/admin/WhatsAppConnectionModal";
+import { checkWahaStatus, sendWhatsAppMessage } from "@/services/evolutionApiService";
 import {
   parseProposalRequestFromPrompt,
   generateBudgetProposal,
@@ -247,6 +249,33 @@ export default function JarvisHUDPage() {
   const [chatHistory, setChatHistory] = useState<Array<{ role: string; text: string }>>([]);
   const [isVoiceCloneOpen, setIsVoiceCloneOpen] = useState(false);
   const [isHarveyModalOpen, setIsHarveyModalOpen] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [waStatusLive, setWaStatusLive] = useState<"connected" | "waiting" | "disconnected" | "checking">("checking");
+
+  useEffect(() => {
+    let mounted = true;
+    const verifyStatus = async () => {
+      try {
+        const res = await checkWahaStatus();
+        if (!mounted) return;
+        if (res.connected) {
+          setWaStatusLive("connected");
+        } else if (res.status === "SCAN_QR_CODE" || res.status === "STARTING" || res.qrCode) {
+          setWaStatusLive("waiting");
+        } else {
+          setWaStatusLive("disconnected");
+        }
+      } catch {
+        if (mounted) setWaStatusLive("disconnected");
+      }
+    };
+    verifyStatus();
+    const interval = setInterval(verifyStatus, 6000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [isWhatsAppModalOpen]);
   const [lateralTab, setLateralTab] = useState<"nucleo" | "solicitacoes">("nucleo");
   const [mobileActiveTab, setMobileActiveTab] = useState<"chat" | "models" | "actions" | "logs">("chat");
   const [lastJarvisReply, setLastJarvisReply] = useState<string | null>(null);
@@ -863,30 +892,29 @@ gn_prosperaplan@consorciomagalu.com.br`;
         .replace(/{segmento}/g, data.segmento);
 
       try {
-        await fetch("http://localhost:3000/api/sendText", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chatId: lead.telefone,
-            text: personalizedText,
-          }),
+        const sendRes = await sendWhatsAppMessage({
+          number: lead.telefone,
+          text: personalizedText,
+          leadNome: lead.nome,
         });
 
-        setLogs((prev) =>
-          prev.map((l) => {
-            if (l.id !== logId) return l;
-            const updatedLeads = [...l.prospectingData!.leads];
-            updatedLeads[i] = { ...updatedLeads[i], statusEnvio: "enviado" };
-            return {
-              ...l,
-              prospectingData: {
-                ...l.prospectingData!,
-                leads: updatedLeads,
-                enviadosCount: (l.prospectingData!.enviadosCount || 0) + 1,
-              },
-            };
-          })
-        );
+        if (sendRes.success) {
+          setLogs((prev) =>
+            prev.map((l) => {
+              if (l.id !== logId) return l;
+              const updatedLeads = [...l.prospectingData!.leads];
+              updatedLeads[i] = { ...updatedLeads[i], statusEnvio: "enviado" };
+              return {
+                ...l,
+                prospectingData: {
+                  ...l.prospectingData!,
+                  leads: updatedLeads,
+                  enviadosCount: (l.prospectingData!.enviadosCount || 0) + 1,
+                },
+              };
+            })
+          );
+        }
       } catch (err) {
         console.warn("Falha no envio individual WAHA:", err);
       }
@@ -1636,13 +1664,46 @@ gn_prosperaplan@consorciomagalu.com.br`;
                   <span className="text-[10px] font-black text-amber-400">IMAP ATIVO</span>
                 </div>
 
-                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-indigo-900/40 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setIsWhatsAppModalOpen(true)}
+                  className={`w-full p-2.5 rounded-xl border flex items-center justify-between text-left transition-all hover:scale-[1.01] cursor-pointer ${
+                    waStatusLive === "connected"
+                      ? "bg-emerald-950/40 border-emerald-800/60 hover:bg-emerald-900/40"
+                      : waStatusLive === "waiting"
+                      ? "bg-amber-950/40 border-amber-800/60 hover:bg-amber-900/40 animate-pulse"
+                      : "bg-slate-950/80 border-indigo-900/40 hover:bg-slate-900/80"
+                  }`}
+                  title="Clique para abrir Conexão Prática do WhatsApp (Pairing Code ou QR Code)"
+                >
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
+                    <MessageSquare
+                      className={`h-3.5 w-3.5 ${
+                        waStatusLive === "connected"
+                          ? "text-emerald-400"
+                          : waStatusLive === "waiting"
+                          ? "text-amber-400"
+                          : "text-indigo-400"
+                      }`}
+                    />
                     <span className="text-[11px] text-slate-300 font-bold">WAHA WhatsApp</span>
                   </div>
-                  <span className="text-[10px] font-black text-indigo-400">LOCAL ATIVO</span>
-                </div>
+                  <span
+                    className={`text-[10px] font-black ${
+                      waStatusLive === "connected"
+                        ? "text-emerald-400"
+                        : waStatusLive === "waiting"
+                        ? "text-amber-400"
+                        : "text-rose-400"
+                    }`}
+                  >
+                    {waStatusLive === "connected"
+                      ? "🟢 CONECTADO"
+                      : waStatusLive === "waiting"
+                      ? "🟡 PAREAR AGORA"
+                      : "🔴 CONECTAR"}
+                  </span>
+                </button>
               </div>
 
               {/* MINI VISUALIZADOR DE ÁUDIO & TELEMETRIA DO SISTEMA */}
@@ -2734,6 +2795,12 @@ gn_prosperaplan@consorciomagalu.com.br`;
             ...prev,
           ]);
         }}
+      />
+
+      <WhatsAppConnectionModal
+        open={isWhatsAppModalOpen}
+        onOpenChange={setIsWhatsAppModalOpen}
+        onConnected={() => setWaStatusLive("connected")}
       />
     </div>
   );

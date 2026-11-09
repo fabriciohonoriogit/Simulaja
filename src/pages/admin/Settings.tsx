@@ -24,6 +24,7 @@ import {
   checkWahaStatus,
   fetchWahaQrCode,
   requestWahaPairingCode,
+  restartWahaSession,
   WhatsAppMode 
 } from "@/services/evolutionApiService";
 import { QRCodeSVG } from "qrcode.react";
@@ -220,6 +221,48 @@ export default function Settings() {
       setWahaCreating(false);
     }
   };
+
+  const handleRestartWaha = async () => {
+    setWahaCreating(true);
+    try {
+      const res = await restartWahaSession(wahaSession || "default");
+      if (res.success) {
+        setWahaQrCodeImg(null);
+        setWahaPairingCode(null);
+        setWahaStatus("STOPPED");
+        toast({
+          title: "Sessão Reiniciada 🔄",
+          description: "Cache antigo limpo com sucesso! Você pode gerar um novo QR Code ou Código de Pareamento agora.",
+        });
+      } else {
+        toast({ title: "Aviso", description: res.error, variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } finally {
+      setWahaCreating(false);
+    }
+  };
+
+  // Auto-polling em tempo real para detectar conexão concluída no celular
+  useEffect(() => {
+    if (!wahaQrCodeImg && !wahaPairingCode && wahaStatus !== "SCAN_QR_CODE") return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await checkWahaStatus(wahaSession || "default");
+        if (res.state === "WORKING") {
+          setWahaStatus("WORKING");
+          setWahaQrCodeImg(null);
+          setWahaPairingCode(null);
+          toast({
+            title: "WhatsApp CONECTADO! 🟢",
+            description: "Aparelho pareado com sucesso. Pronto para envios pelo CRM!",
+          });
+        }
+      } catch (e) {}
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [wahaQrCodeImg, wahaPairingCode, wahaStatus, wahaSession]);
 
   const fetchData = async () => {
     if (!profile?.organizacao_id) return;
@@ -896,7 +939,18 @@ export default function Settings() {
                             className="font-bold text-xs h-9"
                           >
                             {wahaTesting ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
-                            Salvar &amp; Testar
+                            Testar Conexão
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleRestartWaha}
+                            disabled={wahaCreating}
+                            className="font-bold text-xs h-9 border-amber-300 hover:border-amber-400 hover:bg-amber-50 text-amber-800"
+                            title="Limpar arquivos residuais e reiniciar sessão do zero"
+                          >
+                            <RefreshCw className="mr-1.5 h-3.5 w-3.5 text-amber-600" />
+                            Limpar &amp; Reiniciar
                           </Button>
                           <Button 
                             size="sm"
@@ -983,12 +1037,28 @@ export default function Settings() {
                           )}
 
                           {wahaPairingCode && (
-                            <div className="p-3 bg-slate-800/90 rounded-xl border border-emerald-500/30 text-center w-full max-w-xs space-y-1">
-                              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
-                                Código de Pareamento de 8 dígitos:
+                            <div className="p-4 bg-slate-800/95 rounded-2xl border border-emerald-500/40 text-center w-full max-w-sm space-y-2 shadow-lg">
+                              <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-bold">
+                                Código de Pareamento por Telefone:
                               </p>
-                              <p className="text-xl font-mono font-black text-emerald-400 tracking-widest">
-                                {wahaPairingCode}
+                              <div className="flex items-center justify-center gap-2">
+                                <p className="text-2xl font-mono font-black text-white tracking-widest bg-black/40 px-3 py-1.5 rounded-xl border border-slate-700 select-all">
+                                  {wahaPairingCode}
+                                </p>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(wahaPairingCode);
+                                    toast({ title: "Código copiado!", description: wahaPairingCode });
+                                  }}
+                                  className="h-10 text-xs font-bold border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                >
+                                  Copiar
+                                </Button>
+                              </div>
+                              <p className="text-[10.5px] text-slate-300">
+                                💡 No WhatsApp: <strong>Aparelhos conectados</strong> &gt; <strong>Conectar com número de telefone</strong> &gt; Digite o código acima.
                               </p>
                             </div>
                           )}

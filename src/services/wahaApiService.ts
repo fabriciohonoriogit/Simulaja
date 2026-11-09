@@ -174,6 +174,31 @@ export const startWahaSession = async (customSession?: string): Promise<{ succes
 };
 
 /**
+ * Reinicia e limpa arquivos residuais da sessão WAHA para permitir novo pareamento limpo
+ */
+export const restartWahaSession = async (customSession?: string): Promise<{ success: boolean; message?: string; error?: string }> => {
+  const config = getWahaConfig();
+  const session = customSession || config.sessionName || "default";
+
+  try {
+    const res = await fetch(`${config.apiUrl}/api/sessions/${session}/restart`, {
+      method: "POST",
+      headers: getWahaHeaders(config.apiKey),
+    });
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return { success: true, message: data?.message || "Sessão reiniciada com sucesso." };
+    }
+
+    const err = await res.text().catch(() => "Erro ao reiniciar");
+    return { success: false, error: err };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Falha ao conectar com o servidor WAHA" };
+  }
+};
+
+/**
  * Busca o QR Code gerado pelo WAHA (retorna base64 para exibição direta em <img>)
  */
 export const fetchWahaQrCode = async (customSession?: string): Promise<{
