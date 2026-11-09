@@ -449,9 +449,7 @@ export default function JarvisHUDPage() {
       },
       ...prev,
     ]);
-    if (audioEnabled) {
-      speakResponse(`Motor ${core.name} ativado.`);
-    }
+    toast.success(`${core.name} conectado com sucesso.`);
     // No celular ou tablet, ao escolher um modelo, volta imediatamente para a aba de chat
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setMobileActiveTab("chat");
@@ -1359,15 +1357,6 @@ gn_prosperaplan@consorciomagalu.com.br`;
     // Barge-in: interrompe áudio em reprodução anterior
     stopVoice();
 
-    // Fala de preenchimento aleatória se a resposta demorar mais de 1,2s
-    let fillerPlayed = false;
-    const fillerTimeout = setTimeout(() => {
-      if (audioEnabled) {
-        fillerPlayed = true;
-        speakFillerPhrase();
-      }
-    }, 1200);
-
     try {
       const aiResult = await aiService.askAssistant(
         textToRun,
@@ -1378,13 +1367,11 @@ gn_prosperaplan@consorciomagalu.com.br`;
         selectedCore
       );
 
-      clearTimeout(fillerTimeout);
-
       let responseText = aiResult?.answer;
       if (!responseText || responseText.trim() === "") {
         const isTarde = new Date().getHours() >= 12 && new Date().getHours() < 18;
         const saudacao = isTarde ? "Boa tarde" : new Date().getHours() < 12 ? "Bom dia" : "Boa noite";
-        responseText = `[emoção:alegre] Olá, Fabrício! ${saudacao}! [pausa] Estou à sua total disposição. Como prefere avançar na gestão dos clientes e na prospecção hoje?`;
+        responseText = `Olá, Fabrício! ${saudacao}! Estou à sua total disposição. Como posso lhe ajudar agora?`;
       }
 
       // Remove tags emocionais para feed, histórico e logs
@@ -1406,8 +1393,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
       setLastJarvisReply(cleanReplyForFeed);
       speakResponse(responseText);
     } catch (e: any) {
-      clearTimeout(fillerTimeout);
-      const fallbackMsg = `[emoção:empático] Olá, Fabrício! Tive uma oscilação na resposta externa, [pausa] mas meus subagentes locais estão ativos. Pode solicitar prospecções, simulações ou consultas do funil que executo imediatamente!`;
+      const fallbackMsg = `Olá, Fabrício! Tive uma oscilação momentânea na conexão, mas estou pronto. Como posso lhe ajudar?`;
       const cleanFallback = stripEmotionTags(fallbackMsg);
       setLogs((prev) => [
         { id: (Date.now() + 1).toString(), time: timeStr, tag: "JARVIS AI", text: cleanFallback, color: "text-amber-400 font-semibold" },
@@ -1417,7 +1403,6 @@ gn_prosperaplan@consorciomagalu.com.br`;
       speakResponse(fallbackMsg);
       setOrbState("idle");
     } finally {
-      clearTimeout(fillerTimeout);
       setIsProcessing(false);
     }
   };

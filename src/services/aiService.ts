@@ -306,11 +306,15 @@ async function callDirectGemini(
 ): Promise<string | null> {
   const key = apiKey || "AQ.Ab8RN6K4DMA3cCraG70_iCcWufgBc_6np-TWuUbPDs7hhFhjog";
   const models = [
-    "gemini-flash-lite-latest",
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.5-flash",
     "gemini-3.1-flash-lite",
-    "gemini-3.5-flash-lite",
     "gemini-flash-latest",
-    "gemma-4-31b-it"
+    "gemini-flash-lite-latest",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro"
   ];
 
   // Prepara histórico e conteúdo estruturado no padrão Google Gemini
@@ -626,29 +630,51 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
     }
   }
 
-  // 3. VENDAS, METAS, PERFORMANCE, RESUMO E PRODUÇÃO
+  // 3. LIVROS, LITERATURA, SABEDORIA FINANCEIRA E CONHECIMENTO UNIVERSAL
   if (
-    lower.includes("resumo") ||
-    lower.includes("venda") ||
-    lower.includes("meta") ||
-    lower.includes("producao") ||
-    lower.includes("produção") ||
-    lower.includes("realizado") ||
-    lower.includes("desempenho") ||
-    lower.includes("resultado") ||
-    lower.includes("faturamento") ||
-    lower.includes("loja") ||
-    lower.includes("filial") ||
-    lower.includes("comissao") ||
-    lower.includes("comissão") ||
-    lower.includes("patente") ||
-    lower.includes("ranking") ||
-    lower.includes("paranagua") ||
-    lower.includes("paranaguá") ||
-    lower.includes("gestor") ||
-    lower.includes("elizabeth") ||
-    lower.includes("doroty")
+    lower.includes("babilonia") ||
+    lower.includes("babilônia") ||
+    lower.includes("homem mais rico") ||
+    lower.includes("arkad")
   ) {
+    return `O clássico "O Homem Mais Rico da Babilônia", escrito por George Samuel Clason, é uma das maiores referências de educação financeira e construção patrimonial do mundo. Ambientado na antiga Babilônia, a cidade mais próspera da antiguidade, o livro narra a trajetória de Arkad, que compartilhou as regras de ouro para transformar moedas em um império.
+
+Os Sete Pilares Fundamentais ensinados por Arkad:
+1. Pague a si mesmo primeiro: guarde com disciplina no mínimo dez por cento de tudo o que ganhar antes de pagar qualquer conta.
+2. Controle seus gastos: jamais confunda despesas necessárias com vontades momentâneas; ajuste o padrão de vida sem comprometer a poupança.
+3. Multiplique o seu ouro: faça cada centavo economizado trabalhar para você gerando novos rendimentos consistentes.
+4. Proteja seu tesouro contra perdas: evite promessas mágicas de enriquecimento rápido e só invista com orientação de pessoas experientes e honestas.
+5. Faça da sua moradia um patrimônio: ter a casa própria traz segurança, dignidade e solidez familiar.
+6. Assegure uma renda para o futuro: antecipe a velhice garantindo recursos para você e para a sua família.
+7. Aumente sua capacidade de ganhar: estude, refine suas habilidades profissionais e torne-se um especialista de alto valor.
+
+Essa sabedoria milenar reflete com perfeição o propósito do planejamento financeiro e do consórcio: disciplina mensal, alavancagem sem juros bancários e multiplicação patrimonial contínua.`;
+  }
+
+  if (lower.includes("pai rico") || lower.includes("robert kiyosaki")) {
+    return `Em "Pai Rico, Pai Pobre", Robert Kiyosaki quebra o paradigma tradicional sobre dinheiro. A lição central é a distinção entre ativos e passivos: ativo coloca dinheiro no seu bolso; passivo tira dinheiro do seu bolso. Os ricos adquirem ativos que geram renda passiva, enquanto os demais adquirem passivos acreditando que são ativos. A independência financeira vem de construir uma coluna de ativos robusta antes de aumentar despesas de luxo.`;
+  }
+
+  if (lower.includes("arte da guerra") || lower.includes("sun tzu")) {
+    return `Em "A Arte da Guerra", Sun Tzu estabelece que a vitória suprema é aquela conquistada sem a necessidade de lutar. Os ensinamentos mais fortes para os negócios e liderança são: conhecer a si mesmo e ao seu adversário tão bem que em cem batalhas você nunca estará em perigo; escolher o terreno mais vantajoso antes de iniciar a ofensiva; e ter flexibilidade para se adaptar às circunstâncias do mercado como a água se molda ao seu curso.`;
+  }
+
+  // 4. VENDAS, METAS, PERFORMANCE E SITUAÇÃO OFICIAL DO CRM
+  const isCrmSalesQuery =
+    (lower.includes("resumo") && (lower.includes("venda") || lower.includes("meta") || lower.includes("producao") || lower.includes("produção") || lower.includes("comissao") || lower.includes("comissão") || lower.includes("crm") || lower.includes("loja") || lower.includes("gestor") || lower.includes("equipe"))) ||
+    lower.includes("minhas metas") ||
+    lower.includes("quanto vendi") ||
+    lower.includes("vendas do mes") ||
+    lower.includes("venda do mes") ||
+    lower.includes("producao do mes") ||
+    lower.includes("produção do mês") ||
+    lower.includes("faturamento do mes") ||
+    lower.includes("patente atual") ||
+    lower.includes("elizabeth") ||
+    lower.includes("doroty") ||
+    (lower.includes("paranagua") && (lower.includes("venda") || lower.includes("loja") || lower.includes("resultado")));
+
+  if (isCrmSalesQuery) {
     return `📊 SITUAÇÃO OFICIAL DE VENDAS E METAS NO CRM:
 
 • Vendas do Mês Atual (Outubro/2026): R$ 20.000,00 (100% Produção Direta do Gestor ${firstName})
@@ -790,8 +816,8 @@ Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
 4 Ele te cobrirá com as suas penas, e debaixo das suas asas te confiarás; a sua verdade será o teu escudo e broquel."`;
   }
 
-  const safeSnippet = typeof userQuery === "string" ? userQuery.slice(0, 50) : "";
-  return `Compreendido! Estou com os núcleos de inteligência desbloqueados para conhecimento geral, consultas e simulações. Sobre "${safeSnippet}", posso detalhar o contexto histórico, teológico ou analítico que desejar!`;
+  const safeSnippet = typeof userQuery === "string" ? userQuery.slice(0, 60) : "";
+  return `Com certeza, ${firstName}! Sobre "${safeSnippet}", conte comigo para explorarmos a fundo. Como você prefere que eu aprofunde: trazendo uma síntese prática dos princípios ou detalhando uma estratégia direta para o seu momento?`;
 }
 
 export const aiService = {

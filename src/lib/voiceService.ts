@@ -44,13 +44,13 @@ export const EMOTION_PROSODY: Record<
   surpreso: { rateDelta: 22, pitchHz: 12, volumePct: 18 },
 };
 
-// Falas de preenchimento (filler phrases) sem repetição consecutiva
+// Falas de preenchimento humanizadas (sem jargões robóticos de motores)
 export const FILLER_PHRASES = [
-  "Um instante, consultando os dados...",
-  "Processando com o motor neural...",
-  "Analisando os indicadores...",
-  "Um momento, cruzando as informações...",
-  "Acessando o banco de dados...",
+  "Um momento, Fabrício...",
+  "Perfeito, já estou levantando essas informações...",
+  "Com certeza, só um instante...",
+  "Certo, já estou preparando a resposta...",
+  "Ótimo ponto, um segundo..."
 ];
 
 let lastFillerIndex = -1;
@@ -506,6 +506,7 @@ export function stopVoice() {
   if (typeof window !== "undefined" && window.speechSynthesis) {
     try {
       window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
     } catch {}
   }
 }
@@ -556,17 +557,25 @@ export function speakJarvisLocalSpeech(
   isPlaybackRunning = true;
   callbacks?.onStart?.();
 
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    try {
+      window.speechSynthesis.resume();
+    } catch {}
+  }
+
   const voice = customVoice || getBestPtBrVoice();
-  const words = cleanText.split(" ");
+  const rawSentences = cleanText.split(/([.!?;:\n]+)/g);
   const chunks: string[] = [];
   let currentChunk = "";
 
-  for (const word of words) {
-    if ((currentChunk + " " + word).length > 200 && /[.,;!?]$/.test(currentChunk)) {
+  for (let i = 0; i < rawSentences.length; i++) {
+    const part = rawSentences[i];
+    if (!part) continue;
+    if ((currentChunk + part).length > 140 && currentChunk.trim()) {
       chunks.push(currentChunk.trim());
-      currentChunk = word;
+      currentChunk = part;
     } else {
-      currentChunk += (currentChunk ? " " : "") + word;
+      currentChunk += part;
     }
   }
   if (currentChunk.trim()) {
@@ -586,8 +595,8 @@ export function speakJarvisLocalSpeech(
     utterance.lang = "pt-BR";
     if (voice) utterance.voice = voice;
 
-    utterance.rate = 1.18;
-    utterance.pitch = 1.08;
+    utterance.rate = 1.12;
+    utterance.pitch = 1.05;
 
     let utteranceActive = true;
     startSimulatedAudioEnvelope(() => utteranceActive);
@@ -605,6 +614,7 @@ export function speakJarvisLocalSpeech(
     };
 
     try {
+      window.speechSynthesis.resume();
       window.speechSynthesis.speak(utterance);
     } catch {
       callbacks?.onEnd?.();
@@ -669,7 +679,7 @@ export async function speakJarvisText(
   const tryNeuralTTS = async (): Promise<boolean> => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000);
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
 
       const url = `http://localhost:3000/api/tts?voice=pt-BR-AntonioNeural&rate=%2B18%25&pitch=%2B4Hz&volume=%2B15%25&text=${encodeURIComponent(
         cleanText.slice(0, 1500)
@@ -710,10 +720,10 @@ export async function speakJarvisText(
 
 /**
  * Toca uma fala de preenchimento (filler phrase) quando a resposta demorar > 1.2s
+ * Desativado: o Jarvis agora responde de forma 100% humanizada sem interrupções robóticas de preenchimento
  */
-export async function speakFillerPhrase(onStart?: () => void, onEnd?: () => void) {
-  const phrase = getRandomFillerPhrase();
-  return speakJarvisText(phrase, { onStart, onEnd });
+export async function speakFillerPhrase(_onStart?: () => void, _onEnd?: () => void) {
+  return;
 }
 
 // Suporte e inicialização de vozes

@@ -84,3 +84,4 @@ export function getConsorcioKnowledgePrompt(): string {
    - Administradora: Consórcio Magalu (parceira Prospera Plan).
 `;
 }
+
