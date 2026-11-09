@@ -46,3 +46,4 @@ wa-akg/
 vite.config.ts.timestamp-*
 whatsapp_session/
 waha-sessions/
+public/whatsapp_qr.png
