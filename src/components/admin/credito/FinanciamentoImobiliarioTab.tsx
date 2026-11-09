@@ -1652,8 +1652,6 @@ export function FinanciamentoImobiliarioTab() {
               </tr>
             </tbody>
           </table>
-            </tbody>
-          </table>
         </div>
 
         {/* Quadro de Destaque da Economia (Clean & Executivo) */}
