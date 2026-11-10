@@ -84,6 +84,11 @@ export default function Comissoes() {
   const [fechamentos, setFechamentos] = useState<any[]>([]);
   const [isSavingPagamento, setIsSavingPagamento] = useState(false);
 
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+  const currentFechamento = useMemo(() => fechamentos.find(f => f.mes === currentMonth && f.ano === currentYear), [fechamentos, currentMonth, currentYear]);
+  const idsPagosNesteMes = useMemo(() => (currentFechamento?.comissoes_ids as string[]) || [], [currentFechamento]);
+
   const maskValue = (value: number) => showValues ? formatCurrency(value) : "R$ ••••••";
 
   // Form State
@@ -556,6 +561,25 @@ export default function Comissoes() {
   };
 
   const handleGenerateReport = () => {
+    // O relatório é gerado estritamente com os contratos marcados:
+    // 1. Se houver clientes selecionados na tabela (checkbox), utiliza os selecionados (selectedIds)
+    // 2. Se nenhum checkbox estiver ativo, mas o fechamento do mês já foi registrado, utiliza os clientes fechados no mês (idsPagosNesteMes)
+    // 3. Caso contrário, não gera com a base inteira e orienta o usuário a marcar os clientes
+    const listToPrint = selectedIds.length > 0 
+      ? comissoes.filter(c => selectedIds.includes(c.id)) 
+      : (idsPagosNesteMes.length > 0 
+          ? comissoes.filter(c => idsPagosNesteMes.includes(c.id)) 
+          : []);
+
+    if (listToPrint.length === 0) {
+      toast({
+        title: "Nenhum cliente marcado",
+        description: "Por favor, marque os clientes na tabela usando a caixinha de seleção para gerar o extrato em PDF.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const doc = new jsPDF();
     const companyName = "PROSPERA PLANEJAMENTO CONSÓRCIOS";
     const reportTitle = "EXTRATO DE COMISSIONAMENTO";
@@ -576,14 +600,10 @@ export default function Comissoes() {
     doc.text(reportTitle, 15, 28);
     doc.setFont("helvetica", "bold");
     const refMonthYear = format(new Date(), "MM/yyyy");
-    doc.text(`REFERENCIA ${refMonthYear}`, 15, 34);
+    doc.text(`REFERENCIA ${refMonthYear} (${listToPrint.length} ${listToPrint.length === 1 ? 'contrato marcado' : 'contratos marcados'})`, 15, 34);
     doc.text(`Emissão: ${dateStr}`, 155, 28);
 
     let y = 55;
-    
-    const listToPrint = selectedIds.length > 0 
-      ? comissoes.filter(c => selectedIds.includes(c.id)) 
-      : filtered;
 
     const pdfTotalEstornos = listToPrint.reduce((acc, c) => acc + calcEstornoCorreto(c), 0);
     const pdfTotalComissoes = listToPrint.reduce((acc, c) => acc + Number(c.comissao_total || 0), 0);
@@ -685,7 +705,7 @@ export default function Comissoes() {
     doc.text("* Documento gerado automaticamente pelo sistema CONTEMPLAR CRM.", 15, 285);
 
     doc.save(`extrato-comissoes-${format(new Date(), "yyyy-MM-dd")}.pdf`);
-    toast({ title: "Relatório gerado com sucesso!" });
+    toast({ title: "Relatório gerado com sucesso!", description: `${listToPrint.length} contratos incluídos no extrato.` });
   };
 
   function formatCurrencyInput(value: string) {
@@ -805,11 +825,6 @@ export default function Comissoes() {
 
   if (loading) return <div className="p-20 text-center animate-pulse font-bold text-slate-400 uppercase tracking-widest">Carregando comissionamento...</div>;
 
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-  const currentFechamento = fechamentos.find(f => f.mes === currentMonth && f.ano === currentYear);
-  const idsPagosNesteMes = currentFechamento?.comissoes_ids || [];
-
   return (
     <div className="flex-1 flex flex-col min-h-0 relative group/main-scroll overflow-hidden">
       <div id="comissoes-main-container" className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
@@ -833,7 +848,7 @@ export default function Comissoes() {
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={handleGenerateReport} className="flex-1 sm:flex-none font-bold uppercase tracking-wider border-slate-200">
-            <FileDown className="h-4 w-4 mr-2" /> Relatório
+            <FileDown className="h-4 w-4 mr-2" /> Relatório {selectedIds.length > 0 ? `(${selectedIds.length} marcados)` : (idsPagosNesteMes.length > 0 ? `(${idsPagosNesteMes.length} fechados)` : "")}
           </Button>
           <Button onClick={() => setIsModalOpen(true)} className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider">
             <Plus className="h-4 w-4 mr-2" /> Nova Comissão
@@ -917,6 +932,15 @@ export default function Comissoes() {
             </div>
           </div>
           
+          <div className="flex flex-wrap items-center gap-3">
+            <Button 
+              variant="outline" 
+              onClick={handleGenerateReport} 
+              className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-white font-bold uppercase text-xs px-4 py-6 rounded-xl"
+            >
+              <FileDown className="h-4 w-4 mr-2 text-emerald-400" /> Extrato PDF ({selectedIds.length})
+            </Button>
+
             <Button 
               variant="ghost" 
               onClick={() => setSelectedIds([])} 
@@ -1025,10 +1049,10 @@ export default function Comissoes() {
                 <th className="px-4 py-2 w-10 text-center">
                   <input 
                     type="checkbox" 
-                    className="rounded border-slate-300"
+                    className="rounded border-slate-300 h-4 w-4 cursor-pointer"
                     checked={selectedIds.length === filtered.length && filtered.length > 0}
                     onChange={(e) => {
-                      if (e.target.checked) setSelectedIds(filtered.filter(c => !idsPagosNesteMes.includes(c.id)).map(c => c.id));
+                      if (e.target.checked) setSelectedIds(filtered.map(c => c.id));
                       else setSelectedIds([]);
                     }}
                   />
@@ -1071,19 +1095,22 @@ export default function Comissoes() {
                       return (
                         <tr key={c.id} className={`hover:bg-slate-50/50 transition-colors ${selectedIds.includes(c.id) ? 'bg-emerald-50/30' : ''} ${isPago ? 'opacity-60 bg-slate-50' : ''}`}>
                           <td className="px-4 py-1.5 text-center">
-                            {isPago ? (
-                              <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
-                            ) : (
+                            <div className="flex items-center justify-center gap-1.5">
                               <input 
                                 type="checkbox" 
-                                className="rounded border-slate-300"
+                                className="rounded border-slate-300 h-4 w-4 cursor-pointer"
                                 checked={selectedIds.includes(c.id)}
                                 onChange={(e) => {
                                   if (e.target.checked) setSelectedIds(prev => [...prev, c.id]);
                                   else setSelectedIds(prev => prev.filter(id => id !== c.id));
                                 }}
                               />
-                            )}
+                              {isPago && (
+                                <span title="Recebimento já registrado no fechamento deste mês">
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-1.5 font-semibold text-slate-800">
                             <div className="flex flex-col">
