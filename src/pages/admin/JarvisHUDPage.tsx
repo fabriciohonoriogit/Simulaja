@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { JarvisOrb, OrbState, OrbEmotion } from "@/components/admin/JarvisOrb";
+import { JarvisSaturnNebula } from "@/components/admin/jarvis-studio/JarvisSaturnNebula";
 import {
   Sparkles,
   Volume2,
@@ -245,6 +246,7 @@ function buildOptimizedFluxPrompt(rawPrompt: string): { prompt: string; title: s
 export default function JarvisHUDPage() {
   const navigate = useNavigate();
   const [orbState, setOrbState] = useState<OrbState>("idle");
+  const [celestialMode, setCelestialMode] = useState<"saturn" | "orb">("saturn");
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [command, setCommand] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -2019,24 +2021,45 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
           {/* ÁREA CENTRAL // PROTAGONISTA: ORB QUÂNTICO (55-60% DA ALTURA) */}
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center overflow-y-auto custom-scrollbar py-1 w-full gap-2">
-            {/* O JARVIS ORB - EXCLUSIVO PARA DESKTOP (Ocupa 58% da coluna com presença e profundidade) */}
+            {/* O JARVIS ORB / PLANETA SATURNO COM ANÉIS (58% da coluna com presença e profundidade) */}
             <div className="hidden lg:flex w-full h-[58%] min-h-[300px] max-h-[440px] flex-shrink-0 items-center justify-center relative transition-all duration-500">
-              <JarvisOrb
-                state={orbState}
-                theme={
-                  selectedCore.id === "groq" || selectedCore.id === "cerebras" || selectedCore.id === "claude"
-                    ? "flame"
-                    : selectedCore.id === "nvidia" || selectedCore.id === "chatgpt"
-                    ? "emerald"
-                    : "cobalt"
-                }
-                emotion={currentOrbEmotion}
-                audioBass={audioBass}
-                audioTreble={audioTreble}
-                audioAmplitude={audioAmplitude}
-                statusText={selectedCore.name}
-                subStatusText={`${selectedCore.provider} • ${selectedCore.speed}`}
-              />
+              {celestialMode === "saturn" ? (
+                <JarvisSaturnNebula
+                  state={orbState}
+                  emotion={currentOrbEmotion}
+                  audioAmplitude={audioAmplitude}
+                  audioBass={audioBass}
+                  audioTreble={audioTreble}
+                  mode="saturn"
+                />
+              ) : (
+                <JarvisOrb
+                  state={orbState}
+                  theme={
+                    selectedCore.id === "groq" || selectedCore.id === "cerebras" || selectedCore.id === "claude"
+                      ? "flame"
+                      : selectedCore.id === "nvidia" || selectedCore.id === "chatgpt"
+                      ? "emerald"
+                      : "cobalt"
+                  }
+                  emotion={currentOrbEmotion}
+                  audioBass={audioBass}
+                  audioTreble={audioTreble}
+                  audioAmplitude={audioAmplitude}
+                  statusText={selectedCore.name}
+                  subStatusText={`${selectedCore.provider} • ${selectedCore.speed}`}
+                />
+              )}
+
+              {/* Botão de Alternância Cósmica */}
+              <div className="absolute top-2 right-2 flex items-center gap-1 p-1 rounded-full bg-slate-950/80 border border-white/10 backdrop-blur-md z-20">
+                <button
+                  onClick={() => setCelestialMode(celestialMode === "saturn" ? "orb" : "saturn")}
+                  className="px-2 py-0.5 rounded-full text-[10px] font-bold text-cyan-300 hover:text-white transition-colors"
+                >
+                  {celestialMode === "saturn" ? "🪐 Saturno Ativo" : "🔮 Orb Ativo"}
+                </button>
+              </div>
             </div>
 
             {/* BARRA DE ÁUDIO & STATUS EXCLUSIVA MOBILE */}

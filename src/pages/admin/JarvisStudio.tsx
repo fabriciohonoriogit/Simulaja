@@ -34,6 +34,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { JarvisOrb, OrbState, OrbEmotion } from "@/components/admin/JarvisOrb";
+import { JarvisSaturnNebula } from "@/components/admin/jarvis-studio/JarvisSaturnNebula";
 import { AI_CORE_PROVIDERS, AICoreProvider } from "@/components/admin/JarvisAICoreDeck";
 import { JarvisDesignSystemTokens } from "@/components/admin/jarvis-studio/JarvisDesignSystemTokens";
 import { JarvisNodePipeline } from "@/components/admin/jarvis-studio/JarvisNodePipeline";
@@ -517,20 +518,20 @@ export default function JarvisStudio() {
         {/* Hero Holográfico: Três Elementos (Orb 3D WebGL, Status e Falar com Jarvis) */}
         <section className="relative rounded-3xl p-6 bg-gradient-to-b from-slate-900/60 to-slate-950/80 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            {/* Esfera 3D WebGL (Orb) */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[220px]">
-              <div className="w-52 h-52 relative flex items-center justify-center">
-                <JarvisOrb
+            {/* Planeta 3D WebGL (Saturno com Anéis & Nebulosa Cósmica) */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[280px]">
+              <div className="w-full h-64 relative flex items-center justify-center">
+                <JarvisSaturnNebula
                   state={orbState}
                   emotion={orbEmotion}
                   audioAmplitude={audioAmplitude}
                   audioBass={audioAmplitude * 1.2}
                   audioTreble={audioAmplitude * 0.9}
-                  theme="cobalt"
+                  mode="saturn"
                 />
               </div>
 
-              {/* Status Text do Orb */}
+              {/* Status Text do Planeta */}
               <div className="text-center mt-2">
                 <div className="text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase flex items-center justify-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
@@ -1184,3 +1185,4 @@ export default function JarvisStudio() {
     </div>
   );
 }
+
