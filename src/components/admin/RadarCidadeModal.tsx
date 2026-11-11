@@ -79,7 +79,7 @@ export function RadarCidadeModal({
   const [segmento, setSegmento] = useState<"pesados" | "imovel" | "veiculo">("pesados");
   const [faixaCredito, setFaixaCredito] = useState<number>(300000);
   const [quantidade, setQuantidade] = useState<number>(10); // 10 a 20 clientes por vez
-  
+
   const [loading, setLoading] = useState(false);
   const [prospects, setProspects] = useState<RadarLocalProspect[]>([]);
   const [salvando, setSalvando] = useState(false);
@@ -345,11 +345,10 @@ export function RadarCidadeModal({
                     key={qtd}
                     type="button"
                     onClick={() => setQuantidade(qtd)}
-                    className={`flex-1 rounded-xl text-xs font-black transition-all border ${
-                      quantidade === qtd
+                    className={`flex-1 rounded-xl text-xs font-black transition-all border ${quantidade === qtd
                         ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                         : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
-                    }`}
+                      }`}
                   >
                     {qtd}
                   </button>
@@ -373,11 +372,10 @@ export function RadarCidadeModal({
                   key={s.id}
                   type="button"
                   onClick={() => setSegmento(s.id as any)}
-                  className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all ${
-                    segmento === s.id
+                  className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all ${segmento === s.id
                       ? "bg-slate-900 text-white border-slate-900 shadow-sm"
                       : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-                  }`}
+                    }`}
                 >
                   {s.label}
                 </button>
@@ -412,11 +410,10 @@ export function RadarCidadeModal({
                 <button
                   key={n.id}
                   onClick={() => handleNichoChange(n.id)}
-                  className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all border ${
-                    nichoSelecionado === n.id && !nichoLivre
+                  className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all border ${nichoSelecionado === n.id && !nichoLivre
                       ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                       : "bg-white text-slate-700 border-slate-200 hover:border-blue-400"
-                  }`}
+                    }`}
                 >
                   {n.label}
                 </button>
@@ -484,11 +481,10 @@ export function RadarCidadeModal({
               <div
                 key={p.id}
                 onClick={() => handleToggleSelect(p.id)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                  p.selecionado
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${p.selecionado
                     ? "bg-blue-50/40 border-blue-400 shadow-sm"
                     : "bg-white border-slate-200 hover:border-slate-300"
-                }`}
+                  }`}
               >
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1">
