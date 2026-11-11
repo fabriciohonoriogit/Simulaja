@@ -55,6 +55,13 @@ export default function Login() {
     setError("");
     setLoading(true);
 
+    const lowerEmail = email.trim().toLowerCase();
+    if (lowerEmail.includes("copatti") || lowerEmail.includes("coppati") || lowerEmail.includes("andersoncopatti")) {
+      setError("Acesso revogado pelo Administrador do sistema.");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Timeout de segurança de 10s para redes móveis
       const timeoutPromise = new Promise<{ error: any }>((_, reject) =>

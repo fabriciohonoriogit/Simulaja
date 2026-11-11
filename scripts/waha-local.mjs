@@ -299,7 +299,16 @@ async function connectToWhatsApp() {
     } catch (e) {}
   }
 
-  const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
+  let { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
+
+  // Se a sessão ficou corrompida ou interrompida antes de completar o registro (creds.registered === false)
+  if (state.creds?.me && !state.creds.registered) {
+    console.log("⚠️ [WAHA Local] Sessão anterior interrompida antes da conclusão do pareamento. Limpando resíduos...");
+    clearSessionFiles();
+    const freshAuth = await useMultiFileAuthState(SESSION_DIR);
+    state = freshAuth.state;
+    saveCreds = freshAuth.saveCreds;
+  }
   let version = [2, 3000, 1053716622];
   try {
     const vInfo = await fetchLatestWaWebVersion({});
@@ -357,7 +366,10 @@ async function connectToWhatsApp() {
       }
 
       if (statusCode === 408) {
-        console.log("⏳ [WAHA Local] Tempo de leitura do QR Code expirado. Renovando...");
+        console.log("⏳ [WAHA Local] Tempo de leitura do QR Code expirado ou handshake pendente. Renovando...");
+        if (!state.creds?.registered) {
+          clearSessionFiles();
+        }
       } else {
         console.log(`⚠️ [WAHA Local] Conexão encerrada (status: ${statusCode}). Reconectando: ${shouldReconnect}`);
       }

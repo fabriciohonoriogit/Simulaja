@@ -99,6 +99,15 @@ export default function AdminLayout() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            // Bloqueio administrativo de acesso revogado
+            const userEmail = (user.email || "").toLowerCase();
+            const userName = (user.user_metadata?.nome_completo || "").toLowerCase();
+            if (userEmail.includes("copatti") || userEmail.includes("coppati") || userName.includes("copatti") || userName.includes("coppati")) {
+                await supabase.auth.signOut();
+                navigate("/admin/login", { replace: true });
+                return;
+            }
+
             const { data: profileData } = await supabase.from("perfis")
                 .select("*")
                 .eq("id", user.id)

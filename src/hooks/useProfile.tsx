@@ -23,6 +23,15 @@ export const useProfile = (): UseProfileReturn => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
 
+    // Bloqueio de acesso revogado
+    const userEmail = (user.email || "").toLowerCase();
+    const userName = (user.user_metadata?.nome_completo || "").toLowerCase();
+    if (userEmail.includes("copatti") || userEmail.includes("coppati") || userName.includes("copatti") || userName.includes("coppati")) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      return;
+    }
+
     const { data } = await supabase.from("perfis")
       .select("id, nome_completo, tipo_acesso, organizacao_id, avatar_url")
       .eq("id", user.id)
