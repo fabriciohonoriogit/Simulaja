@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Send, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { COLUMNS, COLUMN_COLORS, COLUMN_DOT_COLORS } from "./constants";
 import { LeadCard } from "./LeadCard";
+import { DisparoNovosLeadsModal } from "./DisparoNovosLeadsModal";
 import { supabase } from "@/integrations/supabase/client";
 import { parseISO } from "date-fns";
 import { Lead } from "@/types/funil";
@@ -37,6 +38,7 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
 
   const currentCol = COLUMNS[mobileColIdx];
   const columnRefs = React.useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [disparoModalOpen, setDisparoModalOpen] = useState(false);
 
   const applyFilters = (leads: Lead[]) => {
     return leads.filter((l: Lead) => {
@@ -164,13 +166,23 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
                 className={`shrink-0 rounded-lg border-t-4 ${COLUMN_COLORS[col.id] || "border-t-border bg-card/50"} bg-card/80 p-1.5 flex flex-col relative group/col ${isMobile ? 'h-auto mr-3 first:ml-3' : 'h-full min-h-0 mr-2 first:ml-2'}`}
                 style={isMobile ? { width: '85vw', maxWidth: '300px' } : { width: columnWidths[col.id] || (isWideView ? 240 : 280), minWidth: isWideView ? 220 : 280 }}
               >
-                <div className="mb-2 flex items-center justify-between">
+                <div className="mb-2 flex items-center justify-between gap-1">
                   <div className="min-w-0 flex-1">
                     <h3 className={`font-black text-[11px] truncate uppercase tracking-tighter ${isWideView ? "text-[10px]" : ""}`}>{col.label}</h3>
                     <p className="text-[9px] text-muted-foreground -mt-0.5">
                       {colLeads.length} leads · {formatCurrency(totalValor)}
                     </p>
                   </div>
+                  {col.id === "novo_lead" && colLeads.length > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={() => setDisparoModalOpen(true)}
+                      className="h-6 px-2 text-[9px] font-black bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-md shadow-xs flex items-center gap-1 shrink-0"
+                      title="Disparo em massa no WhatsApp para Novos Leads"
+                    >
+                      <Send className="h-2.5 w-2.5" /> Disparar ({colLeads.length})
+                    </Button>
+                  )}
                 </div>
 
                 <div
@@ -236,6 +248,17 @@ export function FunilBoard({ state, searchTerm = "", quickFilter = "todos" }: { 
           })}
         </div>
       </div>
+
+      <DisparoNovosLeadsModal
+        isOpen={disparoModalOpen}
+        onClose={() => setDisparoModalOpen(false)}
+        leads={leads}
+        onLeadsUpdated={() => {
+          if (state.fetchLeads) {
+            state.fetchLeads();
+          }
+        }}
+      />
     </DragDropContext>
   );
 }

@@ -156,7 +156,7 @@ Retorne APENAS o JSON puro sem bloco de código markdown no formato:
       "bairro": "Bairro",
       "telefone": "Telefone com DDD",
       "email": "Email corporativo (se disponível, ou contato@...)",
-      "contato": "Nome do proprietário, sócio-administrador ou responsável",
+      "contato": "Nome real da pessoa física que é sócio ou proprietário (deixe em branco '' ou null se não souber o nome de uma pessoa física, JAMAIS coloque termos como 'Diretor Comercial', 'Gerente' ou 'Proprietário')",
       "googleMapsUrl": "https://www.google.com/maps/search/?api=1&query=...",
       "avaliacaoGoogle": 4.8,
       "totalAvaliacoes": 25
@@ -220,10 +220,10 @@ Retorne APENAS o JSON puro sem bloco de código markdown no formato:
             avaliacaoGoogle: item.avaliacaoGoogle || 4.8,
             totalAvaliacoes: item.totalAvaliacoes || 20,
             capitalSocial: 600000 + idx * 120000,
-            socios: [
-              { nome: (item.contato || "Sócio Diretor").toUpperCase(), qualificacao: "Sócio-Administrador" },
-            ],
-            decisorPrincipal: item.contato || "Diretor Comercial",
+            socios: item.contato
+              ? [{ nome: String(item.contato).toUpperCase(), qualificacao: "Sócio-Administrador" }]
+              : [],
+            decisorPrincipal: item.contato || "",
             segmento,
             nicho: ramoFinal,
             valorCredito: cred,

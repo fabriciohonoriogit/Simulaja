@@ -2,7 +2,7 @@ import React from "react";
 import { useFunil } from "@/hooks/useFunil";
 import { FunilBoard } from "@/components/admin/funil/FunilBoard";
 import { FunilModals } from "@/components/admin/funil/FunilModals";
-import { TrendingUp, Zap, FileText, Search } from "lucide-react";
+import { TrendingUp, Zap, FileText, Search, Send } from "lucide-react";
 import { AdminHeroCard } from "@/components/admin/AdminHeroCard";
 import { formatLeadValue } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,12 +11,14 @@ import { Input } from "@/components/ui/input";
 import { ADMINISTRADORAS } from "@/hooks/useFunil";
 import StreakBadge from "@/components/admin/StreakBadge";
 import { useAuth } from "@/hooks/useAuth";
+import { DisparoNovosLeadsModal } from "@/components/admin/funil/DisparoNovosLeadsModal";
 
 export default function Funil() {
   const funilState = useFunil();
   const [selectedCategory, setSelectedCategory] = React.useState<'quente' | 'morno' | 'frio' | 'todos'>('todos');
   const [searchTerm, setSearchTerm] = React.useState("");
   const [quickFilter, setQuickFilter] = React.useState<'todos' | 'atrasados' | 'sem_tratativa' | 'hoje'>('todos');
+  const [disparoModalOpen, setDisparoModalOpen] = React.useState(false);
 
   if (funilState.loading) {
     return (
@@ -203,6 +205,16 @@ export default function Funil() {
           {funilState.profile?.id && (
             <StreakBadge userId={funilState.profile.id} variant="compact" />
           )}
+
+          <Button 
+            size="sm" 
+            onClick={() => setDisparoModalOpen(true)}
+            className="h-7 px-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-[9px] font-black uppercase tracking-tighter shadow-sm flex items-center gap-1"
+            title="Disparo em massa no WhatsApp para Novos Leads com Atendimento IA"
+          >
+            <Send className="h-3 w-3" />
+            Disparo Novos Leads ({funilState.leads.filter((l) => (l.status || "").toLowerCase() === "novo_lead").length})
+          </Button>
           
           <Button 
             variant="outline" 
@@ -218,6 +230,17 @@ export default function Funil() {
 
       <FunilBoard state={funilState} searchTerm={searchTerm} quickFilter={quickFilter} />
       <FunilModals state={funilState} />
+
+      <DisparoNovosLeadsModal
+        isOpen={disparoModalOpen}
+        onClose={() => setDisparoModalOpen(false)}
+        leads={funilState.leads}
+        onLeadsUpdated={() => {
+          if (funilState.fetchLeads) {
+            funilState.fetchLeads();
+          }
+        }}
+      />
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none !important; }

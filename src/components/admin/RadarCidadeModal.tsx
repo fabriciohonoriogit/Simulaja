@@ -160,6 +160,24 @@ export function RadarCidadeModal({
     setProspects((prev) => prev.map((p) => ({ ...p, selecionado: !allSelected })));
   };
 
+  const extrairSocioReal = (decisor?: string | null, socios?: any[]): string | null => {
+    const isValido = (nome?: string | null) => {
+      if (!nome) return false;
+      const limpo = nome.trim().toLowerCase();
+      if (!limpo || limpo.length < 3) return false;
+      return !/^(diretor comercial|s[oó]cio diretor|socio diretor|propriet[aá]rio|proprietario|gerente|respons[aá]vel|responsavel|contato|diretor|administrador|comercial)$/i.test(limpo);
+    };
+
+    if (isValido(decisor)) return decisor!.trim();
+    if (socios && socios.length > 0) {
+      for (const s of socios) {
+        const n = typeof s === "string" ? s : s?.nome;
+        if (isValido(n)) return n.trim();
+      }
+    }
+    return null;
+  };
+
   const handleImportToFunil = async () => {
     const selecionados = prospects.filter((p) => p.selecionado);
     if (selecionados.length === 0) {
@@ -169,41 +187,48 @@ export function RadarCidadeModal({
 
     setSalvando(true);
     try {
-      const inserts = selecionados.map((p) => ({
-        nome: `${p.decisorPrincipal.toUpperCase()} (${p.nomeFantasia.toUpperCase()})`,
-        celular: p.telefone,
-        email: p.email || null,
-        status: "novo_lead", // 🎯 PRIMEIRA COLUNA DO FUNIL KANBAN
-        tipo_consorcio: p.segmento,
-        valor_credito: p.valorCredito,
-        prazo_meses: p.prazoMeses,
-        cidade: `${p.cidade} - ${p.uf}`,
-        lead_temperatura: "quente",
-        lead_score_valor: "alto",
-        origem: "RADAR_LOCAL_MAPS",
-        organizacao_id: organizacaoId || null,
-        dados_cadastro: {
-          cnpj: p.cnpj,
-          razao_social: p.razaoSocial,
-          nome_fantasia: p.nomeFantasia,
-          decisor_principal: p.decisorPrincipal,
-          socios: p.socios,
-          capital_social: p.capitalSocial,
-          endereco: p.endereco,
-          bairro: p.bairro,
-          cidade: p.cidade,
-          uf: p.uf,
-          google_maps_url: p.googleMapsUrl,
-          avaliacao_google: p.avaliacaoGoogle,
-          nicho: p.nicho,
-          parcela_normal: p.parcelaNormal,
-          parcela_50_50: p.parcela5050,
-          lance_embutido_pct: p.lanceEmbutidoPct,
-          gancho_abordagem: p.ganchoAbordagem,
-          canal_entrada: "Radar Local (Google Maps & CNPJ)",
-          data_prospeccao: new Date().toISOString(),
-        },
-      }));
+      const inserts = selecionados.map((p) => {
+        const socioReal = extrairSocioReal(p.decisorPrincipal, p.socios);
+        // Regra: Coloque apenas o nome da empresa. Se houver sócio real, coloque após o nome da empresa.
+        const nomeFinal = socioReal ? `${p.nomeFantasia} - ${socioReal}` : p.nomeFantasia;
+
+        return {
+          nome: nomeFinal,
+          celular: p.telefone,
+          email: p.email || null,
+          status: "novo_lead", // 🎯 PRIMEIRA COLUNA DO FUNIL KANBAN
+          tipo_consorcio: p.segmento,
+          valor_credito: p.valorCredito,
+          prazo_meses: p.prazoMeses,
+          cidade: `${p.cidade} - ${p.uf}`,
+          lead_temperatura: "quente",
+          lead_score_valor: "alto",
+          origem: "RADAR_LOCAL_MAPS",
+          organizacao_id: organizacaoId || null,
+          atendimento_ia: true, // 🤖 Ativa atendimento automático da IA para esse lead
+          dados_cadastro: {
+            cnpj: p.cnpj,
+            razao_social: p.razaoSocial,
+            nome_fantasia: p.nomeFantasia,
+            decisor_principal: socioReal || "",
+            socios: p.socios,
+            capital_social: p.capitalSocial,
+            endereco: p.endereco,
+            bairro: p.bairro,
+            cidade: p.cidade,
+            uf: p.uf,
+            google_maps_url: p.googleMapsUrl,
+            avaliacao_google: p.avaliacaoGoogle,
+            nicho: p.nicho,
+            parcela_normal: p.parcelaNormal,
+            parcela_50_50: p.parcela5050,
+            lance_embutido_pct: p.lanceEmbutidoPct,
+            gancho_abordagem: p.ganchoAbordagem,
+            canal_entrada: "Radar Local (Google Maps & CNPJ)",
+            data_prospeccao: new Date().toISOString(),
+          },
+        };
+      });
 
       const { error } = await supabase.from("leads").insert(inserts).select("id");
       if (error) throw error;
@@ -521,17 +546,23 @@ export function RadarCidadeModal({
                         </b>
                       </p>
 
-                      {/* CONTATO / DECISOR */}
-                      <div className="bg-slate-100/70 p-2.5 rounded-xl border border-slate-200/60 flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs font-black text-blue-900 flex items-center gap-1.5">
-                          <Users className="h-3.5 w-3.5 text-blue-600" /> Contato / Decisor: <b className="text-slate-900">{p.decisorPrincipal}</b>
-                        </span>
-                        {p.socios.length > 1 && (
-                          <span className="text-[10px] text-slate-500 font-medium">
-                            +{p.socios.length - 1} outro(s) sócio(s)
-                          </span>
-                        )}
-                      </div>
+                      {/* CONTATO / SÓCIO (SOMENTE SE HOUVER SÓCIO REAL) */}
+                      {(() => {
+                        const socio = extrairSocioReal(p.decisorPrincipal, p.socios);
+                        if (!socio) return null;
+                        return (
+                          <div className="bg-slate-100/70 p-2 rounded-xl border border-slate-200/60 flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-xs font-black text-blue-900 flex items-center gap-1.5">
+                              <Users className="h-3.5 w-3.5 text-blue-600" /> Sócio / Contato: <b className="text-slate-900">{socio}</b>
+                            </span>
+                            {p.socios && p.socios.length > 1 && (
+                              <span className="text-[10px] text-slate-500 font-medium">
+                                +{p.socios.length - 1} outro(s) sócio(s)
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* TELEFONE, EMAIL E ENDEREÇO */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-slate-100">

@@ -695,6 +695,7 @@ export function useFunil() {
   return {
     leads,
     setLeads,
+    fetchLeads,
     loading,
     refetch,
     celebrationLead,

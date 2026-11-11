@@ -67,6 +67,28 @@ const SUPABASE_WEBHOOK_URL =
   process.env.SUPABASE_WEBHOOK_URL ||
   "https://pfedvdqpnpbrlhfbzjcj.supabase.co/functions/v1/webhook-evolution";
 
+let SUPABASE_URL = "https://pfedvdqpnpbrlhfbzjcj.supabase.co";
+let SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmZWR2ZHFwbnBicmxoZmJ6amNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MDAwMTgsImV4cCI6MjA4NjQ3NjAxOH0.5X19fj92_I5-ovCSobX0FCiHUMOVDUJBlrUkRXvhSsE";
+let GEMINI_API_KEY = "AQ.Ab8RN6K4DMA3cCraG70_iCcWufgBc_6np-TWuUbPDs7hhFhjog";
+
+try {
+  if (fs.existsSync(".env")) {
+    const envContent = fs.readFileSync(".env", "utf-8");
+    for (const line of envContent.split("\n")) {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let value = (match[2] || "").trim();
+        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+        if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+        if (key === "VITE_SUPABASE_URL") SUPABASE_URL = value;
+        if (key === "VITE_SUPABASE_ANON_KEY") SUPABASE_KEY = value;
+        if (key === "VITE_GEMINI_API_KEY" || key === "GEMINI_API_KEY") GEMINI_API_KEY = value;
+      }
+    }
+  }
+} catch (e) {}
+
 let sock = null;
 let currentStatus = "STARTING"; // STARTING, SCAN_QR_CODE, WORKING, STOPPED
 let currentQrText = null;
@@ -279,6 +301,16 @@ async function forwardToSupabaseWebhook(msg) {
       if (res && res.ok) {
         const data = await res.json().catch(() => ({}));
         console.log(`💾 [CRM Sincronizado] Mensagem gravada no CRM com sucesso! Lead ID: ${data.leadId || "OK"}`);
+
+        // Se a mensagem veio do cliente e temos leadId, aciona Atendimento Automático do Jarvis IA
+        if (!isFromMe && data?.leadId) {
+          handleJarvisAutoReply({
+            remoteJid,
+            text: contentText,
+            contactName: safeContactName,
+            leadId: data.leadId,
+          }).catch((e) => console.warn("Aviso Jarvis Auto-Reply:", e.message));
+        }
       } else if (res) {
         const errText = await res.text().catch(() => "");
         console.error(`❌ [Erro Webhook Supabase ${res.status}]: ${errText.substring(0, 150)}`);
@@ -288,6 +320,105 @@ async function forwardToSupabaseWebhook(msg) {
     }
   } catch (err) {
     console.error("❌ Falha ao enviar para webhook do Supabase:", err.message);
+  }
+}
+
+/**
+ * Atendimento Automático Inteligente do Jarvis via WhatsApp
+ * Responde aos leads do CRM respeitando o status atendimento_ia
+ */
+async function handleJarvisAutoReply({ remoteJid, text, contactName, leadId }) {
+  if (!sock || !leadId || !text) return;
+
+  try {
+    // 1. Busca dados do lead no Supabase
+    const leadRes = await fetch(`${SUPABASE_URL}/rest/v1/leads?id=eq.${leadId}&select=id,nome,celular,atendimento_ia,dados_cadastro,valor_credito,tipo_consorcio`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const leads = await leadRes.json();
+    const lead = leads?.[0];
+
+    // Se atendimento_ia for explicitamente false, não responde automaticamente
+    if (lead && lead.atendimento_ia === false) {
+      console.log(`🤖 [Jarvis AI] Atendimento automático desativado para ${lead.nome || contactName}.`);
+      return;
+    }
+
+    // 2. Busca histórico recente das mensagens
+    const histRes = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages?lead_id=eq.${leadId}&order=created_at.asc&limit=8`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const history = await histRes.json().catch(() => []);
+
+    const contents = (Array.isArray(history) ? history : []).map(m => ({
+      role: m.role === "assistant" || m.role === "model" ? "model" : "user",
+      parts: [{ text: m.content || "" }]
+    }));
+
+    if (contents.length === 0 || contents[contents.length - 1].parts[0]?.text !== text) {
+      contents.push({ role: "user", parts: [{ text }] });
+    }
+
+    // 3. Simula presença humana digitando no WhatsApp
+    try {
+      await sock.sendPresenceUpdate("composing", remoteJid);
+    } catch {}
+
+    const leadNome = lead?.nome || contactName || "Cliente";
+    const valorCredito = lead?.valor_credito ? Number(lead.valor_credito).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "R$ 300.000,00";
+    const segmento = lead?.tipo_consorcio || "pesados";
+
+    const systemPrompt = `Você é o Jarvis (assistente e consultor executivo sênior da Prospera Planejamento & Consultoria / SimulaJá com Fabrício Honório).
+Você está conversando no WhatsApp com o cliente "${leadNome}".
+Interesse: consórcio de ${segmento} com crédito de ${valorCredito}.
+
+DIRETRIZES DE COMUNICAÇÃO NO WHATSAPP (SEGUI-LAS RIGOROSAMENTE):
+1. Respostas extremamente dinâmicas, humanas, calorosas e sob medida: máximo de 2 a 3 frases curtas. Não mande textos longos ou burocráticos.
+2. Destaque os benefícios do consórcio com clareza: sem juros bancários, meia parcela 50/50 até a contemplação, lance embutido de até 30% da própria carta.
+3. Se perguntar de valores, informe apenas valores de parcela e prazos com objetividade total.
+4. Conclua sempre com uma pergunta amigável para entender o projeto dele ou combinar uma rápida ligação.`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+    const gRes = await fetch(geminiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents,
+        generationConfig: { maxOutputTokens: 250, temperature: 0.7 },
+        systemInstruction: { parts: [{ text: systemPrompt }] }
+      })
+    });
+
+    if (gRes.ok) {
+      const gData = await gRes.json();
+      const aiText = gData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (aiText) {
+        // Pausa humanizada de 2 segundos
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Envia direto pelo WhatsApp
+        await sock.sendMessage(remoteJid, { text: aiText });
+        console.log(`🤖 [Jarvis Auto-Reply] Resposta enviada para ${leadNome} (${remoteJid}): "${aiText}"`);
+
+        // Grava no chat_messages do Supabase
+        await fetch(`${SUPABASE_URL}/rest/v1/chat_messages`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal"
+          },
+          body: JSON.stringify({
+            lead_id: leadId,
+            content: aiText,
+            role: "assistant"
+          })
+        }).catch(err => console.warn("Erro ao salvar resposta IA no Supabase:", err.message));
+      }
+    }
+  } catch (err) {
+    console.error("❌ [Jarvis Auto-Reply Erro]:", err.message);
   }
 }
 
@@ -879,7 +1010,7 @@ Retorne APENAS o JSON puro sem bloco de código markdown no formato:
       "bairro": "Bairro",
       "telefone": "Telefone com DDD",
       "email": "Email corporativo (se disponível, ou contato@...)",
-      "contato": "Nome do proprietário, sócio-administrador ou responsável",
+      "contato": "Nome real da pessoa física que é sócio ou proprietário (deixe em branco '' ou null se não souber o nome de uma pessoa física, JAMAIS coloque termos como 'Diretor Comercial', 'Gerente' ou 'Proprietário')",
       "googleMapsUrl": "URL de busca no Google Maps",
       "avaliacaoGoogle": 4.8,
       "totalAvaliacoes": 25
@@ -968,10 +1099,10 @@ Retorne APENAS o JSON puro sem bloco de código markdown no formato:
           avaliacaoGoogle: item.avaliacaoGoogle || 4.8,
           totalAvaliacoes: item.totalAvaliacoes || 24,
           capitalSocial: 500000 + (i * 150000),
-          socios: [
-            { nome: (item.contato || "Sócio Diretor").toUpperCase(), qualificacao: "Sócio-Administrador" },
-          ],
-          decisorPrincipal: item.contato || "Diretor Comercial",
+          socios: item.contato
+            ? [{ nome: String(item.contato).toUpperCase(), qualificacao: "Sócio-Administrador" }]
+            : [],
+          decisorPrincipal: item.contato || "",
           segmento,
           nicho: ramo,
           valorCredito: credEmpresa,
