@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { sendWhatsAppMessage } from "@/services/evolutionApiService";
 import { Lead } from "@/types/funil";
+import { obterSaudacaoTempo, ajustarSaudacaoPorHorario } from "@/lib/timeGreeting";
 
 interface DisparoNovosLeadsModalProps {
   isOpen: boolean;
@@ -49,9 +50,10 @@ interface ItemDisparo {
 }
 
 // 🛡️ Pool de Variações Humanizadas da Black das Blacks para rotacionar a cada 3 envios
+// Com NOÇÃO DE ESPAÇO E TEMPO: a partir das 18:01 é boa noite, das 5:00 é bom dia, das 12:01 é boa tarde.
 export const VARIANTES_BLACK_DAS_BLACKS = [
-  // 1. Envios 1 a 3 (Original oficial)
-  `Olá, boa tarde! Tudo bem?
+  // 1. Envios 1 a 3 (Original oficial adaptado ao horário)
+  `Olá, {saudacao}! Tudo bem?
 
 Aqui é o Fabricio Honório, sou gestor aqui do Consórcio Magalu em {cidade}.
 
@@ -60,7 +62,7 @@ Estou entrando em contato porque estamos com a Black das Blacks, com nossas cond
 Posso te explicar em 5 minutinhos como funciona? Se fizer sentido, ótimo. Se não, sem problema nenhum. 🙂`,
 
   // 2. Envios 4 a 6
-  `Oi, boa tarde! Tudo ótimo por aí?
+  `Oi, {saudacao}! Tudo ótimo por aí?
 
 Aqui é o Fabricio Honório, responsável pela gestão do Consórcio Magalu aqui em {cidade}.
 
@@ -69,7 +71,7 @@ Passando para te apresentar a nossa campanha da Black das Blacks. Criamos condi�
 Teria 5 minutinhos hoje para eu te resumir como funciona? Se achar interessante, aprofundamos. Se não fizer sentido agora, fica tudo em paz! 👍`,
 
   // 3. Envios 7 a 9
-  `Olá, como vai? Boa tarde!
+  `Olá, como vai? {Saudacao}!
 
 Aqui quem fala é o Fabricio Honório, gestor do Consórcio Magalu na região de {cidade}.
 
@@ -78,7 +80,7 @@ Estamos com a nossa ação especial da Black das Blacks liberada neste mês. É 
 Consigo te apresentar em apenas 5 minutos essa proposta? Se for vantajoso pra vocês, conversamos melhor; senão, agradeço desde já a atenção! 🙂`,
 
   // 4. Envios 10 a 12
-  `Boa tarde! Tudo bem com você?
+  `{Saudacao}! Tudo bem com você?
 
 Fabricio Honório por aqui, à frente do Consórcio Magalu em {cidade}.
 
@@ -87,7 +89,7 @@ Quis falar contigo porque abrimos a Black das Blacks com condições exclusivas 
 Posso te mostrar em 5 minutinhos como opera? Se fizer sentido pro seu momento, alinhamos. Caso contrário, super tranquilo! Abraço! 🤝`,
 
   // 5. Envios 13 a 15
-  `Olá, tudo bem? Uma ótima tarde!
+  `Olá, tudo bem? {otima_saudacao}!
 
 Sou o Fabricio Honório, gestor do Consórcio Magalu aqui de {cidade}.
 
@@ -96,7 +98,7 @@ O motivo do meu contato é a Black das Blacks Magalu, onde liberamos condições
 Me permite te explicar a lógica em 5 minutinhos? Se servir para o seu negócio, ótimo. Se não for o momento, sem nenhum problema! 😉`,
 
   // 6. Envios 16 a 18
-  `Oi, boa tarde! Como estão as coisas?
+  `Oi, {saudacao}! Como estão as coisas?
 
 Aqui é o Fabricio Honório, gestor local do Consórcio Magalu em {cidade}.
 
@@ -106,10 +108,10 @@ Teria 5 minutos para eu te mandar um breve resumo? Se fizer sentido, avançamos;
 ];
 
 export const VARIANTES_MEIA_PARCELA = [
-  `Olá, {nome}! Tudo bem? Vi o destaque da sua empresa em {cidade}. Estamos liberando cartas de consórcio de {credito} com Meia Parcela de {parcela_50_50}/mês até a contemplação e lance embutido de 30%. Teria 2 minutos para eu te apresentar como funciona?`,
-  `Oi {primeiro_nome}, como vai? Notei a atuação da sua empresa em {cidade} e preparei uma proposta de crédito de {credito} com parcela reduzida de {parcela_50_50}/mês (50/50) até a contemplação. Posso te enviar um breve resumo em 2 minutinhos?`,
-  `Olá! Tudo bem com você? Aqui é da equipe de planejamento financeiro em {cidade}. Abrimos cotas empresariais de {credito} com a modalidade Meia Parcela de {parcela_50_50}/mês e lance embutido sem juros bancários. Teria 2 minutos para conhecer?`,
-  `Olá {primeiro_nome}! Tudo certo? Temos uma condição especial em {cidade} para alavancagem com crédito de {credito} pagando apenas metade da parcela ({parcela_50_50}/mês) até ser contemplado. Gostaria de dar uma olhada na simulação? 🙂`,
+  `Olá, {nome}! {Saudacao}, tudo bem? Vi o destaque da sua empresa em {cidade}. Estamos liberando cartas de consórcio de {credito} com Meia Parcela de {parcela_50_50}/mês até a contemplação e lance embutido de 30%. Teria 2 minutos para eu te apresentar como funciona?`,
+  `Oi {primeiro_nome}, {saudacao}! Como vai? Notei a atuação da sua empresa em {cidade} e preparei uma proposta de crédito de {credito} com parcela reduzida de {parcela_50_50}/mês (50/50) até a contemplação. Posso te enviar um breve resumo em 2 minutinhos?`,
+  `{Saudacao}! Tudo bem com você? Aqui é da equipe de planejamento financeiro em {cidade}. Abrimos cotas empresariais de {credito} com a modalidade Meia Parcela de {parcela_50_50}/mês e lance embutido sem juros bancários. Teria 2 minutos para conhecer?`,
+  `Olá {primeiro_nome}! {Saudacao}, tudo certo? Temos uma condição especial em {cidade} para alavancagem com crédito de {credito} pagando apenas metade da parcela ({parcela_50_50}/mês) até ser contemplado. Gostaria de dar uma olhada na simulação? 🙂`,
 ];
 
 export function obterTemplateComVariacao(
@@ -138,13 +140,14 @@ export function obterTemplateComVariacao(
     return VARIANTES_MEIA_PARCELA[idx];
   }
 
-  // Variação genérica para textos personalizados (muda saudação e fechamento)
+  // Variação genérica para textos personalizados (muda saudação temporal e fechamento)
+  const infoTempo = obterSaudacaoTempo();
   const saudacoes = [
-    "Olá, boa tarde! Tudo bem?",
+    `Olá, ${infoTempo.saudacao}! Tudo bem?`,
     "Oi, tudo bem por aí?",
-    "Olá, como vai? Tudo certo?",
-    "Boa tarde! Tudo bem com você?",
-    "Oi! Uma ótima tarde pra você.",
+    `Olá, como vai? ${infoTempo.saudacaoCapitalizada}!`,
+    `${infoTempo.saudacaoCapitalizada}! Tudo bem com você?`,
+    `Oi! ${infoTempo.otimaSaudacao} pra você.`,
   ];
   const fechamentos = [
     "Fico à disposição! 🙂",
@@ -161,7 +164,9 @@ export function obterTemplateComVariacao(
   if (
     linhas[0].toLowerCase().startsWith("olá") ||
     linhas[0].toLowerCase().startsWith("oi") ||
-    linhas[0].toLowerCase().startsWith("boa tarde")
+    linhas[0].toLowerCase().startsWith("boa tarde") ||
+    linhas[0].toLowerCase().startsWith("bom dia") ||
+    linhas[0].toLowerCase().startsWith("boa noite")
   ) {
     linhas[0] = saudacao;
   } else {
@@ -309,7 +314,10 @@ export function DisparoNovosLeadsModal({
       });
     }
 
-    return template
+    // Aplica inteligência temporal (05:00-12:00 Bom dia | 12:01-18:00 Boa tarde | 18:01-04:59 Boa noite)
+    const templateComTempo = ajustarSaudacaoPorHorario(template);
+
+    return templateComTempo
       .replace(/{nome}/g, nomeCompleto)
       .replace(/{primeiro_nome}/g, primeiroNome)
       .replace(/{empresa}/g, nomeEmpresa)
@@ -622,16 +630,30 @@ export function DisparoNovosLeadsModal({
                 { tag: "{cidade}", label: "Cidade" },
                 { tag: "{credito}", label: "Valor de Crédito" },
                 { tag: "{parcela_50_50}", label: "Meia Parcela" },
+                { tag: "{saudacao}", label: "🕒 Saudação Horário" },
               ].map((t) => (
                 <button
                   key={t.tag}
                   type="button"
                   onClick={() => inserirTag(t.tag)}
+                  title={t.label}
                   className="text-[10px] font-mono bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-600 px-2 py-0.5 rounded border border-slate-200 transition-colors"
                 >
                   {t.tag}
                 </button>
               ))}
+            </div>
+
+            {/* STATUS DE NOÇÃO DE ESPAÇO E TEMPO */}
+            <div className="flex items-center justify-between text-[11px] text-slate-600 bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                Noção Temporal Ativa: <b className="text-slate-800">{obterSaudacaoTempo().horaFormatada}</b>
+              </span>
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md border border-emerald-300/40 text-[10px]">
+                {obterSaudacaoTempo().periodo === "manha" ? "☀️" : obterSaudacaoTempo().periodo === "tarde" ? "🌤️" : "🌙"}{" "}
+                {obterSaudacaoTempo().saudacaoCapitalizada} (05h Bom dia | 12h01 Boa tarde | 18h01 Boa noite)
+              </span>
             </div>
 
             {/* PRÉVIA AO VIVO COM SELETOR DE VARIANTES ANTI-BLOQUEIO */}

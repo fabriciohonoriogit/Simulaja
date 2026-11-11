@@ -33,6 +33,7 @@ import { format, isValid, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { parseUTCDate } from "@/lib/formatters";
 import { Lead } from "@/types/funil";
+import { obterSaudacaoTempo, ajustarSaudacaoPorHorario } from "@/lib/timeGreeting";
 import { toast } from "sonner";
 import { 
   sendWhatsAppMessage, 
@@ -70,7 +71,7 @@ const QUICK_TEMPLATES: QuickTemplate[] = [
     title: "⭐ Black das Blacks - Consórcio Magalu (Oficial)",
     category: "apresentacao",
     badge: "Black das Blacks",
-    text: `Olá, boa tarde! Tudo bem?
+    text: `Olá, {saudacao}! Tudo bem?
 
 Aqui é o Fabricio Honório, sou gestor aqui do Consórcio Magalu em Paranaguá.
 
@@ -239,7 +240,8 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
   };
 
   const handleApplyTemplate = (tpl: QuickTemplate) => {
-    const populated = tpl.text
+    const textComTempo = ajustarSaudacaoPorHorario(tpl.text);
+    const populated = textComTempo
       .replace(/{nome}/g, lead.nome ? lead.nome.split(" ")[0] : "Cliente")
       .replace(/{credito}/g, formattedCredito);
     setNewMessage(populated);
@@ -252,8 +254,9 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
       toast.error("Digite um rascunho primeiro para o Jarvis humanizar.");
       return;
     }
+    const info = obterSaudacaoTempo();
     const firstName = lead.nome ? lead.nome.split(" ")[0] : "Cliente";
-    const enhanced = `Olá, ${firstName}! Tudo bem? ${newMessage.trim()} Estou à total disposição para te apoiar e facilitar cada etapa. Conte comigo!`;
+    const enhanced = `Olá, ${firstName}! ${info.saudacaoCapitalizada}, tudo bem? ${newMessage.trim()} Estou à total disposição para te apoiar e facilitar cada etapa. Conte comigo!`;
     setNewMessage(enhanced);
     toast.success("✨ Mensagem refinada com o tom executivo Jarvis!");
   };

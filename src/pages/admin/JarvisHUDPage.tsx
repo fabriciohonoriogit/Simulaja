@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { aiService, formatConciseBudgetQuote } from "@/services/aiService";
+import { obterSaudacaoTempo } from "@/lib/timeGreeting";
 import {
   speakJarvisText,
   speakFillerPhrase,
@@ -1002,7 +1003,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
     // 1. Saudações Simples e Isoladas (Direto e sem enrolação)
     const exactGreetings = ["boa tarde", "bom dia", "boa noite", "ola", "olá", "oi", "oi jarvis", "ola jarvis", "olá jarvis"];
     if (exactGreetings.includes(normalized)) {
-      const periodo = normalized.includes("dia") ? "Bom dia" : normalized.includes("noite") ? "Boa noite" : "Boa tarde";
+      const periodo = obterSaudacaoTempo().saudacaoCapitalizada;
       return {
         id: Date.now().toString(),
         time: timeStr,
@@ -1371,8 +1372,7 @@ gn_prosperaplan@consorciomagalu.com.br`;
 
       let responseText = aiResult?.answer;
       if (!responseText || responseText.trim() === "") {
-        const isTarde = new Date().getHours() >= 12 && new Date().getHours() < 18;
-        const saudacao = isTarde ? "Boa tarde" : new Date().getHours() < 12 ? "Bom dia" : "Boa noite";
+        const saudacao = obterSaudacaoTempo().saudacaoCapitalizada;
         responseText = `Olá, Fabrício! ${saudacao}! Estou à sua total disposição. Como posso lhe ajudar agora?`;
       }
 

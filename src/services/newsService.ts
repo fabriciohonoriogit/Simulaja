@@ -4,6 +4,8 @@
  * com curadoria setorial profunda e inteligência neural para o Jarvis narrar briefings e insights de vendas.
  */
 
+import { obterSaudacaoTempo } from "@/lib/timeGreeting";
+
 export type DailyNewsCategory =
   | "todas"
   | "imobiliario"
@@ -785,8 +787,7 @@ export function getDailyBriefingScript(
   userName = "Fabrício",
   category: DailyNewsCategory = "todas"
 ): string {
-  const currentHour = new Date().getHours();
-  const saudacao = currentHour < 12 ? "Bom dia" : currentHour < 18 ? "Boa tarde" : "Boa noite";
+  const saudacao = obterSaudacaoTempo().saudacaoCapitalizada;
   const firstName = userName.split(" ")[0] || "Fabrício";
 
   // Briefing específico de Mercado Imobiliário

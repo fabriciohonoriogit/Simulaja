@@ -104,6 +104,69 @@ const recentOutgoingByJid = new Map(); // key: targetJid -> timestamp (4s anti-f
 const processedMessageKeys = new Set(); // key: msg.key.id (previne processar o mesmo evento do Baileys 2x)
 const activeAutoReplies = new Map(); // key: leadId -> timestamp (cooldown de resposta IA para evitar loop/duplicidade)
 
+/**
+ * 🕒 Noção Rigorosa de Espaço e Tempo para Saudações no WhatsApp:
+ * - A partir das 05:00 até 12:00: "Bom dia" / "bom dia"
+ * - A partir das 12:01 até 18:00: "Boa tarde" / "boa tarde"
+ * - A partir das 18:01 até 04:59: "Boa noite" / "boa noite"
+ */
+function getGreetingByHour(date = new Date()) {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const totalMinutes = hours * 60 + minutes;
+
+  const horaFormatada = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+
+  if (totalMinutes >= 300 && totalMinutes <= 720) {
+    // 05:00 às 12:00
+    return {
+      saudacao: "bom dia",
+      saudacaoCapitalizada: "Bom dia",
+      otimaSaudacao: "Um ótimo dia",
+      periodo: "manhã",
+      horaFormatada,
+    };
+  } else if (totalMinutes >= 721 && totalMinutes <= 1080) {
+    // 12:01 às 18:00
+    return {
+      saudacao: "boa tarde",
+      saudacaoCapitalizada: "Boa tarde",
+      otimaSaudacao: "Uma ótima tarde",
+      periodo: "tarde",
+      horaFormatada,
+    };
+  } else {
+    // 18:01 às 04:59
+    return {
+      saudacao: "boa noite",
+      saudacaoCapitalizada: "Boa noite",
+      otimaSaudacao: "Uma ótima noite",
+      periodo: "noite",
+      horaFormatada,
+    };
+  }
+}
+
+function adjustGreetingByHour(text, date = new Date()) {
+  if (!text) return "";
+  const info = getGreetingByHour(date);
+
+  let result = text
+    .replace(/{saudacao}/g, info.saudacao)
+    .replace(/{Saudacao}/g, info.saudacaoCapitalizada)
+    .replace(/{otima_saudacao}/g, info.otimaSaudacao);
+
+  // Auto-ajuste de saudação estática fora de horário (ex: "boa tarde" à noite vira "boa noite")
+  result = result.replace(/\b(uma? ótim[ao] (tarde|dia|noite))\b/gi, (match) => {
+    const isFirstUpper = match[0] === match[0].toUpperCase();
+    return isFirstUpper ? info.otimaSaudacao : info.otimaSaudacao.toLowerCase();
+  });
+  result = result.replace(/\b(Boa tarde|Bom dia|Boa noite)\b/g, info.saudacaoCapitalizada);
+  result = result.replace(/\b(boa tarde|bom dia|boa noite)\b/g, info.saudacao);
+
+  return result;
+}
+
 // Garante que a pasta de sessão existe
 if (!fs.existsSync(SESSION_DIR)) {
   fs.mkdirSync(SESSION_DIR, { recursive: true });
@@ -382,9 +445,19 @@ async function handleJarvisAutoReply({ remoteJid, text, contactName, leadId }) {
     const valorCredito = lead?.valor_credito ? Number(lead.valor_credito).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "R$ 300.000,00";
     const segmento = lead?.tipo_consorcio || "pesados";
 
+    const greetingInfo = getGreetingByHour();
     const systemPrompt = `Você é o Jarvis (assistente e consultor executivo sênior da Prospera Planejamento & Consultoria / SimulaJá com Fabrício Honório).
 Você está conversando no WhatsApp com o cliente "${leadNome}".
 Interesse: consórcio de ${segmento} com crédito de ${valorCredito}.
+
+NOÇÃO DE ESPAÇO E TEMPO (REGRAS ESTRITAS DE HORÁRIO):
+- Horário atual no Brasil: ${greetingInfo.horaFormatada} (${greetingInfo.periodo}).
+- Saudação obrigatória para este momento: "${greetingInfo.saudacaoCapitalizada}".
+- REGRAS TEMPORAIS ESTRITAS:
+  * A partir das 05:00 até 12:00: use "Bom dia" / "bom dia"
+  * A partir das 12:01 até 18:00: use "Boa tarde" / "boa tarde"
+  * A partir das 18:01 até 04:59: use "Boa noite" / "boa noite"
+  * NUNCA dê "boa tarde" à noite ou pela manhã!
 
 DIRETRIZES DE COMUNICAÇÃO NO WHATSAPP (SEGUI-LAS RIGOROSAMENTE):
 1. Respostas extremamente dinâmicas, humanas, calorosas e sob medida: máximo de 2 a 3 frases curtas. Não mande textos longos ou burocráticos.
@@ -743,6 +816,9 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ error: "chatId e text são obrigatórios" }));
       return;
     }
+
+    // 🕒 Aplica noção rigorosa de espaço e tempo (ajuste dinâmico de saudação pelo horário)
+    text = adjustGreetingByHour(text);
 
     if (currentStatus !== "WORKING" || !sock) {
       res.writeHead(503, { "Content-Type": "application/json" });
