@@ -118,6 +118,7 @@ export default function Simulador() {
   const wppDestino = isIndicacao ? refCelular : "5541997925357";
 
   const [categoria, setCategoria] = useState(initialSegment);
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [idx, setIdx] = useState(4);
   const [nome, setNome] = useState("");
   const [wpp, setWpp] = useState("");

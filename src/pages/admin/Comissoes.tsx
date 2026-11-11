@@ -133,7 +133,7 @@ export default function Comissoes() {
       if (error) {
         console.error(error);
       } else {
-        let currentList = data || [];
+        let currentList: any[] = data || [];
         
         // Auto-provisioning e Alinhamento:
         // 1. Elizabeth (20k): Única venda do mês de Outubro, 100% VENDA_GESTOR (4% em 10x de R$ 80 = Total R$ 800)
@@ -176,7 +176,7 @@ export default function Comissoes() {
               changed = true;
             }
             if (changed) {
-              supabase.from("comissoes").update({
+              (supabase.from("comissoes") as any).update({
                 regra_comissao: "INDICACAO_MAGALU",
                 taxa_comissao: item.taxa_comissao,
                 parcelas_comissao: item.parcelas_comissao,
