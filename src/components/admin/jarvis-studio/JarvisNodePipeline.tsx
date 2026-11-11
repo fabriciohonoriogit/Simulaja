@@ -78,7 +78,7 @@ export function JarvisNodePipeline({
   ];
 
   return (
-    <div className="rounded-3xl p-5 bg-slate-950/60 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]">
+    <div className="rounded-3xl p-5 bg-black/20 border border-white/[0.08] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.25)]">
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_#00F2FE]" />

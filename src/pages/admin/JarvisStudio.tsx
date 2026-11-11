@@ -229,7 +229,7 @@ export default function JarvisStudio() {
       // Marca que o Jarvis está falando para evitar que ele ouça a própria voz
       isJarvisSpeakingRef.current = true;
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
+        try { recognitionRef.current.stop(); } catch (e) { }
       }
 
       // Reprodução com voz neural se habilitada
@@ -246,7 +246,7 @@ export default function JarvisStudio() {
         setOrbState("idle");
         setOrbEmotion("neutro");
         if (isHandsFree && recognitionRef.current) {
-          try { recognitionRef.current.start(); } catch (e) {}
+          try { recognitionRef.current.start(); } catch (e) { }
         }
       }, speechDuration);
     } catch (err) {
@@ -270,7 +270,7 @@ export default function JarvisStudio() {
       toast.success("Escuta Contínua ATIVA: Pode falar a qualquer momento sem clicar!");
     } else {
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
+        try { recognitionRef.current.stop(); } catch (e) { }
       }
       setIsListening(false);
       setOrbState("idle");
@@ -282,7 +282,7 @@ export default function JarvisStudio() {
   useEffect(() => {
     if (!isHandsFree) {
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
+        try { recognitionRef.current.stop(); } catch (e) { }
         recognitionRef.current = null;
       }
       setIsListening(false);
@@ -302,7 +302,7 @@ export default function JarvisStudio() {
 
       try {
         if (recognitionRef.current) {
-          try { recognitionRef.current.stop(); } catch (e) {}
+          try { recognitionRef.current.stop(); } catch (e) { }
         }
 
         const rec = new SpeechRecognition();
@@ -359,7 +359,7 @@ export default function JarvisStudio() {
           if (isHandsFree && !isJarvisSpeakingRef.current && !loadingAI) {
             setTimeout(() => {
               if (isMounted && isHandsFree && !isJarvisSpeakingRef.current && !loadingAI) {
-                try { rec.start(); } catch (err) {}
+                try { rec.start(); } catch (err) { }
               }
             }, 250);
           }
@@ -377,7 +377,7 @@ export default function JarvisStudio() {
       isMounted = false;
       if (speechDebounceTimer.current) clearTimeout(speechDebounceTimer.current);
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
+        try { recognitionRef.current.stop(); } catch (e) { }
         recognitionRef.current = null;
       }
     };
@@ -440,7 +440,7 @@ export default function JarvisStudio() {
     try {
       const cleanPrompt = encodeURIComponent(fluxPrompt.trim());
       const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1280&height=720&model=flux&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
-      
+
       // Pré-carrega a imagem
       const img = new Image();
       img.src = imageUrl;
@@ -481,14 +481,14 @@ export default function JarvisStudio() {
   const calculatedQuote = calculate5050();
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 relative overflow-hidden font-sans pb-16">
-      {/* Luzes Volumétricas Ambientais */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[450px] bg-gradient-to-b from-purple-600/15 via-cyan-500/10 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute top-40 right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-20 left-[-10%] w-[500px] h-[500px] bg-pink-500/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#05060d] text-slate-100 relative overflow-hidden font-sans pb-16">
+      {/* Auroras Cósmicas Eteriais Suaves (Substitui o azul pesado por transparência profunda) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[450px] bg-gradient-to-b from-purple-500/[0.04] via-transparent to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-40 right-[-10%] w-[500px] h-[500px] bg-cyan-500/[0.03] rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-20 left-[-10%] w-[500px] h-[500px] bg-pink-500/[0.03] rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Top Bar Executiva */}
-      <header className="sticky top-0 z-50 px-4 lg:px-8 py-3.5 bg-slate-950/80 border-b border-white/10 backdrop-blur-2xl flex flex-wrap items-center justify-between gap-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+      {/* Top Bar Executiva com Glassmorphism 80% Translúcido */}
+      <header className="sticky top-0 z-50 px-4 lg:px-8 py-3.5 bg-black/20 border-b border-white/[0.08] backdrop-blur-3xl flex flex-wrap items-center justify-between gap-3 shadow-[0_4px_30px_rgba(0,0,0,0.25)]">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 via-purple-600 to-pink-500 p-0.5 shadow-[0_0_20px_rgba(0,242,254,0.35)]">
@@ -535,11 +535,10 @@ export default function JarvisStudio() {
               if (isVoiceActive) stopVoice();
               setIsVoiceActive(!isVoiceActive);
             }}
-            className={`p-2.5 rounded-xl border transition-all ${
-              isVoiceActive
+            className={`p-2.5 rounded-xl border transition-all ${isVoiceActive
                 ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-400 shadow-[0_0_12px_rgba(0,242,254,0.2)]"
                 : "bg-white/5 border-white/10 text-slate-500"
-            }`}
+              }`}
             title={isVoiceActive ? "Voz HD Ativa" : "Voz Mutada"}
           >
             {isVoiceActive ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -577,8 +576,8 @@ export default function JarvisStudio() {
 
       {/* Conteúdo Principal */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6 space-y-6">
-        {/* Seletor Rápido de Motores de IA (Multi-Engine Deck) */}
-        <section className="rounded-2xl p-3 bg-slate-950/70 border border-white/10 backdrop-blur-2xl">
+        {/* Seletor Rápido de Motores de IA (Multi-Engine Deck) com 80% Glass */}
+        <section className="rounded-2xl p-3 bg-white/[0.02] border border-white/[0.08] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.25)]">
           <div className="flex items-center justify-between px-2 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-cyan-400" />
@@ -599,8 +598,8 @@ export default function JarvisStudio() {
                   }}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl shrink-0 border transition-all text-left ${
                     isSelected
-                      ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border-cyan-400/80 shadow-[0_0_15px_rgba(0,242,254,0.3)] text-white scale-[1.02]"
-                      : "bg-white/[0.03] border-white/5 hover:border-white/20 text-slate-400 hover:text-white"
+                      ? "bg-white/[0.08] border-cyan-400/80 shadow-[0_0_15px_rgba(0,242,254,0.3)] text-white scale-[1.02]"
+                      : "bg-white/[0.02] border-white/[0.06] hover:border-white/20 text-slate-400 hover:text-white"
                   }`}
                 >
                   <div
@@ -617,12 +616,12 @@ export default function JarvisStudio() {
           </div>
         </section>
 
-        {/* Hero Holográfico: Três Elementos (Orb 3D WebGL, Status e Falar com Jarvis) */}
-        <section className="relative rounded-3xl p-6 bg-gradient-to-b from-slate-900/60 to-slate-950/80 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] overflow-hidden">
+        {/* Hero Holográfico: Saturno 3D com Luas Orbitais & Rotinas Interativas (80% Glass) */}
+        <section className="relative rounded-3xl p-6 bg-white/[0.02] border border-white/[0.08] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.25)] overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            {/* Planeta 3D WebGL (Saturno com Anéis & Nebulosa Cósmica) */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[280px]">
-              <div className="w-full h-64 relative flex items-center justify-center">
+            {/* Planeta 3D WebGL (Saturno, Anéis & Luas Orbitais Interativas) */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[320px]">
+              <div className="w-full h-72 relative flex items-center justify-center">
                 <JarvisSaturnNebula
                   state={orbState}
                   emotion={orbEmotion}
@@ -630,6 +629,15 @@ export default function JarvisStudio() {
                   audioBass={audioAmplitude * 1.2}
                   audioTreble={audioAmplitude * 0.9}
                   mode="saturn"
+                  onSelectRoutine={(routineId) => {
+                    if (routineId === "whatsapp") {
+                      setShowWahaModal(true);
+                      toast.success("Rotina Reia: Conexão WhatsApp / WAHA aberta!");
+                    } else {
+                      setActiveTab(routineId);
+                      toast.success(`Rotina orbital ativada: ${routineId.toUpperCase()}`);
+                    }
+                  }}
                 />
               </div>
 
@@ -667,11 +675,10 @@ export default function JarvisStudio() {
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   onClick={toggleHandsFree}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-xs transition-all duration-300 shadow-lg ${
-                    isHandsFree
+                  className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-xs transition-all duration-300 shadow-lg ${isHandsFree
                       ? "bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-400 text-slate-950 font-black shadow-emerald-500/40 border border-emerald-300 hover:scale-[1.03] active:scale-[0.98]"
                       : "bg-white/10 hover:bg-white/20 text-slate-300 border border-white/20"
-                  }`}
+                    }`}
                 >
                   <Radio className={`w-4 h-4 ${isHandsFree ? "animate-pulse" : ""}`} />
                   {isHandsFree ? "🟢 Escuta Contínua (Hands-Free Ativo)" : "Ativar Escuta Contínua (Sem Clicar)"}
@@ -717,11 +724,10 @@ export default function JarvisStudio() {
         <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-              activeTab === "chat"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${activeTab === "chat"
                 ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(0,242,254,0.2)]"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             <Terminal className="w-4 h-4" />
             Nexus de Conversação
@@ -729,11 +735,10 @@ export default function JarvisStudio() {
 
           <button
             onClick={() => setActiveTab("radar")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-              activeTab === "radar"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${activeTab === "radar"
                 ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-[0_0_15px_rgba(139,92,246,0.2)]"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             <Building2 className="w-4 h-4" />
             Radar de Prospecção (10 a 20 Leads)
@@ -741,11 +746,10 @@ export default function JarvisStudio() {
 
           <button
             onClick={() => setActiveTab("budget")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-              activeTab === "budget"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${activeTab === "budget"
                 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             <Truck className="w-4 h-4" />
             Simulador 50/50 Objetivo
@@ -753,11 +757,10 @@ export default function JarvisStudio() {
 
           <button
             onClick={() => setActiveTab("flux")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-              activeTab === "flux"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${activeTab === "flux"
                 ? "bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-[0_0_15px_rgba(236,72,153,0.2)]"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             <ImageIcon className="w-4 h-4" />
             Estúdio FLUX.1 Neural
@@ -765,11 +768,10 @@ export default function JarvisStudio() {
 
           <button
             onClick={() => setActiveTab("design")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-              activeTab === "design"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${activeTab === "design"
                 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             <Palette className="w-4 h-4" />
             Design System Tokens
@@ -780,7 +782,7 @@ export default function JarvisStudio() {
 
         {/* ABA 1: CHAT & TERMINAL NEURAL */}
         {activeTab === "chat" && (
-          <div className="rounded-3xl p-5 bg-slate-950/70 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] flex flex-col h-[650px]">
+          <div className="rounded-3xl p-5 bg-white/[0.025] border border-white/[0.08] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.25)] flex flex-col h-[650px]">
             {/* Histórico de Mensagens */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
               {chatMessages.map((msg) => {
@@ -798,11 +800,10 @@ export default function JarvisStudio() {
                     </div>
 
                     <div
-                      className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed ${
-                        isUser
+                      className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed ${isUser
                           ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/30 rounded-tr-none border border-blue-400/30"
                           : "bg-white/[0.04] text-slate-200 border border-white/10 shadow-lg rounded-tl-none backdrop-blur-xl"
-                      }`}
+                        }`}
                     >
                       <p className="whitespace-pre-wrap">{msg.text}</p>
 
@@ -891,11 +892,10 @@ export default function JarvisStudio() {
                 <button
                   type="button"
                   onClick={toggleHandsFree}
-                  className={`p-3 rounded-2xl border transition-all ${
-                    isHandsFree
+                  className={`p-3 rounded-2xl border transition-all ${isHandsFree
                       ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
                       : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
-                  }`}
+                    }`}
                   title={isHandsFree ? "Escuta Contínua Ativa (Pode falar sem clicar - clique para pausar)" : "Ativar Escuta Contínua"}
                 >
                   <Mic className={`w-4 h-4 ${isHandsFree ? "text-emerald-400 animate-pulse" : ""}`} />
@@ -928,7 +928,7 @@ export default function JarvisStudio() {
 
         {/* ABA 2: RADAR DE PROSPECÇÃO EM MASSA (10 A 20 LEADS) */}
         {activeTab === "radar" && (
-          <div className="rounded-3xl p-6 bg-slate-950/70 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
+          <div className="rounded-3xl p-6 bg-white/[0.025] border border-white/[0.08] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.25)] space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
               <div>
                 <h3 className="text-base font-black text-white flex items-center gap-2">
@@ -996,21 +996,19 @@ export default function JarvisStudio() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setRadarQuantidade(10)}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
-                      radarQuantidade === 10
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${radarQuantidade === 10
                         ? "bg-purple-600 text-white border-purple-400 shadow-md"
                         : "bg-white/5 border-white/10 text-slate-400"
-                    }`}
+                      }`}
                   >
                     10 Empresas
                   </button>
                   <button
                     onClick={() => setRadarQuantidade(20)}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
-                      radarQuantidade === 20
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${radarQuantidade === 20
                         ? "bg-purple-600 text-white border-purple-400 shadow-md"
                         : "bg-white/5 border-white/10 text-slate-400"
-                    }`}
+                      }`}
                   >
                     20 Empresas
                   </button>
@@ -1061,11 +1059,10 @@ export default function JarvisStudio() {
                           radarLeads.map((l) => (l.id === lead.id ? { ...l, selecionado: !l.selecionado } : l))
                         );
                       }}
-                      className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                        lead.selecionado
+                      className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${lead.selecionado
                           ? "bg-purple-950/40 border-purple-500/60 shadow-[0_0_15px_rgba(139,92,246,0.2)]"
                           : "bg-white/[0.02] border-white/10 hover:border-white/20"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -1091,7 +1088,7 @@ export default function JarvisStudio() {
 
         {/* ABA 3: SIMULADOR 50/50 RÁPIDO */}
         {activeTab === "budget" && (
-          <div className="rounded-3xl p-6 bg-slate-950/70 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
+          <div className="rounded-3xl p-6 bg-white/[0.025] border border-white/[0.08] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.25)] space-y-6">
             <div className="border-b border-white/10 pb-4">
               <h3 className="text-base font-black text-white flex items-center gap-2">
                 <Truck className="w-5 h-5 text-amber-400" />
@@ -1111,9 +1108,8 @@ export default function JarvisStudio() {
                       setBudgetCategory("pesados");
                       setBudgetTerm(120);
                     }}
-                    className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 ${
-                      budgetCategory === "pesados" ? "bg-amber-500/20 text-amber-300 border-amber-500/50" : "bg-white/5 border-white/10 text-slate-400"
-                    }`}
+                    className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 ${budgetCategory === "pesados" ? "bg-amber-500/20 text-amber-300 border-amber-500/50" : "bg-white/5 border-white/10 text-slate-400"
+                      }`}
                   >
                     <Truck className="w-4 h-4" />
                     Pesados
@@ -1124,9 +1120,8 @@ export default function JarvisStudio() {
                       setBudgetCategory("imovel");
                       setBudgetTerm(200);
                     }}
-                    className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 ${
-                      budgetCategory === "imovel" ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/50" : "bg-white/5 border-white/10 text-slate-400"
-                    }`}
+                    className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 ${budgetCategory === "imovel" ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/50" : "bg-white/5 border-white/10 text-slate-400"
+                      }`}
                   >
                     <Building2 className="w-4 h-4" />
                     Imóvel
@@ -1137,9 +1132,8 @@ export default function JarvisStudio() {
                       setBudgetCategory("veiculo");
                       setBudgetTerm(80);
                     }}
-                    className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 ${
-                      budgetCategory === "veiculo" ? "bg-purple-500/20 text-purple-300 border-purple-500/50" : "bg-white/5 border-white/10 text-slate-400"
-                    }`}
+                    className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 ${budgetCategory === "veiculo" ? "bg-purple-500/20 text-purple-300 border-purple-500/50" : "bg-white/5 border-white/10 text-slate-400"
+                      }`}
                   >
                     <Car className="w-4 h-4" />
                     Veículo
@@ -1219,7 +1213,7 @@ export default function JarvisStudio() {
 
         {/* ABA 4: ESTÚDIO FLUX.1 NEURAL */}
         {activeTab === "flux" && (
-          <div className="rounded-3xl p-6 bg-slate-950/70 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
+          <div className="rounded-3xl p-6 bg-white/[0.025] border border-white/[0.08] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.25)] space-y-6">
             <div className="border-b border-white/10 pb-4">
               <h3 className="text-base font-black text-white flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-pink-400" />

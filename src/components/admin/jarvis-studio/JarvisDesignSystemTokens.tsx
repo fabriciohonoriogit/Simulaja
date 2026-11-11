@@ -34,7 +34,7 @@ export function JarvisDesignSystemTokens() {
   };
 
   return (
-    <div className="relative rounded-3xl p-6 bg-slate-950/70 border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] overflow-hidden">
+    <div className="relative rounded-3xl p-6 bg-black/20 border border-white/[0.08] backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.25)] overflow-hidden">
       {/* Glow decorativo de fundo */}
       <div className="absolute -top-24 -right-24 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
