@@ -98,6 +98,12 @@ const contactNameCache = new Map();
 const phoneToJidCache = new Map();
 const CACHE_FILE = path.join(SESSION_DIR, "phone_jid_cache.json");
 
+// 🛡️ Caches de Deduplicação em Memória (Garantia de 0 Mensagens Duplicadas para o Cliente)
+const recentOutgoingSends = new Map(); // key: `${targetJid}:${textHash}` -> timestamp (60s window)
+const recentOutgoingByJid = new Map(); // key: targetJid -> timestamp (4s anti-flood)
+const processedMessageKeys = new Set(); // key: msg.key.id (previne processar o mesmo evento do Baileys 2x)
+const activeAutoReplies = new Map(); // key: leadId -> timestamp (cooldown de resposta IA para evitar loop/duplicidade)
+
 // Garante que a pasta de sessão existe
 if (!fs.existsSync(SESSION_DIR)) {
   fs.mkdirSync(SESSION_DIR, { recursive: true });
@@ -330,6 +336,14 @@ async function forwardToSupabaseWebhook(msg) {
 async function handleJarvisAutoReply({ remoteJid, text, contactName, leadId }) {
   if (!sock || !leadId || !text) return;
 
+  // 🛡️ Proteção Anti-Duplicação do Jarvis IA: Cooldown de 20s por lead
+  const now = Date.now();
+  if (activeAutoReplies.has(leadId) && now - activeAutoReplies.get(leadId) < 20000) {
+    console.log(`🛡️ [Jarvis AI] Cooldown ativo para lead ${leadId} (<20s). Evitando resposta duplicada.`);
+    return;
+  }
+  activeAutoReplies.set(leadId, now);
+
   try {
     // 1. Busca dados do lead no Supabase
     const leadRes = await fetch(`${SUPABASE_URL}/rest/v1/leads?id=eq.${leadId}&select=id,nome,celular,atendimento_ia,dados_cadastro,valor_credito,tipo_consorcio`, {
@@ -532,10 +546,22 @@ async function connectToWhatsApp() {
     }
   });
 
-  // Escuta todas as mensagens e encaminha para o Webhook do Supabase
+  // Escuta todas as mensagens e encaminha para o Webhook do Supabase (com desduplicação de key.id)
   sock.ev.on("messages.upsert", async (m) => {
     for (const msg of m.messages) {
       if (!msg?.message) continue;
+      const msgId = msg.key?.id;
+      if (msgId) {
+        if (processedMessageKeys.has(msgId)) {
+          // Ignora evento duplicado do Baileys para a mesma mensagem
+          continue;
+        }
+        processedMessageKeys.add(msgId);
+        if (processedMessageKeys.size > 3000) {
+          const first = processedMessageKeys.values().next().value;
+          processedMessageKeys.delete(first);
+        }
+      }
       await forwardToSupabaseWebhook(msg);
     }
   });
@@ -738,8 +764,56 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 🛡️ DEDUPLICAÇÃO DE ENVIOS NO SOCKET:
+    const textHash = text.trim().toLowerCase().replace(/\s+/g, " ");
+    const deduplicationKey = `${targetJid}:${textHash}`;
+    const now = Date.now();
+
+    // 1. Bloqueia a MESMA mensagem para o mesmo número dentro de 60 segundos
+    if (recentOutgoingSends.has(deduplicationKey) && now - recentOutgoingSends.get(deduplicationKey) < 60000) {
+      console.warn(`🛡️ [WAHA Local - Deduplicação]: Mesma mensagem já enviada para ${targetJid} há menos de 60s. Ignorando reenvio duplicado.`);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          success: true,
+          deduplicated: true,
+          id: `dedup_${now}`,
+          timestamp: now,
+          warning: "Mensagem idêntica enviada recentemente para este número. Duplicação evitada com sucesso.",
+        })
+      );
+      return;
+    }
+
+    // 2. Bloqueia envio simultâneo/flood para o mesmo número (< 4 segundos)
+    if (recentOutgoingByJid.has(targetJid) && now - recentOutgoingByJid.get(targetJid) < 4000) {
+      console.warn(`🛡️ [WAHA Local - Anti-Flood]: Mensagem para ${targetJid} disparada muito rápido (<4s). Bloqueando envio concorrente.`);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          success: true,
+          deduplicated: true,
+          id: `flood_${now}`,
+          timestamp: now,
+          warning: "Intervalo mínimo de 4s violado. Evitando duplicidade.",
+        })
+      );
+      return;
+    }
+
     try {
       const result = await sock.sendMessage(targetJid, { text });
+      recentOutgoingSends.set(deduplicationKey, now);
+      recentOutgoingByJid.set(targetJid, now);
+
+      // Limpeza periódica de cache antigo para não sobrecarregar memória
+      if (recentOutgoingSends.size > 2000) {
+        const cutoff = now - 120000;
+        for (const [k, v] of recentOutgoingSends.entries()) {
+          if (v < cutoff) recentOutgoingSends.delete(k);
+        }
+      }
+
       console.log(`📤 [Mensagem Enviada pelo CRM para ${targetJid}]: ${text.substring(0, 60)}...`);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(

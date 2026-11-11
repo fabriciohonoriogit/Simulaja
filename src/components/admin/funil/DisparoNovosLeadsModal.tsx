@@ -48,23 +48,139 @@ interface ItemDisparo {
   erroMsg?: string;
 }
 
-const PRESETS_MENSAGEM = [
-  {
-    id: "black_das_blacks",
-    titulo: "⭐ Black das Blacks Magalu (Oficial)",
-    texto: `Olá, boa tarde! Tudo bem?
+// 🛡️ Pool de Variações Humanizadas da Black das Blacks para rotacionar a cada 3 envios
+export const VARIANTES_BLACK_DAS_BLACKS = [
+  // 1. Envios 1 a 3 (Original oficial)
+  `Olá, boa tarde! Tudo bem?
 
 Aqui é o Fabricio Honório, sou gestor aqui do Consórcio Magalu em {cidade}.
 
 Estou entrando em contato porque estamos com a Black das Blacks, com nossas condições especiais, e acredito que pode fazer sentido para vocês, seja para renovar frota, adquirir equipamentos, imóveis ou qualquer outro investimento sem precisar pagar juros de capital de giro.
 
 Posso te explicar em 5 minutinhos como funciona? Se fizer sentido, ótimo. Se não, sem problema nenhum. 🙂`,
+
+  // 2. Envios 4 a 6
+  `Oi, boa tarde! Tudo ótimo por aí?
+
+Aqui é o Fabricio Honório, responsável pela gestão do Consórcio Magalu aqui em {cidade}.
+
+Passando para te apresentar a nossa campanha da Black das Blacks. Criamos condições diferenciadas que podem ajudar muito a sua empresa a trocar veículos, comprar novos maquinários ou investir em imóveis sem se prender aos juros bancários tradicionais.
+
+Teria 5 minutinhos hoje para eu te resumir como funciona? Se achar interessante, aprofundamos. Se não fizer sentido agora, fica tudo em paz! 👍`,
+
+  // 3. Envios 7 a 9
+  `Olá, como vai? Boa tarde!
+
+Aqui quem fala é o Fabricio Honório, gestor do Consórcio Magalu na região de {cidade}.
+
+Estamos com a nossa ação especial da Black das Blacks liberada neste mês. É uma excelente oportunidade para expansão, compra de equipamentos, frota ou imóveis comerciais com custo reduzido e sem as taxas pesadas do crédito bancário convencional.
+
+Consigo te apresentar em apenas 5 minutos essa proposta? Se for vantajoso pra vocês, conversamos melhor; senão, agradeço desde já a atenção! 🙂`,
+
+  // 4. Envios 10 a 12
+  `Boa tarde! Tudo bem com você?
+
+Fabricio Honório por aqui, à frente do Consórcio Magalu em {cidade}.
+
+Quis falar contigo porque abrimos a Black das Blacks com condições exclusivas da administradora. Pode ser uma ferramenta estratégica para alavancar sua empresa, renovar utilitários ou investir no seu espaço físico fugindo dos juros de capital de giro.
+
+Posso te mostrar em 5 minutinhos como opera? Se fizer sentido pro seu momento, alinhamos. Caso contrário, super tranquilo! Abraço! 🤝`,
+
+  // 5. Envios 13 a 15
+  `Olá, tudo bem? Uma ótima tarde!
+
+Sou o Fabricio Honório, gestor do Consórcio Magalu aqui de {cidade}.
+
+O motivo do meu contato é a Black das Blacks Magalu, onde liberamos condições especiais de crédito programado. É ideal para aquisição de bens, frotas, máquinas ou imóveis sem sofrer com o custo exorbitante dos juros bancários.
+
+Me permite te explicar a lógica em 5 minutinhos? Se servir para o seu negócio, ótimo. Se não for o momento, sem nenhum problema! 😉`,
+
+  // 6. Envios 16 a 18
+  `Oi, boa tarde! Como estão as coisas?
+
+Aqui é o Fabricio Honório, gestor local do Consórcio Magalu em {cidade}.
+
+Estamos com uma condição imperdível na Black das Blacks para empresas da região. Se você planeja renovar sua frota, adquirir novos equipamentos ou comprar imóvel comercial, conseguimos estruturar sem juros de financiamento bancário.
+
+Teria 5 minutos para eu te mandar um breve resumo? Se fizer sentido, avançamos; se não, zero problema! Um abraço! 🙂`,
+];
+
+export const VARIANTES_MEIA_PARCELA = [
+  `Olá, {nome}! Tudo bem? Vi o destaque da sua empresa em {cidade}. Estamos liberando cartas de consórcio de {credito} com Meia Parcela de {parcela_50_50}/mês até a contemplação e lance embutido de 30%. Teria 2 minutos para eu te apresentar como funciona?`,
+  `Oi {primeiro_nome}, como vai? Notei a atuação da sua empresa em {cidade} e preparei uma proposta de crédito de {credito} com parcela reduzida de {parcela_50_50}/mês (50/50) até a contemplação. Posso te enviar um breve resumo em 2 minutinhos?`,
+  `Olá! Tudo bem com você? Aqui é da equipe de planejamento financeiro em {cidade}. Abrimos cotas empresariais de {credito} com a modalidade Meia Parcela de {parcela_50_50}/mês e lance embutido sem juros bancários. Teria 2 minutos para conhecer?`,
+  `Olá {primeiro_nome}! Tudo certo? Temos uma condição especial em {cidade} para alavancagem com crédito de {credito} pagando apenas metade da parcela ({parcela_50_50}/mês) até ser contemplado. Gostaria de dar uma olhada na simulação? 🙂`,
+];
+
+export function obterTemplateComVariacao(
+  templateBase: string,
+  grupoVariacao: number,
+  rotacaoAtiva: boolean
+): string {
+  if (!rotacaoAtiva) return templateBase;
+
+  const isBlackDasBlacks =
+    templateBase.toLowerCase().includes("black das blacks") ||
+    templateBase.toLowerCase().includes("fabricio honório") ||
+    templateBase.toLowerCase().includes("fabricio honorio");
+
+  if (isBlackDasBlacks) {
+    const idx = grupoVariacao % VARIANTES_BLACK_DAS_BLACKS.length;
+    return VARIANTES_BLACK_DAS_BLACKS[idx];
+  }
+
+  const isMeiaParcela =
+    templateBase.toLowerCase().includes("meia parcela") ||
+    templateBase.toLowerCase().includes("50/50");
+
+  if (isMeiaParcela) {
+    const idx = grupoVariacao % VARIANTES_MEIA_PARCELA.length;
+    return VARIANTES_MEIA_PARCELA[idx];
+  }
+
+  // Variação genérica para textos personalizados (muda saudação e fechamento)
+  const saudacoes = [
+    "Olá, boa tarde! Tudo bem?",
+    "Oi, tudo bem por aí?",
+    "Olá, como vai? Tudo certo?",
+    "Boa tarde! Tudo bem com você?",
+    "Oi! Uma ótima tarde pra você.",
+  ];
+  const fechamentos = [
+    "Fico à disposição! 🙂",
+    "Se fizer sentido, conversamos. Um abraço! 👍",
+    "Qualquer dúvida, conte comigo! 🤝",
+    "Tenha uma excelente semana! ✨",
+    "Se for o momento, me avise por aqui! 😉",
+  ];
+
+  const saudacao = saudacoes[grupoVariacao % saudacoes.length];
+  const fechamento = fechamentos[grupoVariacao % fechamentos.length];
+
+  const linhas = templateBase.trim().split("\n");
+  if (
+    linhas[0].toLowerCase().startsWith("olá") ||
+    linhas[0].toLowerCase().startsWith("oi") ||
+    linhas[0].toLowerCase().startsWith("boa tarde")
+  ) {
+    linhas[0] = saudacao;
+  } else {
+    linhas.unshift(saudacao, "");
+  }
+
+  return `${linhas.join("\n")}\n\n${fechamento}`;
+}
+
+const PRESETS_MENSAGEM = [
+  {
+    id: "black_das_blacks",
+    titulo: "⭐ Black das Blacks Magalu (Oficial)",
+    texto: VARIANTES_BLACK_DAS_BLACKS[0],
   },
   {
     id: "meia_parcela",
     titulo: "🔥 Meia Parcela 50/50",
-    texto:
-      "Olá, {nome}! Tudo bem? Vi o destaque da sua empresa em {cidade}. Estamos liberando cartas de consórcio de {credito} com Meia Parcela de {parcela_50_50}/mês até a contemplação e lance embutido de 30%. Teria 2 minutos para eu te apresentar como funciona?",
+    texto: VARIANTES_MEIA_PARCELA[0],
   },
   {
     id: "consultiva_direta",
@@ -95,10 +211,12 @@ export function DisparoNovosLeadsModal({
   const [mensagem, setMensagem] = useState(PRESETS_MENSAGEM[0].texto);
   const [presetAtivo, setPresetAtivo] = useState(PRESETS_MENSAGEM[0].id);
 
-  // Configurações
+  // Configurações Anti-Bloqueio e Automação
   const [ativarIA, setAtivarIA] = useState(true);
   const [moverPrimeiroContato, setMoverPrimeiroContato] = useState(true);
   const [intervaloSegundos, setIntervaloSegundos] = useState(8);
+  const [rotacaoAntiBloqueio, setRotacaoAntiBloqueio] = useState(true);
+  const [variantePreview, setVariantePreview] = useState(0);
 
   // Execução
   const [emExecucao, setEmExecucao] = useState(false);
@@ -108,6 +226,7 @@ export function DisparoNovosLeadsModal({
 
   const pausadoRef = useRef(false);
   const canceladoRef = useRef(false);
+  const isExecutingRef = useRef(false);
 
   useEffect(() => {
     pausadoRef.current = pausado;
@@ -199,14 +318,22 @@ export function DisparoNovosLeadsModal({
       .replace(/{parcela_50_50}/g, parc5050);
   };
 
-  // Preview com base no primeiro selecionado
+  // Preview com base no primeiro selecionado e variação ativa
   const primeiroLead = selecionados[0]?.lead || leadsNovos[0];
+  const templatePreview = rotacaoAntiBloqueio
+    ? obterTemplateComVariacao(mensagem, variantePreview, true)
+    : mensagem;
   const mensagemPreview = primeiroLead
-    ? montarMensagemLead(primeiroLead, mensagem)
+    ? montarMensagemLead(primeiroLead, templatePreview)
     : "Selecione ao menos um lead para visualizar a prévia.";
 
-  // Função principal de disparo
+  // Função principal de disparo com Blindagem Anti-Duplicação
   const handleIniciarDisparo = async () => {
+    if (isExecutingRef.current) {
+      toast.warning("Disparo já em andamento. Aguarde a conclusão.");
+      return;
+    }
+
     if (selecionados.length === 0) {
       toast.error("Selecione ao menos um lead para disparar!");
       return;
@@ -217,6 +344,7 @@ export function DisparoNovosLeadsModal({
       return;
     }
 
+    isExecutingRef.current = true;
     setEmExecucao(true);
     setPausado(false);
     canceladoRef.current = false;
@@ -224,133 +352,195 @@ export function DisparoNovosLeadsModal({
 
     let sucessoCount = 0;
     let erroCount = 0;
+    let puladosCount = 0;
+    const telefonesJaDisparados = new Set<string>();
 
-    for (let i = 0; i < itens.length; i++) {
-      if (canceladoRef.current) {
-        toast.info("Disparos cancelados pelo usuário.");
-        break;
-      }
+    try {
+      for (let i = 0; i < itens.length; i++) {
+        if (canceladoRef.current) {
+          toast.info("Disparos cancelados pelo usuário.");
+          break;
+        }
 
-      const item = itens[i];
-      if (!item.selecionado) continue;
+        const item = itens[i];
+        if (!item.selecionado) continue;
 
-      // Espera enquanto estiver pausado
-      while (pausadoRef.current) {
-        await new Promise((r) => setTimeout(r, 600));
+        // Espera enquanto estiver pausado
+        while (pausadoRef.current) {
+          await new Promise((r) => setTimeout(r, 600));
+          if (canceladoRef.current) break;
+        }
         if (canceladoRef.current) break;
-      }
-      if (canceladoRef.current) break;
 
-      setIndiceAtual(i);
-      setItens((prev) =>
-        prev.map((it, idx) => (idx === i ? { ...it, status: "enviando" } : it))
-      );
-
-      const lead = item.lead;
-      const targetPhone = lead.celular ? lead.celular.replace(/\D/g, "") : "";
-
-      if (!targetPhone || targetPhone.length < 10) {
-        erroCount++;
+        setIndiceAtual(i);
         setItens((prev) =>
-          prev.map((it, idx) =>
-            idx === i
-              ? { ...it, status: "erro", erroMsg: "Número de telefone inválido" }
-              : it
-          )
+          prev.map((it, idx) => (idx === i ? { ...it, status: "enviando" } : it))
         );
-        continue;
-      }
 
-      const textoFinal = montarMensagemLead(lead, mensagem);
+        const lead = item.lead;
+        const targetPhone = lead.celular ? lead.celular.replace(/\D/g, "") : "";
 
-      try {
-        // 1. Envia via WhatsApp (WAHA Local ou Evolution API)
-        const waRes = await sendWhatsAppMessage({
-          number: targetPhone,
-          text: textoFinal,
-          organizacaoId: lead.organizacao_id,
-          leadId: lead.id,
-          leadNome: lead.nome,
-        });
-
-        if (!waRes.success) {
+        if (!targetPhone || targetPhone.length < 10) {
           erroCount++;
+          setItens((prev) =>
+            prev.map((it, idx) =>
+              idx === i
+                ? { ...it, status: "erro", erroMsg: "Número de telefone inválido" }
+                : it
+            )
+          );
+          continue;
+        }
+
+        // 🛡️ BLINDAGEM 1: Deduplicação por número no mesmo lote
+        // Extrai os últimos 8 dígitos para comparação precisa
+        const shortPhone = targetPhone.replace(/^55/, "").slice(-8);
+        if (telefonesJaDisparados.has(shortPhone)) {
+          puladosCount++;
+          console.warn(`🛡️ [Anti-Duplicação]: Número ${targetPhone} já contatado neste lote. Pulando.`);
           setItens((prev) =>
             prev.map((it, idx) =>
               idx === i
                 ? {
                     ...it,
-                    status: "erro",
-                    erroMsg: waRes.error || "Sem WhatsApp ou erro de conexão",
+                    status: "pulado",
+                    erroMsg: "Número duplicado no lote (já recebeu mensagem)",
                   }
                 : it
             )
           );
-        } else {
-          sucessoCount++;
+          continue;
+        }
 
-          // 2. Grava no chat_messages do Supabase para aparecer no LeadChat
-          await supabase.from("chat_messages").insert({
-            lead_id: lead.id,
-            content: textoFinal,
-            role: "assistant",
-          });
+        // 🛡️ BLINDAGEM 2: Verifica no Supabase se já houve contato recente (última 1h)
+        try {
+          const { data: recentMsgs } = await supabase
+            .from("chat_messages")
+            .select("id, created_at")
+            .eq("lead_id", lead.id)
+            .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString())
+            .limit(1);
 
-          // 3. Atualiza lead no Supabase: status e atendimento_ia
-          const updatePayload: any = {
-            atendimento_ia: ativarIA,
-            status_updated_at: new Date().toISOString(),
-          };
-          if (moverPrimeiroContato) {
-            updatePayload.status = "primeiro_contato";
+          if (recentMsgs && recentMsgs.length > 0) {
+            puladosCount++;
+            console.warn(`🛡️ [Anti-Duplicação]: Lead ${lead.nome} já recebeu mensagem nos últimos 60 min. Pulando.`);
+            setItens((prev) =>
+              prev.map((it, idx) =>
+                idx === i
+                  ? {
+                      ...it,
+                      status: "pulado",
+                      erroMsg: "Já recebeu mensagem recentemente (proteção 1h)",
+                    }
+                  : it
+              )
+            );
+            continue;
           }
+        } catch (checkErr) {
+          console.warn("Aviso ao checar mensagens recentes:", checkErr);
+        }
 
-          await supabase.from("leads").update(updatePayload).eq("id", lead.id);
+        // Registra o número como disparado
+        telefonesJaDisparados.add(shortPhone);
 
-          // 4. Grava no histórico de contatos
-          await supabase.from("historico_contatos").insert({
-            lead_id: lead.id,
-            tipo_contato: "whatsapp",
-            detalhes: `Disparo em lote WhatsApp: "${textoFinal.substring(0, 100)}..."`,
-            resultado: ativarIA
-              ? "Mensagem entregue com Atendimento IA ativado"
-              : "Mensagem entregue",
+        // 🛡️ ROTAÇÃO ANTI-BLOQUEIO META (A CADA 3 ENVIOS):
+        // A cada 3 mensagens bem-sucedidas, altera o vocabulário para invalidar a hash da Meta
+        const grupoVariacao = rotacaoAntiBloqueio ? Math.floor(sucessoCount / 3) : 0;
+        const templateFinal = obterTemplateComVariacao(mensagem, grupoVariacao, rotacaoAntiBloqueio);
+        const textoFinal = montarMensagemLead(lead, templateFinal);
+
+        try {
+          // 1. Envia via WhatsApp (WAHA Local ou Evolution API)
+          const waRes = await sendWhatsAppMessage({
+            number: targetPhone,
+            text: textoFinal,
+            organizacaoId: lead.organizacao_id,
+            leadId: lead.id,
+            leadNome: lead.nome,
           });
 
+          if (!waRes.success) {
+            erroCount++;
+            setItens((prev) =>
+              prev.map((it, idx) =>
+                idx === i
+                  ? {
+                      ...it,
+                      status: "erro",
+                      erroMsg: waRes.error || "Sem WhatsApp ou erro de conexão",
+                    }
+                  : it
+              )
+            );
+          } else {
+            sucessoCount++;
+
+            // 2. Grava no chat_messages do Supabase para aparecer no LeadChat
+            await supabase.from("chat_messages").insert({
+              lead_id: lead.id,
+              content: textoFinal,
+              role: "assistant",
+            });
+
+            // 3. Atualiza lead no Supabase: status e atendimento_ia
+            const updatePayload: any = {
+              atendimento_ia: ativarIA,
+              status_updated_at: new Date().toISOString(),
+            };
+            if (moverPrimeiroContato) {
+              updatePayload.status = "primeiro_contato";
+            }
+
+            await supabase.from("leads").update(updatePayload).eq("id", lead.id);
+
+            // 4. Grava no histórico de contatos
+            await supabase.from("historico_contatos").insert({
+              lead_id: lead.id,
+              tipo_contato: "whatsapp",
+              detalhes: `Disparo em lote WhatsApp: "${textoFinal.substring(0, 100)}..."`,
+              resultado: ativarIA
+                ? "Mensagem entregue com Atendimento IA ativado"
+                : "Mensagem entregue",
+            });
+
+            setItens((prev) =>
+              prev.map((it, idx) =>
+                idx === i ? { ...it, status: "sucesso" } : it
+              )
+            );
+          }
+        } catch (err: any) {
+          erroCount++;
           setItens((prev) =>
             prev.map((it, idx) =>
-              idx === i ? { ...it, status: "sucesso" } : it
+              idx === i ? { ...it, status: "erro", erroMsg: err.message } : it
             )
           );
         }
-      } catch (err: any) {
-        erroCount++;
-        setItens((prev) =>
-          prev.map((it, idx) =>
-            idx === i ? { ...it, status: "erro", erroMsg: err.message } : it
-          )
-        );
-      }
 
-      setProgresso({
-        enviados: sucessoCount,
-        erros: erroCount,
-        total: selecionados.length,
-      });
+        setProgresso({
+          enviados: sucessoCount,
+          erros: erroCount,
+          total: selecionados.length,
+        });
 
-      // Intervalo seguro entre disparos para evitar bloqueio do WhatsApp
-      if (i < itens.length - 1 && !canceladoRef.current) {
-        await new Promise((r) => setTimeout(r, intervaloSegundos * 1000));
+        // Intervalo seguro entre disparos para proteger o chip do consultor
+        if (i < itens.length - 1 && !canceladoRef.current) {
+          await new Promise((r) => setTimeout(r, intervaloSegundos * 1000));
+        }
       }
+    } finally {
+      isExecutingRef.current = false;
+      setEmExecucao(false);
+      setIndiceAtual(-1);
     }
 
-    setEmExecucao(false);
-    setIndiceAtual(-1);
+    const msgResumo = puladosCount > 0
+      ? `🎉 Disparos concluídos! ${sucessoCount} enviados, ${puladosCount} duplicados prevenidos, ${erroCount} falhas.`
+      : `🎉 Disparos concluídos! ${sucessoCount} enviados com sucesso, ${erroCount} falhas.`;
 
-    toast.success(
-      `🎉 Disparos concluídos! ${sucessoCount} enviados com sucesso, ${erroCount} falhas.`,
-      { duration: 6000 }
-    );
+    toast.success(msgResumo, { duration: 6000 });
 
     if (onLeadsUpdated) {
       onLeadsUpdated();
@@ -444,28 +634,65 @@ export function DisparoNovosLeadsModal({
               ))}
             </div>
 
-            {/* PRÉVIA AO VIVO */}
-            <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 text-xs space-y-1">
-              <div className="flex items-center justify-between text-[10px] font-black uppercase text-emerald-800">
-                <span>👁️ Prévia ao Vivo (Como o cliente recebe):</span>
+            {/* PRÉVIA AO VIVO COM SELETOR DE VARIANTES ANTI-BLOQUEIO */}
+            <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 text-xs space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-black uppercase text-emerald-800">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Prévia ao Vivo
+                  {rotacaoAntiBloqueio && (
+                    <span className="text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded font-black text-[9px]">
+                      Variante {variantePreview + 1} (A cada 3 envios)
+                    </span>
+                  )}
+                </span>
                 {primeiroLead && (
                   <span className="text-slate-500 font-normal">
                     Exemplo: <b>{primeiroLead.nome}</b>
                   </span>
                 )}
               </div>
-              <p className="text-slate-700 whitespace-pre-wrap leading-relaxed font-sans bg-white p-2.5 rounded-lg border border-emerald-100/60 shadow-xs">
+
+              {rotacaoAntiBloqueio && (
+                <div className="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase mr-1 shrink-0">
+                    Driblando a Meta:
+                  </span>
+                  {[
+                    { idx: 0, label: "Envios 1-3 (Var 1)" },
+                    { idx: 1, label: "Envios 4-6 (Var 2)" },
+                    { idx: 2, label: "Envios 7-9 (Var 3)" },
+                    { idx: 3, label: "Envios 10-12 (Var 4)" },
+                    { idx: 4, label: "Envios 13-15 (Var 5)" },
+                    { idx: 5, label: "Envios 16-18 (Var 6)" },
+                  ].map((v) => (
+                    <button
+                      key={v.idx}
+                      type="button"
+                      onClick={() => setVariantePreview(v.idx)}
+                      className={`text-[9px] font-bold px-2 py-0.5 rounded border transition-all shrink-0 ${
+                        variantePreview === v.idx
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                          : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300"
+                      }`}
+                    >
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-slate-700 whitespace-pre-wrap leading-relaxed font-sans bg-white p-2.5 rounded-lg border border-emerald-100/60 shadow-xs text-xs">
                 {mensagemPreview}
               </p>
             </div>
           </div>
 
           {/* SEÇÃO 2: CONFIGURAÇÕES DE DISPARO E ATENDIMENTO AUTOMÁTICO */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* TOGGLE IA ATIVA */}
             <div
               onClick={() => !emExecucao && setAtivarIA(!ativarIA)}
-              className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                 ativarIA
                   ? "bg-emerald-50/60 border-emerald-300 ring-1 ring-emerald-400/20 shadow-sm"
                   : "bg-white border-slate-200 hover:border-slate-300"
@@ -475,7 +702,7 @@ export function DisparoNovosLeadsModal({
                 <div className="flex items-center gap-1.5">
                   <Bot className={`h-4 w-4 ${ativarIA ? "text-emerald-600" : "text-slate-400"}`} />
                   <span className="text-xs font-black text-slate-900">
-                    Atendimento IA Jarvis
+                    Atendimento IA
                   </span>
                 </div>
                 <input
@@ -486,15 +713,42 @@ export function DisparoNovosLeadsModal({
                 />
               </div>
               <p className="text-[10px] text-slate-500 mt-2">
-                Assim que o cliente responder no WhatsApp, o Jarvis responde
-                automaticamente tirando dúvidas de consórcio.
+                Ao responder no WhatsApp, o Jarvis atende imediatamente tirando dúvidas.
+              </p>
+            </div>
+
+            {/* TOGGLE ROTAÇÃO ANTI-BLOQUEIO META (A CADA 3 ENVIOS) */}
+            <div
+              onClick={() => !emExecucao && setRotacaoAntiBloqueio(!rotacaoAntiBloqueio)}
+              className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                rotacaoAntiBloqueio
+                  ? "bg-emerald-50/60 border-emerald-300 ring-1 ring-emerald-400/20 shadow-sm"
+                  : "bg-white border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className={`h-4 w-4 ${rotacaoAntiBloqueio ? "text-emerald-600" : "text-slate-400"}`} />
+                  <span className="text-xs font-black text-slate-900">
+                    Anti-Bloqueio Meta
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={rotacaoAntiBloqueio}
+                  onChange={() => {}}
+                  className="h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500"
+                />
+              </div>
+              <p className="text-[10px] text-slate-500 mt-2">
+                <b>A cada 3 envios</b>, altera o vocabulário para burlar a detecção de spam da Meta.
               </p>
             </div>
 
             {/* TOGGLE MOVER STATUS */}
             <div
               onClick={() => !emExecucao && setMoverPrimeiroContato(!moverPrimeiroContato)}
-              className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                 moverPrimeiroContato
                   ? "bg-blue-50/60 border-blue-300 ring-1 ring-blue-400/20 shadow-sm"
                   : "bg-white border-slate-200 hover:border-slate-300"
@@ -504,7 +758,7 @@ export function DisparoNovosLeadsModal({
                 <div className="flex items-center gap-1.5">
                   <ArrowRight className={`h-4 w-4 ${moverPrimeiroContato ? "text-blue-600" : "text-slate-400"}`} />
                   <span className="text-xs font-black text-slate-900">
-                    Mover para "1º Contato"
+                    1º Contato
                   </span>
                 </div>
                 <input
@@ -515,24 +769,23 @@ export function DisparoNovosLeadsModal({
                 />
               </div>
               <p className="text-[10px] text-slate-500 mt-2">
-                Ao enviar a mensagem, o card no Kanban é movido da coluna "Novo Lead"
-                para "Primeiro Contato".
+                Move o card automaticamente no Kanban para "Primeiro Contato".
               </p>
             </div>
 
             {/* CADÊNCIA / INTERVALO */}
-            <div className="p-3.5 rounded-2xl border border-slate-200 bg-white flex flex-col justify-between">
+            <div className="p-3 rounded-2xl border border-slate-200 bg-white flex flex-col justify-between">
               <div className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-amber-500" />
                 <span className="text-xs font-black text-slate-900">
-                  Cadência Anti-Bloqueio
+                  Cadência
                 </span>
               </div>
               <div className="flex items-center gap-1 mt-2">
                 {[
-                  { seg: 5, label: "5s (Rápido)" },
-                  { seg: 8, label: "8s (Seguro)" },
-                  { seg: 15, label: "15s (Calmo)" },
+                  { seg: 5, label: "5s" },
+                  { seg: 8, label: "8s" },
+                  { seg: 15, label: "15s" },
                 ].map((c) => (
                   <button
                     key={c.seg}
@@ -550,7 +803,7 @@ export function DisparoNovosLeadsModal({
                 ))}
               </div>
               <p className="text-[9px] text-slate-400 mt-1">
-                Intervalo aleatório entre cada envio para proteger o chip.
+                Intervalo seguro entre mensagens para proteger o chip.
               </p>
             </div>
           </div>
@@ -681,6 +934,11 @@ export function DisparoNovosLeadsModal({
                   <span>
                     Enviando {indiceAtual + 1} de {progresso.total}...
                   </span>
+                  {rotacaoAntiBloqueio && (
+                    <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      🛡️ Var {(Math.floor(progresso.enviados / 3) % VARIANTES_BLACK_DAS_BLACKS.length) + 1} (Meta Anti-Spam)
+                    </span>
+                  )}
                 </div>
                 <span className="font-mono text-emerald-400">
                   {Math.round(((indiceAtual + 1) / (progresso.total || 1)) * 100)}%
