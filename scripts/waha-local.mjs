@@ -297,22 +297,18 @@ async function connectToWhatsApp() {
       sock.ev.removeAllListeners("messages.upsert");
       sock.end(undefined);
     } catch (e) {}
+    sock = null;
+    await new Promise((r) => setTimeout(r, 1000));
   }
 
   let { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
 
-  // Se a sessão ficou corrompida ou interrompida antes de completar o registro (creds.registered === false)
-  if (state.creds?.me && !state.creds.registered) {
-    console.log("⚠️ [WAHA Local] Sessão anterior interrompida antes da conclusão do pareamento. Limpando resíduos...");
-    clearSessionFiles();
-    const freshAuth = await useMultiFileAuthState(SESSION_DIR);
-    state = freshAuth.state;
-    saveCreds = freshAuth.saveCreds;
-  }
-  let version = [2, 3000, 1053716622];
+  let version = [2, 3000, 1054098113];
   try {
     const vInfo = await fetchLatestWaWebVersion({});
-    if (vInfo?.version) version = vInfo.version;
+    if (vInfo?.version && !vInfo?.error) {
+      version = vInfo.version;
+    }
   } catch (err) {
     try {
       const bInfo = await fetchLatestBaileysVersion();
@@ -327,11 +323,15 @@ async function connectToWhatsApp() {
       keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
     },
     logger: pino({ level: "silent" }),
-    browser: ["Mac OS", "Chrome", "14.4.1"],
+    browser: Browsers.appropriate("Chrome"),
     printQRInTerminal: false,
-    connectTimeoutMs: 30000,
-    defaultQueryTimeoutMs: 30000,
-    keepAliveIntervalMs: 30000,
+    syncFullHistory: false,
+    markOnlineOnConnect: true,
+    generateHighQualityLinkPreview: false,
+    connectTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 60000,
+    keepAliveIntervalMs: 25000,
+    getMessage: async () => ({ conversation: "" }),
   });
 
   sock.ev.on("creds.update", saveCreds);
@@ -353,7 +353,9 @@ async function connectToWhatsApp() {
 
     if (connection === "close") {
       const statusCode = lastDisconnect?.error?.output?.statusCode;
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+      const isLoggedOut = statusCode === DisconnectReason.loggedOut;
+      const isReplaced = statusCode === 440;
+      const shouldReconnect = !isLoggedOut && !isReplaced;
       currentStatus = "STOPPED";
       currentQrText = null;
       currentQrPngBuffer = null;
@@ -365,19 +367,21 @@ async function connectToWhatsApp() {
         return;
       }
 
+      if (statusCode === 440) {
+        console.log("⚠️ [WAHA Local] Sessão substituída por outra aba ou aparelho conectado (status: 440). Conexão em repouso.");
+        return;
+      }
+
       if (statusCode === 408) {
-        console.log("⏳ [WAHA Local] Tempo de leitura do QR Code expirado ou handshake pendente. Renovando...");
-        if (!state.creds?.registered) {
-          clearSessionFiles();
-        }
+        console.log("⏳ [WAHA Local] Handshake ou renovação de QR Code em andamento...");
       } else {
         console.log(`⚠️ [WAHA Local] Conexão encerrada (status: ${statusCode}). Reconectando: ${shouldReconnect}`);
       }
 
       if (shouldReconnect) {
         setTimeout(connectToWhatsApp, 2500);
-      } else {
-        console.log("❌ [WAHA Local] Desconectado pelo WhatsApp. Limpando sessão para novo pareamento limpo...");
+      } else if (isLoggedOut) {
+        console.log("❌ [WAHA Local] Desconectado pelo WhatsApp (Logout). Limpando sessão para novo pareamento...");
         clearSessionFiles();
       }
     } else if (connection === "open") {
@@ -804,7 +808,7 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ error: "Endpoint não encontrado", path: pathname }));
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`\n======================================================`);
   console.log(`🚀 WAHA Local WhatsApp Server Ativo!`);
   console.log(`📡 URL da API: http://localhost:${PORT}`);
