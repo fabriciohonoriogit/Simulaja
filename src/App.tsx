@@ -21,6 +21,7 @@ import SimuladorAdmin from "./pages/admin/SimuladorAdmin";
 import Agendamentos from "./pages/admin/Agendamentos";
 import Jarvis from "./pages/admin/Jarvis";
 import JarvisHUDPage from "./pages/admin/JarvisHUDPage";
+import JarvisStudio from "./pages/admin/JarvisStudio";
 import JarvisSquadPage from "./pages/admin/JarvisSquadPage";
 import Settings from "./pages/admin/Settings";
 import Register from "./pages/admin/Register";
@@ -84,6 +85,7 @@ const AppContent = () => {
           <Route path="metas" element={<Metas />} />
           <Route path="jarvis" element={<Jarvis />} />
           <Route path="jarvis-hud" element={<JarvisHUDPage />} />
+          <Route path="jarvis-studio" element={<JarvisStudio />} />
           <Route path="squad" element={<JarvisSquadPage />} />
           <Route path="jarvis-squad" element={<JarvisSquadPage />} />
           <Route path="carteira" element={<Carteira />} />
