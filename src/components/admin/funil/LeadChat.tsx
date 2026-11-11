@@ -320,11 +320,11 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
       if (forceWeb || waMode === "web") {
         toast.success("🟢 Mensagem registrada no CRM e aberta no WhatsApp!");
       } else if (waStatus && !waStatus.success) {
-        toast.error(`⚠️ Salvo no CRM, mas API não respondeu. Abrindo no WhatsApp Web...`, {
-          duration: 4000
+        toast.error(`❌ Não entregue via WhatsApp: ${waStatus.error || "Número sem WhatsApp ativo ou servidor offline."}`, {
+          duration: 6000
         });
         if (targetPhone) {
-          window.open(getWhatsAppDirectUrl(targetPhone, messageText), "_blank");
+          toast.info("💡 Você pode tentar abrir diretamente no WhatsApp Web clicando no ícone do WhatsApp.", { duration: 5000 });
         }
       } else {
         const providerLabel = waStatus?.provider === "waha" ? "WAHA" : "Evolution API";

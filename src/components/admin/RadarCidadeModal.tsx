@@ -19,7 +19,9 @@ import {
   ShieldCheck,
   Sparkles,
   CheckSquare,
-  Square
+  Square,
+  Phone,
+  Mail
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -285,18 +287,18 @@ export function RadarCidadeModal({
           </div>
         </div>
 
-        {/* PAINEL DE CONTROLE DE BUSCA GEOGRÁFICA */}
+        {/* PAINEL DE CONTROLE DE BUSCA GEOGRÁFICA NO GOOGLE MAPS */}
         <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
             {/* CIDADE */}
-            <div className="md:col-span-4 space-y-1.5">
+            <div className="md:col-span-3 space-y-1.5">
               <label className="text-[11px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5 text-blue-600" /> Cidade Alvo
               </label>
               <Input
                 value={cidade}
                 onChange={(e) => setCidade(e.target.value)}
-                placeholder="Ex: Curitiba, Cascavel, Joinville..."
+                placeholder="Ex: Curitiba, Cascavel..."
                 className="bg-white font-bold text-slate-900 h-10 rounded-xl"
               />
             </div>
@@ -319,10 +321,23 @@ export function RadarCidadeModal({
               </select>
             </div>
 
+            {/* RAMO / ATIVIDADE */}
+            <div className="md:col-span-4 space-y-1.5">
+              <label className="text-[11px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-cyan-600" /> Ramo / Atividade no Maps
+              </label>
+              <Input
+                value={nichoLivre}
+                onChange={(e) => setNichoLivre(e.target.value)}
+                placeholder="Ex: Transportadoras, Clínicas, Autopeças..."
+                className="bg-white font-bold text-slate-900 h-10 rounded-xl"
+              />
+            </div>
+
             {/* QUANTIDADE (10 A 20) */}
             <div className="md:col-span-3 space-y-1.5">
               <label className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
-                Lote de Prospecção
+                Lote (10 a 20 Leads)
               </label>
               <div className="flex gap-1 h-10">
                 {[10, 15, 20].map((qtd) => (
@@ -341,20 +356,46 @@ export function RadarCidadeModal({
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* BOTÃO PROSPECTAR */}
-            <div className="md:col-span-3">
+          {/* LINHA 2: TIPO DE CRÉDITO E BOTÃO PROSPECTAR NO MAPS */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end pt-1">
+            <div className="md:col-span-7 flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block w-full mb-0.5">
+                Segmento de Consórcio SimulaJá:
+              </span>
+              {[
+                { id: "pesados", label: "🚛 Pesados / Frotas" },
+                { id: "imovel", label: "🏢 Imóveis / Galpões" },
+                { id: "veiculo", label: "🚗 Frotas Leves" },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSegmento(s.id as any)}
+                  className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all ${
+                    segmento === s.id
+                      ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="md:col-span-5">
               <Button
                 onClick={() => handleBuscar()}
                 disabled={loading}
-                className="w-full h-10 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md shadow-blue-500/20"
+                className="w-full h-10 bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md shadow-blue-500/20"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
                     <Search className="h-3.5 w-3.5 mr-1.5" />
-                    Mapear {quantidade} Empresas
+                    Mapear {quantidade} no Google Maps
                   </>
                 )}
               </Button>
@@ -484,32 +525,60 @@ export function RadarCidadeModal({
                         </b>
                       </p>
 
-                      <div className="bg-slate-100/70 p-2 rounded-xl border border-slate-200/60 flex flex-wrap items-center gap-x-4 gap-y-1">
-                        <span className="text-[11px] font-black text-blue-900 flex items-center gap-1">
-                          <Users className="h-3.5 w-3.5 text-blue-600" /> Decisor: {p.decisorPrincipal}
+                      {/* CONTATO / DECISOR */}
+                      <div className="bg-slate-100/70 p-2.5 rounded-xl border border-slate-200/60 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs font-black text-blue-900 flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5 text-blue-600" /> Contato / Decisor: <b className="text-slate-900">{p.decisorPrincipal}</b>
                         </span>
                         {p.socios.length > 1 && (
                           <span className="text-[10px] text-slate-500 font-medium">
-                            +{p.socios.length - 1} outro(s) sócio(s) cadastrado(s)
+                            +{p.socios.length - 1} outro(s) sócio(s)
                           </span>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
-                        <span className="flex items-center gap-1 font-medium">
-                          <MapPin className="h-3 w-3 text-slate-400" /> {p.endereco}
-                        </span>
-                        {p.googleMapsUrl && (
-                          <a
-                            href={p.googleMapsUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-blue-600 font-bold hover:underline inline-flex items-center gap-1 text-[11px]"
-                          >
-                            Abrir no Google Maps <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
+                      {/* TELEFONE, EMAIL E ENDEREÇO */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-slate-100">
+                        {/* TELEFONE */}
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <span className="font-bold text-slate-900">{p.telefone || "Telefone não informado"}</span>
+                          {(p as any).hasWhatsApp && (
+                            <Badge className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-1.5 py-0 border-0">
+                              WhatsApp Ativo
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* EMAIL */}
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                          {p.email ? (
+                            <a href={`mailto:${p.email}`} onClick={(e) => e.stopPropagation()} className="text-blue-700 hover:underline font-medium truncate">
+                              {p.email}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 italic">E-mail sob consulta</span>
+                          )}
+                        </div>
+
+                        {/* ENDEREÇO COMPLETO */}
+                        <div className="md:col-span-2 flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                          <span className="flex items-center gap-1.5 text-slate-600 truncate">
+                            <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" /> {p.endereco}
+                          </span>
+                          {p.googleMapsUrl && (
+                            <a
+                              href={p.googleMapsUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-blue-600 font-bold hover:underline inline-flex items-center gap-1 text-[11px] shrink-0"
+                            >
+                              Ver no Maps <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
                       </div>
 
                       <div className="bg-blue-50/70 p-2 rounded-xl border border-blue-100 text-xs text-blue-950 space-y-1">

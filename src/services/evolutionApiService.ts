@@ -141,8 +141,10 @@ export const sendWhatsAppMessage = async ({ number, text, organizacaoId, leadId,
         return { success: true, provider: "waha", data: wahaRes.data };
       }
       console.warn("[WAHA] Envio direto retornou erro:", wahaRes.error);
+      return { success: false, error: wahaRes.error || "Erro no envio via WAHA Local", provider: "waha" };
     } catch (err: any) {
       console.warn("[WAHA] Erro de rede ao conectar:", err);
+      return { success: false, error: err.message || "Erro de conexão com o WAHA Local", provider: "waha" };
     }
   }
 
