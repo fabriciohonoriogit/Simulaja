@@ -50,8 +50,19 @@ interface ItemDisparo {
 
 const PRESETS_MENSAGEM = [
   {
+    id: "black_das_blacks",
+    titulo: "⭐ Black das Blacks Magalu (Oficial)",
+    texto: `Olá, boa tarde! Tudo bem?
+
+Aqui é o Fabricio Honório, sou gestor aqui do Consórcio Magalu em {cidade}.
+
+Estou entrando em contato porque estamos com a Black das Blacks, com nossas condições especiais, e acredito que pode fazer sentido para vocês, seja para renovar frota, adquirir equipamentos, imóveis ou qualquer outro investimento sem precisar pagar juros de capital de giro.
+
+Posso te explicar em 5 minutinhos como funciona? Se fizer sentido, ótimo. Se não, sem problema nenhum. 🙂`,
+  },
+  {
     id: "meia_parcela",
-    titulo: "🔥 Meia Parcela 50/50 (Alta Conversão)",
+    titulo: "🔥 Meia Parcela 50/50",
     texto:
       "Olá, {nome}! Tudo bem? Vi o destaque da sua empresa em {cidade}. Estamos liberando cartas de consórcio de {credito} com Meia Parcela de {parcela_50_50}/mês até a contemplação e lance embutido de 30%. Teria 2 minutos para eu te apresentar como funciona?",
   },
@@ -154,7 +165,7 @@ export function DisparoNovosLeadsModal({
     const primeiroNome = nomeCompleto.split(" ")[0] || "Cliente";
     const dados = lead.dados_cadastro || {};
     const nomeEmpresa = dados.nome_fantasia || lead.nome || "sua empresa";
-    const cidade = lead.cidade || dados.cidade || "sua região";
+    const cidade = lead.cidade || dados.cidade || "Paranaguá";
 
     const credNum = Number(lead.valor_credito) || 300000;
     const credFmt = credNum.toLocaleString("pt-BR", {

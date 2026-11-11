@@ -1074,14 +1074,7 @@ Retorne APENAS o JSON puro sem bloco de código markdown no formato:
         const parcEmpNorm = Math.round((custoEmp / prazoMeses) * 100) / 100;
         const parcEmp5050 = Math.round((parcEmpNorm * 0.5) * 100) / 100;
 
-        let gancho = "";
-        if (segmento === "pesados") {
-          gancho = `Renovação e ampliação de frota pesada em ${cidade} utilizando Meia Parcela de R$ ${parcEmp5050.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês até a contemplação e lance embutido de ${lanceEmbutidoPct}%.`;
-        } else if (segmento === "imovel") {
-          gancho = `Aquisição de sede própria ou galpão logístico em ${cidade} com carta de R$ ${credEmpresa.toLocaleString("pt-BR")},00 e meia parcela 50/50.`;
-        } else {
-          gancho = `Planejamento de veículos e utilitários em ${cidade} com taxa reduzida e meia parcela 50/50.`;
-        }
+        const gancho = `Black das Blacks Consórcio Magalu: crédito de R$ ${credEmpresa.toLocaleString("pt-BR")},00 sem juros de capital de giro e com Meia Parcela 50/50 em ${cidade}.`;
 
         enriquecidas.push({
           id: `maps-${Date.now()}-${i}`,

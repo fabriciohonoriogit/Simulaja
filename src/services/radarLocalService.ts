@@ -195,14 +195,7 @@ Retorne APENAS o JSON puro sem bloco de código markdown no formato:
             cleanTel = `55${cleanTel}`;
           }
 
-          let gancho = "";
-          if (segmento === "pesados") {
-            gancho = `Renovação de frota em ${cidadeFormatada} com Meia Parcela de R$ ${c.parcela5050.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês até a contemplação e lance embutido de ${c.lanceEmbutidoPct}%.`;
-          } else if (segmento === "imovel") {
-            gancho = `Compra de sede própria ou galpão em ${cidadeFormatada} com crédito de R$ ${cred.toLocaleString("pt-BR")},00 e meia parcela 50/50.`;
-          } else {
-            gancho = `Expansão programada de frota e utilitários em ${cidadeFormatada} com meia parcela 50/50.`;
-          }
+          const gancho = `Black das Blacks Consórcio Magalu: crédito de R$ ${cred.toLocaleString("pt-BR")},00 sem juros de capital de giro e com Meia Parcela 50/50 em ${cidadeFormatada}.`;
 
           return {
             id: `maps-client-${Date.now()}-${idx}`,

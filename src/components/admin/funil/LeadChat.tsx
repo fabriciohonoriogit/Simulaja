@@ -66,6 +66,19 @@ interface QuickTemplate {
 
 const QUICK_TEMPLATES: QuickTemplate[] = [
   {
+    id: "black-das-blacks-magalu",
+    title: "⭐ Black das Blacks - Consórcio Magalu (Oficial)",
+    category: "apresentacao",
+    badge: "Black das Blacks",
+    text: `Olá, boa tarde! Tudo bem?
+
+Aqui é o Fabricio Honório, sou gestor aqui do Consórcio Magalu em Paranaguá.
+
+Estou entrando em contato porque estamos com a Black das Blacks, com nossas condições especiais, e acredito que pode fazer sentido para vocês, seja para renovar frota, adquirir equipamentos, imóveis ou qualquer outro investimento sem precisar pagar juros de capital de giro.
+
+Posso te explicar em 5 minutinhos como funciona? Se fizer sentido, ótimo. Se não, sem problema nenhum. 🙂`,
+  },
+  {
     id: "apresentacao-1",
     title: "Apresentação & Simulação Personalizada",
     category: "apresentacao",
