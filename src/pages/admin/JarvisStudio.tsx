@@ -80,10 +80,21 @@ export default function JarvisStudio() {
   // Voz & Áudio
   const [isVoiceActive, setIsVoiceActive] = useState(true);
   const [isListening, setIsListening] = useState(false);
+  const [isHandsFree, setIsHandsFree] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("jarvis_hands_free");
+      return saved === "true";
+    }
+    return true; // Ativado por padrão para permitir que qualquer palavra seja ouvida!
+  });
   const [audioAmplitude, setAudioAmplitude] = useState(0);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showWahaModal, setShowWahaModal] = useState(false);
   const [wahaConnected, setWahaConnected] = useState(false);
+
+  const recognitionRef = useRef<any>(null);
+  const isJarvisSpeakingRef = useRef<boolean>(false);
+  const speechDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Chat e Interações
   const [inputPrompt, setInputPrompt] = useState("");
@@ -215,76 +226,162 @@ export default function JarvisStudio() {
       setOrbEmotion("alegre");
       setActivePipelineStep("action");
 
+      // Marca que o Jarvis está falando para evitar que ele ouça a própria voz
+      isJarvisSpeakingRef.current = true;
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+
       // Reprodução com voz neural se habilitada
       if (isVoiceActive) {
         speakJarvisText(replyText);
       }
 
+      // Tempo de fala aproximado para reativar escuta contínua de forma transparente
+      const wordCount = (replyText || "").split(/\s+/).length;
+      const speechDuration = Math.min(20000, Math.max(2500, wordCount * 220));
+
       setTimeout(() => {
+        isJarvisSpeakingRef.current = false;
         setOrbState("idle");
         setOrbEmotion("neutro");
-      }, 4000);
+        if (isHandsFree && recognitionRef.current) {
+          try { recognitionRef.current.start(); } catch (e) {}
+        }
+      }, speechDuration);
     } catch (err) {
       console.error("Erro na resposta do Jarvis:", err);
       toast.error("Erro na comunicação com o motor de IA.");
       setOrbState("idle");
+      isJarvisSpeakingRef.current = false;
     } finally {
       setLoadingAI(false);
     }
   };
 
-  // Reconhecimento de Voz (Microfone)
-  const toggleSpeechRecognition = () => {
-    if (isListening) {
+  // Alternador da Escuta Contínua (Hands-Free: qualquer palavra dita aciona o Jarvis)
+  const toggleHandsFree = () => {
+    const nextVal = !isHandsFree;
+    setIsHandsFree(nextVal);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("jarvis_hands_free", String(nextVal));
+    }
+    if (nextVal) {
+      toast.success("Escuta Contínua ATIVA: Pode falar a qualquer momento sem clicar!");
+    } else {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
       setIsListening(false);
       setOrbState("idle");
+      toast.info("Escuta Contínua pausada.");
+    }
+  };
+
+  // Ciclo de Vida da Escuta Contínua Hands-Free
+  useEffect(() => {
+    if (!isHandsFree) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
       return;
     }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast.error("Navegador sem suporte a Web Speech API.");
+      console.warn("SpeechRecognition não suportado neste navegador.");
       return;
     }
 
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.lang = "pt-BR";
-      recognition.interimResults = false;
-      recognition.continuous = false;
+    let isMounted = true;
 
-      recognition.onstart = () => {
-        setIsListening(true);
-        setOrbState("listening");
-        setOrbEmotion("empatico");
-        toast.info("Jarvis ouvindo...");
-      };
+    const startContinuousListener = () => {
+      if (!isMounted || !isHandsFree || isJarvisSpeakingRef.current || loadingAI) return;
 
-      recognition.onresult = (e: any) => {
-        const transcript = e.results[0][0].transcript;
-        if (transcript) {
-          setInputPrompt(transcript);
-          handleSendMessage(transcript);
+      try {
+        if (recognitionRef.current) {
+          try { recognitionRef.current.stop(); } catch (e) {}
         }
-      };
 
-      recognition.onerror = () => {
-        setIsListening(false);
-        setOrbState("idle");
-      };
+        const rec = new SpeechRecognition();
+        rec.lang = "pt-BR";
+        rec.continuous = true;
+        rec.interimResults = true;
+        recognitionRef.current = rec;
 
-      recognition.onend = () => {
-        setIsListening(false);
-        if (orbState === "listening") setOrbState("idle");
-      };
+        rec.onstart = () => {
+          if (!isMounted) return;
+          setIsListening(true);
+          setOrbState("listening");
+        };
 
-      recognition.start();
-    } catch (err) {
-      console.error(err);
-      setIsListening(false);
-      setOrbState("idle");
-    }
-  };
+        rec.onresult = (e: any) => {
+          if (isJarvisSpeakingRef.current || loadingAI) return;
+
+          let interim = "";
+          let final = "";
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const t = e.results[i][0].transcript;
+            if (e.results[i].isFinal) final += t;
+            else interim += t;
+          }
+
+          const currentSpeech = (final || interim).trim();
+          if (!currentSpeech) return;
+
+          setInputPrompt(currentSpeech);
+          setOrbState("listening");
+          setOrbEmotion("empatico");
+
+          // Disparo automático e inteligente após pausa natural de 900ms na fala do usuário
+          if (speechDebounceTimer.current) clearTimeout(speechDebounceTimer.current);
+          speechDebounceTimer.current = setTimeout(() => {
+            if (currentSpeech.length >= 2 && !isJarvisSpeakingRef.current && !loadingAI) {
+              handleSendMessage(currentSpeech);
+            }
+          }, 900);
+        };
+
+        rec.onerror = (e: any) => {
+          if (e.error === "not-allowed") {
+            setIsHandsFree(false);
+            setIsListening(false);
+            toast.error("Permissão de microfone necessária para escuta contínua.");
+          }
+        };
+
+        rec.onend = () => {
+          if (!isMounted) return;
+          setIsListening(false);
+          // Reinicia automaticamente para garantir que qualquer palavra dita seja capturada sem clicar
+          if (isHandsFree && !isJarvisSpeakingRef.current && !loadingAI) {
+            setTimeout(() => {
+              if (isMounted && isHandsFree && !isJarvisSpeakingRef.current && !loadingAI) {
+                try { rec.start(); } catch (err) {}
+              }
+            }, 250);
+          }
+        };
+
+        rec.start();
+      } catch (err) {
+        console.warn("Erro ao iniciar escuta contínua:", err);
+      }
+    };
+
+    startContinuousListener();
+
+    return () => {
+      isMounted = false;
+      if (speechDebounceTimer.current) clearTimeout(speechDebounceTimer.current);
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+        recognitionRef.current = null;
+      }
+    };
+  }, [isHandsFree, loadingAI]);
 
   // Executar Prospecção em Massa
   const handleExecuteRadar = async () => {
@@ -420,6 +517,11 @@ export default function JarvisStudio() {
               <span>•</span>
               <span className={wahaConnected ? "text-emerald-400" : "text-amber-400"}>
                 {wahaConnected ? "WhatsApp Ativo" : "WhatsApp Standby"}
+              </span>
+              <span>•</span>
+              <span className={isHandsFree ? "text-emerald-400 font-bold flex items-center gap-1" : "text-slate-500"}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isHandsFree ? "bg-emerald-400 animate-ping" : "bg-slate-600"}`} />
+                {isHandsFree ? "Escuta Contínua Ativa" : "Voz Manual"}
               </span>
             </div>
           </div>
@@ -564,15 +666,15 @@ export default function JarvisStudio() {
               {/* Botões Rápidos de Ação */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
-                  onClick={toggleSpeechRecognition}
+                  onClick={toggleHandsFree}
                   className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-xs transition-all duration-300 shadow-lg ${
-                    isListening
-                      ? "bg-rose-600 text-white shadow-rose-600/40 animate-pulse border border-rose-400"
-                      : "bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-slate-950 font-black shadow-cyan-500/30 hover:scale-[1.03] active:scale-[0.98] border border-cyan-300"
+                    isHandsFree
+                      ? "bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-400 text-slate-950 font-black shadow-emerald-500/40 border border-emerald-300 hover:scale-[1.03] active:scale-[0.98]"
+                      : "bg-white/10 hover:bg-white/20 text-slate-300 border border-white/20"
                   }`}
                 >
-                  <Mic className="w-4 h-4" />
-                  {isListening ? "Ouvindo... Clique para Parar" : "Falar com Jarvis (Voz)"}
+                  <Radio className={`w-4 h-4 ${isHandsFree ? "animate-pulse" : ""}`} />
+                  {isHandsFree ? "🟢 Escuta Contínua (Hands-Free Ativo)" : "Ativar Escuta Contínua (Sem Clicar)"}
                 </button>
 
                 <button
@@ -786,12 +888,29 @@ export default function JarvisStudio() {
 
               {/* Caixa de Entrada de Texto */}
               <div className="relative flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={toggleHandsFree}
+                  className={`p-3 rounded-2xl border transition-all ${
+                    isHandsFree
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                      : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+                  }`}
+                  title={isHandsFree ? "Escuta Contínua Ativa (Pode falar sem clicar - clique para pausar)" : "Ativar Escuta Contínua"}
+                >
+                  <Mic className={`w-4 h-4 ${isHandsFree ? "text-emerald-400 animate-pulse" : ""}`} />
+                </button>
+
                 <input
                   type="text"
                   value={inputPrompt}
                   onChange={(e) => setInputPrompt(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  placeholder="Pergunte ao Jarvis ou digite um comando executivo..."
+                  placeholder={
+                    isHandsFree
+                      ? "Escuta contínua ativa... Pode falar qualquer palavra ou digitar aqui!"
+                      : "Pergunte ao Jarvis ou digite um comando executivo..."
+                  }
                   className="flex-1 px-4 py-3 text-xs text-white placeholder-slate-500 rounded-2xl bg-slate-900/80 border border-white/10 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 backdrop-blur-xl transition-all shadow-inner"
                 />
 

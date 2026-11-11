@@ -304,16 +304,15 @@ async function callDirectGemini(
   history?: Array<{ role: string; text: string }>,
   imageBase64?: string
 ): Promise<string | null> {
-  const key = apiKey || "AQ.Ab8RN6K4DMA3cCraG70_iCcWufgBc_6np-TWuUbPDs7hhFhjog";
+  // Apenas invoca se a chave tiver o formato padrão da Google AI Studio (iniciada em AIzaSy)
+  if (!apiKey || !apiKey.startsWith("AIzaSy")) {
+    return null;
+  }
+
   const models = [
-    "gemini-3.8-flash",
-    "gemini-3.7-flash",
-    "gemini-3.5-flash",
-    "gemini-3.1-flash-lite",
-    "gemini-flash-latest",
-    "gemini-flash-lite-latest",
     "gemini-2.0-flash",
     "gemini-1.5-flash",
+    "gemini-2.0-flash-lite-preview-02-05",
     "gemini-1.5-pro"
   ];
 
@@ -341,15 +340,19 @@ async function callDirectGemini(
 
   for (const m of models) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents,
-          generationConfig: { maxOutputTokens: 1200, temperature: 0.7 }
-        })
+          generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -368,16 +371,16 @@ async function callAI(
   history?: Array<{ role: string; text: string }>,
   imageBase64?: string
 ): Promise<{ text: string; error: any }> {
-  // 1. Prioridade Máxima: Conexão Direta Ultra-Rápida via Gemini Ativo com Modelos de Conhecimento Infinito
-  const directKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY || "AQ.Ab8RN6K4DMA3cCraG70_iCcWufgBc_6np-TWuUbPDs7hhFhjog";
-  if (directKey) {
+  // 1. Prioridade Máxima: Conexão Direta Ultra-Rápida se houver chave válida do Gemini
+  const directKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
+  if (directKey && directKey.startsWith("AIzaSy")) {
     const directText = await callDirectGemini(prompt, directKey, history, imageBase64);
     if (directText) {
       return { text: directText, error: null };
     }
   }
 
-  // 2. Tenta invocar a Edge Function do Supabase (jarvis-ai)
+  // 2. Tenta invocar a Edge Function do Supabase (jarvis-ai) com timeout rápido para não travar
   try {
     const { data, error } = await supabase.functions.invoke("jarvis-ai", {
       body: { prompt, maxTokens, history, imageBase64 },
@@ -840,10 +843,20 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
     userName = "Fabrício",
     selectedCore?: { id: string; name: string }
   ) {
-    // 1. Tenta comunicar com o Hermes Agent via Jarvis Brain Server na porta 8008 (timeout ultrarrápido para não bloquear a UI)
+    // 0. Resposta Ultra-Rápida Instantânea (<10ms) para Cotações e Simulações Oficiais
+    const conciseQuote = formatConciseBudgetQuote(question);
+    const isQuoteIntent = /(simul|cota|quanto fica|parcela|valor|50\/50|meia parcela|tabela|plano)/i.test(question);
+    if (conciseQuote && isQuoteIntent) {
+      return {
+        answer: `Para o crédito de ${conciseQuote.creditoFormatado}, a meia parcela é de ${conciseQuote.meiaParcelaFormatada}/mês até a contemplação (ou ${conciseQuote.parcelaIntegralFormatada} parcela integral pós-contemplação), em ${conciseQuote.prazo} meses.`,
+        error: null,
+      };
+    }
+
+    // 1. Tenta comunicar com o Hermes Agent apenas se ativo localmente (timeout de 60ms)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 300);
+      const timeoutId = setTimeout(() => controller.abort(), 60);
       const res = await fetch("http://127.0.0.1:8008/hermes/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -858,13 +871,13 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
         }
       }
     } catch (e) {
-      // Fallback para servidor local / Edge Function na nuvem
+      // Continua direto sem travar
     }
 
     let localContext = "";
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 200);
+      const timeoutId = setTimeout(() => controller.abort(), 50);
       const res = await fetch(`http://127.0.0.1:8008/context?query=${encodeURIComponent(question)}&who=vendedor`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (res.ok) {
