@@ -958,6 +958,7 @@ export default function Comissoes() {
               {isSavingPagamento ? "Processando..." : "Confirmar Recebimento do Mês"}
             </Button>
           </div>
+        </div>
       )}
 
       {fechamentos.length > 0 && (
