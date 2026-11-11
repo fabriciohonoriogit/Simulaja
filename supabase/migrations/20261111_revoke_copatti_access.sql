@@ -15,3 +15,4 @@ WHERE nome_completo ILIKE '%copatti%'
 DELETE FROM public.organizacoes 
 WHERE nome ILIKE '%copatti%' 
    OR nome ILIKE '%coppati%';
+
