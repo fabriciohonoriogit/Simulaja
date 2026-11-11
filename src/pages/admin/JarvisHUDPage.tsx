@@ -259,11 +259,11 @@ export default function JarvisHUDPage() {
     let mounted = true;
     const verifyStatus = async () => {
       try {
-        const res = await checkWahaStatus();
+        const res: any = await checkWahaStatus();
         if (!mounted) return;
-        if (res.connected) {
+        if (res.connected || res.state === "WORKING") {
           setWaStatusLive("connected");
-        } else if (res.status === "SCAN_QR_CODE" || res.status === "STARTING" || res.qrCode) {
+        } else if (res.status === "SCAN_QR_CODE" || res.status === "STARTING" || res.state === "SCAN_QR_CODE" || res.state === "STARTING" || res.qrCode) {
           setWaStatusLive("waiting");
         } else {
           setWaStatusLive("disconnected");
