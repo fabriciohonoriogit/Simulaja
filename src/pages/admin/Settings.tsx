@@ -195,13 +195,13 @@ export default function Settings() {
   };
 
   const handleRequestWahaPairing = async () => {
-    if (!wahaPhoneForCode.trim()) {
+    if (!wahaPairingPhone.trim()) {
       toast({ title: "Telefone Ausente", description: "Informe o número com DDD (ex: 11999999999)", variant: "destructive" });
       return;
     }
     setWahaCreating(true);
     try {
-      const res = await requestWahaPairingCode(wahaPhoneForCode, wahaSession || "default");
+      const res = await requestWahaPairingCode(wahaPairingPhone, wahaSession || "default");
       if (res.success && res.code) {
         setWahaPairingCode(res.code);
         toast({

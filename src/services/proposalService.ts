@@ -411,8 +411,8 @@ export async function sendProposalViaWhatsAppInbox(
     if (!leadId) {
       try {
         const orgId = proposal.organizacaoId || "8b1a2dcc-83cd-4985-a828-f3870dcbc2a4";
-        const { data: newLead, error: leadError } = await supabase
-          .from("leads")
+        const { data: newLead, error: leadError } = await (supabase
+          .from("leads") as any)
           .insert({
             nome: clienteNome !== "Não informado" ? clienteNome : "Cliente Orçamento",
             celular: targetPhone || "",
@@ -446,8 +446,8 @@ export async function sendProposalViaWhatsAppInbox(
         });
 
         // Atualiza timestamp e último contato no funil
-        await supabase
-          .from("leads")
+        await (supabase
+          .from("leads") as any)
           .update({
             updated_at: new Date().toISOString(),
             data_ultimo_contato: new Date().toISOString(),

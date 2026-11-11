@@ -31,7 +31,7 @@ vi.mock("@/services/evolutionApiService", () => ({
   getEvolutionConfig: vi.fn().mockReturnValue({ apiUrl: "", apiKey: "", instanceName: "" }),
 }));
 
-global.fetch = vi.fn().mockImplementation((url: string) => {
+globalThis.fetch = vi.fn().mockImplementation((url: string) => {
   if (String(url).includes("api/sendText")) {
     return Promise.resolve({
       ok: true,
