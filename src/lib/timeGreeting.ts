@@ -87,3 +87,4 @@ export function ajustarSaudacaoPorHorario(texto: string, data: Date = new Date()
 
   return resultado;
 }
+

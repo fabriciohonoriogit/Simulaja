@@ -616,7 +616,7 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
                   }`}>
                     <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
 
-                    <div className="flex items-center justify-end gap-1.5 mt-1 pt-1 opacity-80 text-[10px]">
+                    <div className="flex items-center justify-end gap-1.5 mt-1 pt-1 opacity-90 text-[10px]">
                       <button
                         type="button"
                         onClick={() => handleCopyMessage(msg.content)}
@@ -625,6 +625,22 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
                       >
                         <Copy className="h-3 w-3" />
                       </button>
+
+                      {/* 🕒 HORA EXATA DO ENVIO (PADRÃO WHATSAPP) */}
+                      <span className="font-mono text-[10px] tracking-tight font-medium opacity-90">
+                        {(() => {
+                          if (!msg.created_at) return "";
+                          try {
+                            const date = parseUTCDate(msg.created_at);
+                            if (!date || !isValid(date)) return "";
+                            if (isToday(date)) return format(date, "HH:mm");
+                            if (isYesterday(date)) return `Ontem ${format(date, "HH:mm")}`;
+                            return format(date, "dd/MM HH:mm", { locale: ptBR });
+                          } catch {
+                            return "";
+                          }
+                        })()}
+                      </span>
 
                       {!isClient && (
                         <span title="Mensagem entregue no WhatsApp">

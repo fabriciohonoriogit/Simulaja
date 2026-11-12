@@ -336,7 +336,17 @@ async function forwardToSupabaseWebhook(msg) {
     const contentText = text || (isAudio ? "🎤 [Áudio]" : isImage ? "📷 [Imagem]" : "📎 [Documento]");
     const sender = isFromMe ? "Você (celular)" : (msg.pushName || remoteJid.replace(/@.*$/, ""));
 
-    console.log(`📩 [WhatsApp ${isFromMe ? "Enviada" : "Recebida"} | ${remoteJid}]: ${sender}: ${contentText}`);
+    // 🕒 Registra a hora EXATA do envio da mensagem (timestamp do WhatsApp)
+    const rawTimestamp = msg.messageTimestamp;
+    let timestampIso = new Date().toISOString();
+    if (rawTimestamp) {
+      const sec = typeof rawTimestamp === "object" ? Number(rawTimestamp.low || rawTimestamp) : Number(rawTimestamp);
+      if (sec && !isNaN(sec) && sec > 0) {
+        timestampIso = new Date(sec * 1000).toISOString();
+      }
+    }
+
+    console.log(`📩 [WhatsApp ${isFromMe ? "Enviada" : "Recebida"} | ${remoteJid} | ${timestampIso.substring(11, 16)}]: ${sender}: ${contentText}`);
 
     // Garante que o contactName nunca seja o próprio Fabrício Honório
     let safeContactName = "";
@@ -361,6 +371,8 @@ async function forwardToSupabaseWebhook(msg) {
           text: contentText,
           contactName: safeContactName,
           remoteJid: remoteJid,
+          timestamp: timestampIso,
+          created_at: timestampIso,
         }),
       }).catch((fetchErr) => {
         console.warn("⚠️ [Aviso fetch Webhook Supabase]:", fetchErr.message);
@@ -615,6 +627,49 @@ async function connectToWhatsApp() {
       console.log("\n🟢 [WAHA Local] WhatsApp CONECTADO com sucesso! Pronto para disparos pelo CRM.");
       if (sock.user) {
         console.log(`   Conta ativa: ${sock.user.name || "WhatsApp"} (${sock.user.id.split(":")[0]})`);
+      }
+    }
+  });
+
+  // 📥 Sincronização de Histórico Completo de Mensagens e Contatos do WhatsApp para o CRM
+  sock.ev.on("messaging-history.set", async ({ chats, contacts, messages }) => {
+    console.log(`📥 [Histórico WhatsApp] Sincronizando com o CRM: ${chats?.length || 0} conversas, ${contacts?.length || 0} contatos, ${messages?.length || 0} mensagens.`);
+    if (Array.isArray(contacts)) {
+      for (const c of contacts) {
+        if (c.id && c.name) {
+          const lower = c.name.toLowerCase();
+          if (!lower.includes("honorio") && !lower.includes("fabricio")) {
+            contactNameCache.set(c.id, c.name);
+          }
+        }
+      }
+    }
+    if (Array.isArray(messages)) {
+      for (const msg of messages) {
+        if (!msg?.message) continue;
+        const msgId = msg.key?.id;
+        if (msgId && processedMessageKeys.has(msgId)) continue;
+        if (msgId) {
+          processedMessageKeys.add(msgId);
+          if (processedMessageKeys.size > 5000) {
+            const first = processedMessageKeys.values().next().value;
+            processedMessageKeys.delete(first);
+          }
+        }
+        await forwardToSupabaseWebhook(msg);
+      }
+    }
+  });
+
+  sock.ev.on("contacts.set", ({ contacts }) => {
+    if (Array.isArray(contacts)) {
+      for (const c of contacts) {
+        if (c.id && c.name) {
+          const lower = c.name.toLowerCase();
+          if (!lower.includes("honorio") && !lower.includes("fabricio")) {
+            contactNameCache.set(c.id, c.name);
+          }
+        }
       }
     }
   });

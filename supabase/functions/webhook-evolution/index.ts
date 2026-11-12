@@ -353,15 +353,20 @@ serve(async (req) => {
         });
       }
 
-      // 4. Salvar a mensagem no histórico do chat do lead
+      // 4. Salvar a mensagem no histórico do chat do lead com hora exata do envio
       const msgRole = isFromMe ? "assistant" : "user";
-      const { error: msgErr } = await supabaseAdmin
+      const rawTimestamp = body.timestamp || body.created_at || (msg.messageTimestamp ? new Date(Number(msg.messageTimestamp) * 1000).toISOString() : new Date().toISOString());
+
+      const { data: insertedMsg, error: msgErr } = await supabaseAdmin
         .from("chat_messages")
         .insert({
           lead_id: matchedLead.id,
           content: incomingText,
           role: msgRole,
-        });
+          created_at: rawTimestamp,
+        })
+        .select("id")
+        .single();
 
       // Atualiza o updated_at do lead para subir imediatamente ao topo da lista no CRM
       await supabaseAdmin

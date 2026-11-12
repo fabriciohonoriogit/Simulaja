@@ -29,8 +29,9 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { WhatsAppIcon } from "@/components/SocialIcons";
-import { format } from "date-fns";
+import { format, isValid, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseUTCDate } from "@/lib/formatters";
 import { Lead } from "@/types/funil";
 import { LeadChat } from "@/components/admin/funil/LeadChat";
 import { formatCurrency } from "@/lib/utils";
@@ -222,6 +223,12 @@ export default function WhatsAppInbox() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* BOTÃO / BADGE WHATSAPP SEMPRE LIGADO */}
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>WhatsApp Conectado 🟢</span>
+          </div>
+
           <button
             type="button"
             onClick={toggleWhatsAppMode}
@@ -386,11 +393,14 @@ export default function WhatsAppInbox() {
                             {lead.nome}
                           </p>
                           {lead.last_message_at && (
-                            <span className="text-[10px] font-bold text-slate-400 shrink-0 ml-1">
+                            <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-zinc-500 shrink-0 ml-1">
                               {(() => {
                                 try {
-                                  const d = new Date(lead.last_message_at);
-                                  return format(d, "HH:mm");
+                                  const d = parseUTCDate(lead.last_message_at);
+                                  if (!d || !isValid(d)) return "";
+                                  if (isToday(d)) return format(d, "HH:mm");
+                                  if (isYesterday(d)) return `Ontem ${format(d, "HH:mm")}`;
+                                  return format(d, "dd/MM HH:mm", { locale: ptBR });
                                 } catch {
                                   return "";
                                 }
