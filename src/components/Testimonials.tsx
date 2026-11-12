@@ -35,7 +35,7 @@ const testimonials = [
 
 const Testimonials = () => {
   return (
-    <section className="py-24 bg-[#070D19] text-white relative overflow-hidden border-t border-white/10" id="depoimentos">
+    <section className="py-12 sm:py-16 bg-[#070D19] text-white relative overflow-hidden border-t border-white/10" id="depoimentos">
       {/* Partículas Espaciais Contínuas */}
       <BlueParticlesBackground />
 
@@ -46,7 +46,7 @@ const Testimonials = () => {
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Header da Seção */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-300 text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.2)]">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span>Depoimentos Reais de Clientes</span>

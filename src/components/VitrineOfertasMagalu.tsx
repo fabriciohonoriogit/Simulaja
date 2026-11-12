@@ -100,10 +100,18 @@ export function VitrineOfertasMagalu() {
   const theme = getActiveCampaignTheme();
 
   const handleSelectOffer = (oferta: OfertaConquista) => {
-    // Sincroniza o simulador globalmente
+    const simCategory = 
+      oferta.categoria === "caminhão" ? "pesados" :
+      oferta.categoria === "moto" ? "veiculo" :
+      oferta.categoria;
+
+    // Sincroniza o simulador globalmente com categoria e crédito exato da oferta
     window.dispatchEvent(
       new CustomEvent("select-simulator-category", {
-        detail: { categoryId: oferta.categoria },
+        detail: { 
+          categoryId: simCategory,
+          targetCredit: oferta.creditoValor,
+        },
       })
     );
 
@@ -115,7 +123,7 @@ export function VitrineOfertasMagalu() {
   };
 
   return (
-    <section className="py-16 bg-[#070D19] text-white relative overflow-hidden border-b border-white/10">
+    <section className="py-10 bg-[#070D19] text-white relative overflow-hidden border-b border-white/10">
       {/* Luzes de Fundo Sazonais Magalu */}
       <div className="absolute top-0 right-1/4 w-[500px] h-[300px] bg-blue-600/15 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[500px] h-[300px] bg-amber-500/10 blur-3xl pointer-events-none" />

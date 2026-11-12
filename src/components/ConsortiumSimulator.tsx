@@ -302,14 +302,35 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
 
   useEffect(() => {
     const handleCategorySelect = (e: Event) => {
-      const customEvent = e as CustomEvent<{ categoryId: string }>;
-      if (customEvent.detail?.categoryId) {
-        setCategoria(customEvent.detail.categoryId);
+      const customEvent = e as CustomEvent<{ categoryId: string; targetCredit?: number }>;
+      const { categoryId, targetCredit } = customEvent.detail || {};
+      if (categoryId) {
+        setCategoria(categoryId);
+        setFilterPlanoGold(false);
+        setPaymentMode("reduzido");
+
+        const list = dynamicGrupos[categoryId];
+        if (list && list.length > 0) {
+          if (targetCredit) {
+            let bestIdx = 0;
+            let bestDiff = Math.abs(list[0].credito - targetCredit);
+            for (let i = 1; i < list.length; i++) {
+              const diff = Math.abs(list[i].credito - targetCredit);
+              if (diff < bestDiff) {
+                bestDiff = diff;
+                bestIdx = i;
+              }
+            }
+            setIdx(bestIdx);
+          } else {
+            setIdx(Math.min(4, list.length - 1));
+          }
+        }
       }
     };
     window.addEventListener("select-simulator-category", handleCategorySelect);
     return () => window.removeEventListener("select-simulator-category", handleCategorySelect);
-  }, []);
+  }, [dynamicGrupos]);
   const [idx, setIdx] = useState(4);
   const [simNome, setSimNome] = useState("");
   const [simWpp, setSimWpp] = useState("");
@@ -710,7 +731,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
 
   return (
     <div 
-      className={`min-h-screen flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} bg-[#040B16]`}
+      className={`${compact ? 'w-full' : 'min-h-screen bg-[#040B16]'} flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
@@ -719,15 +740,15 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
       <style>{sliderThumbStyles}</style>
 
       {/* Background Deep Gradient matching the image */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />
+      {!compact && <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />}
       
       {/* Orbs/Particles in the background */}
       <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
           <JarvisOrb state="idle" />
       </div>
 
-      <section id="simulator" className={`relative z-10 flex-1 ${compact ? "py-1 sm:py-2" : "py-6 sm:py-8"}`}>
-        <div className={`container mx-auto px-4 flex flex-col items-center ${isInternal ? 'max-w-5xl' : 'max-w-2xl sm:max-w-3xl lg:max-w-4xl'}`}>
+      <section id="simulator" className={`relative z-10 flex-1 ${compact ? "p-0" : "py-6 sm:py-8"}`}>
+        <div className={`w-full flex flex-col items-center ${compact ? 'max-w-full px-0' : (isInternal ? 'container mx-auto px-4 max-w-5xl' : 'container mx-auto px-4 max-w-2xl sm:max-w-3xl lg:max-w-4xl')}`}>
           
           <div className={`relative flex flex-col items-center ${compact ? "mb-2" : "mb-4"} animate-breathe w-full`}>
             <div className={`relative ${compact ? "w-10 h-10 sm:w-12 sm:h-12" : "w-14 h-14 sm:w-16 sm:h-16"} flex items-center justify-center`}>
@@ -810,7 +831,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                 background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`,
               }}
             />
-            <div className="flex justify-between text-[9px] font-black text-muted-foreground/50 mb-8 uppercase tracking-widest">
+            <div className={`flex justify-between text-[9px] font-black text-muted-foreground/50 ${compact ? 'mb-2' : 'mb-8'} uppercase tracking-widest`}>
               <span className="bg-slate-100 px-2 py-0.5 rounded">
                 {lista.length > 0 && (simulationMode === "credit" 
                   ? `MIN: R$ ${lista[0].credito.toLocaleString("pt-BR")}` 
@@ -826,7 +847,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
             {(() => {
               if (!hasBothPlans) return null;
               return (
-                <div className="flex justify-center mb-5 animate-in fade-in zoom-in-95 duration-200">
+                <div className={`flex justify-center ${compact ? "mb-2 sm:mb-3" : "mb-5"} animate-in fade-in zoom-in-95 duration-200`}>
                   <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                     <button 
                       onClick={() => {
@@ -862,7 +883,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
               );
             })()}
 
-            <div className="flex flex-wrap gap-1.5 justify-center mb-5">
+            <div className={`flex flex-wrap gap-1.5 justify-center ${compact ? "mb-2 sm:mb-3" : "mb-5"}`}>
               {dynamicCategorias.map((cat) => (
                 <button
                   key={cat.id}
@@ -923,7 +944,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                     </p>
                   </div>
                 ) : null}
-                <div className={`rounded-2xl p-5 text-center mb-5 relative overflow-hidden shadow-lg border-2 ${
+                <div className={`rounded-2xl ${compact ? "p-3 sm:p-4 mb-3" : "p-5 mb-5"} text-center relative overflow-hidden shadow-lg border-2 ${
                   isBF 
                     ? "border-cyan-400/90 bg-gradient-to-br from-cyan-50/70 via-slate-50 to-pink-50/40 shadow-[0_0_25px_rgba(0,229,255,0.2)]" 
                     : "border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50/60 to-emerald-100/50"
@@ -935,7 +956,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                     {isBF && <span className="text-pink-600 font-extrabold mr-1">🔥 BLACK DAS BLACKS MAGALU ·</span>}
                     {g.isPlanoGold ? (isLinear ? "Plano Golden Linear" : (g.tipoVenda ?? "PLANO GOLD")) : (isLinear ? "Parcela Linear" : "Parcela reduzida 50%")} <span className={`${isBF ? "text-cyan-700" : "text-emerald-600"} font-normal`}>· {g.isPlanoGold ? "golden" : (isLinear ? "integral" : "até a contemplação")}</span>
                   </p>
-                  <p className={`text-3xl sm:text-4xl font-black font-mono drop-shadow-sm ${isBF ? "text-[#0f2044]" : "text-emerald-700"}`}>
+                  <p className={`${compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"} font-black font-mono drop-shadow-sm ${isBF ? "text-[#0f2044]" : "text-emerald-700"}`}>
                     {fmtFull(selectedInstallment)}
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-3">
@@ -1206,7 +1227,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                   </>
                 )}
 
-                <div className={`grid grid-cols-1 ${!isInternal ? 'sm:grid-cols-1' : 'sm:grid-cols-2'} gap-2 mb-4 mt-2`}>
+                <div className={`grid grid-cols-1 sm:grid-cols-2 gap-2 ${compact ? 'mb-2.5 mt-1' : 'mb-4 mt-2'}`}>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-[16px] w-[16px] text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1232,7 +1253,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                   </div>
                 </div>
 
-                <div className={`flex items-center gap-2 text-xs text-muted-foreground mb-4 ${isInternal ? 'justify-center' : ''}`}>
+                <div className={`flex items-center gap-2 text-xs text-muted-foreground ${compact ? 'mb-2.5' : 'mb-4'} ${isInternal ? 'justify-center' : ''}`}>
                   <Clock className="w-3.5 h-3.5 text-primary opacity-75" />
                   {isInternal ? "Finalizar simulação" : "Em segundos você verá sua estratégia."}
                 </div>
@@ -1240,7 +1261,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                 <button
                   onClick={confirmarSimulacao}
                   disabled={bloqueado}
-                  className={`w-full py-3.5 rounded-xl text-sm font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2 transition-all disabled:opacity-45 disabled:cursor-not-allowed text-white shadow-lg active:scale-95 ${isInternal ? 'bg-[#0f2044] hover:bg-[#1a3266]' : 'bg-[#FF7A00] hover:bg-[#FF8B1F]'}`}
+                  className={`w-full ${compact ? 'py-3' : 'py-3.5'} rounded-xl text-sm font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2 transition-all disabled:opacity-45 disabled:cursor-not-allowed text-white shadow-lg active:scale-95 ${isInternal ? 'bg-[#0f2044] hover:bg-[#1a3266]' : 'bg-[#FF7A00] hover:bg-[#FF8B1F]'}`}
                 >
                   <ArrowRight className="w-4 h-4" />
                   {isInternal ? "Registrar Simulação" : "Ver Estratégia"}

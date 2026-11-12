@@ -13,7 +13,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
   const theme = getActiveCampaignTheme();
 
   return (
-    <section className="relative w-full bg-[#050814] text-white pt-24 pb-12 overflow-hidden border-b border-white/10">
+    <section className="relative w-full bg-[#050814] text-white pt-16 pb-8 overflow-hidden border-b border-white/10">
       {/* Luzes e Auroras Cósmicas Futuristas da Campanha Magalu */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-gradient-to-br from-blue-600/20 via-cyan-500/10 to-transparent blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[130px] pointer-events-none" />
@@ -118,7 +118,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
         </div>
 
         {/* FAIXA DE CREDIBILIDADE MAGALU INFERIOR */}
-        <div className="mt-12 pt-6 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div className="mt-8 pt-5 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div className="flex flex-col items-center">
             <span className="text-lg font-black text-white">+30 Anos</span>
             <span className="text-xs text-slate-400">Tradição Magazine Luiza</span>
