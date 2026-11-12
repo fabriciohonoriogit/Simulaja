@@ -120,6 +120,170 @@ interface ConsortiumSimulatorProps {
   }) => void;
 }
 
+
+interface PainelGrupoProps {
+  grupo: string;
+  prazo: number;
+  tx?: number;
+  fr?: number;
+  isPlanoGold?: boolean;
+  estats?: any;
+}
+
+const PainelCaracteristicasGrupoInterno = ({
+  grupo,
+  prazo,
+  tx,
+  fr,
+  isPlanoGold,
+  estats
+}: PainelGrupoProps) => {
+  const c = GRUPO_CARACTERISTICAS[grupo];
+  if (!c) return null;
+  const mediaLance = MEDIA_LANCES_GRUPOS[grupo] || estats?.lanceMedia || null;
+  const estatsLances = obterEstatisticasGrupo(grupo) || estats;
+  const totalParticipantesAprox = c.prazoOriginal ? (c.prazoOriginal >= 180 ? 4500 : 2000) : 3000;
+  const contemResolucao285 = c.caracteristicas?.includes("RESOLUÇAO 285") || c.caracteristicas?.includes("RESOLUÇÃO 285");
+
+  return (
+    <div className="mt-4 p-4 sm:p-5 rounded-2xl border-2 border-blue-500/40 bg-gradient-to-br from-[#070D19] via-[#0B1528] to-[#070D19] text-white shadow-xl space-y-4">
+      {/* Header do Grupo com Badges */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-cyan-300 font-black text-sm">
+            ⚙️
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              Grupo {c.grupo} {isPlanoGold && <span className="text-amber-400 text-xs">(PLANO GOLD)</span>}
+            </h4>
+            <p className="text-[10px] text-slate-400 font-medium">Informações Técnicas & Regras Oficiais do Grupo</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {c.status && (
+            <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${
+              c.status === 'Formação' 
+                ? 'bg-amber-500/20 text-amber-300 border-amber-400/40' 
+                : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+            }`}>
+              ● {c.status}
+            </span>
+          )}
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40">
+            Reajuste: {c.reajuste}
+          </span>
+        </div>
+      </div>
+
+      {/* Grid 1: Participantes, Vagas & Assembleias */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2.5">
+          <p className="text-[10px] uppercase font-bold text-slate-400">Vagas Disponíveis</p>
+          <p className="text-sm font-black text-emerald-400 font-mono mt-0.5">
+            {c.cotasVagas ? `${c.cotasVagas.toLocaleString('pt-BR')} cotas` : "Em formação"}
+          </p>
+        </div>
+
+        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2.5">
+          <p className="text-[10px] uppercase font-bold text-slate-400">Total Participantes</p>
+          <p className="text-sm font-black text-cyan-300 font-mono mt-0.5">
+            {`~${totalParticipantesAprox.toLocaleString('pt-BR')} pessoas`}
+          </p>
+        </div>
+
+        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2.5">
+          <p className="text-[10px] uppercase font-bold text-slate-400">Assembleia Atual</p>
+          <p className="text-sm font-black text-white font-mono mt-0.5">
+            {c.numeroAssembleia ? `${c.numeroAssembleia}ª Assembleia` : "1ª Assembleia"}
+          </p>
+        </div>
+
+        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2.5">
+          <p className="text-[10px] uppercase font-bold text-slate-400">Próx. Assembleia</p>
+          <p className="text-sm font-black text-amber-300 font-mono mt-0.5">
+            {c.proximaAssembleia}
+          </p>
+        </div>
+      </div>
+
+      {/* Grid 2: Média de Lances & Contemplações */}
+      <div className="bg-blue-950/40 border border-cyan-500/30 rounded-xl p-3.5 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-black text-cyan-300 uppercase tracking-wider">
+            <span>🎯</span> Média de Lances & Contemplações
+          </div>
+          <span className="text-[10px] font-bold text-slate-400">
+            ~3 a 8 contemplações/mês
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-white/[0.03] rounded-lg p-2 border border-white/5">
+            <span className="text-[9px] font-bold text-slate-400 uppercase block">Menor Lance Histórico</span>
+            <span className="text-xs font-black text-emerald-400 font-mono">
+              {estatsLances?.lanceMenor ? `${estatsLances.lanceMenor.toFixed(1)}%` : (mediaLance ? `${(mediaLance * 0.7).toFixed(1)}%` : "32.5%")}
+            </span>
+          </div>
+
+          <div className="bg-white/[0.03] rounded-lg p-2 border border-cyan-500/20">
+            <span className="text-[9px] font-bold text-cyan-300 uppercase block">Média de Lances</span>
+            <span className="text-sm font-black text-cyan-200 font-mono">
+              {mediaLance ? `${mediaLance.toFixed(1)}%` : (estatsLances?.lanceMedia ? `${estatsLances.lanceMedia.toFixed(1)}%` : "52.0%")}
+            </span>
+          </div>
+
+          <div className="bg-white/[0.03] rounded-lg p-2 border border-white/5">
+            <span className="text-[9px] font-bold text-slate-400 uppercase block">Maior Lance Registrado</span>
+            <span className="text-xs font-black text-amber-300 font-mono">
+              {estatsLances?.lanceMaior ? `${estatsLances.lanceMaior.toFixed(1)}%` : (mediaLance ? `${(mediaLance * 1.3).toFixed(1)}%` : "85.0%")}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid 3: Tipos de Lances & Ordem de Contemplação */}
+      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3 space-y-2 text-xs">
+        <div>
+          <p className="text-[10px] font-black uppercase text-amber-400 tracking-wider">Tipos de Lances & Ordem de Contemplação:</p>
+          <p className="text-xs text-slate-200 mt-1 leading-relaxed">
+            {c.ordemContemplacao}
+          </p>
+        </div>
+
+        <div className="pt-2 border-t border-white/10 flex flex-wrap gap-2 text-[11px]">
+          <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-400/30 text-blue-300">
+            <strong>Opção Diluição:</strong> {c.opcaoDiluir}
+          </span>
+          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-400/30 text-emerald-300">
+            <strong>Prazo:</strong> {c.prazoRestante || prazo} de {c.prazoOriginal || prazo} meses
+          </span>
+          <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-400/30 text-cyan-300">
+            <strong>Taxas:</strong> Adm {c.taxaAdm ?? tx}% | F. Reserva {c.fundoReserva ?? fr}%
+          </span>
+        </div>
+      </div>
+
+      {/* Características & Regras Textuais */}
+      {c.caracteristicas && (
+        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3 text-[11px] text-slate-300 leading-relaxed">
+          <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Regras e Especificações do Grupo:</p>
+          <p>{c.caracteristicas}</p>
+        </div>
+      )}
+
+      {/* Alerta Resolução 285 se aplicável */}
+      {contemResolucao285 && (
+        <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30 text-[11px] text-amber-200 flex items-center gap-2">
+          <span>⚠️</span>
+          <span><strong>Resolução 285 Banco Central:</strong> Este grupo não permite alteração na data da 1ª assembleia.</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSimulateSubmit }: ConsortiumSimulatorProps) => {
   const { profile } = useProfile();
   const { toast } = useToast();
@@ -790,7 +954,17 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                     ))}
                   </div>
                 </div>
-                {/* Características do grupo ocultas conforme orientação comercial */}
+                {/* Características completas exibidas no CRM interno */}
+                {isInternal && (
+                  <PainelCaracteristicasGrupoInterno
+                    grupo={isLinear ? (g.grupoLinear ?? g.grupo) : g.grupo}
+                    prazo={isLinear ? (g.prazoLinear ?? g.prazo) : g.prazo}
+                    tx={tx}
+                    fr={fr}
+                    isPlanoGold={g.isPlanoGold}
+                    estats={estats}
+                  />
+                )}
               </div>
 
               </div> {/* FIM COLUNA ESQUERDA */}
@@ -1126,7 +1300,17 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                     )}
                   </div>
 
-                  {/* Características do grupo ocultas conforme orientação comercial */}
+                  {/* Características completas exibidas no CRM interno */}
+                  {isInternal && (
+                    <PainelCaracteristicasGrupoInterno
+                      grupo={isLinear ? (resultado.grupoLinear ?? resultado.grupo) : resultado.grupo}
+                      prazo={isLinear ? (resultado.prazoLinear ?? resultado.prazo) : resultado.prazo}
+                      tx={resultado.tx}
+                      fr={resultado.fr}
+                      isPlanoGold={resultado.isPlanoGold}
+                      estats={estats}
+                    />
+                  )}
 
                   {(lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) && (
                     <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
