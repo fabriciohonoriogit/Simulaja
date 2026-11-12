@@ -136,7 +136,22 @@
   </head>
 
   <body class="hide-lovable">
-    <div id="root"></div>
+    <div id="root">
+      <div id="pwa-boot-loader" style="position:fixed;inset:0;background:#090d16;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#38bdf8;font-family:system-ui,-apple-system,sans-serif;z-index:99999;">
+        <div style="width:40px;height:40px;border:3px solid #1e293b;border-top-color:#38bdf8;border-radius:50%;animation:pwa-spin 1s linear infinite;"></div>
+        <p style="margin-top:14px;font-size:12px;font-weight:600;letter-spacing:0.04em;color:#94a3b8;">Carregando O Especialista...</p>
+        <button id="pwa-force-update" onclick="localStorage.clear();sessionStorage.clear();if('caches' in window){caches.keys().then(function(k){return Promise.all(k.map(function(c){return caches.delete(c);}));}).then(function(){location.reload(true);});}else{location.reload(true);}" style="display:none;margin-top:16px;padding:8px 16px;background:#0284c7;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;">
+          Atualizar Versão
+        </button>
+      </div>
+      <style>@keyframes pwa-spin{to{transform:rotate(360deg)}}</style>
+      <script>
+        setTimeout(function() {
+          var btn = document.getElementById('pwa-force-update');
+          if (btn) btn.style.display = 'block';
+        }, 4000);
+      </script>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <script src="/cin-effects.js" defer></script>
 

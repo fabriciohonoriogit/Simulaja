@@ -135,18 +135,18 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
       return;
     }
     const clean = targetPhone.replace(/\D/g, "");
-    
-    // Tenta abrir o protocolo nativo do WhatsApp Desktop e fallback para web
-    const nativeUrl = `whatsapp://send?phone=${clean}`;
-    const webUrl = getWhatsAppDirectUrl(clean, `Olá, ${leadNome}! Aqui é o Fabrício Honório do Consórcio Magalu. Estou te chamando por aqui para batermos aquele papo leve sobre o seu projeto!`);
-    
-    try {
-      window.location.href = nativeUrl;
-      setTimeout(() => {
-        window.open(webUrl, "_blank");
-      }, 800);
-    } catch (e) {
-      window.open(webUrl, "_blank");
+    const webUrl = getWhatsAppDirectUrl(clean, `Olá, ${leadNome}! Aqui é o Fabrício Honório do Consórcio Magalu. Gostaria de falar 2 minutos sobre o seu projeto?`);
+
+    // Abre em nova aba sem descarregar a aplicação (previne tela branca no PWA)
+    const win = window.open(webUrl, "_blank", "noopener,noreferrer");
+    if (!win) {
+      const a = document.createElement("a");
+      a.href = webUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     toast.success("WhatsApp aberto para chamada com o cliente!");
@@ -158,8 +158,15 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
       return;
     }
     const clean = targetPhone.replace(/\D/g, "");
-    window.location.href = `tel:+${clean}`;
-    toast.info("Discador do telefone acionado!");
+    
+    // Disparo seguro via link temporário para não descarregar a PWA
+    const a = document.createElement("a");
+    a.href = `tel:+${clean}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast.info("Discador telefônico acionado!");
   };
 
   return (
