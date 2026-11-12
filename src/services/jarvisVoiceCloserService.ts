@@ -73,6 +73,9 @@ export class JarvisVoiceCloserService {
   private currentFase: FaseSRV = "sonho";
   private conversationHistory: { role: "system" | "user" | "assistant"; content: string }[] = [];
 
+  private isSpeaking = false;
+  private silenceTimer: any = null;
+
   constructor() {
     // Não inicializa SpeechRecognition no construtor para evitar crash em browsers sem suporte
   }
@@ -88,17 +91,22 @@ export class JarvisVoiceCloserService {
         this.recognition.lang = "pt-BR";
 
         this.recognition.onresult = async (event: any) => {
+          if (this.isSpeaking) return; // Ignora captura enquanto Jarvis fala (previne eco)
+
           const lastResult = event.results[event.results.length - 1];
           if (lastResult?.isFinal) {
             const transcript = lastResult[0]?.transcript?.trim();
-            if (transcript) {
-              await this.handleClientSpeech(transcript);
+            if (transcript && transcript.length >= 2) {
+              if (this.silenceTimer) clearTimeout(this.silenceTimer);
+              this.silenceTimer = setTimeout(async () => {
+                await this.handleClientSpeech(transcript);
+              }, 600);
             }
           }
         };
 
         this.recognition.onerror = (e: any) => {
-          console.warn("[Closer SRV] Reconhecimento de voz pausado/erro:", e?.error);
+          console.warn("[Closer SRV] Reconhecimento de voz:", e?.error);
         };
       }
     } catch (err) {
@@ -169,14 +177,14 @@ export class JarvisVoiceCloserService {
     this.emitState(true);
     this.emitMessage("sistema", `Chamada conectada com ${nomeValido}. Metodologia SRV ativada: [Fase 1: O Sonho].`);
 
-    // Abertura consultiva humana
+    // Abertura natural de telefone humana: curta, educada e esperando o cliente atender
     const primeiroNome = nomeValido.split(" ")[0];
-    const abertura = `Olá, ${primeiroNome}! Tudo bem com você? Aqui é o Jarvis, junto com o Fabrício Honório do Consórcio Magalu. Eu não estou te ligando para te empurrar consórcio ou falar de parcelas, mas sim para entender o seu projeto e como podemos te ajudar a tirar esse objetivo do papel. Me conta: qual é a grande conquista que você tem em mente para os próximos meses?`;
+    const abertura = `Olá, ${primeiroNome}! Aqui é o Fabrício Honório do Consórcio Magalu, tudo bem com você?`;
 
     this.emitMessage("jarvis", abertura, "alegre");
     await this.speak(abertura, "alegre");
 
-    // Inicia microfone apenas sob demanda
+    // Inicia microfone apenas sob demanda após a fala
     this.initSpeechRecognition();
     if (this.recognition) {
       try {
@@ -194,8 +202,6 @@ export class JarvisVoiceCloserService {
     this.emitMessage("cliente", userText);
     this.conversationHistory.push({ role: "user", content: userText });
 
-    this.atualizarEvolucaoSRV(userText);
-
     try {
       const resposta = await this.generateSRVResponse(userText);
       this.emitMessage("jarvis", resposta.text, resposta.emotion);
@@ -209,81 +215,98 @@ export class JarvisVoiceCloserService {
     }
   }
 
-  private atualizarEvolucaoSRV(userText: string) {
-    const lower = userText.toLowerCase();
-
-    if (this.currentFase === "sonho") {
-      if (lower.includes("casa") || lower.includes("imovel") || lower.includes("carro") || lower.includes("caminh") || lower.includes("reforma") || lower.includes("terreno") || lower.includes("empresa") || lower.length > 25) {
-        if (this.currentContext) this.currentContext.sonhoIdentificado = userText;
-        this.setFase("realidade");
-        this.emitMessage("sistema", "Sonho identificado! Transição para [Fase 2: Realidade & Capacidade Financeira].");
-      }
-    } else if (this.currentFase === "realidade") {
-      if (lower.match(/\d+/) || lower.includes("mil") || lower.includes("cem") || lower.includes("reais") || lower.includes("mes") || lower.includes("capacidade") || lower.includes("lance")) {
-        if (this.currentContext) this.currentContext.capacidadeMensal = userText;
-        this.setFase("viabilidade");
-        this.emitMessage("sistema", "Capacidade mapeada! Transição para [Fase 3: Viabilidade & Apresentação de Valor].");
-      }
-    } else if (this.currentFase === "viabilidade") {
-      if (lower.includes("gostei") || lower.includes("faz sentido") || lower.includes("sim") || lower.includes("como funciona") || lower.includes("pode ser") || lower.includes("manda")) {
-        this.setFase("fechamento");
-        this.emitMessage("sistema", "Cliente engajado! Transição para [Fase 4: Formalização de Fechamento].");
-      }
-    }
-  }
-
   private async generateSRVResponse(userText: string): Promise<{ text: string; emotion: VoiceEmotion }> {
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || "AQ.Ab8RN6K4DMA3cCraG70_iCcWufgBc_6np-TWuUbPDs7hhFhjog";
+    const leadNome = this.currentContext?.nome || "Cliente";
+    const segmento = this.currentContext?.tipo_consorcio || this.currentContext?.segmento || "imóvel/veículo";
+
+    const prompt = `Você é o JARVIS, assistente executivo e consultor de negociação de alta performance do Fabrício Honório (Consórcio Magalu).
+Você está em uma chamada de voz consultiva com o cliente ${leadNome}.
+Interesse: ${segmento}.
+Fase atual no método SRV: ${this.currentFase.toUpperCase()}.
+
+O cliente acabou de falar exatamente isto na chamada: "${userText}".
+
+DIRETRIZES FUNDAMENTAIS (METODOLOGIA SRV):
+1. Responda DIRETAMENTE e ESPECIFICAMENTE ao que o cliente falou ("${userText}").
+2. Se o cliente apenas cumprimentou ("oi", "olá", "alô", "quem é?", "tudo bem"): cumprimente de volta com entusiasmo, confirme se ele pode falar 2 minutos e pergunte qual o grande projeto ou conquista que ele tem em mente para os próximos meses.
+3. Se o cliente falou do sonho (ex: carro, caminhão, casa, reforma): parabenize a conquista com calor humano genuíno e pergunte sobre o prazo ideal ou como ele imagina essa realização. Mude novaFase para "realidade".
+4. Se o cliente falou de prazo, dinheiro ou parcela: pergunte qual aporte mensal fica 100% confortável no bolso dele sem comprometer as reservas. Mude novaFase para "viabilidade".
+5. Se o cliente demonstrou interesse na estratégia: apresente o formato sem juros com opção de lance embutido de até 30% e sugira reservar a vaga na assembleia deste mês. Mude novaFase para "fechamento".
+6. NUNCA fale frases longas. No máximo 2 a 3 frases curtas faladas de telefone. NUNCA empurre produto.
+7. Retorne EXCLUSIVAMENTE um JSON válido no formato:
+{"text": "sua fala aqui", "emotion": "alegre" | "empático" | "empolgado" | "sério", "novaFase": "sonho" | "realidade" | "viabilidade" | "fechamento"}`;
+
     try {
-      const { data, error } = await supabase.functions.invoke("chat-closer-ia", {
-        body: {
-          messages: this.conversationHistory,
-          leadContext: this.currentContext,
-          faseSRV: this.currentFase,
-          lastUserMessage: userText
-        }
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
       });
 
-      if (!error && data?.reply) {
-        return {
-          text: data.reply,
-          emotion: data.emotion || "empático"
-        };
+      if (res.ok) {
+        const data = await res.json();
+        const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (rawJson) {
+          const parsed = JSON.parse(rawJson);
+          if (parsed?.novaFase && parsed.novaFase !== this.currentFase) {
+            this.setFase(parsed.novaFase);
+          }
+          if (parsed?.text) {
+            return {
+              text: parsed.text,
+              emotion: parsed.emotion || "empático"
+            };
+          }
+        }
       }
-    } catch (err) {}
+    } catch (err) {
+      console.warn("[Closer SRV] Falha na chamada direta Gemini, usando fallback contextual:", err);
+    }
 
     return this.obterRespostaPadraoFase(userText);
   }
 
   private obterRespostaPadraoFase(userText: string = ""): { text: string; emotion: VoiceEmotion } {
-    if (this.currentFase === "sonho") {
+    const lower = userText.toLowerCase();
+
+    // Saudação ou identificação
+    if (lower.includes("olá") || lower.includes("oi") || lower.includes("alô") || lower.includes("quem") || lower.length < 12) {
       return {
-        text: "Que conquista incrível! Um projeto como esse transforma completamente a vida da gente. E me diz: você tem um prazo ideal que gostaria de ver isso acontecendo, ou quer se planejar com tranquilidade?",
+        text: "Tudo ótimo por aqui! Estou te ligando rapidinho para te dar um retorno sobre o seu projeto. Você tem 2 minutinhos para falarmos sobre o que você planeja conquistar?",
         emotion: "alegre"
       };
     }
 
-    if (this.currentFase === "realidade") {
+    // Identificação de sonho
+    if (this.currentFase === "sonho") {
+      this.setFase("realidade");
       return {
-        text: "Perfeito! Para que você conquiste isso sem apertar seu padrão de vida e com total segurança, qual valor mensal hoje fica mais confortável para o seu orçamento investir?",
-        emotion: "empático"
-      };
-    }
-
-    if (this.currentFase === "viabilidade") {
-      const sonho = this.currentContext?.sonhoIdentificado ? "conquistar o seu projeto" : "sua conquista";
-      return {
-        text: `Excelente. Sabendo que o seu foco é ${sonho} e com esse aporte confortável, nós conseguimos estruturar um crédito sob medida onde você não paga um único centavo de juros bancários. Além disso, podemos usar lance embutido de até 30% da própria carta para acelerar sua contemplação. Faz sentido para você esse formato?`,
+        text: "Que conquista incrível! Um projeto como esse é maravilhoso. E para a gente planejar isso com total conforto no seu bolso, qual valor mensal hoje você consegue investir com tranquilidade?",
         emotion: "empolgado"
       };
     }
 
+    if (this.currentFase === "realidade") {
+      this.setFase("viabilidade");
+      return {
+        text: "Perfeito! Com essa faixa mensal nós conseguimos estruturar uma carta de crédito sob medida no Consórcio Magalu sem juros de financiamento bancário, além de poder usar lance embutido para adiantar sua contemplação. Faz sentido esse caminho para você?",
+        emotion: "empático"
+      };
+    }
+
     return {
-      text: "Maravilha! O que podemos fazer para garantir essa vaga do grupo da assembleia deste mês é formalizar a reserva da sua cota sem compromisso. Você prefere que eu já reserve agora ou te mando o resumo no WhatsApp para você dar o OK final?",
+      text: "Maravilha! O que podemos fazer para garantir essa condição para a assembleia deste mês é formalizar a reserva da sua cota sem compromisso. Você prefere que eu já reserve ou te mando o resumo no WhatsApp para você dar o OK final?",
       emotion: "sério"
     };
   }
 
   private async speak(text: string, emotion: VoiceEmotion = "empático") {
+    this.isSpeaking = true;
     if (this.recognition) {
       try { this.recognition.abort(); } catch(e) {}
     }
@@ -291,18 +314,26 @@ export class JarvisVoiceCloserService {
     try {
       await speakJarvisText(text, {
         onEnd: () => {
+          this.isSpeaking = false;
           if (this.isCallActive && this.recognition) {
-            try { this.recognition.start(); } catch(e) {}
+            setTimeout(() => {
+              if (this.isCallActive && !this.isSpeaking) {
+                try { this.recognition.start(); } catch(e) {}
+              }
+            }, 400);
           }
         }
       }, { emotion });
     } catch (e) {
+      this.isSpeaking = false;
       console.warn("[Closer SRV] Erro fala Jarvis:", e);
     }
   }
 
   public endVoiceCall() {
     this.emitState(false);
+    this.isSpeaking = false;
+    if (this.silenceTimer) clearTimeout(this.silenceTimer);
     try {
       stopVoice();
     } catch (e) {}
@@ -316,8 +347,26 @@ export class JarvisVoiceCloserService {
     const primeiroNome = (leadNome || "Cliente").split(" ")[0];
     const textoAudio = customText || `Olá, ${primeiroNome}! Aqui é o Fabrício Honório do Consórcio Magalu. Tentei te ligar rapidinho agora para bater um papo leve sobre aquele projeto que você me comentou. Não quero te empurrar nada nem falar de parcelas, mas sim entender o seu momento e como podemos desenhar uma estratégia que caiba com total conforto no seu bolso. Quando tiver 5 minutinhos, me manda um alô por aqui! Um grande abraço!`;
 
-    await this.speak(textoAudio, "empático");
+    // 1. Envia nota de voz de áudio real diretamente pelo WAHA (Porta 3000)
+    try {
+      const cleanPhone = String(telefone).replace(/\D/g, "");
+      const res = await fetch("http://localhost:3000/api/sendVoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatId: cleanPhone,
+          text: textoAudio,
+          voice: "pt-BR-AntonioNeural",
+          emotion: "empatico"
+        })
+      });
 
+      if (res.ok) {
+        return true;
+      }
+    } catch (e) {}
+
+    // Fallback: envio de texto se o endpoint de voz não responder
     try {
       const cleanPhone = String(telefone).replace(/\D/g, "");
       await fetch("http://localhost:3000/api/sendText", {

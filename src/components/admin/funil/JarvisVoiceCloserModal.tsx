@@ -134,9 +134,32 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
       toast.error("Lead sem telefone cadastrado.");
       return;
     }
-    const url = getWhatsAppDirectUrl(targetPhone, `Olá, ${leadNome}! Estou te ligando agora pelo WhatsApp para alinharmos aquele seu projeto com calma. Pode atender?`);
-    window.open(url, "_blank");
-    toast.info("Abrindo WhatsApp para chamada com o cliente!");
+    const clean = targetPhone.replace(/\D/g, "");
+    
+    // Tenta abrir o protocolo nativo do WhatsApp Desktop e fallback para web
+    const nativeUrl = `whatsapp://send?phone=${clean}`;
+    const webUrl = getWhatsAppDirectUrl(clean, `Olá, ${leadNome}! Aqui é o Fabrício Honório do Consórcio Magalu. Estou te chamando por aqui para batermos aquele papo leve sobre o seu projeto!`);
+    
+    try {
+      window.location.href = nativeUrl;
+      setTimeout(() => {
+        window.open(webUrl, "_blank");
+      }, 800);
+    } catch (e) {
+      window.open(webUrl, "_blank");
+    }
+
+    toast.success("WhatsApp aberto para chamada com o cliente!");
+  };
+
+  const handleOpenPhoneCall = () => {
+    if (!targetPhone) {
+      toast.error("Lead sem telefone cadastrado.");
+      return;
+    }
+    const clean = targetPhone.replace(/\D/g, "");
+    window.location.href = `tel:+${clean}`;
+    toast.info("Discador do telefone acionado!");
   };
 
   return (
@@ -319,15 +342,45 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
 
           {/* BOTÕES DE AÇÃO PRINCIPAIS */}
           <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-800/60">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* 1. LIGAR REAL NO WHATSAPP */}
+              {targetPhone && (
+                <Button
+                  type="button"
+                  onClick={handleOpenWhatsAppCall}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-9 gap-1.5 rounded-xl shadow-lg shadow-emerald-900/30"
+                  title="Abrir WhatsApp para ligação direta com o cliente"
+                >
+                  <Phone className="w-4 h-4 text-emerald-200" />
+                  Ligar no WhatsApp
+                </Button>
+              )}
+
+              {/* 2. LIGAR REAL NO CELULAR / LINHA */}
+              {targetPhone && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleOpenPhoneCall}
+                  className="border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold text-xs h-9 gap-1.5 rounded-xl"
+                  title="Discar diretamente para o telefone celular do lead"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Ligar Celular
+                </Button>
+              )}
+
+              {/* 3. SIMULAÇÃO / COPILOTO DE VOZ */}
               {!isCalling ? (
                 <Button
                   type="button"
+                  variant="outline"
                   onClick={handleStartCall}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-9 gap-2 rounded-xl shadow-lg shadow-emerald-900/30"
+                  className="border-cyan-700/60 bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 font-bold text-xs h-9 gap-2 rounded-xl"
+                  title="Simular ou acompanhar no viva-voz com o Jarvis respondendo em tempo real"
                 >
-                  <Phone className="w-4 h-4" />
-                  Iniciar Chamada de Voz com IA
+                  <Mic className="w-4 h-4 text-cyan-400" />
+                  Simular Fala com IA
                 </Button>
               ) : (
                 <Button
@@ -337,34 +390,22 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
                   className="font-bold text-xs h-9 gap-2 rounded-xl"
                 >
                   <PhoneOff className="w-4 h-4" />
-                  Encerrar Ligação
-                </Button>
-              )}
-
-              {targetPhone && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleOpenWhatsAppCall}
-                  className="border-emerald-700/60 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-300 font-bold text-xs h-9 gap-1.5 rounded-xl"
-                  title="Abrir WhatsApp para ligação direta"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Ligar no WhatsApp
+                  Pausar Microfone IA
                 </Button>
               )}
             </div>
 
+            {/* 4. DISPARO DE ÁUDIO REAL NO WHATSAPP */}
             <Button
               type="button"
               variant="outline"
               onClick={handleSendWhatsAppAudio}
               disabled={isSendingAudio}
-              className="border-cyan-700/60 bg-cyan-950/30 hover:bg-cyan-900/50 text-cyan-300 font-bold text-xs h-9 gap-1.5 rounded-xl"
-              title="Disparar mensagem de voz consultiva no WhatsApp do lead"
+              className="border-purple-700/60 bg-purple-950/30 hover:bg-purple-900/50 text-purple-300 font-bold text-xs h-9 gap-1.5 rounded-xl"
+              title="Disparar mensagem de voz consultiva gravada pelo Jarvis no WhatsApp do cliente"
             >
               <Volume2 className="w-3.5 h-3.5" />
-              {isSendingAudio ? "Enviando Áudio..." : "Enviar Áudio SRV"}
+              {isSendingAudio ? "Enviando Áudio..." : "Enviar Áudio de Voz SRV"}
             </Button>
           </div>
         </div>

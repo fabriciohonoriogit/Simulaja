@@ -1016,6 +1016,79 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 7.1. Enviar Mensagem de Voz Direta / Áudio PTT (POST /api/sendVoice)
+  if (pathname === "/api/sendVoice" && req.method === "POST") {
+    const body = await readBody();
+    let chatId = body.chatId || body.phone || body.number;
+    let text = body.text || body.message || "";
+    let voice = body.voice || "pt-BR-AntonioNeural";
+    let emotion = body.emotion || "empatico";
+
+    if (!chatId || !text) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "chatId e text são obrigatórios" }));
+      return;
+    }
+
+    if (currentStatus !== "WORKING" || !sock) {
+      res.writeHead(503, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "WhatsApp não está conectado." }));
+      return;
+    }
+
+    const targetJid = await resolveTargetJid(chatId);
+    if (!targetJid) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, error: "Contato não possui WhatsApp ativo." }));
+      return;
+    }
+
+    try {
+      const tts = new MsEdgeTTS();
+      await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      const { audioStream } = tts.toStream(text, { rate: "+15%", pitch: "+0Hz", volume: "+10%" });
+      const chunks = [];
+      for await (const chunk of audioStream) {
+        chunks.push(chunk);
+      }
+      const audioBuffer = Buffer.concat(chunks);
+      const result = await sock.sendMessage(targetJid, {
+        audio: audioBuffer,
+        mimetype: "audio/mp4",
+        ptt: true
+      });
+      console.log(`🎙️ [Nota de Voz Enviada via WhatsApp para ${targetJid}]`);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true, id: result?.key?.id }));
+    } catch (err) {
+      console.error("Erro ao enviar mensagem de voz:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 7.2. Criar Link de Chamada de Áudio do WhatsApp (POST /api/createCallLink)
+  if (pathname === "/api/createCallLink" && req.method === "POST") {
+    if (currentStatus !== "WORKING" || !sock) {
+      res.writeHead(503, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "WhatsApp não está conectado." }));
+      return;
+    }
+    try {
+      const token = await sock.createCallLink("audio");
+      const callUrl = `https://call.whatsapp.com/voice/${token}`;
+      console.log(`📞 [Link de Chamada WhatsApp Gerado]: ${callUrl}`);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true, callUrl, token }));
+    } catch (err) {
+      console.error("Erro ao gerar link de chamada:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   // 8. Síntese de Voz Neural HD do Jarvis (GET ou POST /api/tts - Microsoft Edge Neural com Modulação Prosódica Viva e Emoções)
   if (pathname === "/api/tts" && (req.method === "GET" || req.method === "POST")) {
     let text = "";
