@@ -9,3 +9,4 @@ projectDir = fso.GetParentFolderName(scriptDir)
 ' Executa silenciosamente sem abrir janela de prompt (0 = oculto)
 WshShell.CurrentDirectory = projectDir
 WshShell.Run "node scripts/waha-local.mjs", 0, False
+

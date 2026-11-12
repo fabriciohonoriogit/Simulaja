@@ -11,3 +11,4 @@ $shortcut.Description = "SimulaJa CRM WhatsApp Server em Segundo Plano"
 $shortcut.Save()
 
 Write-Host "SUCESSO: Atalho criado em $shortcutPath"
+

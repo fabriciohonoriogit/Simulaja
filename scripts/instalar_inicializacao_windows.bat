@@ -32,3 +32,4 @@ wscript.exe "%VBS_TARGET%"
 echo [OK] Serviço em execução em segundo plano!
 echo.
 pause
+

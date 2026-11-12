@@ -10,3 +10,4 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3000 ^| findstr LISTENING') 
 
 echo [OK] WhatsApp Server encerrado com sucesso.
 pause
+
