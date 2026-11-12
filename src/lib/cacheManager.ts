@@ -45,12 +45,6 @@ export async function checkAndClearCache(): Promise<void> {
       } catch (err) {
         console.warn("[CacheManager] Erro ao salvar versão no localStorage:", err);
       }
-
-      // 4. Se havia uma versão anterior, recarrega para garantir que os novos bundles sejam carregados
-      if (stored && typeof window !== "undefined") {
-        console.log("[CacheManager] Versão atualizada, forçando recarga imediata...");
-        window.location.reload();
-      }
     }
   } catch (err) {
     console.warn("[CacheManager] Erro geral ao verificar cache:", err);

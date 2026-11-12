@@ -40,6 +40,7 @@ import WhatsAppInbox from "./pages/admin/WhatsAppInbox";
 import { Refine } from "@refinedev/core";
 import { refineDataProvider, refineResources } from "./lib/refineConfig";
 import { LevelUpModal } from "./components/admin/gamification/LevelUpModal";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 import PreCadastro from "./pages/PreCadastro";
 
@@ -113,7 +114,9 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <Refine dataProvider={refineDataProvider} resources={refineResources}>
-          <AppContent />
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
         </Refine>
       </BrowserRouter>
     </TooltipProvider>

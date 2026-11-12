@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -12,16 +11,13 @@ import {
   Phone,
   PhoneOff,
   Mic,
-  MicOff,
   Volume2,
   Send,
   Sparkles,
   Heart,
   DollarSign,
   CheckCircle2,
-  Share2,
   ExternalLink,
-  MessageSquare,
   Flame
 } from "lucide-react";
 import {
@@ -36,15 +32,15 @@ import { formatWhatsAppNumber, getWhatsAppDirectUrl } from "@/services/evolution
 interface JarvisVoiceCloserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  lead: {
+  lead?: {
     id?: string;
-    nome: string;
+    nome?: string;
     telefone?: string;
     celular?: string;
     tipo_consorcio?: string;
     valor_credito?: number | string;
     segmento?: string;
-  };
+  } | null;
 }
 
 export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
@@ -59,9 +55,12 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
   const [isSendingAudio, setIsSendingAudio] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const targetPhone = formatWhatsAppNumber(lead.celular || lead.telefone || "");
+  const leadNome = lead?.nome || "Cliente";
+  const rawPhone = lead?.celular || lead?.telefone || "";
+  const targetPhone = rawPhone ? formatWhatsAppNumber(rawPhone) : "";
 
   useEffect(() => {
+    if (!open) return;
     const unsubMsg = jarvisVoiceCloser.subscribeMessages((newMsg) => {
       setMessages((prev) => [...prev, newMsg]);
     });
@@ -79,7 +78,7 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
       unsubState();
       unsubFase();
     };
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -87,13 +86,15 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
     }
   }, [messages]);
 
+  if (!open) return null;
+
   const handleStartCall = async () => {
     const context: CloserLeadContext = {
-      id: lead.id,
-      nome: lead.nome,
+      id: lead?.id,
+      nome: leadNome,
       telefone: targetPhone,
-      valor_credito: lead.valor_credito,
-      tipo_consorcio: lead.tipo_consorcio || lead.segmento,
+      valor_credito: lead?.valor_credito,
+      tipo_consorcio: lead?.tipo_consorcio || lead?.segmento,
     };
     await jarvisVoiceCloser.startVoiceCall(context);
     toast.success("Chamada de voz consultiva iniciada com o Jarvis Closer!");
@@ -119,7 +120,7 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
     }
     setIsSendingAudio(true);
     toast.info("Sintetizando e disparando áudio consultivo SRV no WhatsApp...");
-    const ok = await jarvisVoiceCloser.sendWhatsAppSRVAudio(targetPhone, lead.nome);
+    const ok = await jarvisVoiceCloser.sendWhatsAppSRVAudio(targetPhone, leadNome);
     setIsSendingAudio(false);
     if (ok) {
       toast.success("Áudio de voz consultiva enviado com sucesso no WhatsApp!");
@@ -133,7 +134,7 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
       toast.error("Lead sem telefone cadastrado.");
       return;
     }
-    const url = getWhatsAppDirectUrl(targetPhone, `Olá, ${lead.nome}! Estou te ligando agora pelo WhatsApp para alinharmos aquele seu projeto com calma. Pode atender?`);
+    const url = getWhatsAppDirectUrl(targetPhone, `Olá, ${leadNome}! Estou te ligando agora pelo WhatsApp para alinharmos aquele seu projeto com calma. Pode atender?`);
     window.open(url, "_blank");
     toast.info("Abrindo WhatsApp para chamada com o cliente!");
   };
@@ -167,7 +168,7 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
                   </Badge>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-400 font-medium mt-0.5">
-                  Negociando com <span className="text-cyan-300 font-bold">{lead.nome}</span> ({targetPhone || "Sem telefone"})
+                  Negociando com <span className="text-cyan-300 font-bold">{leadNome}</span> ({targetPhone || "Sem telefone"})
                 </DialogDescription>
               </div>
             </div>
@@ -277,7 +278,7 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
                 <div key={m.id} className={`flex flex-col ${isJarvis ? "items-start" : "items-end"}`}>
                   <div className="flex items-center gap-1.5 mb-1 px-1">
                     <span className="text-[10px] font-bold text-slate-400">
-                      {isJarvis ? "🤖 Jarvis Closer" : `👤 ${lead.nome}`}
+                      {isJarvis ? "🤖 Jarvis Closer" : `👤 ${leadNome}`}
                     </span>
                     <span className="text-[9px] text-slate-600 font-mono">{m.timestamp}</span>
                     {m.emotion && (
@@ -340,7 +341,6 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
                 </Button>
               )}
 
-              {/* Botão de Ligar via WhatsApp */}
               {targetPhone && (
                 <Button
                   type="button"
@@ -355,7 +355,6 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
               )}
             </div>
 
-            {/* Disparo de Áudio Consultivo SRV */}
             <Button
               type="button"
               variant="outline"
@@ -373,4 +372,3 @@ export const JarvisVoiceCloserModal: React.FC<JarvisVoiceCloserModalProps> = ({
     </Dialog>
   );
 };
-

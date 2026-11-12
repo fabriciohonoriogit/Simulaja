@@ -797,11 +797,13 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
       </div>
 
       {/* MODAL DO AGENTE CLOSER DE VOZ (METODOLOGIA SRV) */}
-      <JarvisVoiceCloserModal
-        open={voiceCloserOpen}
-        onOpenChange={setVoiceCloserOpen}
-        lead={lead}
-      />
+      {voiceCloserOpen && (
+        <JarvisVoiceCloserModal
+          open={voiceCloserOpen}
+          onOpenChange={setVoiceCloserOpen}
+          lead={lead}
+        />
+      )}
     </div>
   );
 }

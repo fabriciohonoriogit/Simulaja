@@ -17,7 +17,7 @@ export type FaseSRV = "sonho" | "realidade" | "viabilidade" | "fechamento";
 
 export interface CloserLeadContext {
   id?: string;
-  nome: string;
+  nome?: string;
   telefone?: string;
   valor_credito?: number | string;
   tipo_consorcio?: string;
@@ -74,31 +74,35 @@ export class JarvisVoiceCloserService {
   private conversationHistory: { role: "system" | "user" | "assistant"; content: string }[] = [];
 
   constructor() {
-    this.initSpeechRecognition();
+    // Não inicializa SpeechRecognition no construtor para evitar crash em browsers sem suporte
   }
 
   private initSpeechRecognition() {
-    if (typeof window === "undefined") return;
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      this.recognition = new SpeechRecognition();
-      this.recognition.continuous = true;
-      this.recognition.interimResults = false;
-      this.recognition.lang = "pt-BR";
+    try {
+      if (typeof window === "undefined" || this.recognition) return;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = false;
+        this.recognition.lang = "pt-BR";
 
-      this.recognition.onresult = async (event: any) => {
-        const lastResult = event.results[event.results.length - 1];
-        if (lastResult.isFinal) {
-          const transcript = lastResult[0].transcript.trim();
-          if (transcript) {
-            await this.handleClientSpeech(transcript);
+        this.recognition.onresult = async (event: any) => {
+          const lastResult = event.results[event.results.length - 1];
+          if (lastResult?.isFinal) {
+            const transcript = lastResult[0]?.transcript?.trim();
+            if (transcript) {
+              await this.handleClientSpeech(transcript);
+            }
           }
-        }
-      };
+        };
 
-      this.recognition.onerror = (e: any) => {
-        console.warn("[Closer SRV] Erro reconhecimento de voz:", e.error);
-      };
+        this.recognition.onerror = (e: any) => {
+          console.warn("[Closer SRV] Reconhecimento de voz pausado/erro:", e?.error);
+        };
+      }
+    } catch (err) {
+      console.warn("[Closer SRV] Inicialização de reconhecimento segura:", err);
     }
   }
 
@@ -157,20 +161,23 @@ export class JarvisVoiceCloserService {
     this.currentFase = "sonho";
     this.setFase("sonho");
 
+    const nomeValido = (context.nome || "Cliente").trim();
     this.conversationHistory = [
-      { role: "system", content: `${CLOSER_SRV_SYSTEM_PROMPT}\n\nLEAD ATUAL: ${context.nome}. Segmento de interesse: ${context.tipo_consorcio || 'Planejamento'}.` }
+      { role: "system", content: `${CLOSER_SRV_SYSTEM_PROMPT}\n\nLEAD ATUAL: ${nomeValido}. Segmento de interesse: ${context.tipo_consorcio || 'Planejamento'}.` }
     ];
 
     this.emitState(true);
-    this.emitMessage("sistema", `Chamada conectada com ${context.nome}. Metodologia SRV ativada: [Fase 1: O Sonho].`);
+    this.emitMessage("sistema", `Chamada conectada com ${nomeValido}. Metodologia SRV ativada: [Fase 1: O Sonho].`);
 
-    // Abertura consultiva humana - Foco no sonho, sem jargões de consórcio
-    const primeiroNome = context.nome.split(" ")[0];
+    // Abertura consultiva humana
+    const primeiroNome = nomeValido.split(" ")[0];
     const abertura = `Olá, ${primeiroNome}! Tudo bem com você? Aqui é o Jarvis, junto com o Fabrício Honório do Consórcio Magalu. Eu não estou te ligando para te empurrar consórcio ou falar de parcelas, mas sim para entender o seu projeto e como podemos te ajudar a tirar esse objetivo do papel. Me conta: qual é a grande conquista que você tem em mente para os próximos meses?`;
 
     this.emitMessage("jarvis", abertura, "alegre");
     await this.speak(abertura, "alegre");
 
+    // Inicia microfone apenas sob demanda
+    this.initSpeechRecognition();
     if (this.recognition) {
       try {
         this.recognition.start();
@@ -187,7 +194,6 @@ export class JarvisVoiceCloserService {
     this.emitMessage("cliente", userText);
     this.conversationHistory.push({ role: "user", content: userText });
 
-    // Determina a evolução da fase SRV com base no diálogo
     this.atualizarEvolucaoSRV(userText);
 
     try {
@@ -197,7 +203,7 @@ export class JarvisVoiceCloserService {
 
       await this.speak(resposta.text, resposta.emotion);
     } catch (e: any) {
-      const fallback = this.obterRespostaPadraoFase();
+      const fallback = this.obterRespostaPadraoFase(userText);
       this.emitMessage("jarvis", fallback.text, fallback.emotion);
       await this.speak(fallback.text, fallback.emotion);
     }
@@ -206,24 +212,19 @@ export class JarvisVoiceCloserService {
   private atualizarEvolucaoSRV(userText: string) {
     const lower = userText.toLowerCase();
 
-    // Transição de Sonho para Realidade/Capacidade
     if (this.currentFase === "sonho") {
       if (lower.includes("casa") || lower.includes("imovel") || lower.includes("carro") || lower.includes("caminh") || lower.includes("reforma") || lower.includes("terreno") || lower.includes("empresa") || lower.length > 25) {
         if (this.currentContext) this.currentContext.sonhoIdentificado = userText;
         this.setFase("realidade");
         this.emitMessage("sistema", "Sonho identificado! Transição para [Fase 2: Realidade & Capacidade Financeira].");
       }
-    }
-    // Transição de Realidade para Viabilidade
-    else if (this.currentFase === "realidade") {
+    } else if (this.currentFase === "realidade") {
       if (lower.match(/\d+/) || lower.includes("mil") || lower.includes("cem") || lower.includes("reais") || lower.includes("mes") || lower.includes("capacidade") || lower.includes("lance")) {
         if (this.currentContext) this.currentContext.capacidadeMensal = userText;
         this.setFase("viabilidade");
         this.emitMessage("sistema", "Capacidade mapeada! Transição para [Fase 3: Viabilidade & Apresentação de Valor].");
       }
-    }
-    // Transição para Fechamento
-    else if (this.currentFase === "viabilidade") {
+    } else if (this.currentFase === "viabilidade") {
       if (lower.includes("gostei") || lower.includes("faz sentido") || lower.includes("sim") || lower.includes("como funciona") || lower.includes("pode ser") || lower.includes("manda")) {
         this.setFase("fechamento");
         this.emitMessage("sistema", "Cliente engajado! Transição para [Fase 4: Formalização de Fechamento].");
@@ -276,7 +277,6 @@ export class JarvisVoiceCloserService {
       };
     }
 
-    // Fechamento
     return {
       text: "Maravilha! O que podemos fazer para garantir essa vaga do grupo da assembleia deste mês é formalizar a reserva da sua cota sem compromisso. Você prefere que eu já reserve agora ou te mando o resumo no WhatsApp para você dar o OK final?",
       emotion: "sério"
@@ -288,35 +288,36 @@ export class JarvisVoiceCloserService {
       try { this.recognition.abort(); } catch(e) {}
     }
 
-    await speakJarvisText(text, {
-      onEnd: () => {
-        if (this.isCallActive && this.recognition) {
-          try { this.recognition.start(); } catch(e) {}
+    try {
+      await speakJarvisText(text, {
+        onEnd: () => {
+          if (this.isCallActive && this.recognition) {
+            try { this.recognition.start(); } catch(e) {}
+          }
         }
-      }
-    }, { emotion });
+      }, { emotion });
+    } catch (e) {
+      console.warn("[Closer SRV] Erro fala Jarvis:", e);
+    }
   }
 
   public endVoiceCall() {
     this.emitState(false);
-    stopVoice();
+    try {
+      stopVoice();
+    } catch (e) {}
     if (this.recognition) {
       try { this.recognition.stop(); } catch(e) {}
     }
     this.emitMessage("sistema", "Chamada consultiva finalizada.");
   }
 
-  /**
-   * Envia Áudio Consultivo SRV Humanizado no WhatsApp do Cliente
-   */
-  public async sendWhatsAppSRVAudio(telefone: string, leadNome: string, customText?: string) {
-    const primeiroNome = leadNome.split(" ")[0];
+  public async sendWhatsAppSRVAudio(telefone: string, leadNome: string = "Cliente", customText?: string) {
+    const primeiroNome = (leadNome || "Cliente").split(" ")[0];
     const textoAudio = customText || `Olá, ${primeiroNome}! Aqui é o Fabrício Honório do Consórcio Magalu. Tentei te ligar rapidinho agora para bater um papo leve sobre aquele projeto que você me comentou. Não quero te empurrar nada nem falar de parcelas, mas sim entender o seu momento e como podemos desenhar uma estratégia que caiba com total conforto no seu bolso. Quando tiver 5 minutinhos, me manda um alô por aqui! Um grande abraço!`;
 
-    // Fala e reproduz localmente
     await this.speak(textoAudio, "empático");
 
-    // Envia no WhatsApp via WAHA
     try {
       const cleanPhone = String(telefone).replace(/\D/g, "");
       await fetch("http://localhost:3000/api/sendText", {

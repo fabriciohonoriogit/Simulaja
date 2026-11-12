@@ -5,13 +5,13 @@ import "./index.css";
 import { registerSW } from "virtual:pwa-register";
 import { checkAndClearCache } from "./lib/cacheManager";
 
-// Garante auto-reload imediato quando um novo Service Worker assume o controle no celular/desktop
+// Garante auto-reload suave apenas se o app já estiver montado e pronto
 if (typeof window !== "undefined" && "serviceWorker" in navigator) {
   let refreshing = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!refreshing) {
+    if (!refreshing && document.readyState === "complete" && navigator.serviceWorker.controller) {
       refreshing = true;
-      console.log("[PWA] Controller atualizado. Recarregando página para aplicar a nova versão...");
+      console.log("[PWA] Controller atualizado após carregamento. Aplicando nova versão...");
       window.location.reload();
     }
   });
