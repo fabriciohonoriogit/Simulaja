@@ -1,0 +1,12 @@
+node_modules
+.git
+.gemini
+dist
+evolution-api
+3cerebros
+agency-agents
+*.log
+*.pdf
+scripts
+.github
+
