@@ -26,7 +26,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-white/10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/40 text-blue-300 text-xs font-black tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(0,134,255,0.25)]">
             <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
-            <span>Representante Autorizado Consórcio Magalu</span>
+            <span>Gestor autorizado do consórcio magalu</span>
             <span className="hidden sm:inline text-slate-500">•</span>
             <span className="hidden sm:inline text-amber-300">O Especialista Consórcio</span>
           </div>
@@ -110,7 +110,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
 
               {/* O COMPONENTE DO SIMULADOR (INTACTO COM TODAS AS FÓRMULAS & LEAD CAPTURE) */}
               <div className="p-2 sm:p-4">
-                <ConsortiumSimulator onSimulateSubmit={onSimulateSubmit} />
+                <ConsortiumSimulator compact={true} onSimulateSubmit={onSimulateSubmit} />
               </div>
             </div>
           </div>

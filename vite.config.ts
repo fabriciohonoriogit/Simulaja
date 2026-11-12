@@ -14,25 +14,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    ViteImageOptimizer({
-      png: { quality: 80 },
-      jpeg: { quality: 75 },
-      jpg: { quality: 75 },
-      webp: { quality: 75 },
-      svg: {
-        multipass: true,
-        plugins: [
-          {
-            name: 'preset-default',
-            params: {
-              overrides: {
-                cleanupIds: false,
-              },
-            },
-          },
-        ],
-      },
-    }),
+    // ViteImageOptimizer desativado no build local para evitar estouro de memória/pagefile com libvips
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],

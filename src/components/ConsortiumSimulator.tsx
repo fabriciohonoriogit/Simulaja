@@ -120,7 +120,7 @@ interface ConsortiumSimulatorProps {
   }) => void;
 }
 
-const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: ConsortiumSimulatorProps) => {
+const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSimulateSubmit }: ConsortiumSimulatorProps) => {
   const { profile } = useProfile();
   const { toast } = useToast();
   
@@ -589,7 +589,13 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             <BlackFridayBanner className="w-full mb-6" />
           )}
 
-          <div ref={simulatorRef} className="w-full bg-white rounded-[24px] shadow-[0_0_35px_rgba(0,134,255,0.25)] p-5 sm:p-8 relative z-10 border-2 border-cyan-400/50">
+          <div ref={simulatorRef} className={`w-full bg-white rounded-[22px] shadow-[0_0_35px_rgba(0,134,255,0.25)] relative z-10 border-2 border-cyan-400/50 ${compact ? "p-3 sm:p-5" : "p-5 sm:p-8"}`}>
+            {compact && isBF && (
+              <div className="mb-3 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600/20 via-cyan-500/20 to-amber-500/20 border border-cyan-400/40 flex items-center justify-between text-[11px] font-black uppercase text-cyan-800">
+                <span>🔥 Black das Blacks Magalu Oficial</span>
+                <span className="text-amber-600 font-mono">50/50 Ativo</span>
+              </div>
+            )}
             <div className={isInternal ? "grid grid-cols-1 md:grid-cols-2 gap-8" : ""}>
               
               {/* ESQUERDA: Controles da Simulação */}
@@ -777,81 +783,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     ))}
                   </div>
                 </div>
-                {/* Características do Grupo */}
-                {(() => {
-                  const c = GRUPO_CARACTERISTICAS[g.grupo];
-                  if (!c) return null;
-                  const contemResolucao285 = c.caracteristicas.includes("RESOLUÇAO 285") || c.caracteristicas.includes("RESOLUÇÃO 285");
-                  return (
-                    <div className="mt-3 p-4 rounded-xl border border-slate-200 bg-white text-left space-y-3 shadow-sm relative overflow-hidden">
-                      <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-300" />
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                          <span>⚙️</span> Características do Grupo {c.grupo} {g.isPlanoGold && "(PLANO GOLDEN)"}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          {c.status && (
-                            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded ${c.status === 'Formação' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
-                              {c.status}
-                            </span>
-                          )}
-                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                            Reajuste: {c.reajuste}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                        <div>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase">1ª Assembleia</p>
-                          <p className="font-semibold text-foreground">{c.primeiraAssembleia}</p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Próxima Assembleia</p>
-                          <p className="font-semibold text-foreground">{c.proximaAssembleia}</p>
-                        </div>
-                        {c.cotasVagas !== undefined && (
-                          <div>
-                            <p className="text-[9px] font-bold text-blue-600 uppercase">Cotas Vagas</p>
-                            <p className="font-bold text-blue-800 font-mono">{c.cotasVagas.toLocaleString('pt-BR')}</p>
-                          </div>
-                        )}
-                        {MEDIA_LANCES_GRUPOS[c.grupo] !== undefined ? (
-                          <div>
-                            <p className="text-[9px] font-bold text-green-600 uppercase">Média Lance</p>
-                            <p className="font-bold text-green-800 font-mono">{MEDIA_LANCES_GRUPOS[c.grupo].toFixed(2)}%</p>
-                          </div>
-                        ) : c.prazoRestante ? (
-                          <div>
-                            <p className="text-[9px] font-bold text-slate-500 uppercase">Prazo Restante</p>
-                            <p className="font-semibold text-slate-800 font-mono">{c.prazoRestante}m</p>
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div className="text-xs space-y-2 pt-1 border-t border-slate-50">
-                        <div>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Ordem de Contemplação</p>
-                          <p className="text-foreground leading-relaxed italic">{c.ordemContemplacao}</p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Regras de Lance & Diluição</p>
-                          <p className="text-foreground leading-relaxed">{c.opcaoDiluir}</p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Regra de Reajuste Anual</p>
-                          <p className="text-foreground leading-relaxed">{c.regraReajuste}</p>
-                        </div>
-                      </div>
-
-                      {contemResolucao285 && (
-                        <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-amber-800 font-bold leading-relaxed">
-                          ⚠️ DEVIDO À RESOLUÇÃO 285, O GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA.
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                {/* Características do grupo ocultas conforme orientação comercial */}
               </div>
 
               </div> {/* FIM COLUNA ESQUERDA */}
@@ -1187,56 +1119,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
                     )}
                   </div>
 
-                  {/* Características do Grupo */}
-                  {(() => {
-                    const c = GRUPO_CARACTERISTICAS[resultado.grupo];
-                    if (!c) return null;
-                    const contemResolucao285 = c.caracteristicas.includes("RESOLUÇAO 285") || c.caracteristicas.includes("RESOLUÇÃO 285");
-                    return (
-                      <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50 text-left space-y-3">
-                        <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
-                          <span className="text-xs font-black uppercase tracking-wider text-[#0f2044] flex items-center gap-1.5">
-                            <span>⚙️</span> Características do Grupo {c.grupo}
-                          </span>
-                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                            Reajuste: {c.reajuste}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase">1ª Assembleia</p>
-                            <p className="font-semibold text-foreground">{c.primeiraAssembleia}</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Próxima Assembleia</p>
-                            <p className="font-semibold text-foreground">{c.proximaAssembleia}</p>
-                          </div>
-                        </div>
-
-                        <div className="text-xs space-y-2 pt-1 border-t border-slate-100">
-                          <div>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Ordem de Contemplação</p>
-                            <p className="text-foreground leading-relaxed italic">{c.ordemContemplacao}</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Regras de Lance & Diluição</p>
-                            <p className="text-foreground leading-relaxed">{c.opcaoDiluir}</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Regra de Reajuste Anual</p>
-                            <p className="text-foreground leading-relaxed">{c.regraReajuste}</p>
-                          </div>
-                        </div>
-
-                        {contemResolucao285 && (
-                          <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-amber-800 font-bold leading-relaxed">
-                            ⚠️ DEVIDO À RESOLUÇÃO 285, O GRUPO NÃO PERMITE TROCA DA DATA DA 1ª ASSEMBLEIA.
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  {/* Características do grupo ocultas conforme orientação comercial */}
 
                   {(lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) && (
                     <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
