@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import { VitrineOfertasMagalu } from "@/components/VitrineOfertasMagalu";
 import HowItWorks from "@/components/HowItWorks";
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
@@ -92,12 +93,15 @@ const Index = () => {
         <Hero onSimulateSubmit={handleSimulateSubmit} />
       </div>
 
-      {/* 2ª SEÇÃO - Como Funciona em 3 Passos Simples */}
+      {/* 2ª SEÇÃO - Vitrine de Conquistas Magalu (Cardápio das Maiores Ofertas) */}
+      <VitrineOfertasMagalu />
+
+      {/* 3ª SEÇÃO - Como Funciona em 3 Passos Simples */}
       <div className="bg-[#070D19] border-t border-b border-white/10">
         <HowItWorks />
       </div>
 
-      {/* 3ª SEÇÃO - Depoimentos de Clientes Contemplados */}
+      {/* 4ª SEÇÃO - Depoimentos de Clientes Contemplados */}
       <Testimonials />
 
       {/* Footer */}
