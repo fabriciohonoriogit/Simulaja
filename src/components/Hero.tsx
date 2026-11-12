@@ -100,7 +100,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
                   <span className="text-xs font-black uppercase tracking-wider text-white">
-                    Simulador Especialista 50/50
+                    Simulador Especialista
                   </span>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
