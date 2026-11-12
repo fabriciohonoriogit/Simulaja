@@ -382,17 +382,17 @@ export default function Indicacoes() {
         
         {/* Logo Section */}
         <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
             <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
             <div className="absolute w-[220%] h-[70%] border border-blue-400/40 rounded-[100%] animate-orbit-1" />
             <div className="absolute w-[220%] h-[70%] border border-green-400/30 rounded-[100%] animate-orbit-2" />
             <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-orbit-3" />
-            <img src="/icon-512.webp" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
+            <img src="/icon-512.webp" alt="Logo Contemplar" className="h-11 sm:h-13 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10" />
           </div>
 
           <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
-            <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
-            <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">ÁREA DO PARCEIRO</span>
+            <span className="text-lg sm:text-xl font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
+            <span className="text-xs sm:text-sm font-bold tracking-[0.35em] text-[#84CC16] -mt-0.5 ml-1 drop-shadow-md">ÁREA DO PARCEIRO</span>
             {isBF && (
               <span className="text-[10px] sm:text-xs font-black tracking-widest text-cyan-300 uppercase mt-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 shadow-[0_0_15px_rgba(0,229,255,0.3)] animate-pulse">
                 ✨ {campaignTheme.badgeText.toUpperCase()}

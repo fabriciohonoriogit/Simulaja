@@ -459,7 +459,7 @@ export default function Simulador() {
         
         {/* Logo Section with Atom Rings */}
         <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
             {/* Core Glow */}
             <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
             
@@ -469,12 +469,12 @@ export default function Simulador() {
             <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-orbit-3" />
 
             {/* Logo Image */}
-            <img src="/icon-512.webp" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
+            <img src="/icon-512.webp" alt="Logo Contemplar" className="h-11 sm:h-13 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10" />
           </div>
 
           <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
-            <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
-            <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
+            <span className="text-lg sm:text-xl font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
+            <span className="text-xs sm:text-sm font-bold tracking-[0.35em] text-[#84CC16] -mt-0.5 ml-1 drop-shadow-md">SIMULADOR</span>
           </div>
           
           <p className="text-slate-200 text-[12px] sm:text-[13px] mt-3 font-medium text-center leading-relaxed max-w-[300px] relative z-10 drop-shadow-md">
@@ -735,7 +735,7 @@ export default function Simulador() {
               <div className="mb-4 p-3 bg-white border border-slate-200 rounded-xl shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                    {isBF ? "🔥 Campanha Oficial Black das Blacks" : "🎁 Arte Dia dos Pais (Consórcio Magalu)"}
+                    {isBF ? "🔥 Campanha Black das Blacks" : "🎁 Arte Dia dos Pais (Consórcio Magalu)"}
                   </span>
                   <span className="text-[10px] text-slate-400 font-medium">{isBF ? "Válido até 30/11" : "Variação da Foto"}</span>
                 </div>

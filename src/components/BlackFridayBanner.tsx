@@ -76,7 +76,7 @@ export const BlackFridayBanner: React.FC<BlackFridayBannerProps> = ({
               <div
                 onClick={() => setShowPosterModal(true)}
                 className="cursor-pointer group relative shrink-0 rounded-xl overflow-hidden border border-cyan-400/50 shadow-[0_0_15px_rgba(0,229,255,0.3)] transition-transform hover:scale-105 active:scale-95"
-                title="Ver cartaz oficial Black das Blacks"
+                title="Ver cartaz Black das Blacks"
               >
                 <img
                   src="/black-das-blacks.jpg"
@@ -109,7 +109,7 @@ export const BlackFridayBanner: React.FC<BlackFridayBannerProps> = ({
               </h2>
 
               <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1 leading-snug max-w-xl">
-                Simulador operando com as <strong className="text-cyan-300 font-bold">menores parcelas oficiais do ano</strong> (Promocional, 50/50, Linear e Golden).
+                Simulador operando com as <strong className="text-cyan-300 font-bold">menores parcelas do ano</strong> (Promocional, 50/50, Linear e Golden).
               </p>
             </div>
           </div>
@@ -174,7 +174,7 @@ export const BlackFridayBanner: React.FC<BlackFridayBannerProps> = ({
               className="w-full h-auto object-contain max-h-[80vh]"
             />
             <div className="p-3 text-center bg-slate-950 border-t border-cyan-500/30">
-              <p className="text-xs font-bold text-cyan-300">Consórcio Magalu · Campanha Oficial Black das Blacks</p>
+              <p className="text-xs font-bold text-cyan-300">Consórcio Magalu · Campanha Black das Blacks</p>
               <p className="text-[10px] text-slate-400">Condições promocionais válidas até 30 de Novembro de 2026</p>
             </div>
           </div>

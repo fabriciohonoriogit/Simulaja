@@ -60,7 +60,7 @@ const THEMES: Record<CampaignThemeId, CampaignThemeConfig> = {
   black_friday: {
     id: "black_friday",
     name: "Black das Blacks Consórcio Magalu",
-    badgeText: "Black das Blacks Magalu Oficial",
+    badgeText: "Black das Blacks Consórcio Magalu",
     subBadgeText: "Condições Exclusivas de Novembro • Meia Parcela Garantida",
     headlineHighlight: "Black das Blacks",
     primaryColor: "#0086FF", // Azul Magalu
@@ -70,14 +70,14 @@ const THEMES: Record<CampaignThemeId, CampaignThemeConfig> = {
     borderClass: "border-cyan-400/50 hover:border-amber-400/70",
     cardBgClass: "bg-[#070D19]/95 backdrop-blur-2xl border border-cyan-500/30",
     badgeBgClass: "bg-gradient-to-r from-blue-600 via-cyan-500 to-amber-500 text-slate-950",
-    countdownLabel: "Encerramento Oficial da Black",
+    countdownLabel: "Encerramento da Black",
     expiryDate: new Date(new Date().getFullYear(), 10, 30, 23, 59, 59),
   },
 
   natal: {
     id: "natal",
     name: "Natal de Conquistas Consórcio Magalu",
-    badgeText: "Natal de Conquistas Magalu Oficial",
+    badgeText: "Natal de Conquistas Consórcio Magalu",
     subBadgeText: "Seu Maior Presente para 2027 • Comece o Ano Sem Juros",
     headlineHighlight: "Natal de Conquistas",
     primaryColor: "#FFD700", // Dourado Nobre
@@ -94,7 +94,7 @@ const THEMES: Record<CampaignThemeId, CampaignThemeConfig> = {
   magalu_future: {
     id: "magalu_future",
     name: "Consórcio Magalu Futurista",
-    badgeText: "Consórcio Magalu Oficial",
+    badgeText: "Consórcio Magalu",
     subBadgeText: "Planejamento Patrimonial Inteligente • Metodologia 50/50",
     headlineHighlight: "Sem Juros Bancários",
     primaryColor: "#0086FF",

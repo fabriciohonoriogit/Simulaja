@@ -22,7 +22,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
       <BlueParticlesBackground />
 
       <div className="container max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* SELO DE AUTORIDADE OFICIAL MAGALU NO TOPO */}
+        {/* SELO DE AUTORIDADE GESTOR AUTORIZADO NO TOPO */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-white/10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/40 text-blue-300 text-xs font-black tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(0,134,255,0.25)]">
             <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
@@ -100,7 +100,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
                   <span className="text-xs font-black uppercase tracking-wider text-white">
-                    Simulador Oficial Magalu 50/50
+                    Simulador Especialista 50/50
                   </span>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">

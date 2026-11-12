@@ -227,7 +227,7 @@ export const BannerGenerator = forwardRef<HTMLDivElement, BannerGeneratorProps>(
                 Consultor Autorizado: {consultorNome} · WhatsApp: {consultorTelefone}
               </p>
               <p className="text-[20px] font-black tracking-widest text-[#00E5FF] uppercase">
-                Assembleia Oficial 25/11/2026 · Válido até 30/11
+                Assembleia 25/11/2026 · Válido até 30/11
               </p>
               <p className="text-[12px] text-slate-400 leading-tight max-w-[920px] mt-1 text-center font-normal">
                 *Ofertas Black das Blacks Consórcio Magalu com taxa de administração reduzida promocional válida enquanto houver vagas disponíveis nos grupos. Sujeito a alteração conforme regras da administradora. Ouvidoria: 0800 340 1214.

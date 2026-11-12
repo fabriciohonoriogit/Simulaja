@@ -562,37 +562,44 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
           <JarvisOrb state="idle" />
       </div>
 
-      <section id="simulator" className="relative z-10 flex-1 py-12">
+      <section id="simulator" className={`relative z-10 flex-1 ${compact ? "py-1 sm:py-2" : "py-6 sm:py-8"}`}>
         <div className={`container mx-auto px-4 flex flex-col items-center ${isInternal ? 'max-w-5xl' : 'max-w-2xl sm:max-w-3xl lg:max-w-4xl'}`}>
           
-          <div className="relative flex flex-col items-center mb-6 animate-breathe w-full">
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+          <div className={`relative flex flex-col items-center ${compact ? "mb-2" : "mb-4"} animate-breathe w-full`}>
+            <div className={`relative ${compact ? "w-10 h-10 sm:w-12 sm:h-12" : "w-14 h-14 sm:w-16 sm:h-16"} flex items-center justify-center`}>
               {/* Core Glow */}
-              <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-150" />
+              <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full scale-125" />
               
               {/* CSS Orbit Rings (Atoms) */}
-              <div className="absolute w-[220%] h-[70%] border border-blue-400/40 rounded-[100%] animate-[spin_10s_linear_infinite]" />
-              <div className="absolute w-[220%] h-[70%] border border-green-400/30 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
-              <div className="absolute w-[220%] h-[70%] border border-blue-400/20 rounded-[100%] animate-[spin_20s_linear_infinite]" />
+              <div className="absolute w-[180%] h-[65%] border border-blue-400/35 rounded-[100%] animate-[spin_10s_linear_infinite]" />
+              <div className="absolute w-[180%] h-[65%] border border-green-400/25 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
 
               {/* Logo Image */}
-              <img src="/icon-512.webp" alt="Logo Contemplar" className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10" />
+              <img 
+                src="/icon-512.webp" 
+                alt="Logo Contemplar" 
+                className={`${compact ? "h-8 sm:h-9" : "h-11 sm:h-13"} w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10`} 
+              />
             </div>
 
-            <div className="flex flex-col items-center leading-tight mt-6 relative z-10">
-              <span className="text-[28px] sm:text-[32px] font-black tracking-widest text-white uppercase drop-shadow-lg">CONTEMPLAR</span>
-              <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">SIMULADOR</span>
+            <div className={`flex flex-col items-center leading-tight ${compact ? "mt-1" : "mt-2"} relative z-10`}>
+              <span className={`${compact ? "text-sm sm:text-base tracking-wider" : "text-lg sm:text-xl tracking-widest"} font-black text-white uppercase drop-shadow-lg`}>
+                CONTEMPLAR
+              </span>
+              <span className={`${compact ? "text-[8px] sm:text-[9px] tracking-[0.3em]" : "text-[11px] sm:text-xs tracking-[0.35em]"} font-bold text-[#84CC16] -mt-0.5 ml-1 drop-shadow-md`}>
+                SIMULADOR
+              </span>
             </div>
           </div>
 
-          {isBF && (
+          {isBF && !compact && (
             <BlackFridayBanner className="w-full mb-6" />
           )}
 
           <div ref={simulatorRef} className={`w-full bg-white rounded-[22px] shadow-[0_0_35px_rgba(0,134,255,0.25)] relative z-10 border-2 border-cyan-400/50 ${compact ? "p-3 sm:p-5" : "p-5 sm:p-8"}`}>
             {compact && isBF && (
               <div className="mb-3 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600/20 via-cyan-500/20 to-amber-500/20 border border-cyan-400/40 flex items-center justify-between text-[11px] font-black uppercase text-cyan-800">
-                <span>🔥 Black das Blacks Magalu Oficial</span>
+                <span>🔥 Black das Blacks Consórcio Magalu</span>
                 <span className="text-amber-600 font-mono">50/50 Ativo</span>
               </div>
             )}

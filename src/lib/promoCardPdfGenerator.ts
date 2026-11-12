@@ -177,7 +177,7 @@ export const generatePromoCardPDF = (data: PromoCardPdfData): jsPDF => {
   doc.setFontSize(8.5);
   doc.setTextColor(0, 229, 255);
   doc.text(
-    `SEGMENTO: ${data.segmento.toUpperCase()}  |  GRUPO: ${data.grupo}  |  STATUS: ATIVO & OFICIAL MAGALU`,
+    `SEGMENTO: ${data.segmento.toUpperCase()}  |  GRUPO: ${data.grupo}  |  STATUS: ATIVO & REGULAMENTADO`,
     W / 2,
     curY + 10.5,
     { align: "center" }

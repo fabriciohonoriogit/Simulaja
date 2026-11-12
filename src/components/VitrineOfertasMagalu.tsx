@@ -137,7 +137,7 @@ export function VitrineOfertasMagalu() {
           </h2>
 
           <p className="text-slate-300 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
-            Valores reais calculados com a metodologia oficial de <strong>50% de parcela até a contemplação</strong>. Toque em qualquer oferta para simular na hora:
+            Valores reais calculados com a metodologia de <strong>50% de parcela até a contemplação</strong>. Toque em qualquer oferta para simular na hora:
           </p>
         </div>
 
