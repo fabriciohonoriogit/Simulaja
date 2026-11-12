@@ -345,7 +345,7 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
           toast.info("💡 Você pode tentar abrir diretamente no WhatsApp Web clicando no ícone do WhatsApp.", { duration: 5000 });
         }
       } else {
-        const providerLabel = waStatus?.provider === "waha" ? "WAHA" : "Evolution API";
+        const providerLabel = "WAHA";
         toast.success(`🟢 Mensagem enviada direto pelo CRM via ${providerLabel}!`);
       }
     }
@@ -412,14 +412,12 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
             className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border transition-all flex items-center gap-1.5 ${
               waMode === "waha"
                 ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
-                : waMode === "evolution"
-                ? "bg-indigo-600 text-white border-indigo-700 shadow-sm"
                 : "bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border-slate-300 dark:border-zinc-700"
             }`}
             title="Clique para alternar entre Envio Direto (WAHA) e WhatsApp Direto (wa.me)"
           >
             <Zap className="h-3 w-3" />
-            {waMode === "waha" ? "🚀 Envio Direto (WAHA)" : waMode === "evolution" ? "⚡ Evolution API" : "📱 Whats Direto (wa.me)"}
+            {waMode === "waha" ? "🚀 Envio Direto (WAHA)" : "📱 Whats Direto (wa.me)"}
           </button>
 
           {/* Botão de Disparo Direto no wa.me */}
@@ -785,13 +783,13 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
             </Button>
           )}
 
-          {/* Botão de Envio Principal (Evolution API ou Modo Atual) */}
+          {/* Botão de Envio Principal (WAHA ou WhatsApp Direto) */}
           <Button 
             type="submit" 
             size="icon" 
             className="rounded-2xl h-11 w-11 shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
             disabled={!newMessage.trim() || sending}
-            title={waMode === "waha" ? "Enviar direto pelo CRM (WAHA)" : waMode === "evolution" ? "Enviar via Evolution API" : "Abrir no WhatsApp Web / wa.me"}
+            title={waMode === "waha" ? "Enviar direto pelo CRM (WAHA)" : "Abrir no WhatsApp Web / wa.me"}
           >
             {sending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>

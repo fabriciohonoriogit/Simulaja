@@ -35,7 +35,7 @@ export {
   type WahaSendFileParams,
 };
 
-export type WhatsAppMode = "waha" | "web" | "evolution";
+export type WhatsAppMode = "waha" | "web";
 
 export interface EvolutionConfig {
   apiUrl: string;
@@ -44,20 +44,13 @@ export interface EvolutionConfig {
 }
 
 export const getWhatsAppMode = (): WhatsAppMode => {
-  if (typeof window === "undefined") return "web";
-  const saved = localStorage.getItem("whatsapp_mode") as WhatsAppMode;
-  if (saved === "waha" || saved === "web") {
-    return saved;
+  if (typeof window === "undefined") return "waha";
+  const saved = localStorage.getItem("whatsapp_mode");
+  if (saved === "web") {
+    return "web";
   }
-  // Se estava salvo como evolution, migra automaticamente para waha ou web se evolution nao tiver servidor publico
-  if (saved === "evolution") {
-    if (isEvolutionConfigured()) return "evolution";
-    return isWahaConfigured() ? "waha" : "web";
-  }
-  // Se o WAHA estiver configurado, adota WAHA por padrão para envio direto no CRM
-  if (isWahaConfigured()) return "waha";
-  // Padrão seguro universal sem servidor: WhatsApp Direto (wa.me)
-  return "web";
+  // Padrão oficial: WAHA (Servidor local WhatsApp)
+  return "waha";
 };
 
 export const saveWhatsAppMode = (mode: WhatsAppMode) => {
