@@ -42,11 +42,11 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
           </div>
         </div>
 
-        {/* HERO EM 2 COLUNAS: ESQUERDA (PLANETA HOLOGRÁFICO DOS ATIVOS) | DIREITA (SIMULADOR IMEDIATO) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+        {/* HERO EM 2 COLUNAS ALINHADAS NO TOPO: ESQUERDA (HEADLINE & ATIVOS) | DIREITA (SIMULADOR IMEDIATO) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           
-          {/* COLUNA ESQUERDA: HEADLINE & PLANETA HOLOGRÁFICO (Carros, Motos, Casas, Pesados) */}
-          <div className="lg:col-span-6 flex flex-col justify-center space-y-5">
+          {/* COLUNA ESQUERDA: HEADLINE & SHOWCASE DOS ATIVOS */}
+          <div className="lg:col-span-6 flex flex-col justify-start space-y-5 pt-1">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/40 text-amber-300 text-xs font-black uppercase tracking-wider mb-3">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -65,8 +65,8 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
               </p>
             </div>
 
-            {/* PLANETA HOLOGRÁFICO DOS ATIVOS (CARROS, CASAS, MOTOS, PESADOS) */}
-            <div className="relative py-2">
+            {/* SHOWCASE DOS ATIVOS (CARROS, CASAS, MOTOS, PESADOS) */}
+            <div className="relative">
               <OrbitalAssetShowcase />
             </div>
 
@@ -90,7 +90,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
           </div>
 
           {/* COLUNA DIREITA: O SIMULADOR NO TOPO (AÇÃO IMEDIATA) */}
-          <div className="lg:col-span-6 flex flex-col justify-center relative">
+          <div className="lg:col-span-6 flex flex-col justify-start relative pt-1">
             {/* Efeito Glow atrás do simulador */}
             <div className="absolute -inset-1.5 bg-gradient-to-r from-blue-600 via-cyan-500 to-amber-500 rounded-3xl blur-xl opacity-30 pointer-events-none" />
 

@@ -49,6 +49,7 @@ const AppContent = () => {
   const isAdmin = location.pathname.startsWith("/admin");
   const isIndicacoes = location.pathname.startsWith("/indicacoes") || location.pathname.startsWith("/parceiro");
   const isPreCadastro = location.pathname.startsWith("/pre-cadastro");
+  const isLandingPage = location.pathname === "/" || location.pathname === "/home";
 
   return (
     <>
@@ -102,7 +103,7 @@ const AppContent = () => {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!isAdmin && !isPreCadastro && <AIChatbot />}
+      {!isAdmin && !isPreCadastro && !isLandingPage && <AIChatbot />}
     </>
   );
 };

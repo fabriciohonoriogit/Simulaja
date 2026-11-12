@@ -96,10 +96,8 @@ const Index = () => {
       {/* 2ª SEÇÃO - Vitrine de Conquistas Magalu (Cardápio das Maiores Ofertas) */}
       <VitrineOfertasMagalu />
 
-      {/* 3ª SEÇÃO - Como Funciona em 3 Passos Simples */}
-      <div className="bg-[#070D19] border-t border-b border-white/10">
-        <HowItWorks />
-      </div>
+      {/* 3ª SEÇÃO - Como Funciona em 4 Etapas Simples */}
+      <HowItWorks />
 
       {/* 4ª SEÇÃO - Depoimentos de Clientes Contemplados */}
       <Testimonials />
