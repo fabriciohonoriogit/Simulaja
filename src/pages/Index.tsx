@@ -1,20 +1,12 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import SegmentCards from "@/components/SegmentCards";
-import ConsortiumSimulator from "@/components/ConsortiumSimulator";
 import HowItWorks from "@/components/HowItWorks";
 import Testimonials from "@/components/Testimonials";
-import FaqAccordion from "@/components/FaqAccordion";
-import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import { StickySimulatorCTA } from "@/components/StickySimulatorCTA";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Clock, ShieldCheck } from "lucide-react";
-import { BlueParticlesBackground } from "@/components/BlueParticlesBackground";
-
-import { MagaluGalleryCarousel } from "@/components/MagaluGalleryCarousel";
 import { BlackFridayBanner } from "@/components/BlackFridayBanner";
 import { isBlackFridayActive } from "@/utils/blackFridayTheme";
 
@@ -32,7 +24,7 @@ const Index = () => {
   }, []);
 
   const handleSimulateSubmit = async (leadData: any) => {
-    const { nome, celular, categoriaLabel, credito, prazo, r50, leadScoreValor } = leadData;
+    const { nome, celular, categoriaLabel, credito, prazo, leadScoreValor } = leadData;
     
     const fmt = (v: number) =>
       v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -90,63 +82,22 @@ const Index = () => {
   };
 
   return (
-    <main className="min-h-screen bg-white text-slate-900 selection:bg-amber-100 selection:text-[#B8860B]">
+    <main className="min-h-screen bg-[#050814] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
       {isBlackFridayActive() && <BlackFridayBanner compact={true} className="sticky top-0 z-50" />}
       <StickySimulatorCTA />
       <Header />
 
-      {/* 1ª DOBRA - Hero (Clean Light) */}
-      <Hero />
-
-      {/* 2ª SEÇÃO - SIMULADOR INTELIGENTE (Fundo Azul Tech com Partículas e Container Estendido) */}
+      {/* 1ª DOBRA - Hero Futurista Magalu com Planeta Holográfico e Simulador à Direita */}
       <div id="simulator" className="scroll-mt-20">
-        <section className="py-24 bg-[#070D19] text-white relative overflow-hidden border-t border-b border-slate-800">
-          
-          {/* Partículas Animadas Reluzentes */}
-          <BlueParticlesBackground />
-
-          <div className="container max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            
-            {/* Header Acima do Simulador */}
-            <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-                <Sparkles className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
-                <span>{isBlackFridayActive() ? "Black das Blacks Magalu · Simulador Oficial" : "Simulador Inteligente"}</span>
-              </div>
-
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
-                Descubra a melhor estratégia para o <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">seu objetivo</span>
-              </h2>
-
-              <p className="text-slate-300 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto">
-                Leva menos de 30 segundos para montar sua estratégia personalizada.
-              </p>
-
-              <div className="pt-2 flex items-center justify-center gap-6 text-xs text-slate-300 font-bold">
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-amber-400" />
-                  Rápido & Prático
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  100% Seguro
-                </span>
-              </div>
-            </div>
-
-            {/* Componente do Simulador (Sem moldura externa, 100% fluído) */}
-            <div className="w-full relative z-10">
-              <ConsortiumSimulator onSimulateSubmit={handleSimulateSubmit} />
-            </div>
-
-          </div>
-        </section>
+        <Hero onSimulateSubmit={handleSimulateSubmit} />
       </div>
 
-      {/* 3ª SEÇÃO - Como Funciona (4 Etapas Clean) */}
-      <HowItWorks />
+      {/* 2ª SEÇÃO - Como Funciona em 3 Passos Simples */}
+      <div className="bg-[#070D19] border-t border-b border-white/10">
+        <HowItWorks />
+      </div>
 
-      {/* 4ª SEÇÃO - Depoimentos (Clean) */}
+      {/* 3ª SEÇÃO - Depoimentos de Clientes Contemplados */}
       <Testimonials />
 
       {/* Footer */}

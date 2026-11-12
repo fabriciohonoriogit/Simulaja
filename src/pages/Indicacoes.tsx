@@ -18,6 +18,7 @@ import { GRUPOS, CATEGORIAS, GrupoItem } from "@/constants/simulador";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
 import { BlackFridayBanner } from "@/components/BlackFridayBanner";
 import { isBlackFridayActive } from "@/utils/blackFridayTheme";
+import { getActiveCampaignTheme } from "@/utils/campaignThemeManager";
 import { generatePromoCardPDF } from "@/lib/promoCardPdfGenerator";
 
 const customAnimations = `
@@ -99,6 +100,7 @@ type HistItem = {
 
 export default function Indicacoes() {
   const isBF = isBlackFridayActive();
+  const campaignTheme = getActiveCampaignTheme();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const orgParam = searchParams.get("org") || searchParams.get("organizacao_id") || undefined;
@@ -393,7 +395,7 @@ export default function Indicacoes() {
             <span className="text-[18px] sm:text-[20px] font-bold tracking-[0.4em] text-[#84CC16] -mt-1 ml-2 drop-shadow-md">ÁREA DO PARCEIRO</span>
             {isBF && (
               <span className="text-[10px] sm:text-xs font-black tracking-widest text-cyan-300 uppercase mt-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 shadow-[0_0_15px_rgba(0,229,255,0.3)] animate-pulse">
-                🔥 EDIÇÃO BLACK DAS BLACKS MAGALU
+                ✨ {campaignTheme.badgeText.toUpperCase()}
               </span>
             )}
           </div>
@@ -406,7 +408,7 @@ export default function Indicacoes() {
         {isBF && <BlackFridayBanner className="w-full mb-6" />}
 
         {/* Card Principal */}
-        <div className="w-full bg-white rounded-[20px] shadow-[0_0_40px_rgba(0,0,0,0.3)] p-6 sm:p-8 relative z-10 border border-white/10">
+        <div className="w-full bg-white rounded-[24px] shadow-[0_0_40px_rgba(0,134,255,0.25)] p-6 sm:p-8 relative z-10 border-2 border-cyan-400/50">
           
           {/* Partner identification */}
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-6">

@@ -32,6 +32,7 @@ import { SimulacaoData } from "@/schemas/simulacao";
 import { BannerGenerator } from "@/components/BannerGenerator";
 import { BlackFridayBanner } from "@/components/BlackFridayBanner";
 import { isBlackFridayActive } from "@/utils/blackFridayTheme";
+import { getActiveCampaignTheme } from "@/utils/campaignThemeManager";
 import { generatePromoCardPDF } from "@/lib/promoCardPdfGenerator";
 import { NotebookLMPresentation } from "@/components/NotebookLMPresentation";
 import { VoicePodcastModal } from "@/components/admin/VoicePodcastModal";
@@ -128,6 +129,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
   const historicoZustand = useSimuladorStore((state) => state.historico) || [];
   const [searchParams] = useSearchParams();
   const isBF = isBlackFridayActive();
+  const campaignTheme = getActiveCampaignTheme();
 
   const dynamicCategorias = overrideConfig?.categorias || hookCategorias;
   const dynamicGrupos = overrideConfig?.grupos || hookGrupos;
@@ -587,7 +589,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, onSimulateSubmit }: C
             <BlackFridayBanner className="w-full mb-6" />
           )}
 
-          <div ref={simulatorRef} className="w-full bg-white rounded-[24px] shadow-2xl p-5 sm:p-8 relative z-10 border border-white/10">
+          <div ref={simulatorRef} className="w-full bg-white rounded-[24px] shadow-[0_0_35px_rgba(0,134,255,0.25)] p-5 sm:p-8 relative z-10 border-2 border-cyan-400/50">
             <div className={isInternal ? "grid grid-cols-1 md:grid-cols-2 gap-8" : ""}>
               
               {/* ESQUERDA: Controles da Simulação */}
