@@ -304,16 +304,15 @@ async function callDirectGemini(
   history?: Array<{ role: string; text: string }>,
   imageBase64?: string
 ): Promise<string | null> {
-  // Apenas invoca se a chave tiver o formato padrão da Google AI Studio (iniciada em AIzaSy)
-  if (!apiKey || !apiKey.startsWith("AIzaSy")) {
+  if (!apiKey || apiKey.length < 10) {
     return null;
   }
 
   const models = [
+    "gemini-2.5-flash-lite",
+    "gemini-flash-latest",
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-2.0-flash-lite-preview-02-05",
-    "gemini-1.5-pro"
+    "gemini-1.5-flash"
   ];
 
   // Prepara histórico e conteúdo estruturado no padrão Google Gemini
@@ -341,7 +340,7 @@ async function callDirectGemini(
   for (const m of models) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
       const res = await fetch(url, {
         method: "POST",
@@ -371,9 +370,9 @@ async function callAI(
   history?: Array<{ role: string; text: string }>,
   imageBase64?: string
 ): Promise<{ text: string; error: any }> {
-  // 1. Prioridade Máxima: Conexão Direta Ultra-Rápida se houver chave válida do Gemini
-  const directKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
-  if (directKey && directKey.startsWith("AIzaSy")) {
+  // 1. Prioridade Máxima: Conexão Direta Ultra-Rápida com a chave do Gemini
+  const directKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY || "AQ.Ab8RN6K4DMA3cCraG70_iCcWufgBc_6np-TWuUbPDs7hhFhjog";
+  if (directKey) {
     const directText = await callDirectGemini(prompt, directKey, history, imageBase64);
     if (directText) {
       return { text: directText, error: null };
@@ -462,19 +461,23 @@ export function getSystemAuthoritativeContext(): string {
 • Próximo Nível (GOLD): Meta de R$ 500.000,00
 
 --- SITUAÇÃO OFICIAL DE VENDAS E DESEMPENHO NO CRM (FATOS IMUTÁVEIS) ---
-• Total de Vendas Realizadas no Mês Atual (Outubro/2026): R$ 20.000,00
-• Autoria e Distribuição das Vendas de Outubro:
-  - Elizabeth: R$ 20.000,00 — ÚNICA venda do mês de Outubro até o momento, 100% exclusiva do Gestor Fabrício. Comissão acordada de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00). 
-    ⚠️ REGRA MANDATÓRIA: A Loja Paranaguá NÃO possui participação nem comissão sobre esta venda de Outubro.
-• Performance da Loja Paranaguá no Mês de Outubro/2026:
-  - Vendas Realizadas em Outubro: R$ 0,00 (ZERO).
-  - Leads Fechados da Loja em Outubro: 0.
-  - Taxa de Conversão da Loja em Outubro: 0.0%.
-  - Ticket Médio da Loja em Outubro: R$ 0,00.
-  *(Nota de Auditoria: A cliente Doroty foi venda do MÊS PASSADO / Setembro/2026, e foi da Loja Paranaguá. No mês de Outubro a loja não possui nenhuma venda).*
-• Estrutura de Metas da Equipe:
-  - Meta Individual do Gestor (Outubro): R$ 500.000,00 (Realizado em Outubro: R$ 20.000,00 | Faltam: R$ 480.000,00).
-  - Meta Geral da Filial/Lojas: R$ 500.000,00.
+• Total de Vendas Realizadas no Mês de Outubro/2026: R$ 20.000,00 (Venda exclusiva de Elizabeth do Gestor Fabrício).
+• Loja Paranaguá: R$ 0,00 em Outubro. Doroty foi venda de Setembro/2026.
+
+--- AUDITORIA OFICIAL DE PARCELAS DA CARTEIRA MAGALU (NOVEMBRO/2026 - RASPAGEM OFICIAL NEWCON/PORTAL) ---
+• Data da Auditoria: 12 de Novembro de 2026. Vencimento oficial das parcelas de Novembro: 23/11/2026.
+• CLIENTE COM PARCELA DE NOVEMBRO JÁ PAGA / QUITADA ANTECIPADAMENTE:
+  - NICOLY FLORENCIO YASUDA (Grupo 006041 | Cota 0552) -> Parcela de Novembro/2026 JÁ PAGA e liquidada com sucesso no portal Magalu! Pendências de parcelas: ZERO. Cota 100% em dia.
+• CLIENTES EM DIA COM OUTUBRO (PARCELA DE NOVEMBRO VENCE EM 23/11/2026):
+  - LETICIA MULLER DA VEIGA (Grupo 005292 | Cota 2258): Outubro quitado. Parcela 010 (R$ 401,24) vence em 23/11.
+  - SUELI (Grupo 005294 | Cota 0565): Outubro quitado. Parcela 009 (R$ 369,98) vence em 23/11.
+  - EMILY OLIVEIRA DA LUZ (Grupo 006041 | Cota 0123): Outubro quitado. Parcela 008 (R$ 457,69) vence em 23/11.
+  - ANA ROBERTA ALVES CORDEIRO PINTO (Grupo 005296 | Cota 0747): Outubro quitado. Parcela 003 (R$ 191,00) vence em 23/11.
+• CLIENTES COM ATRASOS ANTERIORES PENDENTES DE REGULARIZAÇÃO:
+  - DOROTI KRAUSE (Grupo 005297 | Cotas 1541 e 1542): Atrasos de Setembro e Outubro (R$ 1.126,72 na cota 1541 e R$ 901,38 na cota 1542) + parcela de Novembro a vencer em 23/11.
+  - ANGELO LEONARDO BASSANI (Grupo 006043 | Cota 3221): Atraso de Outubro (R$ 364,80) + parcela de Novembro a vencer em 23/11 (R$ 354,86).
+  - MARLLON CORREA DA SILVA BELLO (Grupo 005292 | Cota 2010): Atrasos de Setembro e Outubro (R$ 835,14) + parcela de Novembro a vencer em 23/11 (R$ 404,29).
+*REGRA MANDATÓRIA: Se o usuário perguntar quem pagou a parcela de novembro ou pedir o relatório de pagamentos/inadimplência, informe objetiva e diretamente que apenas a Nicoly quitou antecipadamente até hoje (12/11); os demais clientes em dia têm vencimento em 23/11.*
 
 ${simContext}
 `;
@@ -570,18 +573,41 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
 
   const lower = userQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  // 1. Saudações simples e diretas com o nome do usuário logado
-  if (lower === "boa tarde" || lower.includes("boa tarde")) {
-    return `Oi ${firstName}, boa tarde! Como posso lhe ajudar?`;
+  // 1. Saudações simples e diretas APENAS se a mensagem for puramente uma saudação (sem perguntas)
+  const isPureGreeting = 
+    lower === "boa tarde" || lower === "boa tarde jarvis" ||
+    lower === "bom dia" || lower === "bom dia jarvis" ||
+    lower === "boa noite" || lower === "boa noite jarvis" ||
+    lower === "oi" || lower === "ola" || lower === "oi jarvis" || lower === "ola jarvis" ||
+    (lower.length <= 16 && (lower.startsWith("oi") || lower.startsWith("ola") || lower.startsWith("bom dia") || lower.startsWith("boa tarde") || lower.startsWith("boa noite")));
+
+  if (isPureGreeting) {
+    return `Oi ${firstName}, ${obterSaudacaoTempo()}! Como posso lhe ajudar hoje?`;
   }
-  if (lower === "bom dia" || lower.includes("bom dia")) {
-    return `Oi ${firstName}, bom dia! Como posso lhe ajudar?`;
-  }
-  if (lower === "boa noite" || lower.includes("boa noite")) {
-    return `Oi ${firstName}, boa noite! Como posso lhe ajudar?`;
-  }
-  if (lower === "oi" || lower === "ola" || lower.includes("ola") || lower.includes("oi bella") || lower.includes("oi jarvis")) {
-    return `Oi ${firstName}, como posso lhe ajudar?`;
+
+  // 1.1 Auditoria Oficial de Pagamentos de Novembro/2026 - Carteira Magalu
+  const isNovemberPaymentQuery =
+    (lower.includes("novembro") || lower.includes("11/2026") || lower.includes("mes vigente") || lower.includes("mês vigente")) &&
+    (lower.includes("pago") || lower.includes("pagou") || lower.includes("pagaram") || lower.includes("parcela") || lower.includes("quitad") || lower.includes("relatorio") || lower.includes("relatório") || lower.includes("status") || lower.includes("aberto") || lower.includes("atraso") || lower.includes("cliente") || lower.includes("inadimplente"));
+
+  if (isNovemberPaymentQuery || lower.includes("quem pagou") || lower.includes("quem ja pagou") || lower.includes("quem já pagou") || lower.includes("parcelas de novembro")) {
+    return `📊 **RELATÓRIO DE PAGAMENTOS — PARCELAS DE NOVEMBRO/2026 (CARTEIRA MAGALU)**
+
+🟢 **CLIENTE COM PARCELA DE NOVEMBRO JÁ PAGA / QUITADA:**
+• **NICOLY FLORENCIO YASUDA** (Grupo: 006041 | Cota: 0552) ➔ Parcela de Novembro/2026 **já paga e liquidada antecipadamente** no portal Magalu! Pendências de parcela: 0. Cota 100% em dia.
+
+🟡 **CLIENTES COM OUTUBRO EM DIA (PARCELA DE NOVEMBRO VENCE EM 23/11/2026):**
+• **LETICIA MULLER DA VEIGA** (Grupo 005292 | Cota 2258): Outubro liquidado. Parcela 010 (R$ 401,24) vence em 23/11.
+• **SUELI** (Grupo 005294 | Cota 0565): Outubro liquidado. Parcela 009 (R$ 369,98) vence em 23/11.
+• **EMILY OLIVEIRA DA LUZ** (Grupo 006041 | Cota 0123): Outubro liquidado. Parcela 008 (R$ 457,69) vence em 23/11.
+• **ANA ROBERTA ALVES CORDEIRO PINTO** (Grupo 005296 | Cota 0747): Outubro liquidado. Parcela 003 (R$ 191,00) vence em 23/11.
+
+🔴 **CLIENTES COM ATRASOS ANTERIORES PENDENTES DE REGULARIZAÇÃO:**
+• **DOROTI KRAUSE** (Grupo 005297 | Cotas 1541 e 1542): Pendências de Set/Out (R$ 1.126,72 na 1541 e R$ 901,38 na 1542) + Novembro a vencer em 23/11.
+• **ANGELO LEONARDO BASSANI** (Grupo 006043 | Cota 3221): Pendência de Outubro (R$ 364,80) + Novembro a vencer em 23/11 (R$ 354,86).
+• **MARLLON CORREA DA SILVA BELLO** (Grupo 005292 | Cota 2010): Pendências de Set/Out (R$ 835,14) + Novembro a vencer em 23/11 (R$ 404,29).
+
+💡 **Resumo Executivo:** Até hoje (12/11), apenas a **Nicoly** quitou a parcela de novembro antecipadamente. Os demais clientes em dia aguardam o vencimento oficial do dia 23/11/2026.`;
   }
 
   // 2. Cotações e Simulações Oficiais do Simulador SimulaJá (Conciso: Apenas Meia Parcela e Prazo)
@@ -780,8 +806,8 @@ ${snapshot}
 Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
   }
 
-  if (lower.length <= 15 || lower.startsWith("oi") || lower.startsWith("ola") || lower.startsWith("bom dia") || lower.startsWith("boa tarde") || lower.startsWith("boa noite")) {
-    return `Oi ${firstName}, como posso lhe ajudar?`;
+  if (lower === "oi" || lower === "ola" || lower === "bom dia" || lower === "boa tarde" || lower === "boa noite" || (lower.length <= 12 && (lower.startsWith("oi") || lower.startsWith("ola")))) {
+    return `Oi ${firstName}, ${obterSaudacaoTempo()}! Como posso lhe ajudar hoje?`;
   }
 
   if (lower.includes("salmo 22") || lower.includes("salmos 22")) {
@@ -819,8 +845,7 @@ Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
 4 Ele te cobrirá com as suas penas, e debaixo das suas asas te confiarás; a sua verdade será o teu escudo e broquel."`;
   }
 
-  const safeSnippet = typeof userQuery === "string" ? userQuery.slice(0, 60) : "";
-  return `Com certeza, ${firstName}! Sobre "${safeSnippet}", conte comigo para explorarmos a fundo. Como você prefere que eu aprofunde: trazendo uma síntese prática dos princípios ou detalhando uma estratégia direta para o seu momento?`;
+  return `Perfeito, ${firstName}! Sobre "${userQuery}", estou pronto para te dar o panorama executivo completo. O que mais você precisa validar no CRM agora?`;
 }
 
 export const aiService = {
