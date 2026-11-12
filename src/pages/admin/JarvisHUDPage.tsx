@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { JarvisOrb, OrbState, OrbEmotion } from "@/components/admin/JarvisOrb";
 import { JarvisSaturnNebula } from "@/components/admin/jarvis-studio/JarvisSaturnNebula";
+import { JarvisMobileAssistant } from "@/components/admin/jarvis/JarvisMobileAssistant";
 import {
   Sparkles,
   Volume2,
@@ -1446,7 +1447,14 @@ gn_prosperaplan@consorciomagalu.com.br`;
   };
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 font-mono p-2 sm:p-3 md:p-3.5 flex flex-col gap-1.5 sm:gap-2.5 select-none relative">
+    <>
+      {/* Visualização Mobile Executiva Nativa (Sem poluição de tela) */}
+      <div className="block lg:hidden h-full">
+        <JarvisMobileAssistant />
+      </div>
+
+      {/* Visualização Desktop HUD Cockpit */}
+      <div className="hidden lg:flex h-[100dvh] max-h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 font-mono p-2 sm:p-3 md:p-3.5 flex-col gap-1.5 sm:gap-2.5 select-none relative">
       {/* Background Tech Image & Neon Grid Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-15 pointer-events-none mix-blend-screen"
@@ -2821,5 +2829,6 @@ gn_prosperaplan@consorciomagalu.com.br`;
         onConnected={() => setWaStatusLive("connected")}
       />
     </div>
+  </>
   );
 }
