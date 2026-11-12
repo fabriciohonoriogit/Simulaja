@@ -46,6 +46,7 @@ import {
 } from "@/services/evolutionApiService";
 import { generateBudgetProposal } from "@/services/proposalService";
 import { formatCurrency, cn } from "@/lib/utils";
+import { JarvisVoiceCloserModal } from "./JarvisVoiceCloserModal";
 
 interface Message {
   id: string;
@@ -132,6 +133,7 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
   const [showTemplates, setShowTemplates] = useState(false);
   const [showAudioHelper, setShowAudioHelper] = useState(false);
   const [waMode, setWaMode] = useState<WhatsAppMode>(() => getWhatsAppMode());
+  const [voiceCloserOpen, setVoiceCloserOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const targetPhone = lead.celular || (lead as any).telefone || "";
@@ -391,6 +393,18 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
 
         {/* BOTOES DE AÇÃO RÁPIDA NO HEADER */}
         <div className="flex items-center gap-2">
+          {/* Botão de Chamada de Voz com Agente Closer IA (Metodologia SRV) */}
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setVoiceCloserOpen(true)}
+            className="h-7 px-2.5 text-[11px] font-black text-white bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 gap-1.5 rounded-lg shadow-sm"
+            title="Ligar com o Jarvis Closer (Metodologia SRV: Sonho -> Realidade -> Viabilidade)"
+          >
+            <Phone className="h-3.5 w-3.5 animate-pulse text-cyan-200" />
+            <span>📞 Ligar Closer SRV</span>
+          </Button>
+
           {/* Alternador de Modo: WAHA vs wa.me Direto */}
           <button
             type="button"
@@ -783,6 +797,13 @@ export function LeadChat({ lead, className }: { lead: Lead; className?: string }
           </Button>
         </form>
       </div>
+
+      {/* MODAL DO AGENTE CLOSER DE VOZ (METODOLOGIA SRV) */}
+      <JarvisVoiceCloserModal
+        open={voiceCloserOpen}
+        onOpenChange={setVoiceCloserOpen}
+        lead={lead}
+      />
     </div>
   );
 }
