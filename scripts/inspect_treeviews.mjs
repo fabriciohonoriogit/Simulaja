@@ -58,3 +58,4 @@ async function inspectSubmenus() {
 }
 
 inspectSubmenus().catch(console.error);
+

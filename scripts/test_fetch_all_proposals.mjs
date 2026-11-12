@@ -61,3 +61,4 @@ async function testFetchAllProposals() {
 }
 
 testFetchAllProposals().catch(console.error);
+

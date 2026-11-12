@@ -53,3 +53,4 @@ console.log(JSON.stringify(cotas.map(c => ({
 const ativas = cotas.filter(c => c.status !== 'C' && c.grupo && c.cota && c.grupo !== '0000');
 console.log(`\nPropostas ATIVAS / ALOCADAS com grupo e cota válidos (${ativas.length}):`);
 console.log(JSON.stringify(ativas.map(a => ({ grupo: a.grupo, cota: a.cota, status: a.status })), null, 2));
+

@@ -50,3 +50,4 @@ async function inspectConsultaPropostas() {
 }
 
 inspectConsultaPropostas().catch(console.error);
+
