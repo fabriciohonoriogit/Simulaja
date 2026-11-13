@@ -1,6 +1,11 @@
 import React from "react";
 import { Sparkles, Flame, CheckCircle2, ArrowRight, ShieldCheck, Heart, Zap } from "lucide-react";
 import { getActiveCampaignTheme } from "@/utils/campaignThemeManager";
+import brightHouse from "@/assets/bright/bright-house.webp";
+import brightCar from "@/assets/bright/bright-car.webp";
+import brightMansion from "@/assets/bright/bright-mansion.webp";
+import brightPickup from "@/assets/bright/bright-pickup.webp";
+import brightMoto from "@/assets/bright/bright-moto.webp";
 
 export interface OfertaConquista {
   id: string;
@@ -25,7 +30,7 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     categoriaLabel: "Imóveis",
     titulo: "Casa Própria & Terreno",
     subtitulo: "Saia do aluguel ou construa a casa da família com escritura própria",
-    imagem: "/images/magalu/bf/bf-imovel.jpg",
+    imagem: brightHouse,
     creditoFormatado: "R$ 150.000,00",
     creditoValor: 150000,
     meiaParcela: "R$ 508,25/mês",
@@ -40,7 +45,7 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     categoriaLabel: "Veículos",
     titulo: "SUV Zero KM ou Sedan",
     subtitulo: "Cheiro de carro novo na garagem com poder de compra à vista na loja",
-    imagem: "/images/magalu/bf/bf-carro.jpg",
+    imagem: brightCar,
     creditoFormatado: "R$ 100.000,00",
     creditoValor: 100000,
     meiaParcela: "R$ 680,00/mês",
@@ -55,7 +60,7 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     categoriaLabel: "Imóveis",
     titulo: "Sobrado Moderno & Alto Padrão",
     subtitulo: "Espaço gourmet, suíte e segurança que a sua família merece",
-    imagem: "/images/magalu/banner_casa_300k.jpg",
+    imagem: brightMansion,
     creditoFormatado: "R$ 300.000,00",
     creditoValor: 300000,
     meiaParcela: "R$ 1.239,00/mês",
@@ -70,7 +75,7 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     categoriaLabel: "Pesados",
     titulo: "Caminhonete 4x4 ou Caminhão",
     subtitulo: "Expansão de frotas e ativos comerciais que geram renda no primeiro mês",
-    imagem: "/images/magalu/bf/bf-caminhonete.jpg",
+    imagem: brightPickup,
     creditoFormatado: "R$ 400.000,00",
     creditoValor: 400000,
     meiaParcela: "R$ 1.950,00/mês",
@@ -85,9 +90,9 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     categoriaLabel: "Motos",
     titulo: "Moto Alta Cilindrada 0km",
     subtitulo: "Liberdade nos finais de semana e agilidade no dia a dia",
-    imagem: "/images/magalu/bf/bf-moto.jpg",
+    imagem: brightMoto,
     creditoFormatado: "R$ 35.000,00",
-    creditoValor: 350000,
+    creditoValor: 35000,
     meiaParcela: "R$ 295,00/mês",
     comparativoFinanciamento: "Menos de R$ 10 ao dia",
     tagDestaque: "⭐ Liberdade Total",
@@ -158,13 +163,14 @@ export function VitrineOfertasMagalu() {
               className="group cursor-pointer rounded-3xl p-3 bg-gradient-to-b from-[#0a1226] to-[#060b18] border border-white/10 hover:border-cyan-400/60 shadow-xl hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 flex flex-col justify-between hover:scale-[1.02] active:scale-[0.98]"
             >
               {/* Imagem Desejável do Bem com Tag de Oferta */}
-              <div className="relative w-full h-40 rounded-2xl overflow-hidden mb-3 bg-slate-950">
+              <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-3 bg-slate-900/30">
                 <img
                   src={oferta.imagem}
                   alt={oferta.titulo}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 brightness-[1.03] contrast-[1.02]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
+                {/* Sutil sombra apenas no rodapé para leitura do prazo */}
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none" />
 
                 {/* Tag de Destaque */}
                 <div className="absolute top-2 left-2 z-10">
