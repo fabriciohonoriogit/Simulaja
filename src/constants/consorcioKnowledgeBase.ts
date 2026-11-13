@@ -64,14 +64,26 @@ export const CONSORCIO_KNOWLEDGE_BASE: ConsorcioKnowledgeTopic[] = [
       "Substituição de Garantia: Ao vender o veículo antigo, o caminhão novo entra no lugar com custo de juros zero.",
       "Benefício Tributário: As parcelas do consórcio podem ser lançadas como despesas operacionais no Lucro Real, gerando abatimento de IRPJ e CSLL."
     ]
+  },
+  {
+    id: "circulares_transferencia_titularidade",
+    title: "Circulares Oficiais Consórcio Magalu: Transferência de Titularidade e Isenção da Taxa",
+    summary: "Normas das Circulares Oficiais nº 02, 10, 19, 23, 29, 37, 46 e 59 sobre cessão de cotas contempladas e não contempladas, isenções de taxa e assinatura GOV.BR.",
+    arguments: [
+      "Cota Não Contemplada: Transferência simplificada por cessão de direitos e obrigações. Cota deve estar rigorosamente em dia. Não há exigência de comprovação de renda complexa do cessionário.",
+      "Cota Contemplada: Exige aprovação cadastral e análise de crédito prévia do cessionário (parcela não pode exceder 30% da renda bruta comprovada). Se o bem já estiver alienado, exige vistoria e repasse de gravame.",
+      "Política de Isenção da Taxa (Circular #2): Isenção total para 1º grau de parentesco (pais, filhos, cônjuges com união estável) e mesmo grupo societário (entre sócios do contrato social ou transferência PF para PJ e vice-versa). Demais casos pagam taxa de transferência sobre o saldo devedor.",
+      "Assinatura GOV.BR (Circulares #10 e #23): Validade jurídica plena via portal GOV.BR (níveis Prata ou Ouro), dispensando reconhecimento de firma em cartório.",
+      "Digitalização e Prazos (Circulares #19, #29 e #59): Emissão do termo direto pelo portal, envio digitalizado e conclusão em 48h a 72h úteis para não contempladas e até 5 dias para contempladas."
+    ]
   }
 ];
 
 export function getConsorcioKnowledgePrompt(): string {
   return `
-# BASE DE CONHECIMENTO TÉCNICO E ESTRATÉGICO EM CONSÓRCIOS (SIMULAJA / MAGALU):
+# BASE DE CONHECIMENTO TÉCNICO, REGULATÓRIO E CIRCULARES OFICIAIS MAGALU:
 1. CONSÓRCIO VS FINANCIAMENTO (SAC/PRICE):
-   - Financiamento bancário tradicional quase triplica o valor do bem devido a juros compostos.
+   - Financiamento tradicional quase triplica o valor do bem em juros compostos.
    - O Consórcio Magalu possui taxa administrativa fixa diluída ao longo de todo o prazo (custo médio diluído de apenas 1,2% a 1,8% a.a.), gerando economia real de até 50% a 65% em comparação a qualquer banco.
 2. MEIA PARCELA (50/50):
    - O proponente paga apenas 50% da parcela até o momento da contemplação.
@@ -79,7 +91,12 @@ export function getConsorcioKnowledgePrompt(): string {
 3. LANCE EMBUTIDO (30%):
    - O cliente pode usar até 30% da própria carta para dar lance sem tirar nada do bolso.
    - Para imóveis, é permitido somar o saldo do FGTS.
-4. SEGURANÇA E REGULAMENTAÇÃO:
+4. CIRCULARES OFICIAIS MAGALU — TRANSFERÊNCIA DE TITULARIDADE (CIRCULARES #2, #10, #19, #23, #37, #46, #59):
+   - Cota Não Contemplada: Cessão rápida de direitos e obrigações. Cota 100% em dia. Não exige comprovação de renda complexa.
+   - Cota Contemplada: Exige análise prévia de crédito do novo titular (cessionário) com renda compatível (parcela ≤ 30% da renda bruta) e sem restrições (Serasa/SPC). Se o bem já estiver alienado, exige vistoria e transferência do gravame.
+   - Isenção da Taxa de Transferência (Circular #2): ISENÇÃO TOTAL para 1º grau de parentesco (pais, filhos e cônjuges) e mesmo grupo societário (sócios da mesma empresa ou PF para sua própria PJ).
+   - Assinatura Eletrônica GOV.BR (Circulares #10 e #23): Aceite formal com validade jurídica via GOV.BR (nível Prata ou Ouro), dispensando ida ao cartório e reconhecimento de firma.
+5. SEGURANÇA E REGULAMENTAÇÃO:
    - Fiscalizado pelo Banco Central do Brasil (Lei Federal 11.795/2008).
    - Administradora: Consórcio Magalu (parceira Prospera Plan).
 `;

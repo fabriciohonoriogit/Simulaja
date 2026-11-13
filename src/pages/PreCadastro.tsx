@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import heroImage from "@/assets/hero-premium-desk.webp";
+import heroBgImage from "@/assets/hero-bg.webp";
+import { BlueParticlesBackground } from "@/components/BlueParticlesBackground";
 import { 
   FileText, 
   User, 
@@ -21,7 +22,8 @@ import {
   Loader2,
   Lock,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  CreditCard
 } from "lucide-react";
 
 export default function PreCadastro() {
@@ -74,6 +76,7 @@ export default function PreCadastro() {
     banco: "",
     agencia: "",
     conta: "",
+    digito: "",
     tipoConta: "Corrente",
 
     // Consórcio
@@ -110,6 +113,11 @@ export default function PreCadastro() {
           bairro: dc.bairro || prev.bairro,
           cidade: dc.cidade || prev.cidade,
           uf: dc.uf || prev.uf,
+          banco: dc.banco || prev.banco,
+          agencia: dc.agencia || prev.agencia,
+          conta: dc.conta || prev.conta,
+          digito: dc.digito || prev.digito,
+          tipoConta: dc.tipoConta || prev.tipoConta,
           tipoConsorcio: dc.tipoConsorcio || lead.tipo_consorcio || prev.tipoConsorcio,
           valorCredito: lead.valor_credito ? String(lead.valor_credito) : prev.valorCredito,
           prazoMeses: dc.prazoMeses || prev.prazoMeses,
@@ -219,7 +227,7 @@ export default function PreCadastro() {
             lead_score_valor: "alto",
             dados_cadastro: payloadDadosCadastro,
             updated_at: new Date().toISOString(),
-            observacao: `Ficha de Pré-Cadastro concluída pelo cliente em ${new Date().toLocaleDateString("pt-BR")}. Contrato em fase de geração.`,
+            observacao: `Ficha de Pré-Cadastro concluída pelo cliente em ${new Date().toLocaleDateString("pt-BR")}. Dados bancários preenchidos (${formData.banco || "Banco"} Ag: ${formData.agencia} CC: ${formData.conta}-${formData.digito}). Contrato em fase de geração.`,
           })
           .eq("id", targetLeadId);
 
@@ -265,23 +273,29 @@ export default function PreCadastro() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4">
-        <Card className="max-w-lg w-full bg-white border border-slate-200 text-slate-900 p-8 text-center rounded-3xl shadow-2xl space-y-6">
-          <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-300 flex items-center justify-center mx-auto animate-bounce">
+      <div className="min-h-screen bg-[#050814] text-slate-100 flex items-center justify-center p-4 relative overflow-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+        <BlueParticlesBackground />
+        
+        {/* Glow Effects */}
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[130px] pointer-events-none" />
+
+        <Card className="max-w-lg w-full bg-[#070D19]/90 border border-cyan-500/30 text-white p-8 sm:p-10 text-center rounded-3xl shadow-2xl shadow-blue-950/80 backdrop-blur-2xl relative z-10 space-y-6">
+          <div className="w-20 h-20 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(16,185,129,0.3)] animate-pulse">
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-black tracking-tight text-slate-900">Pré-Cadastro Concluído! 🎉</h2>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Obrigado, <strong className="text-blue-600">{formData.nome}</strong>. Suas informações foram registradas no sistema e enviadas para o setor de contratos.
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Pré-Cadastro Concluído! 🎉</h2>
+            <p className="text-slate-300 text-sm leading-relaxed">
+              Obrigado, <strong className="text-cyan-300">{formData.nome}</strong>. Suas informações foram registradas com sucesso e enviadas para o setor de contratos do Consórcio Magalu.
             </p>
           </div>
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-2 text-left">
-            <p className="flex items-center gap-2 text-blue-700 font-bold uppercase tracking-wider text-[11px]">
-              <ShieldCheck className="w-4 h-4 text-blue-600" /> Dados Criptografados & Seguros
+          <div className="bg-white/[0.04] p-4 rounded-2xl border border-white/10 text-xs text-slate-300 space-y-2 text-left backdrop-blur-md">
+            <p className="flex items-center gap-2 text-cyan-300 font-bold uppercase tracking-wider text-[11px]">
+              <ShieldCheck className="w-4 h-4 text-cyan-400" /> Dados Criptografados & Homologados
             </p>
-            <p className="text-slate-600">
-              Nosso consultor sênior entrará em contato em instantes com a documentação pronta para sua validação.
+            <p className="text-slate-400">
+              Nosso consultor sênior entrará em contato em instantes para validação formal e assinatura digital do contrato via GOV.BR.
             </p>
           </div>
         </Card>
@@ -290,62 +304,79 @@ export default function PreCadastro() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-[#050814] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-hidden">
       
-      {/* CAPA HERO DA LANDING PAGE */}
-      <div className="relative w-full min-h-[340px] sm:min-h-[420px] bg-slate-900 overflow-hidden flex items-center justify-center">
-        {/* Imagem de Fundo (Hero Cover) */}
+      {/* PARTÍCULAS E GLOW FUTURISTA DA LANDING PAGE */}
+      <BlueParticlesBackground />
+      <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-gradient-to-br from-blue-600/20 via-cyan-500/10 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[130px] pointer-events-none" />
+
+      {/* CAPA HERO FUTURISTA (PADRÃO LANDING PAGE) */}
+      <div className="relative w-full min-h-[340px] sm:min-h-[400px] overflow-hidden flex items-center justify-center border-b border-white/10">
+        {/* Imagem de Fundo (Hero Cover Oficial) */}
         <img
-          src={heroImage}
+          src={heroBgImage}
           alt="Capa Pré-Cadastro Simulaja"
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-40 mix-blend-luminosity scale-105"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-30 mix-blend-luminosity scale-105"
         />
 
-        {/* Dynamic Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-slate-900/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-slate-950/80" />
+        {/* Gradientes e Iluminação */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050814] via-[#050814]/70 to-[#050814]/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050814]/90 via-transparent to-[#050814]/90" />
 
         {/* Conteúdo da Capa */}
-        <div className="relative z-10 container max-w-4xl mx-auto px-4 text-center text-white py-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-blue-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-            <FileText className="w-4 h-4 text-blue-400" />
-            <span>Ficha de Pré-Cadastro • Emissão de Contrato</span>
+        <div className="relative z-10 container max-w-4xl mx-auto px-4 text-center text-white pt-10 pb-16 space-y-4">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/40 text-blue-300 text-xs font-black tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(0,134,255,0.25)]">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
+              <span>Gestor autorizado do consórcio magalu</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-cyan-200 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+              <FileText className="w-3.5 h-3.5 text-cyan-300" />
+              <span>Ficha Oficial de Pré-Cadastro</span>
+            </div>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
-            Qual é o seu <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-cyan-300 to-white">próximo sonho?</span>
+            O Futuro do seu Patrimônio{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-amber-300">
+              Sem Juros Bancários
+            </span>
           </h1>
 
-          <p className="text-slate-200 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
-            Da casa própria ao carro novo, ajudamos você a encontrar o <strong className="text-white font-bold">consórcio ideal</strong> para conquistar seus objetivos com segurança, planejamento e consultoria especializada.
+          <p className="text-slate-300 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
+            Ambiente seguro e criptografado para reserva de cota e elaboração da proposta contratual do <strong className="text-white font-bold">Consórcio Magalu</strong>.
           </p>
 
-          <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-slate-300">
-            <span className="bg-slate-800/80 border border-slate-700 px-3 py-1 rounded-full flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 100% Seguro & Criptografado
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-slate-300">
+            <span className="bg-white/[0.05] border border-white/10 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-md">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" /> 100% Seguro & Criptografado
+            </span>
+            <span className="bg-white/[0.05] border border-white/10 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-md">
+              <Lock className="w-4 h-4 text-cyan-400" /> Homologação Imediata
             </span>
           </div>
         </div>
       </div>
 
-      {/* CONTEÚDO PRINCIPAL (CLEAN LIGHT DESIGN) */}
-      <div className="container max-w-4xl mx-auto px-4 -mt-10 relative z-20 pb-16 space-y-6">
+      {/* CONTEÚDO PRINCIPAL (CARD FUTURISTA DARK GLASS) */}
+      <div className="container max-w-4xl mx-auto px-4 -mt-8 relative z-20 pb-20 space-y-6">
 
         {fetchingLead && (
-          <div className="flex items-center justify-center p-4 bg-white rounded-2xl border border-slate-200 text-blue-600 gap-2 text-xs font-bold shadow-md">
-            <Loader2 className="w-4 h-4 animate-spin" /> Carregando dados do cliente...
+          <div className="flex items-center justify-center p-4 bg-blue-950/40 rounded-2xl border border-cyan-500/30 text-cyan-300 gap-2 text-xs font-bold shadow-lg backdrop-blur-xl">
+            <Loader2 className="w-4 h-4 animate-spin text-cyan-400" /> Sincronizando dados oficiais do lead...
           </div>
         )}
 
-        {/* NAVEGAÇÃO DE ETAPAS (Navegação em Abas Limpas e Modernas) */}
-        <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-lg grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold">
+        {/* NAVEGAÇÃO DE ETAPAS (Tabs Estilo Dark Glass com Glow Ativo) */}
+        <div className="bg-[#070D19]/80 p-2 rounded-2xl border border-white/10 backdrop-blur-xl shadow-xl grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold">
           <button
             type="button"
             onClick={() => setCurrentStep(1)}
             className={`py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
               currentStep === 1
-                ? "bg-slate-900 text-white shadow-md"
-                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(0,180,255,0.4)] border border-cyan-400/50"
+                : "bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.07] border border-white/5"
             }`}
           >
             <User className="w-4 h-4" /> 1. Pessoais
@@ -355,8 +386,8 @@ export default function PreCadastro() {
             onClick={() => setCurrentStep(2)}
             className={`py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
               currentStep === 2
-                ? "bg-slate-900 text-white shadow-md"
-                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(0,180,255,0.4)] border border-cyan-400/50"
+                : "bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.07] border border-white/5"
             }`}
           >
             <MapPin className="w-4 h-4" /> 2. Endereço
@@ -366,8 +397,8 @@ export default function PreCadastro() {
             onClick={() => setCurrentStep(3)}
             className={`py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
               currentStep === 3
-                ? "bg-slate-900 text-white shadow-md"
-                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(0,180,255,0.4)] border border-cyan-400/50"
+                : "bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.07] border border-white/5"
             }`}
           >
             <Briefcase className="w-4 h-4" /> 3. Profissão
@@ -377,122 +408,122 @@ export default function PreCadastro() {
             onClick={() => setCurrentStep(4)}
             className={`py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
               currentStep === 4
-                ? "bg-slate-900 text-white shadow-md"
-                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(0,180,255,0.4)] border border-cyan-400/50"
+                : "bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.07] border border-white/5"
             }`}
           >
-            <Building2 className="w-4 h-4" /> 4. Envio
+            <Building2 className="w-4 h-4" /> 4. Banco & Envio
           </button>
         </div>
 
-        {/* CARD PRINCIPAL DE FORMULÁRIO (Clean White) */}
-        <Card className="bg-white border-slate-200 text-slate-900 rounded-3xl shadow-xl overflow-hidden">
+        {/* CARD PRINCIPAL DE FORMULÁRIO (Dark Luxury Glass) */}
+        <Card className="bg-[#070D19]/90 border border-cyan-500/30 text-white rounded-3xl shadow-2xl shadow-blue-950/80 backdrop-blur-2xl overflow-hidden">
           <CardContent className="p-6 sm:p-10">
             <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* ETAPA 1: DADOS PESSOAIS */}
               {currentStep === 1 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+                  <div className="border-b border-white/10 pb-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                      <div className="p-2.5 bg-blue-500/10 text-cyan-300 rounded-xl border border-cyan-500/30">
                         <User className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-black text-lg text-slate-900">Dados Pessoais & Documentação</h3>
-                        <p className="text-xs text-slate-500 font-medium">Preencha as informações conforme seus documentos oficiais.</p>
+                        <h3 className="font-black text-lg text-white">Dados Pessoais & Documentação</h3>
+                        <p className="text-xs text-slate-400 font-medium">Preencha as informações conforme seus documentos oficiais.</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Nome Completo *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Nome Completo *</Label>
                       <Input
                         required
                         value={formData.nome}
                         onChange={(e) => handleChange("nome", e.target.value)}
                         placeholder="Ex: João da Silva Santos"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">CPF / CNPJ *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">CPF / CNPJ *</Label>
                       <Input
                         required
                         value={formData.cpf}
                         onChange={(e) => handleChange("cpf", e.target.value)}
                         placeholder="000.000.000-00"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">RG / CNH *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">RG / CNH *</Label>
                       <Input
                         required
                         value={formData.rg}
                         onChange={(e) => handleChange("rg", e.target.value)}
                         placeholder="00.000.000-0"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Órgão Emissor / UF</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Órgão Emissor / UF</Label>
                       <Input
                         value={formData.orgaoEmissor}
                         onChange={(e) => handleChange("orgaoEmissor", e.target.value)}
                         placeholder="SSP/PR"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Data de Nascimento *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Data de Nascimento *</Label>
                       <Input
                         required
                         type="text"
                         value={formData.dataNascimento}
                         onChange={(e) => handleChange("dataNascimento", e.target.value)}
                         placeholder="DD/MM/AAAA"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Celular / WhatsApp *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Celular / WhatsApp *</Label>
                       <Input
                         required
                         value={formData.celular}
                         onChange={(e) => handleChange("celular", e.target.value)}
                         placeholder="(00) 00000-0000"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">E-mail</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">E-mail</Label>
                       <Input
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleChange("email", e.target.value)}
                         placeholder="seuemail@cliente.com"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Estado Civil</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Estado Civil</Label>
                       <Select
                         value={formData.estadoCivil}
                         onValueChange={(val) => handleChange("estadoCivil", val)}
                       >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500">
+                        <SelectTrigger className="bg-slate-900/80 border-slate-700/80 text-white text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20">
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 text-slate-900">
+                        <SelectContent className="bg-[#0b1528] border-slate-700 text-white">
                           <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
                           <SelectItem value="Casado(a)">Casado(a)</SelectItem>
                           <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
@@ -503,23 +534,23 @@ export default function PreCadastro() {
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Nome da Mãe *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Nome da Mãe *</Label>
                       <Input
                         required
                         value={formData.nomeMae}
                         onChange={(e) => handleChange("nomeMae", e.target.value)}
                         placeholder="Nome completo da mãe"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Naturalidade (Cidade/UF)</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Naturalidade (Cidade/UF)</Label>
                       <Input
                         value={formData.naturalidade}
                         onChange={(e) => handleChange("naturalidade", e.target.value)}
                         placeholder="Curitiba/PR"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
                   </div>
@@ -528,7 +559,7 @@ export default function PreCadastro() {
                     <Button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-md flex items-center gap-2"
+                      className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-lg shadow-cyan-500/20 flex items-center gap-2"
                     >
                       Próximo: Endereço <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -539,91 +570,91 @@ export default function PreCadastro() {
               {/* ETAPA 2: ENDEREÇO */}
               {currentStep === 2 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-100 pb-4 flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                  <div className="border-b border-white/10 pb-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-500/10 text-cyan-300 rounded-xl border border-cyan-500/30">
                       <MapPin className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-black text-lg text-slate-900">Endereço de Residência</h3>
-                      <p className="text-xs text-slate-500 font-medium">Informe seu endereço para o envio de correspondência do contrato.</p>
+                      <h3 className="font-black text-lg text-white">Endereço de Residência</h3>
+                      <p className="text-xs text-slate-400 font-medium">Informe seu endereço para o envio de correspondência e registro do contrato.</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">CEP * (Busca Automática)</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">CEP * (Busca Automática)</Label>
                       <Input
                         required
                         value={formData.cep}
                         onChange={(e) => handleChange("cep", e.target.value)}
                         onBlur={handleCepBlur}
                         placeholder="00000-000"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Rua / Logradouro *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Rua / Logradouro *</Label>
                       <Input
                         required
                         value={formData.logradouro}
                         onChange={(e) => handleChange("logradouro", e.target.value)}
                         placeholder="Rua, Avenida, Alameda..."
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Número *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Número *</Label>
                       <Input
                         required
                         value={formData.numero}
                         onChange={(e) => handleChange("numero", e.target.value)}
                         placeholder="123"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Complemento</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Complemento</Label>
                       <Input
                         value={formData.complemento}
                         onChange={(e) => handleChange("complemento", e.target.value)}
                         placeholder="Apto 101, Bloco B..."
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Bairro *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Bairro *</Label>
                       <Input
                         required
                         value={formData.bairro}
                         onChange={(e) => handleChange("bairro", e.target.value)}
                         placeholder="Bairro"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Cidade *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Cidade *</Label>
                       <Input
                         required
                         value={formData.cidade}
                         onChange={(e) => handleChange("cidade", e.target.value)}
                         placeholder="Cidade"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">UF *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">UF *</Label>
                       <Input
                         required
                         value={formData.uf}
                         onChange={(e) => handleChange("uf", e.target.value)}
                         placeholder="PR"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
                   </div>
@@ -633,14 +664,14 @@ export default function PreCadastro() {
                       type="button"
                       variant="outline"
                       onClick={() => setCurrentStep(1)}
-                      className="border-slate-200 text-slate-700 hover:bg-slate-100 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
+                      className="border-white/10 text-slate-300 hover:text-white hover:bg-white/5 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" /> Voltar
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setCurrentStep(3)}
-                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-md flex items-center gap-2"
+                      className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-lg shadow-cyan-500/20 flex items-center gap-2"
                     >
                       Próximo: Profissão <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -651,56 +682,56 @@ export default function PreCadastro() {
               {/* ETAPA 3: PROFISSÃO & FINANCEIRO */}
               {currentStep === 3 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-100 pb-4 flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                  <div className="border-b border-white/10 pb-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-500/10 text-cyan-300 rounded-xl border border-cyan-500/30">
                       <Briefcase className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-black text-lg text-slate-900">Dados Profissionais & Renda</h3>
-                      <p className="text-xs text-slate-500 font-medium">Informações necessárias para o enquadramento do seu crédito.</p>
+                      <h3 className="font-black text-lg text-white">Dados Profissionais & Renda</h3>
+                      <p className="text-xs text-slate-400 font-medium">Informações necessárias para o enquadramento do seu crédito.</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Profissão / Cargo *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Profissão / Cargo *</Label>
                       <Input
                         required
                         value={formData.profissao}
                         onChange={(e) => handleChange("profissao", e.target.value)}
                         placeholder="Ex: Engenheiro, Empresário, Autônomo..."
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Empresa / Ocupação</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Empresa / Ocupação</Label>
                       <Input
                         value={formData.empresa}
                         onChange={(e) => handleChange("empresa", e.target.value)}
                         placeholder="Nome da empresa ou negócio"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Renda Mensal Estimada (R$) *</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Renda Mensal Estimada (R$) *</Label>
                       <Input
                         required
                         value={formData.rendaMensal}
                         onChange={(e) => handleChange("rendaMensal", e.target.value)}
                         placeholder="R$ 8.500,00"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Patrimônio Declarado (Opcional)</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">Patrimônio Declarado (Opcional)</Label>
                       <Input
                         value={formData.patrimonio}
                         onChange={(e) => handleChange("patrimonio", e.target.value)}
                         placeholder="R$ 350.000,00"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
                   </div>
@@ -710,14 +741,14 @@ export default function PreCadastro() {
                       type="button"
                       variant="outline"
                       onClick={() => setCurrentStep(2)}
-                      className="border-slate-200 text-slate-700 hover:bg-slate-100 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
+                      className="border-white/10 text-slate-300 hover:text-white hover:bg-white/5 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" /> Voltar
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setCurrentStep(4)}
-                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-md flex items-center gap-2"
+                      className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-sm h-12 px-8 rounded-xl shadow-lg shadow-cyan-500/20 flex items-center gap-2"
                     >
                       Próximo: Dados Bancários <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -728,72 +759,123 @@ export default function PreCadastro() {
               {/* ETAPA 4: DADOS BANCÁRIOS & ENVIO */}
               {currentStep === 4 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="border-b border-slate-100 pb-4 flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
-                      <Building2 className="w-5 h-5" />
+                  <div className="border-b border-white/10 pb-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-500/10 text-cyan-300 rounded-xl border border-cyan-500/30">
+                      <CreditCard className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-black text-lg text-slate-900">Dados Bancários & Confirmação</h3>
-                      <p className="text-xs text-slate-500 font-medium">Dados para faturamento do boleto/débito da cota de consórcio.</p>
+                      <h3 className="font-black text-lg text-white">Dados Bancários & Finalização</h3>
+                      <p className="text-xs text-slate-400 font-medium">Informe seus dados bancários para faturamento, débito e formalização da cota.</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Banco Principal</Label>
+                  {/* 4 CAMPOS BANCÁRIOS SOLICITADOS: BANCO, AGÊNCIA, CONTA, DÍGITO */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    
+                    {/* BANCO */}
+                    <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                        Banco *
+                      </Label>
                       <Input
+                        required
                         value={formData.banco}
                         onChange={(e) => handleChange("banco", e.target.value)}
-                        placeholder="Ex: Itaú, Bradesco, Nubank..."
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ex: Nubank, Itaú, Bradesco, BB..."
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
+                    {/* AGÊNCIA */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Agência</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">
+                        Agência *
+                      </Label>
                       <Input
+                        required
                         value={formData.agencia}
                         onChange={(e) => handleChange("agencia", e.target.value)}
-                        placeholder="0000"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        placeholder="0001"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
 
+                    {/* CONTA */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Conta com Dígito</Label>
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">
+                        Conta *
+                      </Label>
                       <Input
+                        required
                         value={formData.conta}
                         onChange={(e) => handleChange("conta", e.target.value)}
-                        placeholder="00000-0"
-                        className="bg-slate-50 border-slate-200 text-slate-900 text-sm font-medium rounded-xl h-12 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                        placeholder="1234567"
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
                       />
                     </div>
+
+                    {/* DÍGITO */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">
+                        Dígito *
+                      </Label>
+                      <Input
+                        required
+                        value={formData.digito}
+                        onChange={(e) => handleChange("digito", e.target.value)}
+                        placeholder="8"
+                        maxLength={3}
+                        className="bg-slate-900/80 border-slate-700/80 text-white placeholder:text-slate-500 text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
+                      />
+                    </div>
+
+                    {/* TIPO DE CONTA */}
+                    <div className="space-y-1.5 sm:col-span-2 lg:col-span-4">
+                      <Label className="text-xs font-bold text-cyan-200 uppercase tracking-wider">
+                        Tipo de Conta
+                      </Label>
+                      <Select
+                        value={formData.tipoConta}
+                        onValueChange={(val) => handleChange("tipoConta", val)}
+                      >
+                        <SelectTrigger className="bg-slate-900/80 border-slate-700/80 text-white text-sm font-medium rounded-xl h-12 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20">
+                          <SelectValue placeholder="Selecione o tipo..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#0b1528] border-slate-700 text-white">
+                          <SelectItem value="Corrente">Conta Corrente</SelectItem>
+                          <SelectItem value="Poupança">Conta Poupança</SelectItem>
+                          <SelectItem value="Pagamento">Conta de Pagamento / Digital</SelectItem>
+                          <SelectItem value="Salário">Conta Salário</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  {/* Resumo do Plano */}
-                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-blue-600" /> Resumo da Cota de Consórcio
+                  {/* Resumo do Plano (Estilo Dark Luxury Glow) */}
+                  <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/10 space-y-3 backdrop-blur-md">
+                    <h4 className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-400" /> Resumo da Cota de Consórcio
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                      <div className="bg-white p-3 rounded-xl border border-slate-200">
-                        <span className="text-slate-500 block">Tipo de Bem:</span>
-                        <strong className="text-slate-900 font-black text-sm">{formData.tipoConsorcio || "Imóvel"}</strong>
+                      <div className="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[11px]">Tipo de Bem:</span>
+                        <strong className="text-white font-black text-sm">{formData.tipoConsorcio || "Imóvel"}</strong>
                       </div>
-                      <div className="bg-white p-3 rounded-xl border border-slate-200">
-                        <span className="text-slate-500 block">Valor do Crédito:</span>
-                        <strong className="text-slate-900 font-black text-sm">{formData.valorCredito || "Conforme proposta"}</strong>
+                      <div className="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[11px]">Valor do Crédito:</span>
+                        <strong className="text-cyan-300 font-black text-sm">{formData.valorCredito || "Conforme proposta"}</strong>
                       </div>
-                      <div className="bg-white p-3 rounded-xl border border-slate-200">
-                        <span className="text-slate-500 block">Prazo Desejado:</span>
-                        <strong className="text-slate-900 font-black text-sm">{formData.prazoMeses ? `${formData.prazoMeses} meses` : "A definir"}</strong>
+                      <div className="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[11px]">Prazo Desejado:</span>
+                        <strong className="text-amber-300 font-black text-sm">{formData.prazoMeses ? `${formData.prazoMeses} meses` : "A definir"}</strong>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-blue-50/80 p-4 rounded-2xl border border-blue-200 text-xs text-blue-900 flex items-center gap-3">
-                    <Lock className="w-5 h-5 text-blue-600 shrink-0" />
-                    <span>Ao finalizar, seus dados serão registrados em ambiente seguro para emissão imediata da proposta e contrato.</span>
+                  <div className="bg-blue-500/10 p-4 rounded-2xl border border-cyan-500/30 text-xs text-cyan-200 flex items-center gap-3">
+                    <Lock className="w-5 h-5 text-cyan-400 shrink-0" />
+                    <span>Ao finalizar, seus dados bancários e cadastrais serão criptografados em ambiente seguro para emissão imediata da proposta e contrato oficial.</span>
                   </div>
 
                   <div className="flex justify-between pt-6">
@@ -801,14 +883,14 @@ export default function PreCadastro() {
                       type="button"
                       variant="outline"
                       onClick={() => setCurrentStep(3)}
-                      className="border-slate-200 text-slate-700 hover:bg-slate-100 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
+                      className="border-white/10 text-slate-300 hover:text-white hover:bg-white/5 h-12 px-6 rounded-xl font-bold flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" /> Voltar
                     </Button>
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:opacity-95 text-white font-black text-sm h-14 px-10 rounded-2xl shadow-xl shadow-blue-500/20 flex items-center gap-2 transition-all hover:scale-[1.01]"
+                      className="bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 hover:opacity-95 text-white font-black text-sm h-14 px-10 rounded-2xl shadow-xl shadow-cyan-500/30 flex items-center gap-2 transition-all hover:scale-[1.01]"
                     >
                       {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                       Finalizar Pré-Cadastro & Emissão
@@ -823,7 +905,7 @@ export default function PreCadastro() {
 
         {/* Rodapé institucional */}
         <div className="text-center pt-4 text-xs text-slate-500 font-medium">
-          Simulaja Consórcios © {new Date().getFullYear()} • Consultoria Especializada & Soluções Financeiras
+          SimulaJá Consórcios © {new Date().getFullYear()} • Gestor Autorizado Consórcio Magalu • Consultoria Especializada
         </div>
       </div>
     </div>

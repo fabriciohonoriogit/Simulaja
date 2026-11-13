@@ -845,7 +845,87 @@ Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
 4 Ele te cobrirá com as suas penas, e debaixo das suas asas te confiarás; a sua verdade será o teu escudo e broquel."`;
   }
 
-  return `Perfeito, ${firstName}! Sobre "${userQuery}", estou pronto para te dar o panorama executivo completo. O que mais você precisa validar no CRM agora?`;
+  // 6. BASE OFICIAL DE CIRCULARES & TRANSFERÊNCIA DE TITULARIDADE (CONSÓRCIO MAGALU)
+  const isTransferOrCircularQuery =
+    lower.includes("transfer") ||
+    lower.includes("titularidade") ||
+    lower.includes("cessao") ||
+    lower.includes("cessão") ||
+    lower.includes("circular") ||
+    lower.includes("circulares") ||
+    lower.includes("gov.br") ||
+    lower.includes("isencao") ||
+    lower.includes("isenção") ||
+    lower.includes("trocar de titular") ||
+    lower.includes("passar a cota") ||
+    lower.includes("passar a carta");
+
+  if (isTransferOrCircularQuery) {
+    if (
+      lower.includes("transfer") || 
+      lower.includes("titularidade") || 
+      lower.includes("cessao") || 
+      lower.includes("cessão") || 
+      lower.includes("trocar de titular") || 
+      lower.includes("passar a cota") || 
+      lower.includes("passar a carta")
+    ) {
+      return `📋 REGRAS OFICIAIS DE TRANSFERÊNCIA DE TITULARIDADE (CIRCULARES MAGALU #02, #10, #19, #23, #37 e #59):
+
+1. COTA NÃO CONTEMPLADA:
+• Procedimento: Cessão simples de direitos e obrigações.
+• Exigência: A cota deve estar 100% em dia (sem débitos ou parcelas pendentes).
+• Análise de Crédito: Dispensa comprovação de renda complexa do cessionário (novo titular), apenas checagem cadastral básica.
+• Prazo: Conclusão em 48h a 72h úteis após envio do termo assinado.
+
+2. COTA CONTEMPLADA:
+• Análise Prévia de Crédito Obrigatória: O cessionário passa por análise formal de crédito (comprovação de renda onde a parcela não pode exceder 30% da renda bruta comprovada) e consulta restritiva (Serasa/SPC/CCF).
+• Bem já adquirido/alienado: Exige termo de anuência, vistoria prévia e substituição ou repasse de gravame (alienação fiduciária).
+• Prazo: Até 5 dias úteis após envio dos comprovantes.
+
+3. POLÍTICA DE ISENÇÃO DA TAXA DE TRANSFERÊNCIA (Circular nº 02):
+• ISENÇÃO TOTAL DA TAXA:
+  - 1º Grau de Parentesco (Linha Reta e Cônjuges): Pai para filho, filho para pai, ou entre cônjuges/companheiros com união estável comprovada.
+  - Mesmo Grupo Societário / Empresarial: Entre sócios comprovados em Contrato Social, ou da PF para PJ de que seja sócio/titular (e vice-versa).
+  - Partilha Judicial / Sucessão por Inventário.
+• Transferência a Terceiros: Incide taxa administrativa de transferência sobre o saldo devedor conforme tabela vigente.
+
+4. ASSINATURA ELETRÔNICA GOV.BR (Circulares nº 10 e nº 23):
+• Validade Jurídica Plena via GOV.BR (níveis Prata ou Ouro).
+• Dispensa Total de Cartório: Não precisa reconhecer firma por autenticidade ao assinar pelo GOV.BR.
+• Caso assinado fisicamente: Continua exigido reconhecimento de firma por autenticidade em cartório de ambas as partes.
+
+5. COMO EMITIR:
+• Acessar Portal Magalu -> Menu Atendimento -> Transferência de Cota / Emissão de Termo.`;
+    }
+
+    if (lower.includes("circular") || lower.includes("circulares")) {
+      return `📚 BASE DE CONHECIMENTO OFICIAL DE CIRCULARES MAGALU (64 Circulares Catalogadas):
+
+1. Transferências & Jurídico:
+   • Circular #02: Política de Isenção da Taxa de Transferência (1º grau de parentesco e sócios de mesma empresa).
+   • Circular #10 & #23: Validade plena da assinatura eletrônica GOV.BR (Prata/Ouro), dispensando cartório.
+   • Circular #19 & #29: Emissão e digitalização do termo de transferência.
+   • Circular #37 & #59: Procedimentos e taxas de transferência de titularidade.
+   • Circular #46: Intenção de transferência de cotas contempladas.
+
+2. Lances & Assembleias:
+   • Circular #05: Lance Fidelidade (bonificação para consorciados pontuais).
+   • Circular #04: Rateio residual.
+   • Circular #24: Formas oficiais de oferta de lances (livre, embutido até 50%).
+
+3. Imóveis & FGTS:
+   • Circular #30, #34 & #56: Normas e taxas de utilização do FGTS (lance, amortização e abatimento de parcelas).
+   • Circular #25: Aquisição de imóveis em leilão.
+   • Circular #32 & #55: Limite de junção de cotas para um mesmo bem alienado.
+
+4. Crédito & Seguros:
+   • Circular #08, #50 & #63: Prazos e regras de régua preventiva de negativação cadastral (Serasa/SPC).
+   • Circular #38 & #60: Cobertura e limites da apólice de seguro de vida prestamista.`;
+    }
+  }
+
+  return `Olá, ${firstName}! Compreendi sua consulta sobre "${userQuery}". Como assistente executivo Jarvis, estou à disposição para aprofundar qualquer detalhe sobre simulações e parcelas 50/50, status do funil de vendas, circulares oficiais do Consórcio Magalu ou emissão de boletos. Como prefere prosseguir?`;
 }
 
 export const aiService = {
