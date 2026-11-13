@@ -20,7 +20,7 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-              Gestor Autorizado Consórcio Magalu (Filial 10826 / Chapa 918260). Consultoria estratégica e independente em consórcios imobiliários, pesados e veículos com metodologia de meia parcela.
+              Gestor Autorizado Consórcio Magalu. Consultoria estratégica especializada em consórcios imobiliários, pesados e veículos com metodologia de parcelas reduzidas e planejamento de contemplação.
             </p>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[10px] text-cyan-300 font-bold">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
@@ -80,29 +80,52 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Details & Socials */}
+          {/* Redes Sociais & Credibilidade */}
           <div className="space-y-4">
-            <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">Atendimento Direto</h4>
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-slate-800/80 hover:bg-emerald-950/40 border border-slate-700/60 hover:border-emerald-500/40 p-3 rounded-2xl transition-all group w-full"
-            >
-              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
-                <Phone className="w-4.5 h-4.5" />
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">WhatsApp Consultoria</p>
-                <p className="text-xs font-black text-white group-hover:text-emerald-400">(41) 99792-5357</p>
-              </div>
-            </a>
+            <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <span>Redes Oficiais & Resultados</span>
+            </h4>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Quer mais credibilidade? Acompanhe o dia a dia, entregas reais de cartas de crédito e depoimentos nas minhas redes sociais oficiais:
+            </p>
+
+            <div className="space-y-2">
+              <a
+                href="https://www.instagram.com/fabricioespecialistaconsorcio/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-900/40 via-pink-900/30 to-amber-900/30 hover:from-purple-900/60 hover:to-amber-900/50 border border-pink-500/30 p-2.5 rounded-2xl transition-all group w-full shadow-md"
+              >
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <Instagram className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-pink-300 uppercase font-bold tracking-wider">Instagram Oficial</p>
+                  <p className="text-xs font-black text-white group-hover:text-pink-300 truncate">@fabricioespecialistaconsorcio</p>
+                </div>
+              </a>
+
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 p-2.5 rounded-2xl transition-all group w-full shadow-md"
+              >
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-emerald-300 uppercase font-bold tracking-wider">WhatsApp Consultoria</p>
+                  <p className="text-xs font-black text-white group-hover:text-emerald-300">(41) 99792-5357</p>
+                </div>
+              </a>
+            </div>
 
             <div className="flex gap-2.5 pt-1">
               <a href="https://www.facebook.com/profile.php?id=61587719436474" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400/50 transition-all">
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="https://www.instagram.com/fabricioespecialistaconsorcio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400/50 transition-all">
+              <a href="https://www.instagram.com/fabricioespecialistaconsorcio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 hover:text-pink-400 hover:border-pink-400/50 transition-all">
                 <Instagram className="w-4 h-4" />
               </a>
               <a href="#" aria-label="LinkedIn" className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 hover:text-amber-400 hover:border-amber-400/50 transition-all">

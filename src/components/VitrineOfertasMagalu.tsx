@@ -17,8 +17,7 @@ export interface OfertaConquista {
   imagem: string;
   creditoFormatado: string;
   creditoValor: number;
-  meiaParcela: string;
-  parcelaPosContemplacao: string;
+  parcelaAPartir: string;
   comparativoFinanciamento: string;
   tagDestaque: string;
   tagCor: string;
@@ -35,9 +34,8 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     imagem: brightHouse,
     creditoFormatado: "R$ 150.000,00",
     creditoValor: 150000,
-    meiaParcela: "R$ 508,25/mês",
-    parcelaPosContemplacao: "R$ 1.016,50/mês",
-    comparativoFinanciamento: "Financiamento bancário cobraria ~R$ 1.850/mês¹",
+    parcelaAPartir: "R$ 508,25/mês",
+    comparativoFinanciamento: "Financiamento cobraria ~R$ 1.850/mês",
     tagDestaque: "🔥 A Mais Desejada",
     tagCor: "bg-amber-500 text-slate-950",
     prazo: "220 meses",
@@ -47,13 +45,12 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     categoria: "veiculo",
     categoriaLabel: "Veículos",
     titulo: "SUV Zero KM ou Sedan",
-    subtitulo: "Carro novo na garagem com poder de compra à vista na concessionária",
+    subtitulo: "Cheiro de carro novo na garagem com poder de compra à vista na loja",
     imagem: brightCar,
     creditoFormatado: "R$ 100.000,00",
     creditoValor: 100000,
-    meiaParcela: "R$ 680,00/mês",
-    parcelaPosContemplacao: "R$ 1.360,00/mês",
-    comparativoFinanciamento: "Sem pagar R$ 25 mil de entrada bancária",
+    parcelaAPartir: "R$ 680,00/mês",
+    comparativoFinanciamento: "Sem pagar R$ 25 mil de entrada",
     tagDestaque: "⚡ Destaque Black",
     tagCor: "bg-cyan-400 text-slate-950",
     prazo: "100 meses",
@@ -62,14 +59,13 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     id: "oferta_imovel_300k",
     categoria: "imovel",
     categoriaLabel: "Imóveis",
-    titulo: "Sobrado Moderno & Família",
+    titulo: "Sobrado Moderno & Alto Padrão",
     subtitulo: "Espaço gourmet, suíte e segurança que a sua família merece",
     imagem: brightMansion,
     creditoFormatado: "R$ 300.000,00",
     creditoValor: 300000,
-    meiaParcela: "R$ 1.239,00/mês",
-    parcelaPosContemplacao: "R$ 2.478,00/mês",
-    comparativoFinanciamento: "Menos que o aluguel de um apartamento comum",
+    parcelaAPartir: "R$ 1.239,00/mês",
+    comparativoFinanciamento: "Menos que o aluguel de um apto comum",
     tagDestaque: "💎 Alto Padrão",
     tagCor: "bg-purple-400 text-slate-950",
     prazo: "200 meses",
@@ -79,13 +75,12 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     categoria: "caminhão",
     categoriaLabel: "Pesados",
     titulo: "Caminhonete 4x4 ou Caminhão",
-    subtitulo: "Expansão de frotas e ativos comerciais para geração de receita",
+    subtitulo: "Expansão de frotas e ativos comerciais que geram renda no primeiro mês",
     imagem: brightPickup,
     creditoFormatado: "R$ 400.000,00",
     creditoValor: 400000,
-    meiaParcela: "R$ 1.950,00/mês",
-    parcelaPosContemplacao: "R$ 3.900,00/mês",
-    comparativoFinanciamento: "Faturamento do bem auxilia na quitação da cota",
+    parcelaAPartir: "R$ 1.950,00/mês",
+    comparativoFinanciamento: "O próprio trabalho do veículo paga a cota",
     tagDestaque: "🚛 Rentabilidade Pura",
     tagCor: "bg-emerald-400 text-slate-950",
     prazo: "120 meses",
@@ -94,15 +89,14 @@ export const OFERTAS_MAGALU: OfertaConquista[] = [
     id: "oferta_moto_35k",
     categoria: "moto",
     categoriaLabel: "Motos",
-    titulo: "Moto Média/Alta Cilindrada",
-    subtitulo: "Mobilidade diária e viagens de fim de semana com economia",
+    titulo: "Moto Alta Cilindrada 0km",
+    subtitulo: "Liberdade nos finais de semana e agilidade no dia a dia",
     imagem: brightMoto,
     creditoFormatado: "R$ 35.000,00",
     creditoValor: 35000,
-    meiaParcela: "R$ 295,00/mês",
-    parcelaPosContemplacao: "R$ 590,00/mês",
-    comparativoFinanciamento: "Menos de R$ 10 ao dia até contemplar",
-    tagDestaque: "⭐ Mobilidade Total",
+    parcelaAPartir: "R$ 295,00/mês",
+    comparativoFinanciamento: "Menos de R$ 10 ao dia",
+    tagDestaque: "⭐ Liberdade Total",
     tagCor: "bg-pink-400 text-slate-950",
     prazo: "70 meses",
   },
@@ -152,12 +146,12 @@ export function VitrineOfertasMagalu() {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
             Escolha o que você vai conquistar hoje{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500">
-              com parcelas planejadas
+              com parcelas que cabem no bolso
             </span>
           </h2>
 
           <p className="text-slate-300 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
-            Exemplos reais com a modalidade de <strong>50% de parcela até a contemplação</strong>. Toque em qualquer oferta para carregar no simulador:
+            Valores reais calculados com <strong>parcelas a partir de valores reduzidos</strong>. Toque em qualquer oferta para simular na hora:
           </p>
         </div>
 
@@ -220,7 +214,7 @@ export function VitrineOfertasMagalu() {
                   </p>
                 </div>
 
-                {/* Bloco de Preço & Parcela com Transparência Pré/Pós Contemplação */}
+                {/* Bloco de Preço: PARCELAS A PARTIR DE */}
                 <div className="pt-2 border-t border-white/10 space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
                     <span>Crédito:</span>
@@ -228,14 +222,11 @@ export function VitrineOfertasMagalu() {
                   </div>
 
                   <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center group-hover:border-amber-400/60 transition-colors">
-                    <div className="text-[9px] font-bold uppercase tracking-widest text-amber-300">
-                      Meia Parcela (até contemplar):
+                    <div className="text-[9.5px] font-bold uppercase tracking-widest text-amber-300">
+                      Parcelas a partir de:
                     </div>
                     <div className="text-base font-black text-amber-400 group-hover:scale-105 transition-transform font-mono">
-                      {oferta.meiaParcela}
-                    </div>
-                    <div className="text-[9px] text-slate-400 font-medium mt-0.5">
-                      Pós-contemplação: <span className="text-slate-300 font-bold">{oferta.parcelaPosContemplacao}</span>
+                      {oferta.parcelaAPartir}
                     </div>
                   </div>
 
@@ -249,7 +240,7 @@ export function VitrineOfertasMagalu() {
                   type="button"
                   className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-700 hover:from-cyan-400 hover:to-blue-600 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/25 transition-all group-hover:shadow-[0_0_20px_rgba(0,242,254,0.4)]"
                 >
-                  <span>SIMULAR ESTA COTA</span>
+                  <span>QUERO ESTE</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
                 </button>
               </div>
@@ -257,7 +248,7 @@ export function VitrineOfertasMagalu() {
           ))}
         </div>
 
-        {/* FAIXA INFERIOR COM NOTA REGULATÓRIA & LINK DE PERSONALIZAÇÃO */}
+        {/* FAIXA INFERIOR COM PERSONALIZAÇÃO */}
         <div className="mt-8 p-4 rounded-2xl bg-gradient-to-r from-blue-900/30 via-slate-900/40 to-blue-900/30 border border-cyan-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0">
@@ -284,11 +275,11 @@ export function VitrineOfertasMagalu() {
           </button>
         </div>
 
-        {/* NOTA DE TRANSPARÊNCIA E COMPLIANCE ABAC / BACEN */}
+        {/* NOTA DE TRANSPARÊNCIA */}
         <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-slate-400 text-center font-medium">
           <Info className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
           <span>
-            * Imagens de bens meramente ilustrativas. Créditos sujeitos a aprovação cadastral. A meia parcela (Plano 50/50) vigora até a contemplação por sorteio ou lance; após, aplica-se a recomposição ou amortização conforme contrato oficial Magalu. ¹ Base comparativa estimada calculada sobre CET médio de 11,5% a.a. na tabela SAC.
+            * Imagens de bens meramente ilustrativas. Créditos sujeitos a aprovação cadastral e regras do Consórcio Magalu. Valores de parcelas sujeitos a alteração conforme tabela e grupo vigentes.
           </span>
         </div>
 
