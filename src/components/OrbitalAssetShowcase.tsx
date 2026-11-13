@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Car, Home, Truck, Bike, ShieldCheck, CheckCircle2, ArrowRight } from "lucide-react";
-import cardImovel from "@/assets/card-imovel.webp";
-import cardVeiculo from "@/assets/card-veiculo.webp";
-import cardMoto from "@/assets/card-moto.webp";
-import cardPesados from "@/assets/banner-pesados.jpg";
+import brightCar from "@/assets/bright/bright-car.webp";
+import brightHouse from "@/assets/bright/bright-house.webp";
+import brightMoto from "@/assets/bright/bright-moto.webp";
+import brightTruck from "@/assets/bright/bright-truck.webp";
 
 export interface OrbitalConquest {
   id: string;
@@ -28,7 +28,7 @@ export const ORBITAL_CONQUESTS: OrbitalConquest[] = [
     targetCredit: 100000,
     parcelaEstimada: "R$ 680,00/mês",
     prazoMaximo: "100 meses",
-    image: cardVeiculo,
+    image: brightCar,
     icon: Car,
     color: "#00F2FE", // Ciano Neon
     categoryId: "veiculo",
@@ -41,7 +41,7 @@ export const ORBITAL_CONQUESTS: OrbitalConquest[] = [
     targetCredit: 150000,
     parcelaEstimada: "R$ 508,25/mês",
     prazoMaximo: "220 meses",
-    image: cardImovel,
+    image: brightHouse,
     icon: Home,
     color: "#FFB800", // Ouro Magalu
     categoryId: "imovel",
@@ -54,7 +54,7 @@ export const ORBITAL_CONQUESTS: OrbitalConquest[] = [
     targetCredit: 18000,
     parcelaEstimada: "R$ 176,21/mês",
     prazoMaximo: "77 meses",
-    image: cardMoto,
+    image: brightMoto,
     icon: Bike,
     color: "#10B981", // Esmeralda
     categoryId: "veiculo",
@@ -67,7 +67,7 @@ export const ORBITAL_CONQUESTS: OrbitalConquest[] = [
     targetCredit: 250000,
     parcelaEstimada: "R$ 1.412,84/mês",
     prazoMaximo: "127 meses",
-    image: cardPesados,
+    image: brightTruck,
     icon: Truck,
     color: "#8B5CF6", // Roxo Tech
     categoryId: "pesados",
@@ -136,13 +136,14 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
         />
 
         {/* Imagem do Ativo */}
-        <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-slate-950">
+        <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-slate-900/20">
           <img
             src={selectedAsset.image}
             alt={selectedAsset.name}
-            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105 brightness-[1.03] contrast-[1.02]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#060D19] via-[#060D19]/35 to-transparent pointer-events-none" />
+          {/* Apenas suave sombra inferior para leitura da parcela */}
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/80 to-transparent pointer-events-none" />
 
           {/* Badge superior da categoria */}
           <div className="absolute top-3 left-3 z-10 flex items-center gap-2">

@@ -750,32 +750,34 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
       <section id="simulator" className={`relative z-10 flex-1 ${compact ? "p-0" : "py-6 sm:py-8"}`}>
         <div className={`w-full flex flex-col items-center ${compact ? 'max-w-full px-0' : (isInternal ? 'container mx-auto px-4 max-w-5xl' : 'container mx-auto px-4 max-w-2xl sm:max-w-3xl lg:max-w-4xl')}`}>
           
-          <div className={`relative flex flex-col items-center ${compact ? "mb-2" : "mb-4"} animate-breathe w-full`}>
-            <div className={`relative ${compact ? "w-10 h-10 sm:w-12 sm:h-12" : "w-14 h-14 sm:w-16 sm:h-16"} flex items-center justify-center`}>
-              {/* Core Glow */}
-              <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full scale-125" />
-              
-              {/* CSS Orbit Rings (Atoms) */}
-              <div className="absolute w-[180%] h-[65%] border border-blue-400/35 rounded-[100%] animate-[spin_10s_linear_infinite]" />
-              <div className="absolute w-[180%] h-[65%] border border-green-400/25 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
+          {!compact && (
+            <div className="relative flex flex-col items-center mb-4 animate-breathe w-full">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
+                {/* Core Glow */}
+                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full scale-125" />
+                
+                {/* CSS Orbit Rings (Atoms) */}
+                <div className="absolute w-[180%] h-[65%] border border-blue-400/35 rounded-[100%] animate-[spin_10s_linear_infinite]" />
+                <div className="absolute w-[180%] h-[65%] border border-green-400/25 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
 
-              {/* Logo Image */}
-              <img 
-                src="/icon-512.webp" 
-                alt="Logo Contemplar" 
-                className={`${compact ? "h-8 sm:h-9" : "h-11 sm:h-13"} w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10`} 
-              />
-            </div>
+                {/* Logo Image */}
+                <img 
+                  src="/icon-512.webp" 
+                  alt="Logo Contemplar" 
+                  className="h-11 sm:h-13 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10" 
+                />
+              </div>
 
-            <div className={`flex flex-col items-center leading-tight ${compact ? "mt-1" : "mt-2"} relative z-10`}>
-              <span className={`${compact ? "text-sm sm:text-base tracking-wider" : "text-lg sm:text-xl tracking-widest"} font-black text-white uppercase drop-shadow-lg`}>
-                CONTEMPLAR
-              </span>
-              <span className={`${compact ? "text-[8px] sm:text-[9px] tracking-[0.3em]" : "text-[11px] sm:text-xs tracking-[0.35em]"} font-bold text-[#84CC16] -mt-0.5 ml-1 drop-shadow-md`}>
-                SIMULADOR
-              </span>
+              <div className="flex flex-col items-center leading-tight mt-2 relative z-10">
+                <span className="text-lg sm:text-xl tracking-widest font-black text-white uppercase drop-shadow-lg">
+                  CONTEMPLAR
+                </span>
+                <span className="text-[11px] sm:text-xs tracking-[0.35em] font-bold text-[#84CC16] -mt-0.5 ml-1 drop-shadow-md">
+                  SIMULADOR
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {isBF && !compact && (
             <BlackFridayBanner className="w-full mb-6" />
@@ -1490,8 +1492,6 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
           </div>
         </div>
       </section>
-      {/* VERSAO INJETADA PARA DEBUG VISUAL */}
-      <div className="text-[10px] text-gray-300 text-center mt-2">v_fix_10_color</div>
       
       {/* Hidden Banner Generator placed absolutely to avoid ResizeObserver loops */}
       {(resultado || isInternal) && (
