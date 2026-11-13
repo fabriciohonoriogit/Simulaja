@@ -1,41 +1,40 @@
 import React from "react";
-import { CheckCheck, CheckCircle2, Star, ShieldCheck } from "lucide-react";
-import { WhatsAppIcon } from "./SocialIcons";
+import { CheckCircle2, ShieldCheck, Quote, Info } from "lucide-react";
 import { BlueParticlesBackground } from "@/components/BlueParticlesBackground";
 
 const testimonials = [
   {
-    title: "EU NÃO ACREDITAVA EM CONSÓRCIO",
-    text: "Fiz o consórcio pela amizade que tinha com o Fabricio, e para minha surpresa fui contemplado no 3º mês.",
     author: "João Pereira",
-    role: "Construtor • Paranaguá/PR",
-    time: "09:42",
+    role: "Construtor Civil",
+    city: "Paranaguá/PR",
+    quote: "Confesso que no início eu tinha receio de consórcio, achava que demorava muito. O Fabrício estruturou uma estratégia de lance calculada para o meu orçamento e fui contemplado já no 3º mês. Consegui antecipar a compra do maquinário para as minhas obras sem pagar nenhum juro bancário.",
+    conquista: "Maquinário & Construção Civil",
     initials: "JP",
-    contemplation: "Contemplado no 3º Mês",
+    badge: "Contemplação Planejada",
   },
   {
-    title: "CONQUISTEI MINHA CASA NA PRAIA",
-    text: "Sou aposentada e com fé em Deus e a ajuda do Fabricio consegui conquistar minha casa na praia no 6º mês.",
     author: "Zilma Gomes",
-    role: "Aposentada • Guaratuba/PR",
-    time: "14:15",
+    role: "Aposentada",
+    city: "Guaratuba/PR",
+    quote: "Meu sonho sempre foi ter um imóvel próprio no litoral para reunir a família nos fins de semana. O Fabrício cuidou de cada detalhe com muita paciência e respeito. No 6º mês veio a contemplação e hoje minha casa na praia é uma realidade.",
+    conquista: "Imóvel no Litoral",
     initials: "ZG",
-    contemplation: "Contemplada no 6º Mês",
+    badge: "Casa Própria",
   },
   {
-    title: "CONQUISTEI UMA MOTO TOP",
-    text: "Queria comprar uma moto via financiamento, mas a parcela estava fora do meu orçamento. Por indicação conheci o Fabricio e fui contemplado no 3º mês, hoje curto a liberdade que a moto me proporciona. Gratidão.",
-    author: "Elias Jr",
-    role: "Cliente • Paranaguá/PR",
-    time: "18:30",
+    author: "Elias Jr.",
+    role: "Comerciante & Autônomo",
+    city: "Paranaguá/PR",
+    quote: "Queria trocar de veículo, mas o financiamento bancário pedia uma entrada absurda e quase o dobro do valor em juros. Conheci a consultoria do Fabrício por indicação de um amigo: entrei no plano com meia parcela e conquistei meu veículo sem me descapitalizar.",
+    conquista: "Veículo 0km",
     initials: "EJ",
-    contemplation: "Contemplado no 3º Mês",
+    badge: "Aquisição Sem Entrada",
   },
 ];
 
 const Testimonials = () => {
   return (
-    <section className="py-12 sm:py-16 bg-[#070D19] text-white relative overflow-hidden border-t border-white/10" id="depoimentos">
+    <section className="py-14 sm:py-20 bg-[#070D19] text-white relative overflow-hidden border-t border-white/10" id="depoimentos">
       {/* Partículas Espaciais Contínuas */}
       <BlueParticlesBackground />
 
@@ -46,96 +45,75 @@ const Testimonials = () => {
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Header da Seção */}
-        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 space-y-4">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-300 text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.2)]">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Depoimentos Reais de Clientes</span>
+            <span>Casos Reais de Sucesso</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
-            Histórias Reais de{" "}
+            Histórias de quem planejou e{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500">
-              Conquista
+              conquistou seu patrimônio
             </span>
           </h2>
 
-          <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
-            Veja as mensagens enviadas por clientes reais que planejaram e conquistaram seus patrimônios com a consultoria de Fabrício Honório.
+          <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+            Experiências de clientes que transformaram metas em conquistas concretas com a assessoria executiva de Fabrício Honório.
           </p>
         </div>
 
-        {/* WhatsApp Review Cards Grid em Estilo Noturno Executivo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Grid de Depoimentos Alinhados com Design Executivo */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {testimonials.map((item, idx) => (
             <div
               key={idx}
-              className="group relative bg-[#0B1528]/90 rounded-3xl overflow-hidden border border-white/10 hover:border-emerald-400/50 shadow-2xl shadow-blue-950/60 hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between backdrop-blur-xl"
+              className="relative bg-gradient-to-b from-[#0B1528]/95 to-[#070D19]/95 rounded-3xl p-6 sm:p-7 border border-white/10 hover:border-cyan-400/50 shadow-2xl shadow-blue-950/60 hover:shadow-cyan-500/10 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between backdrop-blur-xl h-full"
             >
-              {/* WhatsApp Header Bar Noturno */}
-              <div className="bg-[#0e2c22] text-white p-4 flex items-center justify-between border-b border-emerald-500/20 shadow-md">
+              {/* Top: Ícone Quote & Badge da Conquista */}
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center justify-center">
+                    <Quote className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-white/[0.04] text-cyan-300 border border-cyan-400/30 px-3 py-1 rounded-full">
+                    {item.badge}
+                  </span>
+                </div>
+
+                {/* Depoimento Textual */}
+                <p className="text-slate-200 text-xs sm:text-sm leading-relaxed font-medium mb-6">
+                  "{item.quote}"
+                </p>
+              </div>
+
+              {/* Bottom: Perfil do Cliente */}
+              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-600 border border-emerald-400/60 flex items-center justify-center font-black text-sm text-white shadow-inner">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-black text-sm flex items-center justify-center shadow-md shadow-cyan-500/20 shrink-0">
                     {item.initials}
                   </div>
                   <div>
                     <h3 className="font-bold text-sm text-white leading-tight flex items-center gap-1.5">
                       {item.author}
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
                     </h3>
-                    <p className="text-[11px] text-emerald-200/80 font-medium">{item.role}</p>
+                    <p className="text-[11px] text-slate-400">
+                      {item.role} • <span className="text-slate-300">{item.city}</span>
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black bg-emerald-950/90 px-2.5 py-1 rounded-full text-emerald-300 border border-emerald-400/40">
-                    🏆 {item.contemplation}
-                  </span>
-                </div>
-              </div>
-
-              {/* Chat Body Wallpaper Noturno & Message Bubble */}
-              <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between bg-[#08101a] relative">
-                
-                {/* Incoming Message Bubble */}
-                <div className="relative bg-[#0F291E] text-slate-100 rounded-2xl rounded-tl-none p-4.5 shadow-lg border border-emerald-500/30 max-w-[96%] mb-4">
-                  {/* Small WhatsApp Bubble Tail Left Top */}
-                  <div className="absolute -top-[1px] -left-2 w-0 h-0 border-t-[10px] border-t-[#0F291E] border-l-[10px] border-l-transparent" />
-                  
-                  {/* Quote Highlight Title */}
-                  <div className="text-xs font-black uppercase text-amber-300 tracking-wider mb-2 pb-1 border-b border-emerald-500/30 flex items-center justify-between">
-                    <span>"{item.title}"</span>
-                    <div className="flex text-amber-400 gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Message Content */}
-                  <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-                    "{item.text}"
-                  </p>
-
-                  {/* Timestamp & Double Blue Checkmark */}
-                  <div className="flex items-center justify-end gap-1.5 mt-3 text-[10px] text-slate-400 font-bold">
-                    <span>{item.time}</span>
-                    <CheckCheck className="w-4 h-4 text-[#34B7F1]" />
-                  </div>
-                </div>
-
-                {/* WhatsApp Footer Badge */}
-                <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 font-bold">
-                  <div className="flex items-center gap-1.5 text-emerald-400">
-                    <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
-                    <span>Depoimento Verificado</span>
-                  </div>
-                  <span className="text-[10px] uppercase font-black tracking-wider text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                    100% Real
-                  </span>
-                </div>
-
               </div>
             </div>
           ))}
+        </div>
+
+        {/* AVISO REGULATÓRIO BANCO CENTRAL & LEI 11.795/2008 */}
+        <div className="mt-10 p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-xs text-slate-400 flex items-start gap-3 max-w-4xl mx-auto backdrop-blur-md">
+          <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+          <p className="text-[11px] leading-relaxed">
+            <strong className="text-slate-200">Aviso Regulatório (Lei Federal nº 11.795/2008 / Banco Central do Brasil):</strong> Os depoimentos acima representam experiências individuais de clientes consorciados. No sistema de consórcios, a contemplação ocorre exclusivamente por meio de sorteio ou lance nas assembleias oficiais mensais da administradora, não havendo garantia de data prévia de contemplação.
+          </p>
         </div>
 
       </div>

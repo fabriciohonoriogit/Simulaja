@@ -1270,12 +1270,13 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                 </button>
                 
                 {!isInternal && (
-                  <div className="mt-4 flex flex-col items-center gap-1">
+                  <div className="mt-3 flex flex-col items-center gap-1">
                     <p className="text-[10px] font-bold text-[#FF7A00] uppercase tracking-widest">
                       Leva menos de 30 segundos
                     </p>
-                    <p className="text-[10px] text-muted-foreground opacity-60">
-                      Sem compromisso. Não enviamos spam.
+                    <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-emerald-400" />
+                      <span>Dados 100% protegidos pela LGPD. Sem spam.</span>
                     </p>
                   </div>
                 )}

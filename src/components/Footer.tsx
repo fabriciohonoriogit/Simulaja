@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Linkedin, Phone, Sparkles } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Phone, Sparkles, ShieldCheck, Lock } from "lucide-react";
 
 const WHATSAPP_NUMBER = "5541997925357";
 
@@ -11,7 +11,7 @@ const Footer = () => {
           {/* Brand Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#B8860B] via-[#D4AF37] to-[#966F1E] flex items-center justify-center text-slate-950 font-bold">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#B8860B] via-[#D4AF37] to-[#966F1E] flex items-center justify-center text-slate-950 font-bold shadow-md">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
@@ -20,8 +20,12 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-              Consultoria estratégica especializada em planejamento financeiro e consórcios. Conquiste seu imóvel, veículo ou investimento sem juros bancários.
+              Gestor Autorizado Consórcio Magalu (Filial 10826 / Chapa 918260). Consultoria estratégica e independente em consórcios imobiliários, pesados e veículos com metodologia de meia parcela.
             </p>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[10px] text-cyan-300 font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Parceria Oficial Consórcio Magalu</span>
+            </div>
           </div>
 
           {/* Navigation Anchors */}
@@ -41,27 +45,37 @@ const Footer = () => {
                 <a href="#depoimentos" className="hover:text-amber-400 transition-colors">Histórias de Sucesso</a>
               </li>
               <li>
-                <a href="#faq" className="hover:text-amber-400 transition-colors">Perguntas Frequentes</a>
+                <a href="/pre-cadastro" className="hover:text-amber-400 transition-colors">Ficha de Pré-Cadastro</a>
+              </li>
+              <li>
+                <a href="/login" className="hover:text-amber-400 transition-colors">Acesso Administrativo CRM</a>
               </li>
             </ul>
           </div>
 
-          {/* Useful Links & ABAC */}
+          {/* Compliance & ABAC */}
           <div className="space-y-3">
-            <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">Links Úteis</h4>
+            <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">Regulatório & ABAC</h4>
             <ul className="space-y-2 text-xs font-medium text-slate-400">
               <li>
                 <a href="https://www.abac.org.br/para-voce" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
-                  ABAC — Guia do Consórcio
+                  ABAC — Guia Oficial do Consórcio
                 </a>
               </li>
               <li>
-                <a href="https://www.abac.org.br/perguntas-frequentes" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
-                  ABAC — Dúvidas e Regras
+                <a href="https://www.bcb.gov.br/estabilidadefinanceira/consorcios" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
+                  Banco Central do Brasil — Fiscalização
                 </a>
               </li>
               <li>
-                <a href="/login" className="hover:text-amber-400 transition-colors">Acesso Administrativo</a>
+                <span className="text-slate-500 block text-[11px] pt-1">
+                  Lei Federal nº 11.795/2008 (Sistema de Consórcios)
+                </span>
+              </li>
+              <li>
+                <span className="text-slate-500 block text-[11px]">
+                  Administradora: Consórcio Magalu Ltda. (CNPJ 50.416.748/0001-90)
+                </span>
               </li>
             </ul>
           </div>
@@ -99,9 +113,21 @@ const Footer = () => {
 
         </div>
 
-        <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
+        {/* NOTA LGPD & SEGURANÇA */}
+        <div className="border-t border-slate-800/80 pt-6 pb-4 text-[11px] text-slate-400 leading-relaxed flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-cyan-300 font-bold">
+            <Lock className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>Privacidade & LGPD:</span>
+          </div>
+          <p className="flex-1 text-slate-400 text-[10.5px]">
+            Seus dados cadastrais e de simulação são protegidos em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Não comercializamos suas informações com terceiros nem enviamos mensagens não autorizadas.
+          </p>
+        </div>
+
+        {/* COPYRIGHT & CRÉDITOS */}
+        <div className="border-t border-slate-800/80 pt-6 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} O Especialista em Consórcio — Fabrício Rodrigues Honório — <a href="https://www.oespecialistaconsorcio.com.br" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors font-bold">www.oespecialistaconsorcio.com.br</a></p>
-          <p className="font-bold text-amber-400/90 tracking-wider">PROSPERA PLANEJAMENTO & CONSULTORIA</p>
+          <p className="font-bold text-amber-400/90 tracking-wider text-[11px]">PROSPERA PLANEJAMENTO & CONSULTORIA</p>
         </div>
       </div>
     </footer>
@@ -109,4 +135,3 @@ const Footer = () => {
 };
 
 export default Footer;
-
