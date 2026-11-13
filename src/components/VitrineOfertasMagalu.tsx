@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { Sparkles, Flame, CheckCircle2, ArrowRight, ShieldCheck, Heart, Zap } from "lucide-react";
 import { getActiveCampaignTheme } from "@/utils/campaignThemeManager";
 import brightHouse from "@/assets/bright/bright-house.webp";
@@ -128,9 +129,9 @@ export function VitrineOfertasMagalu() {
   };
 
   return (
-    <section className="py-10 bg-[#070D19] text-white relative overflow-hidden border-b border-white/10">
-      {/* Luzes de Fundo Sazonais Magalu */}
-      <div className="absolute top-0 right-1/4 w-[500px] h-[300px] bg-blue-600/15 blur-3xl pointer-events-none" />
+    <section className="py-12 bg-[#070D19] text-white relative overflow-hidden border-b border-white/10">
+      {/* Luzes de Fundo Sazonais Magalu com Pulso Lento */}
+      <div className="absolute top-0 right-1/4 w-[500px] h-[300px] bg-blue-600/15 blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute bottom-0 left-1/4 w-[500px] h-[300px] bg-amber-500/10 blur-3xl pointer-events-none" />
 
       <div className="container max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -154,33 +155,42 @@ export function VitrineOfertasMagalu() {
           </p>
         </div>
 
-        {/* VITRINE HORIZONTAL DE CARDS DE DESEJO */}
+        {/* VITRINE HORIZONTAL DE CARDS DE DESEJO COM ANIMAÇÃO INTERATIVA */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          {OFERTAS_MAGALU.map((oferta) => (
-            <div
+          {OFERTAS_MAGALU.map((oferta, idx) => (
+            <motion.div
               key={oferta.id}
               onClick={() => handleSelectOffer(oferta)}
-              className="group cursor-pointer rounded-3xl p-3 bg-gradient-to-b from-[#0a1226] to-[#060b18] border border-white/10 hover:border-cyan-400/60 shadow-xl hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 flex flex-col justify-between hover:scale-[1.02] active:scale-[0.98]"
+              whileHover={{ y: -7, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="group cursor-pointer rounded-3xl p-3 bg-gradient-to-b from-[#0a1226] to-[#060b18] border border-white/10 hover:border-cyan-400/80 shadow-xl hover:shadow-[0_12px_35px_rgba(0,242,254,0.22)] transition-all duration-300 flex flex-col justify-between"
             >
-              {/* Imagem Desejável do Bem com Tag de Oferta */}
+              {/* Imagem Desejável do Bem com Tag de Oferta e Feixe de Luz */}
               <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-3 bg-slate-900/30">
                 <img
                   src={oferta.imagem}
                   alt={oferta.titulo}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 brightness-[1.03] contrast-[1.02]"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 brightness-[1.03] contrast-[1.02]"
                 />
+
+                {/* Feixe de Luz Reflexivo ao Passar o Mouse */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+                  <div className="w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg] translate-x-[-150%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out" />
+                </div>
+
                 {/* Sutil sombra apenas no rodapé para leitura do prazo */}
-                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none z-10" />
 
                 {/* Tag de Destaque */}
-                <div className="absolute top-2 left-2 z-10">
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-md ${oferta.tagCor}`}>
+                <div className="absolute top-2 left-2 z-20">
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-md ${oferta.tagCor} flex items-center gap-1`}>
                     {oferta.tagDestaque}
                   </span>
                 </div>
 
                 {/* Prazo */}
-                <div className="absolute bottom-2 right-2 z-10 px-2 py-0.5 rounded-md bg-black/70 border border-white/10 text-[9px] font-bold text-slate-300 backdrop-blur-md">
+                <div className="absolute bottom-2 right-2 z-20 px-2 py-0.5 rounded-md bg-black/75 border border-white/15 text-[9px] font-bold text-slate-300 backdrop-blur-md">
                   {oferta.prazo}
                 </div>
               </div>
@@ -206,11 +216,11 @@ export function VitrineOfertasMagalu() {
                     <span className="text-white font-black">{oferta.creditoFormatado}</span>
                   </div>
 
-                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center group-hover:border-amber-400/60 transition-colors">
                     <div className="text-[9px] font-bold uppercase tracking-widest text-amber-300">
                       Meia Parcela 50/50:
                     </div>
-                    <div className="text-base font-black text-amber-400">
+                    <div className="text-base font-black text-amber-400 group-hover:scale-105 transition-transform font-mono">
                       {oferta.meiaParcela}
                     </div>
                   </div>
@@ -223,13 +233,13 @@ export function VitrineOfertasMagalu() {
                 {/* Botão de Conquista Imediata */}
                 <button
                   type="button"
-                  className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-blue-600 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/25 transition-all group-hover:scale-105"
+                  className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-blue-600 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/25 transition-all group-hover:shadow-[0_0_20px_rgba(0,242,254,0.4)]"
                 >
                   <span>QUERO ESTE</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
                 </button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -254,7 +264,7 @@ export function VitrineOfertasMagalu() {
               const sim = document.getElementById("simulator");
               if (sim) sim.scrollIntoView({ behavior: "smooth" });
             }}
-            className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white transition-all shrink-0"
+            className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white transition-all shrink-0 hover:scale-105"
           >
             Personalizar no Simulador ➔
           </button>
@@ -264,4 +274,3 @@ export function VitrineOfertasMagalu() {
     </section>
   );
 }
-

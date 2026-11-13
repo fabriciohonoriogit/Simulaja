@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Car, Home, Truck, Bike, ShieldCheck, CheckCircle2, ArrowRight } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Car, Home, Truck, Bike, ShieldCheck, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import brightCar from "@/assets/bright/bright-car.webp";
 import brightHouse from "@/assets/bright/bright-house.webp";
 import brightMoto from "@/assets/bright/bright-moto.webp";
@@ -79,11 +80,27 @@ interface OrbitalAssetShowcaseProps {
   className?: string;
 }
 
-export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: OrbitalAssetShowcaseProps) {
-  const [selectedAsset, setSelectedAsset] = useState<OrbitalConquest>(ORBITAL_CONQUESTS[0]);
+const AUTOPLAY_DURATION_MS = 5500;
 
-  const handleSelect = (asset: OrbitalConquest) => {
-    setSelectedAsset(asset);
+export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: OrbitalAssetShowcaseProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const selectedAsset = ORBITAL_CONQUESTS[selectedIndex];
+
+  // Auto-Play: avança automaticamente a cada 5.5s se não estiver em hover
+  useEffect(() => {
+    if (isHovered) return;
+
+    const interval = setInterval(() => {
+      setSelectedIndex((prev) => (prev + 1) % ORBITAL_CONQUESTS.length);
+    }, AUTOPLAY_DURATION_MS);
+
+    return () => clearInterval(interval);
+  }, [isHovered, selectedIndex]);
+
+  const handleSelect = (index: number) => {
+    setSelectedIndex(index);
+    const asset = ORBITAL_CONQUESTS[index];
     if (onSelectCategory) {
       onSelectCategory(asset.categoryId);
     }
@@ -100,67 +117,118 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
   };
 
   return (
-    <div className={`w-full flex flex-col items-start select-none ${className}`}>
-      {/* SELETOR SUPERIOR EM PÍLULAS */}
+    <div 
+      className={`w-full flex flex-col items-start select-none ${className}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* SELETOR SUPERIOR EM PÍLULAS COM BARRA DE PROGRESSO ANIMADA */}
       <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-[#070D19]/90 border border-white/10 backdrop-blur-xl shadow-xl z-20 mb-3 w-full">
-        {ORBITAL_CONQUESTS.map((asset) => {
-          const isSelected = selectedAsset.id === asset.id;
+        {ORBITAL_CONQUESTS.map((asset, index) => {
+          const isSelected = selectedIndex === index;
           const Icon = asset.icon;
           return (
             <button
               key={asset.id}
-              onClick={() => handleSelect(asset)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 ${
+              onClick={() => handleSelect(index)}
+              className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 ${
                 isSelected
-                  ? "bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 text-white shadow-lg shadow-cyan-500/25 scale-102"
+                  ? "bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 text-white shadow-lg shadow-cyan-500/25 scale-[1.02]"
                   : "text-slate-300 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{asset.name}</span>
+              <Icon className="w-3.5 h-3.5 relative z-10" />
+              <span className="relative z-10">{asset.name}</span>
+
+              {/* Barra de progresso do Auto-Play no botão ativo */}
+              {isSelected && !isHovered && (
+                <motion.div
+                  key={`progress-${selectedIndex}`}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: AUTOPLAY_DURATION_MS / 1000, ease: "linear" }}
+                  style={{ originX: 0 }}
+                  className="absolute inset-x-0 bottom-0 h-[2px] bg-white/70"
+                />
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* VITRINE REAL DO BEM SELECIONADO - CLICÁVEL QUE ATUALIZA O SIMULADOR */}
+      {/* VITRINE REAL DO BEM SELECIONADO COM EFEITOS DINÂMICOS */}
       <div 
-        onClick={() => handleSelect(selectedAsset)}
-        className="w-full relative rounded-3xl overflow-hidden border border-white/15 bg-gradient-to-b from-[#0B1528] to-[#060D19] shadow-2xl group transition-all duration-300 cursor-pointer hover:border-cyan-400/60"
-        title="Clique para simular esta oferta no simulador ao lado"
+        onClick={() => handleSelect(selectedIndex)}
+        className="w-full relative rounded-3xl overflow-hidden border border-white/15 bg-gradient-to-b from-[#0B1528] to-[#060D19] shadow-2xl group transition-all duration-500 cursor-pointer hover:border-cyan-400/60 hover:shadow-[0_0_35px_rgba(0,242,254,0.25)]"
+        title="Toque para simular esta conquista com meia parcela"
       >
-        {/* Glow dinâmico sutil baseado na cor do ativo */}
+        {/* Glow dinâmico sutil que pulsa e reage à cor do ativo */}
         <div
-          className="absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-700"
+          className="absolute -top-12 -right-12 w-72 h-72 rounded-full blur-3xl opacity-25 pointer-events-none transition-all duration-1000 animate-pulse"
           style={{ backgroundColor: selectedAsset.color }}
         />
 
-        {/* Imagem do Ativo */}
-        <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-slate-900/20">
-          <img
-            src={selectedAsset.image}
-            alt={selectedAsset.name}
-            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105 brightness-[1.03] contrast-[1.02]"
-          />
-          {/* Apenas suave sombra inferior para leitura da parcela */}
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/80 to-transparent pointer-events-none" />
+        {/* CONTAINER DA IMAGEM COM TRANSIÇÃO KEN BURNS E FEIXE DE LUZ */}
+        <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-slate-900/30">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedAsset.id}
+              initial={{ opacity: 0, scale: 1.08 }}
+              animate={{ opacity: 1, scale: 1.02 }}
+              exit={{ opacity: 0, scale: 1 }}
+              transition={{
+                opacity: { duration: 0.6, ease: "easeInOut" },
+                scale: { duration: 6, ease: "easeOut" }
+              }}
+              className="w-full h-full"
+            >
+              <img
+                src={selectedAsset.image}
+                alt={selectedAsset.name}
+                className="w-full h-full object-cover object-center brightness-[1.04] contrast-[1.03] transition-transform duration-700 group-hover:scale-105"
+              />
+            </motion.div>
+          </AnimatePresence>
 
-          {/* Badge superior da categoria */}
-          <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-slate-950/80 border border-white/15 text-[10px] font-black uppercase tracking-wider text-cyan-300 backdrop-blur-md">
+          {/* FEIXE DE LUZ REFLEXIVO (SHINE SWEEP DE ALTO PADRÃO) */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+            <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] animate-shine-sweep" />
+          </div>
+
+          {/* Apenas suave sombra inferior para leitura da parcela */}
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent pointer-events-none z-10" />
+
+          {/* Badges superiores flutuantes com animação */}
+          <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-slate-950/85 border border-white/20 text-[10px] font-black uppercase tracking-wider text-cyan-300 backdrop-blur-md shadow-lg">
               {selectedAsset.name}
             </span>
-            <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider text-emerald-300 backdrop-blur-md">
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-[10px] font-black uppercase tracking-wider text-emerald-300 backdrop-blur-md shadow-lg flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+              </span>
               50% até contemplar
             </span>
           </div>
 
-          {/* Destaque da Parcela Reduzida na Imagem */}
-          <div className="absolute bottom-3 right-3 z-10 text-right">
-            <div className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Meia Parcela a partir de</div>
-            <div className="text-xl sm:text-2xl font-black text-amber-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] font-mono">
-              {selectedAsset.parcelaEstimada}
+          {/* Destaque da Parcela Reduzida na Imagem com Animação de Entrada */}
+          <div className="absolute bottom-3 right-3 z-20 text-right">
+            <div className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center justify-end gap-1">
+              <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" /> Meia Parcela a partir de
             </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedAsset.parcelaEstimada}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="text-xl sm:text-2xl font-black text-amber-300 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] font-mono tracking-tight"
+              >
+                {selectedAsset.parcelaEstimada}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
@@ -170,21 +238,21 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
             <p className="text-xs sm:text-sm text-slate-300 font-medium leading-snug">
               {selectedAsset.subtitle}
             </p>
-            <span className="inline-flex items-center gap-1 text-[11px] font-black text-cyan-300 shrink-0 group-hover:translate-x-1 transition-transform">
+            <span className="inline-flex items-center gap-1 text-[11px] font-black text-cyan-300 shrink-0 group-hover:translate-x-1.5 transition-transform">
               Simular <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10 text-[11px] font-bold text-slate-300">
-            <div className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 text-cyan-300 flex items-center gap-1.5">
+            <div className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 text-cyan-300 flex items-center gap-1.5 shadow-sm">
               <span>Créditos:</span>
               <strong className="text-white">{selectedAsset.creditRange}</strong>
             </div>
-            <div className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 text-amber-300 flex items-center gap-1.5">
+            <div className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 text-amber-300 flex items-center gap-1.5 shadow-sm">
               <span>Prazo:</span>
               <strong className="text-white">{selectedAsset.prazoMaximo}</strong>
             </div>
-            <div className="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 flex items-center gap-1.5">
+            <div className="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 flex items-center gap-1.5 shadow-sm">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Sem Juros Bancários</span>
             </div>
