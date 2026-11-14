@@ -3,7 +3,7 @@ import ConsortiumSimulator from "@/components/ConsortiumSimulator";
 
 export default function SimuladorAdmin() {
   return (
-    <div 
+    <div
       className="flex-1 overflow-y-auto custom-scrollbar w-full h-full bg-[#FAF9F5] text-slate-800"
       style={{
         backgroundImage: `
