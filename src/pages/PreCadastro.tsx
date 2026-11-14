@@ -339,7 +339,7 @@ export default function PreCadastro() {
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
             O Futuro do seu Patrimônio{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-amber-300">
+            <span className="text-[#0086FF]">
               Sem Juros Bancários
             </span>
           </h1>
