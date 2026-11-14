@@ -29,7 +29,7 @@ const FinalCTA = () => {
         {/* Large Text */}
         <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15]">
           Planeje hoje. <br className="hidden sm:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">
+          <span className="text-[#0086FF]">
             Conquiste amanhã.
           </span>
         </h2>
@@ -43,7 +43,7 @@ const FinalCTA = () => {
         <div className="pt-4">
           <button
             onClick={scrollToSimulator}
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-slate-950 px-10 py-5 rounded-2xl text-lg font-black uppercase tracking-wider shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all hover:scale-105 active:scale-95 group"
+            className="inline-flex items-center gap-3 bg-[#0086FF] hover:bg-[#0074E0] text-white px-10 py-5 rounded-2xl text-lg font-bold uppercase tracking-wider shadow-2xl shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 group"
           >
             SIMULAR AGORA
             <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />

@@ -50,14 +50,14 @@ const HowItWorks = () => {
         
         {/* Header da Seção */}
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/40 text-cyan-300 text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-[0_0_15px_rgba(0,134,255,0.2)]">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>Metodologia Consultiva & Transparente</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
             Como Funciona o{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-amber-300">
+            <span className="text-[#0086FF]">
               Planejamento Estratégico
             </span>
           </h2>
@@ -72,21 +72,21 @@ const HowItWorks = () => {
           {steps.map((step, idx) => (
             <div
               key={idx}
-              className="group relative bg-[#0B1528]/80 rounded-3xl p-7 border border-white/10 hover:border-cyan-400/50 shadow-xl shadow-blue-950/40 hover:shadow-cyan-500/10 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between"
+              className="group relative bg-[#0B1528] rounded-3xl p-7 border border-slate-800 hover:border-blue-500/50 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between"
             >
               <div>
                 {/* Step Top Bar */}
                 <div className="flex items-center justify-between mb-5">
-                  <span className="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-wider text-cyan-300">
+                  <span className="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-wider text-blue-300">
                     {step.tag}
                   </span>
-                  <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-500">
+                  <span className="text-3xl font-black text-[#0086FF]">
                     {step.number}
                   </span>
                 </div>
 
                 {/* Title & Description */}
-                <h3 className="font-black text-lg sm:text-xl text-white group-hover:text-cyan-300 transition-colors mb-2.5 leading-snug">
+                <h3 className="font-black text-lg sm:text-xl text-white group-hover:text-blue-300 transition-colors mb-2.5 leading-snug">
                   {step.title}
                 </h3>
                 <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
@@ -110,10 +110,10 @@ const HowItWorks = () => {
         <div className="mt-14 text-center">
           <button
             onClick={scrollToSimulator}
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-wider shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all"
+            className="inline-flex items-center gap-3 bg-[#0086FF] hover:bg-[#0074E0] text-white px-8 py-4 rounded-2xl text-sm font-bold uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all"
           >
             <span>Começar Meu Planejamento</span>
-            <ArrowRight className="w-4 h-4 text-slate-950" />
+            <ArrowRight className="w-4 h-4 text-white" />
           </button>
         </div>
 

@@ -37,7 +37,7 @@ export const BlackFridayBanner: React.FC<BlackFridayBannerProps> = ({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
           </span>
-          <span className="text-[10px] sm:text-xs font-black tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-pink-400">
+          <span className="text-[10px] sm:text-xs font-black tracking-widest uppercase text-white">
             Black das Blacks Magalu
           </span>
           <span className="hidden sm:inline-block text-[9px] font-bold px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
@@ -102,10 +102,7 @@ export const BlackFridayBanner: React.FC<BlackFridayBannerProps> = ({
               </div>
 
               <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white uppercase leading-none drop-shadow-md">
-                BLACK DAS{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-pink-400 to-cyan-300">
-                  BLACKS
-                </span>
+                BLACK DAS <span className="text-[#0086FF]">BLACKS</span>
               </h2>
 
               <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1 leading-snug max-w-xl">

@@ -91,7 +91,7 @@ const SegmentCards = () => {
             <span>Portfólio de Soluções</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#0F172A]">
-            Tipos de <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#966F1E]">Consórcio</span>
+            Tipos de <span className="text-[#0086FF]">Consórcio</span>
           </h2>
           <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
             Escolha o segmento ideal para o seu momento de vida e receba um planejamento personalizado para atingir seu objetivo.

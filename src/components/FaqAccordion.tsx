@@ -56,7 +56,7 @@ const FaqAccordion = () => {
             Tire Suas Dúvidas
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#0F172A]">
-            Perguntas <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#966F1E]">Frequentes</span>
+            Perguntas <span className="text-[#0086FF]">Frequentes</span>
           </h2>
           <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
             Respostas transparentes para as principais dúvidas sobre o consórcio inteligente.

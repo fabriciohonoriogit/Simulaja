@@ -138,14 +138,14 @@ export function VitrineOfertasMagalu() {
         
         {/* HEADER DA VITRINE COM APELO DE DESEJO */}
         <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600/30 to-amber-500/20 border border-cyan-400/40 text-cyan-300 text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-lg shadow-cyan-500/20">
-            <Flame className="w-4 h-4 text-amber-400 animate-bounce" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+            <Flame className="w-4 h-4 text-blue-400" />
             <span>Cardápio de Oportunidades Magalu</span>
           </div>
 
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
             Escolha o que você vai conquistar hoje{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500">
+            <span className="text-[#0086FF]">
               com parcelas que cabem no bolso
             </span>
           </h2>
@@ -161,23 +161,18 @@ export function VitrineOfertasMagalu() {
             <motion.div
               key={oferta.id}
               onClick={() => handleSelectOffer(oferta)}
-              whileHover={{ y: -7, scale: 1.02 }}
+              whileHover={{ y: -5, scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="group cursor-pointer rounded-3xl p-3.5 bg-gradient-to-b from-[#0a1226] to-[#060b18] border border-white/10 hover:border-cyan-400/80 shadow-xl hover:shadow-[0_12px_35px_rgba(0,242,254,0.22)] transition-all duration-300 flex flex-col justify-between"
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="group cursor-pointer rounded-3xl p-3.5 bg-[#0B1528] border border-slate-800 hover:border-blue-500/60 shadow-xl transition-all duration-300 flex flex-col justify-between"
             >
               {/* Imagem do Bem com Tag de Oferta e Feixe de Luz */}
               <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-3 bg-slate-900/30">
                 <img
                   src={oferta.imagem}
                   alt={oferta.titulo}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 brightness-[1.03] contrast-[1.02]"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 brightness-[1.02] contrast-[1.02]"
                 />
-
-                {/* Feixe de Luz Reflexivo ao Passar o Mouse */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
-                  <div className="w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg] translate-x-[-150%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out" />
-                </div>
 
                 {/* Sombra no rodapé para leitura dos badges */}
                 <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none z-10" />
@@ -203,10 +198,10 @@ export function VitrineOfertasMagalu() {
               {/* Corpo da Oferta */}
               <div className="flex-1 flex flex-col justify-between space-y-2">
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-blue-400">
                     {oferta.categoriaLabel}
                   </div>
-                  <h3 className="text-sm font-black text-white leading-tight group-hover:text-cyan-300 transition-colors">
+                  <h3 className="text-sm font-black text-white leading-tight group-hover:text-blue-300 transition-colors">
                     {oferta.titulo}
                   </h3>
                   <p className="text-[11px] text-slate-400 line-clamp-2 mt-1 leading-snug">
@@ -215,17 +210,17 @@ export function VitrineOfertasMagalu() {
                 </div>
 
                 {/* Bloco de Preço: PARCELAS A PARTIR DE */}
-                <div className="pt-2 border-t border-white/10 space-y-1.5">
+                <div className="pt-2 border-t border-slate-800 space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
                     <span>Crédito:</span>
                     <span className="text-white font-black">{oferta.creditoFormatado}</span>
                   </div>
 
-                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center group-hover:border-amber-400/60 transition-colors">
-                    <div className="text-[9.5px] font-bold uppercase tracking-widest text-amber-300">
+                  <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-700/60 text-center group-hover:border-blue-500/40 transition-colors">
+                    <div className="text-[9.5px] font-bold uppercase tracking-widest text-slate-300">
                       Parcelas a partir de:
                     </div>
-                    <div className="text-base font-black text-amber-400 group-hover:scale-105 transition-transform font-mono">
+                    <div className="text-base font-black text-white group-hover:text-[#0086FF] transition-colors font-mono">
                       {oferta.parcelaAPartir}
                     </div>
                   </div>
@@ -238,7 +233,7 @@ export function VitrineOfertasMagalu() {
                 {/* Botão de Conquista Imediata */}
                 <button
                   type="button"
-                  className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-700 hover:from-cyan-400 hover:to-blue-600 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/25 transition-all group-hover:shadow-[0_0_20px_rgba(0,242,254,0.4)]"
+                  className="w-full mt-2 py-2.5 rounded-xl bg-[#0086FF] hover:bg-[#0074E0] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 transition-all"
                 >
                   <span>QUERO ESTE</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
@@ -249,10 +244,10 @@ export function VitrineOfertasMagalu() {
         </div>
 
         {/* FAIXA INFERIOR COM PERSONALIZAÇÃO */}
-        <div className="mt-8 p-4 rounded-2xl bg-gradient-to-r from-blue-900/30 via-slate-900/40 to-blue-900/30 border border-cyan-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div className="mt-8 p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0">
-              <Zap className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 rounded-2xl bg-blue-950/80 border border-blue-500/30 flex items-center justify-center shrink-0">
+              <Zap className="w-5 h-5 text-blue-400" />
             </div>
             <div>
               <div className="text-xs font-black text-white uppercase tracking-wider">
@@ -269,7 +264,7 @@ export function VitrineOfertasMagalu() {
               const sim = document.getElementById("simulator");
               if (sim) sim.scrollIntoView({ behavior: "smooth" });
             }}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs transition-all shrink-0 hover:scale-105 shadow-md shadow-amber-500/20"
+            className="px-5 py-2.5 rounded-xl bg-[#0086FF] hover:bg-[#0074E0] text-white font-bold text-xs transition-all shrink-0 shadow-md shadow-blue-500/20"
           >
             Personalizar no Simulador ➔
           </button>

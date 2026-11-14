@@ -46,14 +46,14 @@ const Testimonials = () => {
         
         {/* Header da Seção */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-300 text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span>Casos Reais de Sucesso</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
             Histórias de quem planejou e{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500">
+            <span className="text-[#0086FF]">
               conquistou seu patrimônio
             </span>
           </h2>
@@ -68,15 +68,15 @@ const Testimonials = () => {
           {testimonials.map((item, idx) => (
             <div
               key={idx}
-              className="relative bg-gradient-to-b from-[#0B1528]/95 to-[#070D19]/95 rounded-3xl p-6 sm:p-7 border border-white/10 hover:border-cyan-400/50 shadow-2xl shadow-blue-950/60 hover:shadow-cyan-500/10 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between backdrop-blur-xl h-full"
+              className="relative bg-[#0B1528] rounded-3xl p-6 sm:p-7 border border-slate-800 hover:border-blue-500/50 shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between backdrop-blur-xl h-full"
             >
               {/* Top: Ícone Quote & Badge da Conquista */}
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center">
                     <Quote className="w-5 h-5" />
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-white/[0.04] text-cyan-300 border border-cyan-400/30 px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white/[0.04] text-blue-300 border border-blue-400/30 px-3 py-1 rounded-full">
                     {item.badge}
                   </span>
                 </div>
@@ -90,13 +90,13 @@ const Testimonials = () => {
               {/* Bottom: Perfil do Cliente */}
               <div className="pt-4 border-t border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-black text-sm flex items-center justify-center shadow-md shadow-cyan-500/20 shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-[#0086FF] text-white font-black text-sm flex items-center justify-center shadow-md shrink-0">
                     {item.initials}
                   </div>
                   <div>
                     <h3 className="font-bold text-sm text-white leading-tight flex items-center gap-1.5">
                       {item.author}
-                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
                     </h3>
                     <p className="text-[11px] text-slate-400">
                       {item.role} • <span className="text-slate-300">{item.city}</span>

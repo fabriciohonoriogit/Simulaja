@@ -48,14 +48,14 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
           {/* COLUNA ESQUERDA: HEADLINE & SHOWCASE DOS ATIVOS */}
           <div className="lg:col-span-6 flex flex-col justify-start space-y-5 pt-1">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/40 text-amber-300 text-xs font-black uppercase tracking-wider mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-bold uppercase tracking-wider mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                 <span>{theme.badgeText}</span>
               </div>
 
               <h1 className="text-3xl sm:text-4xl xl:text-5xl font-black tracking-tight text-white leading-tight">
                 O Futuro do seu Patrimônio{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-amber-300">
+                <span className="text-[#0086FF]">
                   Sem Juros Bancários
                 </span>
               </h1>
@@ -89,13 +89,13 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
             </div>
 
             {/* GARANTIAS E DIFERENCIAIS EXECUTIVOS QUE ELIMINAM ESPAÇOS VAGOS */}
-            <div className="rounded-2xl p-3.5 bg-gradient-to-br from-blue-950/40 via-slate-900/60 to-[#0B1528] border border-cyan-500/20 backdrop-blur-xl space-y-2 shadow-xl">
-              <div className="text-[11px] font-black uppercase tracking-wider text-cyan-300 flex items-center justify-between">
+            <div className="rounded-2xl p-3.5 bg-[#0B1528] border border-slate-800 backdrop-blur-xl space-y-2 shadow-xl">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span>Diferenciais Estratégicos Magalu</span>
                 </div>
-                <span className="text-[10px] text-amber-300 font-mono font-bold">100% Regulamentado</span>
+                <span className="text-[10px] text-blue-400 font-mono font-bold">100% Regulamentado</span>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -104,15 +104,15 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
                   <span className="font-semibold text-[11px]">Meia parcela até contemplar</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-200 bg-white/5 rounded-xl px-2.5 py-1.5 border border-white/5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                   <span className="font-semibold text-[11px]">Lance embutido de até 50%</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-200 bg-white/5 rounded-xl px-2.5 py-1.5 border border-white/5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                   <span className="font-semibold text-[11px]">Poder de compra à vista</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-200 bg-white/5 rounded-xl px-2.5 py-1.5 border border-white/5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-300 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                   <span className="font-semibold text-[11px]">Assessoria em assembleias</span>
                 </div>
               </div>
@@ -121,19 +121,19 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
 
           {/* COLUNA DIREITA: O SIMULADOR NO TOPO (AÇÃO IMEDIATA) */}
           <div className="lg:col-span-6 flex flex-col justify-start relative pt-1">
-            {/* Efeito Glow atrás do simulador */}
-            <div className="absolute -inset-1.5 bg-gradient-to-r from-blue-600 via-cyan-500 to-amber-500 rounded-3xl blur-xl opacity-30 pointer-events-none" />
+            {/* Efeito Glow discreto atrás do simulador */}
+            <div className="absolute -inset-1.5 bg-blue-600/10 rounded-3xl blur-2xl pointer-events-none" />
 
-            <div className="relative z-10 w-full rounded-3xl overflow-hidden border border-cyan-500/40 shadow-2xl shadow-blue-950/60 bg-[#070D19]/90 backdrop-blur-2xl">
-              {/* Header do Simulador com Identidade Magalu */}
-              <div className="px-5 py-3.5 bg-gradient-to-r from-blue-900/60 via-slate-900/80 to-blue-900/60 border-b border-white/10 flex items-center justify-between">
+            <div className="relative z-10 w-full rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-[#0B1528] backdrop-blur-2xl">
+              {/* Header do Simulador com Identidade Sóbria Magalu */}
+              <div className="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#0086FF]" />
                   <span className="text-xs font-black uppercase tracking-wider text-white">
                     Simulador Especialista
                   </span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">
                   Condição Ativa
                 </span>
               </div>

@@ -52,7 +52,7 @@ const WhyPlanning = () => {
             Vantagens Exclusivas
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#0F172A]">
-            Por que fazer um consórcio <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#966F1E]">com planejamento?</span>
+            Por que fazer um consórcio <span className="text-[#0086FF]">com planejamento?</span>
           </h2>
           <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
             Consórcio sem estratégia é depender apenas da sorte. Com consultoria especializada, transformamos seu objetivo em um plano de conquistas concreto.

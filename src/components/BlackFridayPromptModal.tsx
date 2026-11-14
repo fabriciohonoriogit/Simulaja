@@ -64,7 +64,7 @@ export const BlackFridayPromptModal: React.FC<BlackFridayPromptModalProps> = ({
               Engenharia de Prompt IA
             </span>
           </div>
-          <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-pink-400">
+          <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-white">
             Gerador de Prompts: Estilo Cybernetic Wireframe
           </DialogTitle>
           <DialogDescription className="text-slate-300 text-xs sm:text-sm">

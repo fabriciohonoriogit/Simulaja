@@ -106,7 +106,7 @@ export const MagaluGalleryCarousel = () => {
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
-            Galeria Exclusiva de <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">Planos & Oportunidades</span>
+            Galeria Exclusiva de <span className="text-[#0086FF]">Planos & Oportunidades</span>
           </h2>
 
           <p className="text-slate-300 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto">

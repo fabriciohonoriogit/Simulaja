@@ -94,13 +94,13 @@ const Footer = () => {
                 href="https://www.instagram.com/fabricioespecialistaconsorcio/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-900/40 via-pink-900/30 to-amber-900/30 hover:from-purple-900/60 hover:to-amber-900/50 border border-pink-500/30 p-2.5 rounded-2xl transition-all group w-full shadow-md"
+                className="inline-flex items-center gap-3 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 p-2.5 rounded-2xl transition-all group w-full shadow-md"
               >
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#E1306C] to-[#833AB4] text-white flex items-center justify-center shrink-0 shadow-md">
                   <Instagram className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] text-pink-300 uppercase font-bold tracking-wider">Instagram Oficial</p>
+                  <p className="text-[10px] text-pink-400 uppercase font-bold tracking-wider">Instagram Oficial</p>
                   <p className="text-xs font-black text-white group-hover:text-pink-300 truncate">@fabricioespecialistaconsorcio</p>
                 </div>
               </a>
