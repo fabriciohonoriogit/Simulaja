@@ -76,6 +76,19 @@ export const CONSORCIO_KNOWLEDGE_BASE: ConsorcioKnowledgeTopic[] = [
       "Assinatura GOV.BR (Circulares #10 e #23): Validade jurídica plena via portal GOV.BR (níveis Prata ou Ouro), dispensando reconhecimento de firma em cartório.",
       "Digitalização e Prazos (Circulares #19, #29 e #59): Emissão do termo direto pelo portal, envio digitalizado e conclusão em 48h a 72h úteis para não contempladas e até 5 dias para contempladas."
     ]
+  },
+  {
+    id: "circular_lance_caucao_magalu",
+    title: "Circular Oficial Consórcio Magalu (CIRC/ADM/001/2026): Regras do Lance Caução",
+    summary: "Normas completas da Circular Oficial CIRC/ADM/001/2026 da Gestão de Grupos do Consórcio Magalu para oferta e baixa de Lance Caução em veículos e imóveis.",
+    arguments: [
+      "O que é o Lance Caução: Permite ao consorciado que já possui um bem (veículo ou imóvel) oferecê-lo como parte do pagamento (lance) na compra de um novo bem, SEM precisar vendê-lo antes da contemplação (vende somente após ser contemplado).",
+      "Limite Máximo de Oferta: No Imóvel e no Veículo, o lance caução é limitado a até 70,0000% do lance ofertado em todos os grupos. Não pode ultrapassar (70,0001% é recusado). Eletro e Serviços NÃO possuem caução.",
+      "Regra do Valor do Novo Bem: O bem a ser adquirido deve ter valor no MÍNIMO igual à soma do Crédito Líquido + Lance Caução Ofertado. Se vender o bem abaixo da FIPE, o consorciado complementa a diferença com recursos próprios.",
+      "Documentos & Baixa do Lance: Prazo de até 3 dias úteis após a contemplação via formulário oficial. Veículos: CRLV no nome do titular ou cônjuge (com certidão de casamento/união estável) + Print da FIPE. Imóveis: Matrícula atualizada + Laudo de avaliação de engenheiro.",
+      "Troca entre Subsegmentos: Permitido trocar moto por carro, carro por caminhão (mesmo segmento de veículos). Pode ofertar o mesmo veículo em mais de uma cota do mesmo segmento.",
+      "Vedações Absolutas: Proibido usar crédito contemplado com lance caução para reforma ou construção; proibido receber crédito em espécie; proibido usar garantia substitutiva em imóvel; e não há estorno de caução para pagamento em recursos próprios."
+    ]
   }
 ];
 
@@ -91,12 +104,18 @@ export function getConsorcioKnowledgePrompt(): string {
 3. LANCE EMBUTIDO (30%):
    - O cliente pode usar até 30% da própria carta para dar lance sem tirar nada do bolso.
    - Para imóveis, é permitido somar o saldo do FGTS.
-4. CIRCULARES OFICIAIS MAGALU — TRANSFERÊNCIA DE TITULARIDADE (CIRCULARES #2, #10, #19, #23, #37, #46, #59):
+4. LANCE CAUÇÃO (CIRCULAR OFICIAL MAGALU CIRC/ADM/001/2026):
+   - Finalidade: O consorciado oferece o próprio carro, moto, caminhão ou imóvel como lance sem precisar vender antes da assembleia.
+   - Limite de Oferta: Até 70,0000% do lance ofertado em Imóveis e Veículos (em todos os grupos). Não há caução para eletro e serviços.
+   - Regra do Bem Adquirido: O valor do novo bem DEVE ser no mínimo a soma: Crédito Líquido + Valor Ofertado como Caução.
+   - Documentos e Prazo: Envio em até 3 dias úteis após a contemplação via formulário Magalu. Veículo exige CRLV (titular ou cônjuge) + print FIPE. Imóvel exige matrícula atualizada + laudo de engenheiro.
+   - Vedações: Proibido receber em dinheiro/espécie; proibido usar em construção/reforma do imóvel caucionado; não permite garantia substitutiva para imóvel; e não permite estorno para dinheiro próprio.
+5. TRANSFERÊNCIA DE TITULARIDADE (CIRCULARES #2, #10, #19, #23, #37, #46, #59):
    - Cota Não Contemplada: Cessão rápida de direitos e obrigações. Cota 100% em dia. Não exige comprovação de renda complexa.
    - Cota Contemplada: Exige análise prévia de crédito do novo titular (cessionário) com renda compatível (parcela ≤ 30% da renda bruta) e sem restrições (Serasa/SPC). Se o bem já estiver alienado, exige vistoria e transferência do gravame.
    - Isenção da Taxa de Transferência (Circular #2): ISENÇÃO TOTAL para 1º grau de parentesco (pais, filhos e cônjuges) e mesmo grupo societário (sócios da mesma empresa ou PF para sua própria PJ).
    - Assinatura Eletrônica GOV.BR (Circulares #10 e #23): Aceite formal com validade jurídica via GOV.BR (nível Prata ou Ouro), dispensando ida ao cartório e reconhecimento de firma.
-5. SEGURANÇA E REGULAMENTAÇÃO:
+6. SEGURANÇA E REGULAMENTAÇÃO:
    - Fiscalizado pelo Banco Central do Brasil (Lei Federal 11.795/2008).
    - Administradora: Consórcio Magalu (parceira Prospera Plan).
 `;

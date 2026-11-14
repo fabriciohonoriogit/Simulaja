@@ -858,9 +858,43 @@ Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
     lower.includes("isenção") ||
     lower.includes("trocar de titular") ||
     lower.includes("passar a cota") ||
-    lower.includes("passar a carta");
+    lower.includes("passar a carta") ||
+    lower.includes("caucao") ||
+    lower.includes("caução");
 
   if (isTransferOrCircularQuery) {
+    // 6.1 LANCE CAUÇÃO (CIRCULAR OFICIAL CIRC/ADM/001/2026)
+    if (lower.includes("caucao") || lower.includes("caução")) {
+      return `📋 REGRAS OFICIAIS DO LANCE CAUÇÃO (CIRCULAR CONSÓRCIO MAGALU CIRC/ADM/001/2026):
+
+1. FINALIDADE E FUNCIONAMENTO:
+• Permite que o consorciado que possui um bem (veículo ou imóvel) ofereça esse bem como lance na assembleia, SEM precisar vendê-lo antes de ser contemplado.
+• A venda ou entrega do bem só ocorre após a confirmação efetiva da contemplação.
+
+2. LIMITES DE OFERTA:
+• Imóvel: Permitido até 70,0000% do lance ofertado (em todos os grupos). Se ofertar 70,0001% ou mais, a utilização do lance caução é recusada.
+• Veículo (Carros, Motos, Caminhões): Permitido até 70,0000% do lance ofertado (em todos os grupos).
+• Eletro e Serviços: NÃO há modalidade de lance caução nestes segmentos.
+
+3. REGRA DE OURO DO NOVO BEM ADQUIRIDO:
+• O valor do bem a ser comprado DEVE ser no MÍNIMO a somatória: [Crédito Líquido + Valor Ofertado como Lance Caução].
+• Se o consorciado vender o bem por valor abaixo da Tabela FIPE, ele deve obrigatoriamente complementar a diferença com recursos próprios na compra do novo bem.
+
+4. PRAZO E DOCUMENTOS PARA BAIXA DO LANCE:
+• Prazo de envio: Imediatamente após a contemplação (prazo limite de até 3 dias úteis para vencimento do lance).
+• Envio via Formulário Magalu Oficial: https://forms.gle/8ia1mzYE2g1gsXj98
+• Veículo: CRLV em nome do consorciado ou cônjuge (se cônjuge: anexar certidão de casamento ou união estável) + Print da avaliação pela Tabela FIPE.
+• Imóvel: Matrícula atualizada do imóvel em nome do cliente + Laudo de avaliação de engenheiro contratado pelo cliente.
+
+5. PERGUNTAS FREQUENTES DA CIRCULAR MAGALU:
+• Pode usar moto como caução para comprar carro? SIM, pois ambos pertencem ao mesmo segmento de veículos (assim como carro para caminhão).
+• Pode ofertar o mesmo veículo em mais de uma cota? SIM, desde que do mesmo segmento e que o novo bem adquirido cubra a soma de todos os créditos líquidos + o caução.
+• Imóvel na planta é aceito? SIM, com apresentação do contrato de compra e venda + extrato financeiro das parcelas pagas para abatimento.
+• Pode usar para reforma, construção ou quitar financiamento existente? NÃO, a finalidade do lance caução é exclusivamente a troca/aquisição de um NOVO bem.
+• Pode receber o crédito em dinheiro/espécie? NÃO, apenas para compra direta do novo bem faturado.
+• Permite garantia substitutiva ou estorno em dinheiro próprio? NÃO. Na transferência da cota contemplada com caução, o novo titular (cessionário) é obrigado a apresentar outro bem caução em seu nome.`;
+    }
+
     if (
       lower.includes("transfer") || 
       lower.includes("titularidade") || 
