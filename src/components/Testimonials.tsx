@@ -6,7 +6,7 @@ const testimonials = [
     author: "João Pereira",
     role: "Construtor Civil",
     city: "Paranaguá/PR",
-    quote: "Confesso que no início eu tinha receio de consórcio, achava que demorava muito. O Fabrício estruturou uma estratégia de lance calculada para o meu orçamento e fui contemplado já no 3º mês. Consegui antecipar a compra do maquinário para as minhas obras sem pagar nenhum juro bancário.",
+    quote: "Confesso que no início eu tinha receio de consórcio, achava que demorava muito. Estruturamos uma estratégia de lance calculada para o meu orçamento e fui contemplado já no 3º mês. Consegui antecipar a compra do maquinário para as minhas obras sem pagar nenhum juro bancário.",
     conquista: "Maquinário & Construção Civil",
     initials: "JP",
     badge: "Contemplação Planejada",
@@ -15,7 +15,7 @@ const testimonials = [
     author: "Zilma Gomes",
     role: "Aposentada",
     city: "Guaratuba/PR",
-    quote: "Meu sonho sempre foi ter um imóvel próprio no litoral para reunir a família nos fins de semana. O Fabrício cuidou de cada detalhe com muita paciência e respeito. No 6º mês veio a contemplação e hoje minha casa na praia é uma realidade.",
+    quote: "Meu sonho sempre foi ter um imóvel próprio no litoral para reunir a família nos fins de semana. Cuidaram de cada detalhe com muita paciência e respeito. No 6º mês veio a contemplação e hoje minha casa na praia é uma realidade.",
     conquista: "Imóvel no Litoral",
     initials: "ZG",
     badge: "Casa Própria",
@@ -24,7 +24,7 @@ const testimonials = [
     author: "Elias Jr.",
     role: "Comerciante & Autônomo",
     city: "Paranaguá/PR",
-    quote: "Queria trocar de veículo, mas o financiamento bancário pedia uma entrada absurda e quase o dobro do valor em juros. Conheci a consultoria do Fabrício por indicação de um amigo: entrei no plano com meia parcela e conquistei meu veículo sem me descapitalizar.",
+    quote: "Queria trocar de veículo, mas o financiamento bancário pedia uma entrada absurda e quase o dobro do valor em juros. Conheci o consórcio por indicação: entrei no plano com meia parcela e conquistei meu veículo sem me descapitalizar.",
     conquista: "Veículo 0km",
     initials: "EJ",
     badge: "Aquisição Sem Entrada",
@@ -55,7 +55,7 @@ const Testimonials = () => {
           </h2>
 
           <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
-            Experiências de clientes que transformaram metas em conquistas concretas com a assessoria executiva de Fabrício Honório.
+            Experiências reais de clientes que transformaram objetivos em conquistas concretas através de planejamento inteligente.
           </p>
         </div>
 

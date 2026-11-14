@@ -24,7 +24,7 @@ const steps = [
     number: "04",
     tag: "Conquista",
     title: "Contemplação & Crédito",
-    desc: "Assessoria executiva contínua de Fabrício Honório em todas as assembleias até a liberação do crédito com poder de compra à vista.",
+    desc: "Assessoria executiva contínua em todas as assembleias até a liberação da carta de crédito com poder de compra à vista.",
   },
 ];
 

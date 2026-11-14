@@ -34,22 +34,22 @@ export const StickySimulatorCTA = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="fixed top-[69px] left-0 right-0 z-[40] bg-[#0F172A]/95 backdrop-blur-md border-b border-amber-500/20 shadow-xl"
+      className="fixed top-[69px] left-0 right-0 z-[40] bg-white/95 backdrop-blur-md border-b border-blue-200 shadow-md"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 items-center justify-center text-amber-400">
+          <div className="hidden sm:flex w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 items-center justify-center text-[#0086FF]">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs text-amber-400 font-bold uppercase tracking-wider hidden sm:block">Simulador Inteligente</p>
-            <p className="text-white font-extrabold text-xs sm:text-sm">Pronto para encontrar a melhor estratégia de consórcio?</p>
+            <p className="text-xs text-[#0086FF] font-black uppercase tracking-wider hidden sm:block">Simulador Inteligente</p>
+            <p className="text-slate-800 font-extrabold text-xs sm:text-sm">Pronto para encontrar a melhor estratégia de consórcio?</p>
           </div>
         </div>
         
         <button 
           onClick={scrollToSimulator}
-          className="inline-flex items-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-slate-950 rounded-xl font-black text-xs uppercase tracking-wider shadow-md transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+          className="inline-flex items-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 bg-[#0086FF] hover:bg-[#0074E0] text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
         >
           <span>Simular Agora</span>
           <ArrowRight className="w-3.5 h-3.5" />

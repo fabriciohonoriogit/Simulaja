@@ -123,7 +123,7 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* SELETOR SUPERIOR EM PÍLULAS COM BARRA DE PROGRESSO ANIMADA */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-[#070D19]/90 border border-white/10 backdrop-blur-xl shadow-xl z-20 mb-3 w-full">
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-blue-200/80 shadow-md shadow-blue-50/50 z-20 mb-3 w-full">
         {ORBITAL_CONQUESTS.map((asset, index) => {
           const isSelected = selectedIndex === index;
           const Icon = asset.icon;
@@ -133,8 +133,8 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
               onClick={() => handleSelect(index)}
               className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 ${
                 isSelected
-                  ? "bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 text-white shadow-lg shadow-cyan-500/25 scale-[1.02]"
-                  : "text-slate-300 hover:text-white hover:bg-white/5"
+                  ? "bg-[#0086FF] text-white shadow-md shadow-blue-500/25 scale-[1.02]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
               }`}
             >
               <Icon className="w-3.5 h-3.5 relative z-10" />
@@ -159,7 +159,7 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
       {/* VITRINE REAL DO BEM SELECIONADO COM EFEITOS DINÂMICOS */}
       <div 
         onClick={() => handleSelect(selectedIndex)}
-        className="w-full relative rounded-3xl overflow-hidden border border-white/15 bg-gradient-to-b from-[#0B1528] to-[#060D19] shadow-2xl group transition-all duration-500 cursor-pointer hover:border-cyan-400/60 hover:shadow-[0_0_35px_rgba(0,242,254,0.25)]"
+        className="w-full relative rounded-3xl overflow-hidden border border-blue-200/80 bg-white shadow-xl shadow-blue-100/50 group transition-all duration-500 cursor-pointer hover:border-[#0086FF]/60 hover:shadow-2xl"
         title="Toque para simular esta conquista com meia parcela"
       >
         {/* Glow dinâmico sutil que pulsa e reage à cor do ativo */}
@@ -233,27 +233,27 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
         </div>
 
         {/* Informações Estratégicas do Ativo */}
-        <div className="p-3.5 sm:p-4 space-y-2.5">
+        <div className="p-3.5 sm:p-4 space-y-2.5 bg-slate-50/60 border-t border-slate-100">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs sm:text-sm text-slate-300 font-medium leading-snug">
+            <p className="text-xs sm:text-sm text-slate-700 font-medium leading-snug">
               {selectedAsset.subtitle}
             </p>
-            <span className="inline-flex items-center gap-1 text-[11px] font-black text-cyan-300 shrink-0 group-hover:translate-x-1.5 transition-transform">
+            <span className="inline-flex items-center gap-1 text-[11px] font-black text-[#0086FF] shrink-0 group-hover:translate-x-1.5 transition-transform">
               Simular <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10 text-[11px] font-bold text-slate-300">
-            <div className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 text-cyan-300 flex items-center gap-1.5 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200/60 text-[11px] font-bold text-slate-600">
+            <div className="px-2.5 py-0.5 rounded-lg bg-white border border-slate-200 text-[#0086FF] flex items-center gap-1.5 shadow-xs">
               <span>Créditos:</span>
-              <strong className="text-white">{selectedAsset.creditRange}</strong>
+              <strong className="text-slate-900">{selectedAsset.creditRange}</strong>
             </div>
-            <div className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 text-amber-300 flex items-center gap-1.5 shadow-sm">
+            <div className="px-2.5 py-0.5 rounded-lg bg-white border border-slate-200 text-amber-600 flex items-center gap-1.5 shadow-xs">
               <span>Prazo:</span>
-              <strong className="text-white">{selectedAsset.prazoMaximo}</strong>
+              <strong className="text-slate-900">{selectedAsset.prazoMaximo}</strong>
             </div>
-            <div className="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 flex items-center gap-1.5 shadow-sm">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <div className="px-2.5 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-1.5 shadow-xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               <span>Sem Juros Bancários</span>
             </div>
           </div>

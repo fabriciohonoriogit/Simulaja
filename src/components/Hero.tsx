@@ -57,7 +57,7 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
               </h1>
 
               <p className="text-slate-600 text-sm sm:text-base font-medium leading-relaxed mt-2 max-w-xl">
-                Planeje seu carro, moto, casa ou caminhão com a garantia do Consórcio Magalu e consultoria de Fabrício Honório. Condição exclusiva de <strong>meia parcela até a contemplação</strong>.
+                Planeje seu carro, moto, casa ou caminhão com inteligência financeira e taxas reduzidas. Condição exclusiva de <strong>meia parcela até a contemplação</strong>.
               </p>
             </div>
 
