@@ -147,18 +147,18 @@ const PainelCaracteristicasGrupoInterno = ({
   const contemResolucao285 = c.caracteristicas?.includes("RESOLUÇAO 285") || c.caracteristicas?.includes("RESOLUÇÃO 285");
 
   return (
-    <div className="mt-4 p-4 sm:p-5 rounded-2xl border-2 border-blue-500/40 bg-gradient-to-br from-[#070D19] via-[#0B1528] to-[#070D19] text-white shadow-xl space-y-4">
+    <div className="mt-4 p-4 sm:p-5 rounded-2xl border border-blue-200 bg-white text-slate-800 shadow-md space-y-4">
       {/* Header do Grupo com Badges */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-cyan-300 font-black text-sm">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-[#0086FF] font-black text-sm shadow-xs">
             ⚙️
           </div>
           <div>
-            <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              Grupo {c.grupo} {isPlanoGold && <span className="text-amber-400 text-xs">(PLANO GOLD)</span>}
+            <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              Grupo {c.grupo} {isPlanoGold && <span className="text-amber-600 text-xs">(PLANO GOLD)</span>}
             </h4>
-            <p className="text-[10px] text-slate-400 font-medium">Informações Técnicas & Regras Oficiais do Grupo</p>
+            <p className="text-[10px] text-slate-500 font-medium">Informações Técnicas & Regras Oficiais do Grupo</p>
           </div>
         </div>
 
@@ -166,13 +166,13 @@ const PainelCaracteristicasGrupoInterno = ({
           {c.status && (
             <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${
               c.status === 'Formação' 
-                ? 'bg-amber-500/20 text-amber-300 border-amber-400/40' 
-                : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
             }`}>
               ● {c.status}
             </span>
           )}
-          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40">
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#0086FF] border border-blue-200">
             Reajuste: {c.reajuste}
           </span>
         </div>
@@ -180,64 +180,64 @@ const PainelCaracteristicasGrupoInterno = ({
 
       {/* Grid 1: Participantes, Vagas & Assembleias */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2.5">
-          <p className="text-[10px] uppercase font-bold text-slate-400">Vagas Disponíveis</p>
-          <p className="text-sm font-black text-emerald-400 font-mono mt-0.5">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 shadow-xs">
+          <p className="text-[10px] uppercase font-bold text-slate-500">Vagas Disponíveis</p>
+          <p className="text-sm font-black text-emerald-600 font-mono mt-0.5">
             {c.cotasVagas ? `${c.cotasVagas.toLocaleString('pt-BR')} cotas` : "Em formação"}
           </p>
         </div>
 
-        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2.5">
-          <p className="text-[10px] uppercase font-bold text-slate-400">Total Participantes</p>
-          <p className="text-sm font-black text-cyan-300 font-mono mt-0.5">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 shadow-xs">
+          <p className="text-[10px] uppercase font-bold text-slate-500">Total Participantes</p>
+          <p className="text-sm font-black text-[#0086FF] font-mono mt-0.5">
             {`~${totalParticipantesAprox.toLocaleString('pt-BR')} pessoas`}
           </p>
         </div>
 
-        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2.5">
-          <p className="text-[10px] uppercase font-bold text-slate-400">Assembleia Atual</p>
-          <p className="text-sm font-black text-white font-mono mt-0.5">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 shadow-xs">
+          <p className="text-[10px] uppercase font-bold text-slate-500">Assembleia Atual</p>
+          <p className="text-sm font-black text-slate-900 font-mono mt-0.5">
             {c.numeroAssembleia ? `${c.numeroAssembleia}ª Assembleia` : "1ª Assembleia"}
           </p>
         </div>
 
-        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2.5">
-          <p className="text-[10px] uppercase font-bold text-slate-400">Próx. Assembleia</p>
-          <p className="text-sm font-black text-amber-300 font-mono mt-0.5">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 shadow-xs">
+          <p className="text-[10px] uppercase font-bold text-slate-500">Próx. Assembleia</p>
+          <p className="text-sm font-black text-amber-600 font-mono mt-0.5">
             {c.proximaAssembleia}
           </p>
         </div>
       </div>
 
       {/* Grid 2: Média de Lances & Contemplações */}
-      <div className="bg-blue-950/40 border border-cyan-500/30 rounded-xl p-3.5 space-y-2.5">
+      <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3.5 space-y-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-black text-cyan-300 uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 uppercase tracking-wider">
             <span>🎯</span> Média de Lances & Contemplações
           </div>
-          <span className="text-[10px] font-bold text-slate-400">
+          <span className="text-[10px] font-bold text-slate-500">
             ~3 a 8 contemplações/mês
           </span>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="bg-white/[0.03] rounded-lg p-2 border border-white/5">
-            <span className="text-[9px] font-bold text-slate-400 uppercase block">Menor Lance Histórico</span>
-            <span className="text-xs font-black text-emerald-400 font-mono">
+          <div className="bg-white rounded-lg p-2 border border-blue-100 shadow-xs">
+            <span className="text-[9px] font-bold text-slate-500 uppercase block">Menor Lance Histórico</span>
+            <span className="text-xs font-black text-emerald-600 font-mono">
               {estatsLances?.lanceMenor ? `${estatsLances.lanceMenor.toFixed(1)}%` : (mediaLance ? `${(mediaLance * 0.7).toFixed(1)}%` : "32.5%")}
             </span>
           </div>
 
-          <div className="bg-white/[0.03] rounded-lg p-2 border border-cyan-500/20">
-            <span className="text-[9px] font-bold text-cyan-300 uppercase block">Média de Lances</span>
-            <span className="text-sm font-black text-cyan-200 font-mono">
+          <div className="bg-white rounded-lg p-2 border border-blue-300 shadow-xs">
+            <span className="text-[9px] font-bold text-blue-700 uppercase block">Média de Lances</span>
+            <span className="text-sm font-black text-[#0086FF] font-mono">
               {mediaLance ? `${mediaLance.toFixed(1)}%` : (estatsLances?.lanceMedia ? `${estatsLances.lanceMedia.toFixed(1)}%` : "52.0%")}
             </span>
           </div>
 
-          <div className="bg-white/[0.03] rounded-lg p-2 border border-white/5">
-            <span className="text-[9px] font-bold text-slate-400 uppercase block">Maior Lance Registrado</span>
-            <span className="text-xs font-black text-amber-300 font-mono">
+          <div className="bg-white rounded-lg p-2 border border-blue-100 shadow-xs">
+            <span className="text-[9px] font-bold text-slate-500 uppercase block">Maior Lance Registrado</span>
+            <span className="text-xs font-black text-amber-600 font-mono">
               {estatsLances?.lanceMaior ? `${estatsLances.lanceMaior.toFixed(1)}%` : (mediaLance ? `${(mediaLance * 1.3).toFixed(1)}%` : "85.0%")}
             </span>
           </div>
@@ -245,22 +245,22 @@ const PainelCaracteristicasGrupoInterno = ({
       </div>
 
       {/* Grid 3: Tipos de Lances & Ordem de Contemplação */}
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3 space-y-2 text-xs">
+      <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-2 text-xs">
         <div>
-          <p className="text-[10px] font-black uppercase text-amber-400 tracking-wider">Tipos de Lances & Ordem de Contemplação:</p>
-          <p className="text-xs text-slate-200 mt-1 leading-relaxed">
+          <p className="text-[10px] font-black uppercase text-amber-700 tracking-wider">Tipos de Lances & Ordem de Contemplação:</p>
+          <p className="text-xs text-slate-700 mt-1 leading-relaxed">
             {c.ordemContemplacao}
           </p>
         </div>
 
-        <div className="pt-2 border-t border-white/10 flex flex-wrap gap-2 text-[11px]">
-          <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-400/30 text-blue-300">
+        <div className="pt-2 border-t border-slate-200 flex flex-wrap gap-2 text-[11px]">
+          <span className="px-2 py-0.5 rounded bg-blue-100/60 border border-blue-200 text-blue-800 font-medium">
             <strong>Opção Diluição:</strong> {c.opcaoDiluir}
           </span>
-          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-400/30 text-emerald-300">
+          <span className="px-2 py-0.5 rounded bg-emerald-100/60 border border-emerald-200 text-emerald-800 font-medium">
             <strong>Prazo:</strong> {c.prazoRestante || prazo} de {c.prazoOriginal || prazo} meses
           </span>
-          <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-400/30 text-cyan-300">
+          <span className="px-2 py-0.5 rounded bg-cyan-100/60 border border-cyan-200 text-cyan-800 font-medium">
             <strong>Taxas:</strong> Adm {c.taxaAdm ?? tx}% | F. Reserva {c.fundoReserva ?? fr}%
           </span>
         </div>
@@ -268,15 +268,15 @@ const PainelCaracteristicasGrupoInterno = ({
 
       {/* Características & Regras Textuais */}
       {c.caracteristicas && (
-        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3 text-[11px] text-slate-300 leading-relaxed">
-          <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Regras e Especificações do Grupo:</p>
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-[11px] text-slate-700 leading-relaxed">
+          <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Regras e Especificações do Grupo:</p>
           <p>{c.caracteristicas}</p>
         </div>
       )}
 
       {/* Alerta Resolução 285 se aplicável */}
       {contemResolucao285 && (
-        <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30 text-[11px] text-amber-200 flex items-center gap-2">
+        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 flex items-center gap-2">
           <span>⚠️</span>
           <span><strong>Resolução 285 Banco Central:</strong> Este grupo não permite alteração na data da 1ª assembleia.</span>
         </div>
@@ -732,7 +732,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
 
   return (
     <div 
-      className={`${compact ? 'w-full' : 'min-h-screen bg-[#040B16]'} flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`${compact ? 'w-full' : (isInternal ? 'min-h-screen bg-[#FAF9F5] text-slate-800' : 'min-h-screen bg-[#040B16]')} flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
@@ -741,12 +741,24 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
       <style>{sliderThumbStyles}</style>
 
       {/* Background Deep Gradient matching the image */}
-      {!compact && <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />}
+      {!compact && !isInternal && (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />
+      )}
+
+      {/* Background Suave com luzes ambientais da Landing Page no modo CRM interno */}
+      {!compact && isInternal && (
+        <div className="absolute inset-0 bg-[#FAF9F5] pointer-events-none overflow-hidden">
+          <div className="absolute top-0 right-10 w-[550px] h-[450px] bg-gradient-to-bl from-blue-200/35 via-sky-100/20 to-transparent rounded-full blur-3xl animate-breath" />
+          <div className="absolute bottom-0 left-10 w-[450px] h-[350px] bg-gradient-to-tr from-amber-100/30 via-orange-50/20 to-transparent rounded-full blur-3xl animate-breath" />
+        </div>
+      )}
       
       {/* Orbs/Particles in the background */}
-      <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
+      {!isInternal && (
+        <div className="absolute inset-0 z-0 opacity-20 mix-blend-screen pointer-events-none scale-[1.5] sm:scale-125">
           <JarvisOrb state="idle" />
-      </div>
+        </div>
+      )}
 
       <section id="simulator" className={`relative z-10 flex-1 ${compact ? "p-0" : "py-6 sm:py-8"}`}>
         <div className={`w-full flex flex-col items-center ${compact ? 'max-w-full px-0' : (isInternal ? 'container mx-auto px-4 max-w-5xl' : 'container mx-auto px-4 max-w-2xl sm:max-w-3xl lg:max-w-4xl')}`}>
@@ -755,26 +767,26 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
             <div className="relative flex flex-col items-center mb-4 animate-breathe w-full">
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
                 {/* Core Glow */}
-                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full scale-125" />
+                <div className={`absolute inset-0 ${isInternal ? "bg-blue-500/10" : "bg-blue-500/20"} blur-xl rounded-full scale-125`} />
                 
                 {/* CSS Orbit Rings (Atoms) */}
-                <div className="absolute w-[180%] h-[65%] border border-blue-400/35 rounded-[100%] animate-[spin_10s_linear_infinite]" />
-                <div className="absolute w-[180%] h-[65%] border border-green-400/25 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
+                <div className={`absolute w-[180%] h-[65%] border ${isInternal ? "border-blue-400/25" : "border-blue-400/35"} rounded-[100%] animate-[spin_10s_linear_infinite]`} />
+                <div className={`absolute w-[180%] h-[65%] border ${isInternal ? "border-emerald-400/20" : "border-green-400/25"} rounded-[100%] animate-[spin_15s_linear_infinite_reverse]`} />
 
                 {/* Logo Image */}
                 <img 
                   src="/icon-512.webp" 
                   alt="Logo Contemplar" 
-                  className="h-11 sm:h-13 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10" 
+                  className="h-11 sm:h-13 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] relative z-10" 
                 />
               </div>
 
               <div className="flex flex-col items-center leading-tight mt-2 relative z-10">
-                <span className="text-lg sm:text-xl tracking-widest font-black text-white uppercase drop-shadow-lg">
+                <span className={`text-lg sm:text-xl tracking-widest font-black uppercase drop-shadow-sm ${isInternal ? "text-slate-900" : "text-white drop-shadow-lg"}`}>
                   CONTEMPLAR
                 </span>
-                <span className="text-[11px] sm:text-xs tracking-[0.35em] font-bold text-[#84CC16] -mt-0.5 ml-1 drop-shadow-md">
-                  SIMULADOR
+                <span className={`text-[11px] sm:text-xs tracking-[0.35em] font-bold -mt-0.5 ml-1 ${isInternal ? "text-[#0086FF]" : "text-[#84CC16] drop-shadow-md"}`}>
+                  SIMULADOR ESPECIALISTA
                 </span>
               </div>
             </div>
@@ -994,7 +1006,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
               </div> {/* FIM COLUNA ESQUERDA */}
 
               {/* DIREITA: Resultados & Ações (No CRM) */}
-              <div className={`flex flex-col w-full ${isInternal ? 'bg-slate-50/50 rounded-2xl p-4 sm:p-5 border border-slate-100' : ''}`}>
+              <div className={`flex flex-col w-full ${isInternal ? 'bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm' : ''}`}>
                 {isInternal && (
                   <>
 
@@ -1264,7 +1276,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
                 <button
                   onClick={confirmarSimulacao}
                   disabled={bloqueado}
-                  className={`w-full ${compact ? 'py-3' : 'py-3.5'} rounded-xl text-sm font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2 transition-all disabled:opacity-45 disabled:cursor-not-allowed text-white shadow-lg active:scale-95 ${isInternal ? 'bg-[#0f2044] hover:bg-[#1a3266]' : 'bg-[#FF7A00] hover:bg-[#FF8B1F]'}`}
+                  className={`w-full ${compact ? 'py-3' : 'py-3.5'} rounded-xl text-sm font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2 transition-all disabled:opacity-45 disabled:cursor-not-allowed text-white shadow-lg active:scale-95 ${isInternal ? 'bg-[#0086FF] hover:bg-[#0074E0]' : 'bg-[#FF7A00] hover:bg-[#FF8B1F]'}`}
                 >
                   <ArrowRight className="w-4 h-4" />
                   {isInternal ? "Registrar Simulação" : "Ver Estratégia"}
