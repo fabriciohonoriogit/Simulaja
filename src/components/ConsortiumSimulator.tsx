@@ -17,7 +17,8 @@ import {
   Calculator,
   Info,
   Send,
-  FileText
+  FileText,
+  Lock
 } from "lucide-react";
 import { WhatsAppIcon } from './SocialIcons';
 import { Input } from "@/components/ui/input";
