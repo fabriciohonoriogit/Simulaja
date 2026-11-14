@@ -107,7 +107,7 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
     // Sincroniza o simulador globalmente com categoria e crédito exato
     window.dispatchEvent(
       new CustomEvent("select-simulator-category", {
-        detail: { 
+        detail: {
           categoryId: asset.categoryId,
           targetCredit: asset.targetCredit,
           assetId: asset.id
@@ -117,7 +117,7 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
   };
 
   return (
-    <div 
+    <div
       className={`w-full flex flex-col items-start select-none ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -131,11 +131,10 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
             <button
               key={asset.id}
               onClick={() => handleSelect(index)}
-              className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 ${
-                isSelected
+              className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 ${isSelected
                   ? "bg-[#0086FF] text-white shadow-md shadow-blue-500/25 scale-[1.02]"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-              }`}
+                }`}
             >
               <Icon className="w-3.5 h-3.5 relative z-10" />
               <span className="relative z-10">{asset.name}</span>
@@ -157,7 +156,7 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
       </div>
 
       {/* VITRINE REAL DO BEM SELECIONADO COM EFEITOS DINÂMICOS */}
-      <div 
+      <div
         onClick={() => handleSelect(selectedIndex)}
         className="w-full relative rounded-3xl overflow-hidden border border-blue-200/80 bg-white shadow-xl shadow-blue-100/50 group transition-all duration-500 cursor-pointer hover:border-[#0086FF]/60 hover:shadow-2xl"
         title="Toque para simular esta conquista com meia parcela"

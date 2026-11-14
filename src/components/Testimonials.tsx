@@ -39,7 +39,7 @@ const Testimonials = () => {
       <div className="absolute bottom-10 left-10 w-[500px] h-[350px] bg-emerald-100/20 blur-3xl pointer-events-none" />
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-        
+
         {/* Header da Seção */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-blue-200 text-[#0086FF] text-xs font-bold uppercase tracking-widest shadow-sm">

@@ -106,15 +106,15 @@ export function VitrineOfertasMagalu() {
   getActiveCampaignTheme();
 
   const handleSelectOffer = (oferta: OfertaConquista) => {
-    const simCategory = 
+    const simCategory =
       oferta.categoria === "caminhão" ? "pesados" :
-      oferta.categoria === "moto" ? "veiculo" :
-      oferta.categoria;
+        oferta.categoria === "moto" ? "veiculo" :
+          oferta.categoria;
 
     // Sincroniza o simulador globalmente com categoria e crédito exato da oferta
     window.dispatchEvent(
       new CustomEvent("select-simulator-category", {
-        detail: { 
+        detail: {
           categoryId: simCategory,
           targetCredit: oferta.creditoValor,
         },
@@ -129,13 +129,13 @@ export function VitrineOfertasMagalu() {
   };
 
   return (
-    <section className="py-12 sm:py-16 relative overflow-hidden border-b border-slate-200/80 bg-[#FAF9F5]"> 
+    <section className="py-12 sm:py-16 relative overflow-hidden border-b border-slate-200/80 bg-[#FAF9F5]">
       {/* Manchas decorativas suaves */}
       <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-gradient-to-bl from-blue-100/30 to-transparent pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[200px] bg-gradient-to-tr from-amber-100/30 to-transparent pointer-events-none" />
 
       <div className="container max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* HEADER DA VITRINE COM APELO DE DESEJO */}
         <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-orange-200 text-orange-700 text-xs font-bold uppercase tracking-widest shadow-sm">
