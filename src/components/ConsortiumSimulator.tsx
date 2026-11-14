@@ -784,7 +784,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
             <BlackFridayBanner className="w-full mb-6" />
           )}
 
-          <div ref={simulatorRef} className={`w-full bg-white rounded-[22px] shadow-[0_0_35px_rgba(0,134,255,0.25)] relative z-10 border-2 border-cyan-400/50 ${compact ? "p-3 sm:p-5" : "p-5 sm:p-8"}`}>
+          <div ref={simulatorRef} className={`w-full bg-[#FAF9F5] rounded-[22px] shadow-lg shadow-blue-500/10 relative z-10 border-2 border-blue-200/80 ${compact ? "p-3 sm:p-5" : "p-5 sm:p-8"}`}>
             {compact && isBF && (
               <div className="mb-3 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600/20 via-cyan-500/20 to-amber-500/20 border border-cyan-400/40 flex items-center justify-between text-[11px] font-black uppercase text-cyan-800">
                 <span>🔥 Black das Blacks Consórcio Magalu</span>

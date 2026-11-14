@@ -129,28 +129,28 @@ export function VitrineOfertasMagalu() {
   };
 
   return (
-    <section className="py-12 sm:py-16 bg-[#070D19] text-white relative overflow-hidden border-b border-white/10">
-      {/* Luzes de Fundo Sazonais Magalu com Pulso Lento */}
-      <div className="absolute top-0 right-1/4 w-[500px] h-[300px] bg-blue-600/15 blur-3xl pointer-events-none animate-pulse" />
-      <div className="absolute bottom-0 left-1/4 w-[500px] h-[300px] bg-amber-500/10 blur-3xl pointer-events-none" />
+    <section className="py-12 sm:py-16 relative overflow-hidden border-b border-orange-100" style={{background: "linear-gradient(180deg, #FFF8F0 0%, #FFF4E6 60%, #FFF8F0 100%)"}}> 
+      {/* Manchas decorativas bege */}
+      <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-gradient-to-bl from-orange-50/80 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[200px] bg-gradient-to-tr from-amber-50/60 to-transparent pointer-events-none" />
 
       <div className="container max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* HEADER DA VITRINE COM APELO DE DESEJO */}
         <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-            <Flame className="w-4 h-4 text-blue-400" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-orange-200 text-orange-700 text-xs font-bold uppercase tracking-widest shadow-sm">
+            <Flame className="w-4 h-4 text-orange-500" />
             <span>Cardápio de Oportunidades Magalu</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
             Escolha o que você vai conquistar hoje{" "}
             <span className="text-[#0086FF]">
               com parcelas que cabem no bolso
             </span>
           </h2>
 
-          <p className="text-slate-300 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
             Valores reais calculados com <strong>parcelas a partir de valores reduzidos</strong>. Toque em qualquer oferta para simular na hora:
           </p>
         </div>
@@ -164,18 +164,18 @@ export function VitrineOfertasMagalu() {
               whileHover={{ y: -5, scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="group cursor-pointer rounded-3xl p-3.5 bg-[#0B1528] border border-slate-800 hover:border-blue-500/60 shadow-xl transition-all duration-300 flex flex-col justify-between"
+              className="group cursor-pointer rounded-3xl p-3.5 bg-white border border-orange-100/80 hover:border-[#0086FF]/50 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
             >
               {/* Imagem do Bem com Tag de Oferta e Feixe de Luz */}
-              <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-3 bg-slate-900/30">
+              <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-3 bg-slate-100">
                 <img
                   src={oferta.imagem}
                   alt={oferta.titulo}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 brightness-[1.02] contrast-[1.02]"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
 
                 {/* Sombra no rodapé para leitura dos badges */}
-                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none z-10" />
 
                 {/* Tag de Destaque */}
                 <div className="absolute top-2 left-2 z-20">
@@ -186,10 +186,10 @@ export function VitrineOfertasMagalu() {
 
                 {/* Selo Ilustrativo & Prazo */}
                 <div className="absolute bottom-2 inset-x-2 z-20 flex items-center justify-between">
-                  <span className="px-1.5 py-0.5 rounded bg-black/60 text-[8.5px] text-slate-300 font-semibold backdrop-blur-sm border border-white/10">
+                  <span className="px-1.5 py-0.5 rounded bg-black/60 text-[8.5px] text-white font-semibold backdrop-blur-sm border border-white/10">
                     Ilustrativo
                   </span>
-                  <span className="px-2 py-0.5 rounded-md bg-black/75 border border-white/15 text-[9px] font-bold text-slate-300 backdrop-blur-md">
+                  <span className="px-2 py-0.5 rounded-md bg-black/75 border border-white/15 text-[9px] font-bold text-white backdrop-blur-md">
                     {oferta.prazo}
                   </span>
                 </div>
@@ -198,34 +198,34 @@ export function VitrineOfertasMagalu() {
               {/* Corpo da Oferta */}
               <div className="flex-1 flex flex-col justify-between space-y-2">
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-blue-400">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#0086FF]">
                     {oferta.categoriaLabel}
                   </div>
-                  <h3 className="text-sm font-black text-white leading-tight group-hover:text-blue-300 transition-colors">
+                  <h3 className="text-sm font-black text-slate-800 leading-tight group-hover:text-[#0086FF] transition-colors">
                     {oferta.titulo}
                   </h3>
-                  <p className="text-[11px] text-slate-400 line-clamp-2 mt-1 leading-snug">
+                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-snug">
                     {oferta.subtitulo}
                   </p>
                 </div>
 
                 {/* Bloco de Preço: PARCELAS A PARTIR DE */}
-                <div className="pt-2 border-t border-slate-800 space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
                     <span>Crédito:</span>
-                    <span className="text-white font-black">{oferta.creditoFormatado}</span>
+                    <span className="text-slate-900 font-black">{oferta.creditoFormatado}</span>
                   </div>
 
-                  <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-700/60 text-center group-hover:border-blue-500/40 transition-colors">
-                    <div className="text-[9.5px] font-bold uppercase tracking-widest text-slate-300">
+                  <div className="p-2 rounded-xl bg-orange-50/70 border border-orange-100 text-center group-hover:border-blue-300 transition-colors">
+                    <div className="text-[9.5px] font-bold uppercase tracking-widest text-slate-500">
                       Parcelas a partir de:
                     </div>
-                    <div className="text-base font-black text-white group-hover:text-[#0086FF] transition-colors font-mono">
+                    <div className="text-base font-black text-[#0086FF] transition-colors font-mono">
                       {oferta.parcelaAPartir}
                     </div>
                   </div>
 
-                  <div className="text-[9.5px] text-emerald-400 font-bold text-center leading-tight">
+                  <div className="text-[9.5px] text-emerald-600 font-bold text-center leading-tight">
                     {oferta.comparativoFinanciamento}
                   </div>
                 </div>
@@ -244,16 +244,16 @@ export function VitrineOfertasMagalu() {
         </div>
 
         {/* FAIXA INFERIOR COM PERSONALIZAÇÃO */}
-        <div className="mt-8 p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div className="mt-8 p-4 rounded-2xl bg-white border border-orange-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-950/80 border border-blue-500/30 flex items-center justify-center shrink-0">
-              <Zap className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
+              <Zap className="w-5 h-5 text-[#0086FF]" />
             </div>
             <div>
-              <div className="text-xs font-black text-white uppercase tracking-wider">
+              <div className="text-xs font-black text-slate-900 uppercase tracking-wider">
                 Prefere outro valor ou crédito sob medida?
               </div>
-              <div className="text-[11px] text-slate-300">
+              <div className="text-[11px] text-slate-600">
                 Você pode simular qualquer crédito de R$ 15 mil até R$ 2 Milhões com taxas oficiais do Consórcio Magalu.
               </div>
             </div>
@@ -271,8 +271,8 @@ export function VitrineOfertasMagalu() {
         </div>
 
         {/* NOTA DE TRANSPARÊNCIA */}
-        <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-slate-400 text-center font-medium">
-          <Info className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+        <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-slate-500 text-center font-medium">
+          <Info className="w-3.5 h-3.5 text-blue-500 shrink-0" />
           <span>
             * Imagens de bens meramente ilustrativas. Créditos sujeitos a aprovação cadastral e regras do Consórcio Magalu. Valores de parcelas sujeitos a alteração conforme tabela e grupo vigentes.
           </span>
