@@ -37,10 +37,10 @@ const HowItWorks = () => {
   };
 
   return (
-    <section className="py-14 sm:py-20 relative overflow-hidden border-t border-slate-200" style={{background: "linear-gradient(180deg, #FFFFFF 0%, #FAF9F5 50%, #FFFFFF 100%)"}} id="como-funciona">
+    <section className="py-14 sm:py-20 relative overflow-hidden border-b border-slate-200/80 bg-[#FAF9F5]" id="como-funciona">
       {/* Luzes decorativas sutis */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[350px] bg-blue-100/40 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-orange-100/30 blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[350px] bg-blue-100/30 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-amber-100/25 blur-3xl pointer-events-none" />
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         

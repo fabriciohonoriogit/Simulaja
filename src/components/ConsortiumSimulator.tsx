@@ -499,7 +499,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
       lanceTotalPct: (lanceDinheiroPct > 0 || lanceEmbutidoPct > 0) ? (lanceDinheiroPct + lanceEmbutidoPct) : undefined,
       prazoRestante: prazoRestante,
       proximaAssembleia: "25/11/2026",
-      consultorNome: profile?.nome || searchParams.get("nome") || "Fabricio Honório - O Especialista",
+      consultorNome: profile?.nome || searchParams.get("nome") || "O Especialista Consórcio",
       consultorTelefone: "41997925357",
     });
 
@@ -582,7 +582,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
   };
 
   const wppLockMsg = historicoZustand.map((h, i) => `${i + 1}. ${fmtFull(h.valor_credito)} — ${fmtFull(h.parcela)} / ${h.meses}m`).join("\n");
-  const lockWppUrl = `https://wa.me/5541997925357?text=${encodeURIComponent("Olá Fabricio! Fiz simulações:\n\n" + wppLockMsg + "\n\nQuero mais informações!")}`;
+  const lockWppUrl = `https://wa.me/5541997925357?text=${encodeURIComponent("Olá! Fiz uma simulação no Simulador:\n\n" + wppLockMsg + "\n\nQuero atendimento personalizado!")}`;
 
   // Lance Cálculos
   const lDinheiroRS = g.credito * (lanceDinheiroPct / 100);
@@ -643,7 +643,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
     const tipoParcelaStr = g.tipoVenda ? (isLinear ? g.tipoVenda : `👑 ${g.tipoVenda}`) : (g.isPlanoGold ? (isLinear ? '👑 Golden Linear' : '👑 PLANO GOLD') : (isLinear ? 'Linear' : 'Reduzida 50%'));
     const prazo = isSelectedLinear ? (g.prazoLinear ?? g.prazo) : g.prazo;
     const grupo = isSelectedLinear ? (g.grupoLinear ?? g.grupo) : g.grupo;
-    const consultor = profile?.nome || searchParams.get("nome") || 'Fabricio Honório';
+    const consultor = profile?.nome || searchParams.get("nome") || 'O Especialista Consórcio';
 
     const msg = [
       `📅 ${dataStr}`,

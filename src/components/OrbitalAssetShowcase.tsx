@@ -168,45 +168,34 @@ export function OrbitalAssetShowcase({ onSelectCategory, className = "" }: Orbit
           style={{ backgroundColor: selectedAsset.color }}
         />
 
-        {/* CONTAINER DA IMAGEM COM TRANSIÇÃO KEN BURNS E FEIXE DE LUZ */}
-        <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-slate-900/30">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={selectedAsset.id}
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 1, scale: 1.02 }}
-              exit={{ opacity: 0, scale: 1 }}
-              transition={{
-                opacity: { duration: 0.6, ease: "easeInOut" },
-                scale: { duration: 6, ease: "easeOut" }
-              }}
-              className="w-full h-full"
-            >
-              <img
-                src={selectedAsset.image}
-                alt={selectedAsset.name}
-                className="w-full h-full object-cover object-center brightness-[1.04] contrast-[1.03] transition-transform duration-700 group-hover:scale-105"
-              />
-            </motion.div>
-          </AnimatePresence>
+        {/* CONTAINER DA IMAGEM */}
+        <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-slate-100">
+          <img
+            key={selectedAsset.id}
+            src={selectedAsset.image}
+            alt={selectedAsset.name}
+            loading="eager"
+            decoding="sync"
+            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+          />
 
-          {/* FEIXE DE LUZ REFLEXIVO (SHINE SWEEP DE ALTO PADRÃO) */}
+          {/* Feixe de brilho dinâmico */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
-            <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] animate-shine-sweep" />
+            <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-[-20deg] animate-shine-sweep" />
           </div>
 
-          {/* Apenas suave sombra inferior para leitura da parcela */}
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent pointer-events-none z-10" />
+          {/* Sombra inferior suave para contraste dos textos */}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent pointer-events-none z-10" />
 
-          {/* Badges superiores flutuantes com animação */}
+          {/* Badges superiores flutuantes */}
           <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-slate-950/85 border border-white/20 text-[10px] font-black uppercase tracking-wider text-cyan-300 backdrop-blur-md shadow-lg">
+            <span className="px-3 py-1 rounded-full bg-slate-900/90 border border-white/20 text-[10px] font-black uppercase tracking-wider text-white backdrop-blur-md shadow-md">
               {selectedAsset.name}
             </span>
-            <span className="px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-[10px] font-black uppercase tracking-wider text-emerald-300 backdrop-blur-md shadow-lg flex items-center gap-1.5">
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500/90 text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md shadow-md flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
               </span>
               50% até contemplar
             </span>

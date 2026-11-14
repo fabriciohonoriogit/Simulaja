@@ -129,10 +129,10 @@ export function VitrineOfertasMagalu() {
   };
 
   return (
-    <section className="py-12 sm:py-16 relative overflow-hidden border-b border-orange-100" style={{background: "linear-gradient(180deg, #FFF8F0 0%, #FFF4E6 60%, #FFF8F0 100%)"}}> 
-      {/* Manchas decorativas bege */}
-      <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-gradient-to-bl from-orange-50/80 to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[200px] bg-gradient-to-tr from-amber-50/60 to-transparent pointer-events-none" />
+    <section className="py-12 sm:py-16 relative overflow-hidden border-b border-slate-200/80 bg-[#FAF9F5]"> 
+      {/* Manchas decorativas suaves */}
+      <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-gradient-to-bl from-blue-100/30 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[200px] bg-gradient-to-tr from-amber-100/30 to-transparent pointer-events-none" />
 
       <div className="container max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         

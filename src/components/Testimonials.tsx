@@ -33,9 +33,9 @@ const testimonials = [
 
 const Testimonials = () => {
   return (
-    <section className="py-14 sm:py-20 relative overflow-hidden border-t border-blue-100" style={{background: "linear-gradient(135deg, #F0F7FF 0%, #EBF4FF 50%, #F5F9FF 100%)"}} id="depoimentos">
+    <section className="py-14 sm:py-20 relative overflow-hidden border-b border-slate-200/80 bg-[#FAF9F5]" id="depoimentos">
       {/* Luzes decorativas suaves */}
-      <div className="absolute top-10 right-10 w-[500px] h-[350px] bg-blue-200/30 blur-3xl pointer-events-none" />
+      <div className="absolute top-10 right-10 w-[500px] h-[350px] bg-blue-100/30 blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 left-10 w-[500px] h-[350px] bg-emerald-100/20 blur-3xl pointer-events-none" />
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
