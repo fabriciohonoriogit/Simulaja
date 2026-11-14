@@ -31,8 +31,7 @@ export function CRMDrawer({ onLoadLead, onSaveSim, showFloatingButton }: CRMDraw
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  const isAdminRoute = typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
-  const shouldDisplayButton = showFloatingButton ?? isAdminRoute;
+  const shouldDisplayButton = false;
 
   useEffect(() => {
     if (isOpen) {
@@ -62,19 +61,6 @@ export function CRMDrawer({ onLoadLead, onSaveSim, showFloatingButton }: CRMDraw
 
   return (
     <>
-      {/* Floating Button (Visível apenas no CRM Interno / Admin) */}
-      {shouldDisplayButton && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl z-50 bg-[#0f2044] hover:bg-[#1a2f5a] border-2 border-[#f47920] group flex items-center justify-center transition-all active:scale-95"
-        >
-          <Users className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
-          <span className="absolute -top-1 -right-1 bg-[#f47920] text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-[#0f2044]">
-            {leads.length}
-          </span>
-        </button>
-      )}
-
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerContent className="h-[90vh] bg-white border-t-4 border-[#f47920]">
           <div className="mx-auto w-full max-w-lg flex flex-col h-full overflow-hidden">

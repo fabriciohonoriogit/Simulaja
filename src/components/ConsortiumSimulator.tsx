@@ -1559,39 +1559,41 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
       />
 
       {/* CRMDrawer (Engrenagem / Lista de Leads) para parceiros e uso externo */}
-      <CRMDrawer 
-        onLoadLead={(lead: any) => {
-          setSimNome(lead.nome || "");
-          setSimWpp(lead.celular || "");
-          if (lead.tipo_consorcio) {
-            const tc = lead.tipo_consorcio.toLowerCase();
-            if (tc.includes("imóvel") || tc.includes("imovel")) setCategoria("imovel");
-            else if (tc.includes("veículo") || tc.includes("veiculo")) setCategoria("veiculo");
-            else if (tc.includes("pesados") || tc.includes("caminh")) setCategoria("pesados");
-            else if (tc.includes("moto")) setCategoria("moto");
-            else if (tc.includes("agro")) setCategoria("agro");
-            else if (tc.includes("naut")) setCategoria("nautica");
-          }
-          toast({ title: `Lead ${lead.nome} carregado!` });
-        }} 
-        onSaveSim={async (leadId: string) => {
-          try {
-          const gItem = resultado || (lista && lista[idx]);
-          if (!gItem) return;
-            const { error } = await supabase.from("leads").update({
-              valor_credito: gItem.credito,
-              prazo_meses: gItem.prazo,
-              tipo_consorcio: `${categoria.toUpperCase()} (G: ${gItem.grupo})`,
-              updated_at: new Date().toISOString()
-            }).eq("id", leadId);
+      {!isInternal && (
+        <CRMDrawer 
+          onLoadLead={(lead: any) => {
+            setSimNome(lead.nome || "");
+            setSimWpp(lead.celular || "");
+            if (lead.tipo_consorcio) {
+              const tc = lead.tipo_consorcio.toLowerCase();
+              if (tc.includes("imóvel") || tc.includes("imovel")) setCategoria("imovel");
+              else if (tc.includes("veículo") || tc.includes("veiculo")) setCategoria("veiculo");
+              else if (tc.includes("pesados") || tc.includes("caminh")) setCategoria("pesados");
+              else if (tc.includes("moto")) setCategoria("moto");
+              else if (tc.includes("agro")) setCategoria("agro");
+              else if (tc.includes("naut")) setCategoria("nautica");
+            }
+            toast({ title: `Lead ${lead.nome} carregado!` });
+          }} 
+          onSaveSim={async (leadId: string) => {
+            try {
+            const gItem = resultado || (lista && lista[idx]);
+            if (!gItem) return;
+              const { error } = await supabase.from("leads").update({
+                valor_credito: gItem.credito,
+                prazo_meses: gItem.prazo,
+                tipo_consorcio: `${categoria.toUpperCase()} (G: ${gItem.grupo})`,
+                updated_at: new Date().toISOString()
+              }).eq("id", leadId);
 
-            if (error) throw error;
-            toast({ title: "Sincronizado!", description: "Dados salvos no lead selecionado." });
-          } catch (e: any) {
-            toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
-          }
-        }} 
-      />
+              if (error) throw error;
+              toast({ title: "Sincronizado!", description: "Dados salvos no lead selecionado." });
+            } catch (e: any) {
+              toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+            }
+          }} 
+        />
+      )}
     </div>
   );
 };
