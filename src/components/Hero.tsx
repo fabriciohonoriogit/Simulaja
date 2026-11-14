@@ -80,9 +80,9 @@ export const Hero: React.FC<HeroProps> = ({ onSimulateSubmit }) => {
               </div>
 
               <h1 className="text-3xl sm:text-4xl xl:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-                O Futuro do seu Patrimônio{" "}
-                <span className="text-[#0086FF] relative inline-block">
-                  Sem Juros Bancários
+                <span className="block">O Futuro do seu Patrimônio</span>
+                <span className="text-[#0086FF] relative inline-block mt-1">
+                  com Planejamento
                   {/* Linha decorativa animada sob o destaque */}
                   <span className="absolute bottom-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#0086FF] to-cyan-400 rounded-full" />
                 </span>
