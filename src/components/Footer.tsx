@@ -1,4 +1,5 @@
 import { Facebook, Instagram, Linkedin, Phone, Sparkles, ShieldCheck, Lock } from "lucide-react";
+import magaluLogo from "@/assets/logo-consorcio-magalu-oficial.webp";
 
 const WHATSAPP_NUMBER = "5541997925357";
 
@@ -134,6 +135,22 @@ const Footer = () => {
             </div>
           </div>
 
+        </div>
+
+        {/* REPRESENTANTE OFICIAL CONSÓRCIO MAGALU */}
+        <div className="border-t border-slate-800 pt-8 pb-4 flex flex-col sm:flex-row items-center justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <img src={magaluLogo} alt="Consórcio Magalu" className="h-12 w-auto" />
+            <div>
+              <p className="text-xs font-black text-white uppercase tracking-widest">Representante Oficial</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Gestor Autorizado — Consórcio Magalu Ltda.</p>
+              <p className="text-[10px] text-slate-500">CNPJ 50.416.748/0001-90</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-bold">
+            <ShieldCheck className="w-4 h-4" />
+            <span>Fiscalizado pelo Banco Central do Brasil</span>
+          </div>
         </div>
 
         {/* NOTA LGPD & SEGURANÇA */}

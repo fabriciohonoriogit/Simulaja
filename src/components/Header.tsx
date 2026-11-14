@@ -25,7 +25,7 @@ const Header = () => {
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? "bg-[#070D19]/95 backdrop-blur-md shadow-xl py-3 border-b border-slate-800/80" 
+          ? "bg-white/98 backdrop-blur-md shadow-sm py-3 border-b border-slate-200" 
           : "bg-transparent py-5"
       }`}
     >
@@ -44,7 +44,7 @@ const Header = () => {
             <a 
               key={link.label} 
               href={link.href}
-              className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors"
+              className="text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               {link.label}
             </a>
@@ -64,7 +64,7 @@ const Header = () => {
         {/* Mobile Menu Button */}
         <button 
           aria-label="Abrir Menu"
-          className="md:hidden text-white bg-slate-800/80 p-2.5 rounded-xl border border-slate-700"
+          className="md:hidden text-slate-700 bg-slate-100 p-2.5 rounded-xl border border-slate-300"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -73,13 +73,13 @@ const Header = () => {
 
       {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="absolute top-full left-0 right-0 bg-[#070D19] border-t border-slate-800 p-6 shadow-2xl md:hidden animate-in slide-in-from-top duration-200">
+        <div className="absolute top-full left-0 right-0 bg-white border-t border-slate-200 p-6 shadow-lg md:hidden animate-in slide-in-from-top duration-200">
           <nav className="flex flex-col gap-4">
             {navLinks.map((link) => (
               <a 
                 key={link.label} 
                 href={link.href}
-                className="text-base font-medium p-3 text-slate-200 hover:text-white hover:bg-slate-800/50 rounded-xl transition-colors"
+                className="text-base font-medium p-3 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.label}

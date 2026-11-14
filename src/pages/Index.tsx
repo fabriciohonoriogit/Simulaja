@@ -83,7 +83,7 @@ const Index = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#050814] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
+    <main className="min-h-screen bg-[#FAF9F5] text-slate-800 selection:bg-blue-500/20 selection:text-blue-900">
       {isBlackFridayActive() && <BlackFridayBanner compact={true} className="sticky top-0 z-50" />}
       <StickySimulatorCTA />
       <Header />
