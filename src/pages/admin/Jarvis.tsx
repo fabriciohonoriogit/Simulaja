@@ -1,8 +1,16 @@
-import React, { useState } from "react";
-import JarvisStudio from "./JarvisStudio";
-import JarvisHUDPage from "./JarvisHUDPage";
+import React, { useState, Suspense, lazy } from "react";
 import { JarvisMobileAssistant } from "@/components/admin/jarvis/JarvisMobileAssistant";
-import { Sparkles, Layers, Zap, Smartphone, Monitor } from "lucide-react";
+import { Layers, Zap } from "lucide-react";
+
+// Carregamento sob demanda para economizar memória e deixar o CRM ultra-leve
+const JarvisStudio = lazy(() => import("./JarvisStudio"));
+const JarvisHUDPage = lazy(() => import("./JarvisHUDPage"));
+
+const JarvisLoader = () => (
+  <div className="flex h-[80vh] w-full items-center justify-center">
+    <div className="w-8 h-8 border-3 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 export default function Jarvis() {
   const [currentMode, setCurrentMode] = useState<"studio" | "hud">(() => {
@@ -60,7 +68,9 @@ export default function Jarvis() {
           </button>
         </div>
 
-        {currentMode === "studio" ? <JarvisStudio /> : <JarvisHUDPage />}
+        <Suspense fallback={<JarvisLoader />}>
+          {currentMode === "studio" ? <JarvisStudio /> : <JarvisHUDPage />}
+        </Suspense>
       </div>
     </div>
   );

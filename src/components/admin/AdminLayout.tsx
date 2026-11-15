@@ -69,11 +69,9 @@ const menuGroups: MenuGroup[] = [
         ]
     },
     {
-        label: "SUPORTE / IA",
+        label: "INTELIGÊNCIA ARTIFICIAL",
         items: [
-            { icon: Zap, label: "Jarvis OS", path: "/admin/jarvis", color: "text-cyan-400" },
-            { icon: Cpu, label: "Jarvis Studio (Next-Gen)", path: "/admin/jarvis-studio", color: "text-purple-400" },
-            { icon: Sparkles, label: "Jarvis HUD", path: "/admin/jarvis-hud", color: "text-amber-400" },
+            { icon: Zap, label: "Jarvis Copiloto & Voz", path: "/admin/jarvis", color: "text-cyan-400" },
             { icon: Users, label: "Esquadrão Jarvis (11 IAs)", path: "/admin/squad", color: "text-indigo-400" },
         ]
     }
