@@ -94,6 +94,7 @@ export default function AdminLayout() {
 
     const currentHour = new Date().getHours();
     const isDayTime = currentHour >= 6 && currentHour < 18;
+    const isImmersionRoute = location.pathname.startsWith("/admin/simulador") || location.pathname.startsWith("/admin/jarvis") || location.pathname.startsWith("/admin/squad");
 
     const fetchProfile = async () => {
         try {
@@ -319,11 +320,11 @@ export default function AdminLayout() {
                     </Sheet>
                 </header>
 
-                <main className="flex-1 flex flex-col min-h-0 bg-slate-50 overflow-y-auto print:h-auto print:overflow-visible print:bg-white print:p-0">
+                <main className={`flex-1 flex flex-col min-h-0 ${isImmersionRoute ? 'bg-[#021024]' : 'bg-slate-50'} overflow-y-auto print:h-auto print:overflow-visible print:bg-white print:p-0`}>
                     <div className="print:hidden">
                         <TrialBanner />
                     </div>
-                    <div className="flex-1 flex flex-col min-h-0 w-full p-3 sm:p-4 md:p-6 pb-12 print:p-0 print:m-0">
+                    <div className={`flex-1 flex flex-col min-h-0 w-full ${isImmersionRoute ? 'p-0 pb-6' : 'p-3 sm:p-4 md:p-6 pb-12'} print:p-0 print:m-0`}>
                         <ErrorBoundary>
                             <Suspense fallback={
                                 <div className="flex h-full w-full items-center justify-center py-20">

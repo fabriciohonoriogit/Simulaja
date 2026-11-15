@@ -43,6 +43,7 @@ import { generateNotebookLMPdfFromRef } from "@/utils/generateNotebookLMPdf";
 import { CRMDrawer } from "@/components/admin/CRMDrawer";
 import { supabase } from "@/integrations/supabase/client";
 import { JarvisOrb } from "@/components/admin/JarvisOrb";
+import { BlueParticlesBackground } from "@/components/BlueParticlesBackground";
 import { Mic } from "lucide-react";
 
 const sliderThumbStyles = `
@@ -732,7 +733,7 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
 
   return (
     <div 
-      className={`${compact ? 'w-full' : (isInternal ? 'min-h-screen bg-[#FAF9F5] text-slate-800' : 'min-h-screen bg-[#040B16]')} flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`${compact ? 'w-full' : (isInternal ? 'min-h-screen bg-transparent text-slate-800' : 'min-h-screen bg-[#040B16]')} flex flex-col relative w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
@@ -745,11 +746,10 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
         <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none" />
       )}
 
-      {/* Background Suave com luzes ambientais da Landing Page no modo CRM interno */}
+      {/* Background Azul com efeitos de pequenos pontos azuis como no Jarvis */}
       {!compact && isInternal && (
-        <div className="absolute inset-0 bg-[#FAF9F5] pointer-events-none overflow-hidden">
-          <div className="absolute top-0 right-10 w-[550px] h-[450px] bg-gradient-to-bl from-blue-200/35 via-sky-100/20 to-transparent rounded-full blur-3xl animate-breath" />
-          <div className="absolute bottom-0 left-10 w-[450px] h-[350px] bg-gradient-to-tr from-amber-100/30 via-orange-50/20 to-transparent rounded-full blur-3xl animate-breath" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#021024] via-[#051f3e] to-[#042817] z-0 pointer-events-none overflow-hidden">
+          <BlueParticlesBackground />
         </div>
       )}
       
@@ -767,11 +767,11 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
             <div className="relative flex flex-col items-center mb-4 animate-breathe w-full">
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
                 {/* Core Glow */}
-                <div className={`absolute inset-0 ${isInternal ? "bg-blue-500/10" : "bg-blue-500/20"} blur-xl rounded-full scale-125`} />
+                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full scale-125" />
                 
                 {/* CSS Orbit Rings (Atoms) */}
-                <div className={`absolute w-[180%] h-[65%] border ${isInternal ? "border-blue-400/25" : "border-blue-400/35"} rounded-[100%] animate-[spin_10s_linear_infinite]`} />
-                <div className={`absolute w-[180%] h-[65%] border ${isInternal ? "border-emerald-400/20" : "border-green-400/25"} rounded-[100%] animate-[spin_15s_linear_infinite_reverse]`} />
+                <div className="absolute w-[180%] h-[65%] border border-blue-400/35 rounded-[100%] animate-[spin_10s_linear_infinite]" />
+                <div className="absolute w-[180%] h-[65%] border border-emerald-400/25 rounded-[100%] animate-[spin_15s_linear_infinite_reverse]" />
 
                 {/* Logo Image */}
                 <img 
@@ -782,10 +782,10 @@ const ConsortiumSimulator = ({ overrideConfig, isInternal, compact = false, onSi
               </div>
 
               <div className="flex flex-col items-center leading-tight mt-2 relative z-10">
-                <span className={`text-lg sm:text-xl tracking-widest font-black uppercase drop-shadow-sm ${isInternal ? "text-slate-900" : "text-white drop-shadow-lg"}`}>
+                <span className="text-lg sm:text-xl tracking-widest font-black uppercase drop-shadow-md text-white">
                   CONTEMPLAR
                 </span>
-                <span className={`text-[11px] sm:text-xs tracking-[0.35em] font-bold -mt-0.5 ml-1 ${isInternal ? "text-[#0086FF]" : "text-[#84CC16] drop-shadow-md"}`}>
+                <span className={`text-[11px] sm:text-xs tracking-[0.35em] font-bold -mt-0.5 ml-1 ${isInternal ? "text-[#38bdf8] drop-shadow-sm" : "text-[#84CC16] drop-shadow-md"}`}>
                   SIMULADOR ESPECIALISTA
                 </span>
               </div>
