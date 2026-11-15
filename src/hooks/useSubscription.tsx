@@ -94,8 +94,14 @@ export function useSubscription() {
       }
     })();
 
+    // Timeout de segurança: nunca trava o CRM se o Supabase demorar
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) setData((d) => ({ ...d, loading: false }));
+    }, 1500);
+
     return () => {
       isMounted = false;
+      clearTimeout(safetyTimer);
     };
   }, [userId]);
 

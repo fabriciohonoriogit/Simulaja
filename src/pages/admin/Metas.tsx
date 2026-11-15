@@ -218,16 +218,6 @@ export default function Metas() {
                 const val = Number(lead.valor_credito || lead.valor_estimado || lead.valor_venda || lead.dados_cadastro?.valor_credito || 0);
                 const nameLow = (lead.nome || lead.cliente_nome || "").toLowerCase();
                 if (val === 20000 || val === 200000 || nameLow.includes("elizabeth") || nameLow.includes("elisabeth") || nameLow.includes("elizabete") || nameLow.includes("elisabete")) {
-                    if (lead.filial_codigo === "952" || (lead.filial_nome || "").toUpperCase().includes("PARANAGU") || !lead.is_venda_gestor) {
-                        (supabase.from("leads") as any).update({
-                            is_venda_gestor: true,
-                            filial_nome: "GESTOR",
-                            filial_codigo: null,
-                            filial_id: null,
-                            loja: "GESTOR",
-                            origem: "venda_gestor"
-                        }).eq("id", lead.id).then();
-                    }
                     return {
                         ...lead,
                         is_venda_gestor: true,

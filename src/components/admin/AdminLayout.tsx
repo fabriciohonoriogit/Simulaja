@@ -327,7 +327,7 @@ export default function AdminLayout() {
                         <ErrorBoundary>
                             <Suspense fallback={
                                 <div className="flex h-full w-full items-center justify-center py-20">
-                                    <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                                    <div className="w-8 h-8 border-3 border-[#0086FF] border-t-transparent rounded-full animate-spin" />
                                 </div>
                             }>
                                 <TrialGate>

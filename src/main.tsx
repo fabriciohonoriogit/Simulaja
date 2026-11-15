@@ -5,47 +5,20 @@ import "./index.css";
 import { registerSW } from "virtual:pwa-register";
 import { checkAndClearCache } from "./lib/cacheManager";
 
-// Garante auto-reload suave apenas se o app já estiver montado e pronto
-if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!refreshing && document.readyState === "complete" && navigator.serviceWorker.controller) {
-      refreshing = true;
-      console.log("[PWA] Controller atualizado após carregamento. Aplicando nova versão...");
-      window.location.reload();
-    }
-  });
-}
+// Renderização imediata e direta do React App
+createRoot(document.getElementById("root")!).render(<App />);
 
-// Verifica versão do build e limpa cache se necessário (garante inicialização no Android/iOS)
-checkAndClearCache()
-  .catch((err) => console.warn("[PWA Boot] Erro ao verificar cache:", err))
-  .finally(() => {
-    createRoot(document.getElementById("root")!).render(<App />);
-  });
+// Limpeza de cache em segundo plano sem bloquear a inicialização
+checkAndClearCache().catch((err) => console.warn("[PWA Boot] Erro ao verificar cache:", err));
 
-// Listener de atualização do SW com reload automático imediato
+// Service Worker registrado sem forçar reload de janela
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    console.log("[PWA] Nova versão detectada. Atualizando imediatamente...");
-    updateSW(true);
+    console.log("[PWA] Nova versão detectada em segundo plano.");
   },
   onOfflineReady() {
     console.log("[PWA] Pronto para uso offline.");
-  },
-  onRegisteredSW(swUrl: string, registration?: ServiceWorkerRegistration) {
-    if (registration) {
-      // Checagem ativa periódica a cada 30 segundos se online
-      setInterval(async () => {
-        if (!navigator.onLine) return;
-        try {
-          await registration.update();
-        } catch (e) {
-          // Checagem silenciosa
-        }
-      }, 30 * 1000);
-    }
   },
 });
 

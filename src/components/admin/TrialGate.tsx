@@ -16,11 +16,19 @@ export default function TrialGate({ children }: { children: React.ReactNode }) {
     }
   }, [loading]);
 
-  // Exibe o indicador apenas na montagem inicial absoluta da sessão, evitando desmontar a tela em atualizações de token
+  // Timeout de segurança: nunca trava o CRM se o Supabase demorar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      hasLoadedOnceRef.current = true;
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Exibe o indicador discreto apenas nos primeiros milissegundos se ainda não carregou
   if (loading && !hasLoadedOnceRef.current) {
     return (
       <div className="flex h-full w-full items-center justify-center py-20">
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

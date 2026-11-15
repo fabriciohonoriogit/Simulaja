@@ -34,9 +34,9 @@
       }, true);
     </script>
     <script>
-      // AGGRESSIVE CACHE BUSTER FOR BRICKED PWAS
+      // SILENT CACHE CLEANUP (SEM RELOAD FORÇADO)
       (function() {
-        var version = 'v_2026_11_14_clean_v6';
+        var version = 'v_2026_11_14_clean_v7';
         if (localStorage.getItem('pwa_bricked_fix') !== version) {
           localStorage.setItem('pwa_bricked_fix', version);
           if ('serviceWorker' in navigator) {
@@ -44,16 +44,12 @@
               for (var i = 0; i < regs.length; i++) {
                 regs[i].unregister();
               }
-            });
+            }).catch(function() {});
           }
           if ('caches' in window) {
             caches.keys().then(function(keys) {
               return Promise.all(keys.map(function(k) { return caches.delete(k); }));
-            }).then(function() {
-              window.location.reload();
-            });
-          } else {
-            window.location.reload();
+            }).catch(function() {});
           }
         }
       })();
