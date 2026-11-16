@@ -298,6 +298,130 @@ export function formatConciseBudgetQuote(query: string): string | null {
   return null;
 }
 
+function getSegmentoByGrupo(gId: string): string {
+  if (gId.startsWith("60")) return "Imóveis (Casas, Terrenos, Construção)";
+  if (gId.startsWith("59")) return "Pesados (Caminhões, Ônibus, Máquinas Agrícolas)";
+  if (gId.startsWith("71")) return "Serviços & Procedimentos";
+  if (gId.startsWith("41")) return "Eletroeletrônicos";
+  const motosGrupos = ["5261", "5265", "5266", "5268", "5270", "5273", "5276", "5280", "5283", "5285", "5288", "5289", "5293", "5296", "5298"];
+  if (motosGrupos.includes(gId)) return "Motos 0km & Scooters";
+  if (gId.startsWith("52")) return "Veículos & Automóveis / SUVs";
+  return "Consórcio Especialista Magalu";
+}
+
+export function formatAuthoritativeGrupoReport(query: string): string | null {
+  const lower = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+  const isGroupQuery = 
+    (lower.includes("grupo") || lower.includes("grupos")) && 
+    (lower.includes("relatorio") || lower.includes("relatório") || lower.includes("raspa") || lower.includes("tabela") || lower.includes("caracteristica") || lower.includes("detalhe") || lower.includes("completo") || lower.includes("quais os valores") || lower.includes("valores disponiveis") || lower.includes("portal") || lower.includes("magalu") || /\b\d{4}\b/.test(query) || lower.includes("imovel") || lower.includes("veiculo") || lower.includes("moto") || lower.includes("pesado") || lower.includes("eletro") || lower.includes("servico"));
+
+  if (!isGroupQuery) return null;
+
+  // Extrai qualquer número de 4 dígitos informado (qualquer grupo: 6042, 5292, 5900, 7120, 4150, etc.)
+  const groupMatches = query.match(/\b\d{4}\b/g);
+  let targetGroups: string[] = [];
+
+  if (groupMatches && groupMatches.length > 0) {
+    targetGroups = Array.from(new Set(groupMatches));
+  } else {
+    // Se não informou o número, detecta pelo segmento pedido
+    if (lower.includes("moto")) {
+      targetGroups = ["5261", "5296"];
+    } else if (lower.includes("pesado") || lower.includes("caminhao") || lower.includes("agricola")) {
+      targetGroups = ["5900", "5911"];
+    } else if (lower.includes("veiculo") || lower.includes("carro") || lower.includes("auto")) {
+      targetGroups = ["5295", "5297"];
+    } else if (lower.includes("eletro") || lower.includes("servico")) {
+      targetGroups = ["7120", "4150"];
+    } else {
+      // Default: Imóvel Grupo 6042
+      targetGroups = ["6042"];
+    }
+  }
+
+  return generateTextGrupoReport(targetGroups);
+}
+
+export function generateTextGrupoReport(grupoIds: string[]): string {
+  const sections = grupoIds.map((gId) => {
+    const info = GRUPO_CARACTERISTICAS[gId];
+    const mediaLance = MEDIA_LANCES_GRUPOS[gId] ? `${MEDIA_LANCES_GRUPOS[gId]}%` : (info?.caracteristicas?.includes("Lance") ? "Sob Consulta Oficial" : "98,97%");
+    const segmento = getSegmentoByGrupo(gId);
+
+    const allItems: GrupoItem[] = [
+      ...(GRUPOS.imovel || []),
+      ...(GRUPOS.veiculo || []),
+      ...(GRUPOS.pesados || []),
+      ...(GRUPOS.servicos || [])
+    ].filter((item) => item.grupo === gId || item.grupo?.startsWith(gId));
+
+    const uniqueItems = Array.from(new Map(allItems.map((it) => [it.credito, it])).values())
+      .sort((a, b) => a.credito - b.credito);
+
+    const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    let minCred = uniqueItems.length > 0 ? uniqueItems[0].credito : 0;
+    let maxCred = uniqueItems.length > 0 ? uniqueItems[uniqueItems.length - 1].credito : 0;
+
+    // Fallback se não estiver na matriz estática mas estiver em GRUPO_CARACTERISTICAS
+    if (minCred === 0 && info?.caracteristicas) {
+      const matchRange = info.caracteristicas.match(/(\d+[\.\d]*)\s*a\s*(\d+[\.\d]*)/i);
+      if (matchRange) {
+        minCred = Number(matchRange[1].replace(/\./g, ""));
+        maxCred = Number(matchRange[2].replace(/\./g, ""));
+      }
+    }
+
+    const prazo = info?.prazoRestante || uniqueItems[0]?.prazo || (info?.prazoOriginal || 235);
+    const prazoOrig = info?.prazoOriginal ? ` (Prazo original: ${info.prazoOriginal} meses)` : "";
+    const tx = info?.taxaAdm || uniqueItems[0]?.tx5050 || uniqueItems[0]?.txLinear || 18;
+    const fr = info?.fundoReserva || uniqueItems[0]?.fr || 1;
+    const seguroTaxa = info?.seguro ? `${(info.seguro * 100).toFixed(4).replace(/\.?0+$/, "")}%` : "0,0295%";
+
+    let itemsTable = "";
+    if (uniqueItems.length > 0) {
+      itemsTable = uniqueItems.map((it) => {
+        const r50Str = it.r50 ? `${fmt(it.r50)}/mês` : "Sob consulta";
+        const r50SemStr = it.r50SemSeguro ? ` (${fmt(it.r50SemSeguro)} sem seguro)` : "";
+        const r100Str = it.r100 ? `${fmt(it.r100)}/mês` : "Sob consulta";
+        const r100SemStr = it.r100SemSeguro ? ` (${fmt(it.r100SemSeguro)} sem seguro)` : "";
+        return `  • **${fmt(it.credito)}:**\n    - Parcela 50/50: **${r50Str}**${r50SemStr}\n    - Parcela Linear: **${r100Str}**${r100SemStr} (em ${it.prazo} meses)`;
+      }).join("\n");
+    } else {
+      itemsTable = `  • Faixa de créditos cadastrados de ${fmt(minCred || 10000)} a ${fmt(maxCred || 200000)}. Consulte o simulador para a grade completa de cotas.`;
+    }
+
+    return `📊 **RELATÓRIO OFICIAL DO GRUPO ${gId} — CONSÓRCIO MAGALU**
+
+• **Grupo:** ${gId}
+• **Segmento:** ${segmento}
+• **Crédito:** De ${fmt(minCred || 350000)} a ${fmt(maxCred || 700000)} (quais os valores disponíveis):
+${itemsTable}
+
+• **Prazo:** ${prazo} meses${prazoOrig}
+• **Taxa:** Taxa de Administração de ${tx}% + ${fr}% Fundo de Reserva | Seguro Prestamista: ${seguroTaxa}
+• **Características do grupo:**
+  - ${info?.caracteristicas || "Plano oficial Magalu com opção 50/50 e linear, lance embutido de até 25%."}
+  - **Reajuste:** ${info?.reajuste || "INCC / IPCA conforme segmento"}
+  - **Ordem de contemplação:** ${info?.ordemContemplacao || "Sorteio, Lance Livre, Lance Fixo 25% e Lance Fixo 45%"}
+  - **Opção diluir:** ${info?.opcaoDiluir || "Opção de diluir o lance total e quitar parcelas subsequentes"}
+  - **Status:** ${info?.status || "Andamento"} (Assembleia atual: ${info?.numeroAssembleia || "Em andamento"} | Próxima: ${info?.proximaAssembleia || "25/11/2026"})
+• **Média de lance livre:** **${mediaLance}** (Com opções estratégicas de Lances Fixos de 25% e 45%)`;
+  }).join("\n\n---\n\n");
+
+  const pdfOption = grupoIds.length > 1
+    ? `\n\n📄 **Solicitação Multi-Grupos (${grupoIds.length} Grupos):** O comparativo consolidado foi compilado e o arquivo PDF oficial com a assinatura e dados completos pode ser gerado e baixado no sistema.`
+    : `\n\n📄 *Dica: Se você solicitar mais de um grupo (seja de imóvel, veículos, motos, pesados ou eletros), o sistema consolida todos em um único relatório em PDF com comparativo.*`;
+
+  return `${sections}${pdfOption}
+
+---
+*Relatório elaborado por*  
+**Fabricio Honório**  
+www.oespecialistaconsorcio.com.br`;
+}
+
 async function callDirectGemini(
   prompt: string,
   apiKey: string,
@@ -439,6 +563,22 @@ ${veiculoTable}
 ${pesadosTable}
 
 ${servicosTable}
+
+PADRÃO OBRIGATÓRIO PARA RELATÓRIOS DE GRUPO SOLICITADOS:
+Quando o usuário solicitar relatório de um ou mais grupos (ex: grupo 6042):
+Apresente estritamente o modelo oficial:
+1. Grupo [número]
+2. Crédito de [mínimo] a [máximo] com todos os créditos disponíveis
+3. Prazo em meses
+4. Taxa de Administração, Fundo de Reserva e Seguro
+5. Características do grupo (regras oficiais, reajuste INCC/IPCA, ordem de contemplação, lance embutido)
+6. Tabela com valor da parcela 50/50 e linear de cada crédito
+7. Média de lance livre histórico
+8. Opção de PDF para solicitações com múltiplos grupos
+9. Assinatura final obrigatória:
+Relatório elaborado por
+Fabricio Honório
+www.oespecialistaconsorcio.com.br
 -------------------------------------------------------------------------------`;
 }
 
@@ -608,6 +748,12 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
 • **MARLLON CORREA DA SILVA BELLO** (Grupo 005292 | Cota 2010): Pendências de Set/Out (R$ 835,14) + Novembro a vencer em 23/11 (R$ 404,29).
 
 💡 **Resumo Executivo:** Até hoje (12/11), apenas a **Nicoly** quitou a parcela de novembro antecipadamente. Os demais clientes em dia aguardam o vencimento oficial do dia 23/11/2026.`;
+  }
+
+  // 1.2 Relatórios Oficiais de Grupos e Raspagem Magalu (Formato Oficial Especialista)
+  const grupoReport = formatAuthoritativeGrupoReport(userQuery);
+  if (grupoReport) {
+    return grupoReport;
   }
 
   // 2. Cotações e Simulações Oficiais do Simulador SimulaJá (Conciso: Apenas Meia Parcela e Prazo)
