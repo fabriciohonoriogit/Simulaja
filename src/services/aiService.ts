@@ -1232,7 +1232,9 @@ ${consorcioKnowledge}
 1. SIMULADOR E CRÉDITOS:
    - É ESTRITAMENTE PROIBIDO inventar, deduzir ou calcular por estimativa qualquer valor de crédito, parcela, prazo, taxa de administração ou fundo de reserva.
    - Utilize EXCLUSIVAMENTE os valores da matriz oficial do simulador SimulaJá apresentados abaixo.
-   - Toda vez que o usuário solicitar uma simulação ou valor de parcela, passe POR PADRÃO as informações da Parcela 50/50 (Meia Parcela) indicando COM e SEM seguro. Apresente a parcela linear apenas se solicitado ou em contraste.
+   - Toda vez que o usuário solicitar uma simulação, orçamento ou valor de parcela:
+     1. Informe as parcelas 50/50 (Meia Parcela) COM e SEM seguro, a Parcela Linear e o prazo.
+     2. Lembre-se de SEMPRE informar o Grupo, a Média Histórica de Lances contemplados e as Características do Grupo (lance embutido de até 25%, lances fixos, índice de reajuste e andamento).
    - Se o usuário solicitar um valor que não existe na tabela (ex: 330k), informe com precisão que não há cota única desse valor e apresente as opções oficiais mais próximas (ex: 320k no Grupo 6030 ou 340k no Grupo 6035).
    - Para lances médios, utilize EXCLUSIVAMENTE a média histórica cadastrada do grupo (ex: 6042: 98.97%, 6030: 77.60%, 5295: 43.73%, 5296: 88.75%).
 2. DADOS DO CRM E VENDAS:
@@ -1242,7 +1244,7 @@ ${consorcioKnowledge}
    - A cliente Doroty foi venda do MÊS PASSADO (Setembro/2026), e foi da Loja Paranaguá. NUNCA diga que Doroty é venda de Outubro nem venda do Gestor.
    - Nunca invente nomes de leads, vendas fantasiosas ou métricas inexistentes.
 
-${dynamicQuote ? `\n--- COTAÇÃO IDENTIFICADA DO SIMULADOR (ATENÇÃO: FALE APENAS AS PARCELAS E O PRAZO, NUNCA DETALHES DO GRUPO!) ---\n${dynamicQuote}\n------------------------------------------------------------\n` : ""}
+${dynamicQuote ? `\n--- COTAÇÃO IDENTIFICADA DO SIMULADOR (INFORME SEMPRE PARCELAS, PRAZO, IDENTIFICAÇÃO DO GRUPO, MÉDIA DE LANCES E CARACTERÍSTICAS) ---\n${dynamicQuote}\n------------------------------------------------------------\n` : ""}
 
 ${funnelSnapshot}
 
