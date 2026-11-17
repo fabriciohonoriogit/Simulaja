@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { aiService } from "@/services/aiService";
+import { triggerBargeIn, stopVoice } from "@/lib/voiceService";
 import { Sparkles, MicOff } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -11,6 +12,8 @@ function checkIfMobile() {
     window.innerWidth <= 768
   );
 }
+
+const WAKE_WORD_REGEX = /(bella|bela|oi bella|ei bella|fala bella|oi bela|ei bela|jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis|dewiar|dewi|deviar|oi dewiar|ei dewiar|closer|reativador|sdr)/i;
 
 export function GlobalJarvisVoiceListener() {
   const { toast } = useToast();
@@ -27,8 +30,11 @@ export function GlobalJarvisVoiceListener() {
 
   const [isMobile, setIsMobile] = useState<boolean>(checkIfMobile);
   
-  // Voz desativada por padrão em todos os dispositivos para evitar disparos automáticos e erros de microfone
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(false);
+  // Lembra preferência de voz do usuário via localStorage
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("jarvis_voice_active") === "true";
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -68,6 +74,20 @@ export function GlobalJarvisVoiceListener() {
 
         fullTextRef.current = "";
 
+        rec.onspeechstart = () => {
+          if (isSpeakingRef.current) {
+            triggerBargeIn();
+            isSpeakingRef.current = false;
+          }
+        };
+
+        rec.onsoundstart = () => {
+          if (isSpeakingRef.current) {
+            triggerBargeIn();
+            isSpeakingRef.current = false;
+          }
+        };
+
         rec.onresult = (event: any) => {
           if (isSpeakingRef.current || !isVoiceEnabled) return;
 
@@ -86,7 +106,7 @@ export function GlobalJarvisVoiceListener() {
 
           const textLower = fullTextRef.current.toLowerCase();
 
-          if (/(bella|bela|oi bella|ei bella|fala bella|oi bela|ei bela|jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis)/i.test(textLower)) {
+          if (WAKE_WORD_REGEX.test(textLower)) {
             setActiveCall(true);
             if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
             silenceTimerRef.current = setTimeout(() => {
@@ -115,11 +135,12 @@ export function GlobalJarvisVoiceListener() {
           const finalQ = fullTextRef.current.trim();
           fullTextRef.current = "";
 
-          const isCalled = /(bella|bela|oi bella|ei bella|fala bella|oi bela|ei bela|jarvis|jarvas|jervis|yarvis|sharvis|jarves|ouça|fala jarvis|ei jarvis)/i.test(finalQ);
+          const isCalled = WAKE_WORD_REGEX.test(finalQ);
 
           if (finalQ && isCalled) {
+            const isDewiar = /(dewiar|dewi|deviar)/i.test(finalQ);
             toast({
-              title: "🤖 Jarvis Atendendo Chamado...",
+              title: isDewiar ? "🎙️ Dewiar / Jarvis Atendendo Chamado..." : "🤖 Jarvis Atendendo Chamado...",
               description: `"${finalQ}"`,
             });
 
@@ -201,13 +222,22 @@ export function GlobalJarvisVoiceListener() {
   const toggleVoice = () => {
     const next = !isVoiceEnabled;
     setIsVoiceEnabled(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("jarvis_voice_active", String(next));
+    }
     toast({
-      title: next ? "🎙️ Jarvis por Voz Ativado" : "🔇 Jarvis por Voz Desativado",
+      title: next ? "🎙️ Voz Ativada (Jarvis, Bella & Dewiar)" : "🔇 Voz Desativada",
       description: next
-        ? "Microfone ativo no Jarvis. Fale 'Jarvis...' para enviar um comando."
+        ? "Microfone ativo. Diga 'Jarvis', 'Bella' ou 'Dewiar' para enviar um comando."
         : "Microfone desligado. Ative novamente quando quiser interagir por voz.",
     });
   };
+
+  useEffect(() => {
+    const handleCustomToggle = () => toggleVoice();
+    window.addEventListener("toggle-jarvis-voice", handleCustomToggle);
+    return () => window.removeEventListener("toggle-jarvis-voice", handleCustomToggle);
+  }, [isVoiceEnabled]);
 
   // Desativado o botão flutuante para não se sobrepor aos botões da interface
   return null;

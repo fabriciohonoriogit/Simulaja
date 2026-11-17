@@ -470,6 +470,26 @@ function playAudioBufferWithCrossfade(
 }
 
 /**
+ * Verifica se a voz do Jarvis está em reprodução ativa no momento
+ */
+export function isVoiceSpeaking(): boolean {
+  return isPlaybackRunning;
+}
+
+/**
+ * BARGE-IN: Interrompe imediatamente qualquer áudio em reprodução com corte ultrarrápido (< 40ms)
+ */
+export function triggerBargeIn() {
+  if (isPlaybackRunning) {
+    console.log("[Jarvis Barge-In] ⚡ Interrupção instantânea acionada pela voz do usuário!");
+  }
+  stopVoice();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("jarvis-barge-in"));
+  }
+}
+
+/**
  * BARGE-IN: Interrompe imediatamente qualquer áudio em reprodução com fade-out
  */
 export function stopVoice() {

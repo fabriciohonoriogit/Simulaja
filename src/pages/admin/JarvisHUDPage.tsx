@@ -54,6 +54,8 @@ import {
   speakJarvisText,
   speakFillerPhrase,
   stopVoice,
+  triggerBargeIn,
+  isVoiceSpeaking,
   stripEmotionTags,
   registerSimulatedAudioListener,
   getGlobalAnalyser
@@ -296,6 +298,7 @@ export default function JarvisHUDPage() {
   const [audioBass, setAudioBass] = useState<number>(0);
   const [audioTreble, setAudioTreble] = useState<number>(0);
   const [audioAmplitude, setAudioAmplitude] = useState<number>(0);
+  const speechRecognitionRef = useRef<any>(null);
 
   // Estado para Anexos Multimodais (Imagens, Boletos, Documentos ou PDFs)
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1424,24 +1427,105 @@ gn_prosperaplan@consorciomagalu.com.br`;
     speakResponse(briefingText);
   };
 
+  // Listener de Barge-In e descarte seguro de instâncias ao desmontar
+  useEffect(() => {
+    const handleBargeInEvent = () => {
+      setOrbState((prev) => (prev === "speaking" ? "listening" : prev));
+    };
+
+    window.addEventListener("jarvis-barge-in", handleBargeInEvent);
+    return () => {
+      window.removeEventListener("jarvis-barge-in", handleBargeInEvent);
+      if (speechRecognitionRef.current) {
+        try { speechRecognitionRef.current.stop(); } catch (e) {}
+        speechRecognitionRef.current = null;
+      }
+      stopVoice();
+    };
+  }, []);
+
   const toggleMic = () => {
     if (orbState === "listening") {
+      if (speechRecognitionRef.current) {
+        try { speechRecognitionRef.current.stop(); } catch (e) {}
+        speechRecognitionRef.current = null;
+      }
       setOrbState("idle");
     } else {
-      // Barge-in: se o Jarvis estiver falando ao clicar no mic, interrompe o áudio imediatamente
-      stopVoice();
+      // Barge-in: se o Jarvis estiver falando ao clicar no mic, corta o áudio imediatamente (< 30ms)
+      triggerBargeIn();
       setOrbState("listening");
+
       if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.lang = "pt-BR";
-        recognition.onresult = (event: any) => {
-          const text = event.results[0][0].transcript;
-          setCommand(text);
-          setOrbState("thinking");
-          handleSendCommand(text);
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        speechRecognitionRef.current = recognition;
+
+        // Barge-in instantâneo: dispara no momento exato em que o usuário começa a falar
+        recognition.onspeechstart = () => {
+          triggerBargeIn();
+          setOrbState("listening");
         };
-        recognition.start();
+
+        recognition.onsoundstart = () => {
+          triggerBargeIn();
+        };
+
+        recognition.onresult = (event: any) => {
+          // Garante corte total do áudio caso haja resíduo de reprodução
+          triggerBargeIn();
+
+          let interimTranscript = "";
+          let finalTranscript = "";
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+
+          const currentText = (finalTranscript || interimTranscript).trim();
+          if (currentText) {
+            setCommand(currentText);
+          }
+
+          if (finalTranscript.trim()) {
+            setOrbState("thinking");
+            handleSendCommand(finalTranscript.trim());
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          if (event.error !== "no-speech") {
+            console.warn("[Jarvis HUD Speech Error]", event.error);
+          }
+          if (orbState === "listening") {
+            setOrbState("idle");
+          }
+        };
+
+        recognition.onend = () => {
+          speechRecognitionRef.current = null;
+          if (orbState === "listening") {
+            setOrbState("idle");
+          }
+        };
+
+        try {
+          recognition.start();
+        } catch (err) {
+          console.warn("[Jarvis HUD] Não foi possível iniciar reconhecimento:", err);
+          setOrbState("idle");
+        }
+      } else {
+        toast.error("Reconhecimento de voz não suportado neste navegador.");
+        setOrbState("idle");
       }
     }
   };

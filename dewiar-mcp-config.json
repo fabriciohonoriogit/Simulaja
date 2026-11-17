@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "simulaja": {
+      "command": "node",
+      "args": ["scripts/simulaja-mcp-server.mjs"],
+      "cwd": "C:\\Users\\Samsung\\Documents\\Projetos\\simulaja",
+      "description": "Servidor MCP do SimulaJá CRM: Conecta o Dewiar App ao Simulador de Consórcio Magalu, Leads, Inadimplentes, Métricas e ao Jarvis Squad."
+    }
+  }
+}

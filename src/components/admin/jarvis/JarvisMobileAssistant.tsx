@@ -36,6 +36,7 @@ import { aiService, formatConciseBudgetQuote } from "@/services/aiService";
 import {
   speakJarvisText,
   stopVoice,
+  triggerBargeIn,
   stripEmotionTags,
   getGlobalAnalyser
 } from "@/lib/voiceService";
@@ -327,7 +328,18 @@ export function JarvisMobileAssistant({ onSwitchToDesktop }: JarvisMobileAssista
         toast.success("Ouvindo... Pode falar!");
       };
 
+      // Barge-in instantâneo: corta fala do Jarvis assim que o microfone detectar voz
+      rec.onspeechstart = () => {
+        triggerBargeIn();
+        setAiState("listening");
+      };
+
+      rec.onsoundstart = () => {
+        triggerBargeIn();
+      };
+
       rec.onresult = (e: any) => {
+        triggerBargeIn();
         let transcript = "";
         for (let i = 0; i < e.results.length; i++) {
           transcript += e.results[i][0].transcript;
