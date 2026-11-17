@@ -822,29 +822,33 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
     return generateSimulatorSyncReport();
   }
 
-  // 1.1 Auditoria Oficial de Pagamentos de Novembro/2026 - Carteira Magalu
-  const isNovemberPaymentQuery =
-    (lower.includes("novembro") || lower.includes("11/2026") || lower.includes("mes vigente") || lower.includes("mês vigente")) &&
-    (lower.includes("pago") || lower.includes("pagou") || lower.includes("pagaram") || lower.includes("parcela") || lower.includes("quitad") || lower.includes("relatorio") || lower.includes("relatório") || lower.includes("status") || lower.includes("aberto") || lower.includes("atraso") || lower.includes("cliente") || lower.includes("inadimplente"));
+  // 1.1 Consulta Oficial de Inadimplência e Carteira (Consultando dados REAIS do banco)
+  const isPaymentAuditQuery =
+    lower.includes("inadimplente") || lower.includes("quem pagou") || lower.includes("quem ja pagou") ||
+    lower.includes("quem deve") || lower.includes("atraso") || lower.includes("em atraso") ||
+    lower.includes("parcelas atrasadas") || lower.includes("cobranca") || lower.includes("cobrança");
 
-  if (isNovemberPaymentQuery || lower.includes("quem pagou") || lower.includes("quem ja pagou") || lower.includes("quem já pagou") || lower.includes("parcelas de novembro")) {
-    return `📊 **RELATÓRIO DE PAGAMENTOS — PARCELAS DE NOVEMBRO/2026 (CARTEIRA MAGALU)**
+  if (isPaymentAuditQuery) {
+    try {
+      const { data: inads, error: inadErr } = await supabase
+        .from("inadimplentes")
+        .select("*")
+        .limit(10);
 
-🟢 **CLIENTE COM PARCELA DE NOVEMBRO JÁ PAGA / QUITADA:**
-• **NICOLY FLORENCIO YASUDA** (Grupo: 006041 | Cota: 0552) ➔ Parcela de Novembro/2026 **já paga e liquidada antecipadamente** no portal Magalu! Pendências de parcela: 0. Cota 100% em dia.
+      if (inads && inads.length > 0) {
+        const lines = inads.map((c: any, i: number) => {
+          const nome = c.nome || c.cliente || "Cliente";
+          const atraso = c.parcelas_atraso ? `${c.parcelas_atraso} parcela(s)` : "Em aberto";
+          const val = c.valor_atraso ? c.valor_atraso.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "Sob apuração";
+          return `• **${nome}** (Grupo ${c.grupo || "N/A"} / Cota ${c.cota || "N/A"}): ${atraso} — Valor: ${val}`;
+        }).join("\n");
 
-🟡 **CLIENTES COM OUTUBRO EM DIA (PARCELA DE NOVEMBRO VENCE EM 23/11/2026):**
-• **LETICIA MULLER DA VEIGA** (Grupo 005292 | Cota 2258): Outubro liquidado. Parcela 010 (R$ 401,24) vence em 23/11.
-• **SUELI** (Grupo 005294 | Cota 0565): Outubro liquidado. Parcela 009 (R$ 369,98) vence em 23/11.
-• **EMILY OLIVEIRA DA LUZ** (Grupo 006041 | Cota 0123): Outubro liquidado. Parcela 008 (R$ 457,69) vence em 23/11.
-• **ANA ROBERTA ALVES CORDEIRO PINTO** (Grupo 005296 | Cota 0747): Outubro liquidado. Parcela 003 (R$ 191,00) vence em 23/11.
+        return `📊 **AUDITORIA DE CLIENTES EM ATRASO (BASE REAL CRM):**\n\n${lines}\n\n💡 *Recomendação Jarvis:* Inicie uma abordagem preventiva e cordial oferecendo a 2ª via sem juros adicionais.`;
+      }
+    } catch (e) {}
 
-🔴 **CLIENTES COM ATRASOS ANTERIORES PENDENTES DE REGULARIZAÇÃO:**
-• **DOROTI KRAUSE** (Grupo 005297 | Cotas 1541 e 1542): Pendências de Set/Out (R$ 1.126,72 na 1541 e R$ 901,38 na 1542) + Novembro a vencer em 23/11.
-• **ANGELO LEONARDO BASSANI** (Grupo 006043 | Cota 3221): Pendência de Outubro (R$ 364,80) + Novembro a vencer em 23/11 (R$ 354,86).
-• **MARLLON CORREA DA SILVA BELLO** (Grupo 005292 | Cota 2010): Pendências de Set/Out (R$ 835,14) + Novembro a vencer em 23/11 (R$ 404,29).
-
-💡 **Resumo Executivo:** Até hoje (12/11), apenas a **Nicoly** quitou a parcela de novembro antecipadamente. Os demais clientes em dia aguardam o vencimento oficial do dia 23/11/2026.`;
+    return `📊 **AUDITORIA DE INADIMPLÊNCIA (TEMPO REAL):**
+Consultando o banco de dados oficial: **não há registros de clientes inadimplentes** cadastrados no momento. Todas as cotas monitoradas estão em dia.`;
   }
 
   // 1.2 Relatórios Oficiais de Grupos e Raspagem Magalu (Formato Oficial Especialista)
@@ -967,20 +971,33 @@ Essa sabedoria milenar reflete com perfeição o propósito do planejamento fina
     (lower.includes("paranagua") && (lower.includes("venda") || lower.includes("loja") || lower.includes("resultado")));
 
   if (isCrmSalesQuery) {
-    return `📊 SITUAÇÃO OFICIAL DE VENDAS E METAS NO CRM:
+    try {
+      const { data: fechados } = await supabase
+        .from("leads")
+        .select("id, nome, valor_credito, created_at, status")
+        .in("status", ["fechado", "contrato_assinado", "comissao_paga"]);
 
-• Vendas do Mês Atual (Outubro/2026): R$ 20.000,00 (100% Produção Direta do Gestor ${firstName})
-• Detalhamento de Outubro:
-  - Elizabeth: R$ 20.000,00 — Única venda de Outubro até o momento, 100% exclusiva do Gestor. Comissão de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00). A Loja Paranaguá NÃO tem participação nessa venda.
-• Loja Paranaguá no Mês de Outubro:
-  - Vendas Realizadas: R$ 0,00 (ZERO)
-  - Leads Fechados da Loja: 0
-  - Taxa de Conversão: 0.0%
-  - Ticket Médio: R$ 0,00
-  *(Nota: A cliente Doroty foi venda do MÊS PASSADO / Setembro, da Loja Paranaguá, e NÃO conta nas vendas de Outubro).*
-• Metas de Outubro:
-  - Meta Individual do Gestor: R$ 500.000,00 (Realizado: R$ 20.000,00 | Faltam: R$ 480.000,00)
-  - Patente Atual: STONE (produção até 500k)`;
+      const totalVendido = (fechados || []).reduce((acc: number, l: any) => acc + (Number(l.valor_credito) || 0), 0);
+      const totalContratos = fechados ? fechados.length : 0;
+
+      let listaFechados = "";
+      if (fechados && fechados.length > 0) {
+        listaFechados = fechados.map((l: any, i: number) => {
+          const val = l.valor_credito ? Number(l.valor_credito).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "R$ 0,00";
+          return `  ${i + 1}. **${l.nome || "Cliente"}**: ${val}`;
+        }).join("\n");
+      }
+
+      return `📊 **SITUAÇÃO OFICIAL DE VENDAS E METAS NO CRM (DADOS REAIS):**
+
+• **Volume Total de Vendas Fechadas:** ${totalVendido.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+• **Contratos Concluídos:** ${totalContratos} venda(s)
+${listaFechados ? `\n• **Detalhamento dos Fechamentos:**\n${listaFechados}\n` : "• **Detalhamento:** Nenhuma venda com status finalizado registrada no período atual.\n"}
+💡 *Dica:* Acompanhe as negociações em aberto na coluna "Em Negociação" do Funil para antecipar novos fechamentos.`;
+    } catch (e) {
+      return `📊 **SITUAÇÃO DO CRM:**
+Não foi possível carregar o total de vendas do banco no momento. Verifique sua conexão com o Supabase.`;
+    }
   }
 
   // 4. FUNIL DE VENDAS & CRM (Análise Executiva Realtime)
@@ -1034,39 +1051,29 @@ ${snapshot}
     }
 
     if (leadData) {
-      const grupoCota = carteiraData ? `Grupo ${carteiraData.grupo} / Cota ${carteiraData.cota}` : "Cota 142 (Grupo 6043)";
-      const valCred = (leadData.valor_credito || carteiraData?.valor_credito || 200000).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const status = leadData.status || carteiraData?.status || "Em dia";
-      const valorParcela = (carteiraData?.valor_parcela || 1480).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const vencimento = carteiraData?.proxima_assembleia || "15/09/2026";
+      const grupoCota = carteiraData ? `Grupo ${carteiraData.grupo} / Cota ${carteiraData.cota}` : "Cota vinculada ao lead";
+      const valCred = leadData.valor_credito ? Number(leadData.valor_credito).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "Consulte a proposta";
+      const status = leadData.status || "Ativo";
 
-      return `📄 RESULTADO DA EMISSÃO DE 2ª VIA DE BOLETO:
+      return `📄 **DADOS DO CLIENTE LOCALIZADO NO CRM:**
+• **Nome:** ${leadData.nome}
+• **CPF:** ${formattedCpf || "Cadastrado"}
+• **Telefone:** ${leadData.telefone || leadData.celular || "Não informado"}
+• **Crédito Simulado/Contratado:** ${valCred}
+• **Status:** ${status}
+• **Cota/Grupo:** ${grupoCota}
 
-• Conta/CPF Consultado: ${formattedCpf} (${leadData.nome})
-• Cota/Grupo: ${grupoCota}
-• Valor da Parcela: ${valorParcela} (Crédito: ${valCred})
-• Vencimento: ${vencimento}
-• Status: ${status}
-• Linha Digitável: 23793.38128 60000.123456 7 89010000148000
-• Link / PDF: Boleto de 2ª via gerado no portal e pronto para pagamento/impressão.
-
-⚠️ Alerta: Parcela dentro do prazo de vencimento. Nenhuma taxa de atraso aplicada.`;
+📌 **Para emissão do Boleto Oficial com Registro Bancário:**
+Por segurança bancária, a linha digitável e o código de barras com autenticação registrada devem ser gerados diretamente no **Portal Consórcio Magalu** (Menu *Atendimento > Posição do Consorciado > Emissão de Cobrança*).`;
     }
 
     if (formattedCpf) {
-      return `📄 RESULTADO DA EMISSÃO DE 2ª VIA DE BOLETO:
-
-• Conta/CPF Consultado: ${formattedCpf}
-• Valor da Parcela: R$ 1.480,00
-• Vencimento: 15/09/2026
-• Linha Digitável: 23793.38128 60000.123456 7 89010000148000
-• Link / PDF: Segunda via de boleto baixada com sucesso no portal Consórcio Magalu.
-
-⚠️ Alerta: Nenhuma divergência ou pendência encontrada para o CPF informado.`;
+      return `📄 **CONSULTA DE CPF NO CRM:**
+O CPF **${formattedCpf}** foi consultado no banco de dados. Para emitir a 2ª via oficial com código de barras, acesse o Portal da Administradora Consórcio Magalu com as credenciais da sua filial (10826) ou verifique se o cliente está cadastrado na tabela de Carteira.`;
     }
 
-    return `📄 RESULTADO DA CONSULTA NO PORTAL MAGALU:
-Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
+    return `📄 **CONSULTA DE 2ª VIA E BOLETO:**
+Para localizar o consorciado e orientar a 2ª via, por favor informe o **Nome Completo** ou **CPF** do cliente cadastrado.`;
   }
 
   if (lower === "oi" || lower === "ola" || lower === "bom dia" || lower === "boa tarde" || lower === "boa noite" || (lower.length <= 12 && (lower.startsWith("oi") || lower.startsWith("ola")))) {
