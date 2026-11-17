@@ -45,6 +45,12 @@ export async function checkAndClearCache(): Promise<void> {
       } catch (err) {
         console.warn("[CacheManager] Erro ao salvar versão no localStorage:", err);
       }
+
+      // 4. Se havia versão antiga em cache, recarrega para carregar os novos chunks atualizados
+      if (stored && typeof window !== "undefined") {
+        console.log("[CacheManager] Recarregando para aplicar a nova versão sincronizada...");
+        window.location.reload();
+      }
     }
   } catch (err) {
     console.warn("[CacheManager] Erro geral ao verificar cache:", err);

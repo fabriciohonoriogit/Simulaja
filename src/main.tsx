@@ -15,7 +15,8 @@ checkAndClearCache().catch((err) => console.warn("[PWA Boot] Erro ao verificar c
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    console.log("[PWA] Nova versão detectada em segundo plano.");
+    console.log("[PWA] Nova versão detectada. Atualizando imediatamente...");
+    updateSW(true);
   },
   onOfflineReady() {
     console.log("[PWA] Pronto para uso offline.");
