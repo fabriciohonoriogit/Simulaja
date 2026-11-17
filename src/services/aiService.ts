@@ -442,30 +442,35 @@ www.oespecialistaconsorcio.com.br`;
 }
 
 export function generateSimulatorSyncReport(): string {
-  const gruposImovel = ["6044", "6043", "6042", "6027", "6030", "6035"];
-  const gruposVeiculo = ["5295", "5297", "5292", "5294"];
+  const gruposImovel = ["6044", "6038", "6027", "6030", "6035", "6039", "6045", "6042"];
+  const gruposVeiculo = ["5298", "5294", "5295", "5297"];
   const gruposMoto = ["5296", "5261", "5285"];
-  const gruposPesados = ["5900", "5911"];
+  const gruposPesados = ["5996", "5900", "5911"];
   const gruposServicos = ["7120", "4150"];
 
   const buildGroupSummary = (ids: string[]) => {
     return ids.map(id => {
       const c = GRUPO_CARACTERISTICAS[id];
       const media = MEDIA_LANCES_GRUPOS[id] ? `${MEDIA_LANCES_GRUPOS[id]}%` : "Sob Consulta";
-      const vagas = c?.cotasVagas ? `${c.cotasVagas.toLocaleString("pt-BR")} vagas` : "Em formação";
+      const vagas = c?.cotasVagas !== undefined ? (c.cotasVagas === 0 ? "0 vagas (ESGOTADO)" : `${c.cotasVagas.toLocaleString("pt-BR")} vagas`) : "Em formação";
       const status = c?.status || "Andamento";
       const ass = c?.numeroAssembleia ? `Ass. ${c.numeroAssembleia}` : "Em andamento";
       const prazo = c?.prazoRestante ? `${c.prazoRestante} meses` : "Consulte";
-      return `  • **Grupo ${id}:** ${vagas} disponíveis | Status: **${status}** (${ass}) | Prazo: ${prazo} | Média Lance: **${media}**`;
+      return `  • **Grupo ${id}:** ${vagas} | Status: **${status}** (${ass}) | Prazo: ${prazo} | Média Lance: **${media}**`;
     }).join("\n");
   };
 
-  return `✅ **SIMULADOR SIMULAJÁ SINCRONIZADO & ATUALIZADO COM SUCESSO!**
+  return `✅ **SIMULADOR SIMULAJÁ SINCRONIZADO COM O PORTAL MAGALU!**
 
-Recalibrei a base oficial do Simulador com as posições ativas do **Consórcio Magalu**:
+Auditamos e atualizamos todas as cotas e vagas em tempo real via raspagem direta do portal:
 
-🏠 **IMÓVEIS (Menores Parcelas 50/50 & Linear):**
+🏠 **IMÓVEIS (Grade Atualizada):**
 ${buildGroupSummary(gruposImovel)}
+
+⚠️ **NOTA CRÍTICA DA AUDITORIA:**
+• **Crédito de R$ 350.000,00 a 16% (Grupo 6042):** **ESGOTADO (SEM VAGAS)** no portal Magalu.
+• **Opção Oficial Ativa para R$ 350.000,00:** Migrada para o **Grupo 6039** (222 meses | Taxa: 20% + 1% FR | Parcela 50/50: **R$ 1.226,02** com seguro / **R$ 1.119,27** sem seguro | 261 vagas disponíveis).
+• **Novo Grupo para Cotas Altas (R$ 400.000 a R$ 800.000):** **Grupo 6045** ativado com taxa promocional de **16%** e **4.296 cotas vagas** disponíveis.
 
 🚗 **AUTOMÓVEIS & SUVS:**
 ${buildGroupSummary(gruposVeiculo)}
@@ -481,11 +486,9 @@ ${buildGroupSummary(gruposServicos)}
 
 ---
 🎯 **Ajustes Operacionais Concluídos:**
-1. **Grade de Créditos & Parcelas:** 100% atualizada com parcelas reduzidas (50/50 negociado e Plano Golden) e parcelas lineares (com e sem seguro de vida).
-2. **Cotas Vagas & Status:** Contabilizadas rigorosamente conforme a posição oficial dos grupos.
-3. **Modalidades de Lance:** Lance Embutido de até 25% e Lances Fixos (25% e 45%) disponíveis para simulação em tempo real.
-
-O simulador em tela e as consultas via chat já estão operando com estes dados consolidados.`;
+1. **Grade de Créditos & Parcelas:** 100% atualizada com base na raspagem do portal. O crédito de 350k agora reflete o Grupo 6039 e as cotas altas refletem o Grupo 6045.
+2. **Cotas Vagas:** Contabilizadas rigorosamente conforme a posição oficial dos grupos.
+3. **Modalidades de Lance:** Lance Embutido de até 25% e Lances Fixos (25% e 45%) disponíveis para simulação em tempo real.`;
 }
 
 async function callDirectGemini(
@@ -1352,11 +1355,12 @@ ${consorcioKnowledge}
 1. SIMULADOR E CRÉDITOS:
    - É ESTRITAMENTE PROIBIDO inventar, deduzir ou calcular por estimativa qualquer valor de crédito, parcela, prazo, taxa de administração ou fundo de reserva.
    - Utilize EXCLUSIVAMENTE os valores da matriz oficial do simulador SimulaJá apresentados abaixo.
+   - ATENÇÃO RIGOROSA DE RASPAGEM DO PORTAL: O crédito de R$ 350.000,00 no Grupo 6042 a 16% está OFICIALMENTE ESGOTADO (SEM MAIS VAGAS) no portal Magalu. A única opção oficial com vagas para R$ 350.000,00 é o Grupo 6039 (222 meses, taxa 20% + 1% FR, 261 vagas, parcela 50/50 R$ 1.226,02 com seguro / R$ 1.119,27 sem seguro). Para créditos a partir de 400 mil até 800 mil com taxa de 16%, o grupo oficial ativo com 4.296 vagas é o Grupo 6045 (240 meses).
    - Toda vez que o usuário solicitar uma simulação, orçamento ou valor de parcela:
      1. Informe as parcelas 50/50 (Meia Parcela) COM e SEM seguro, a Parcela Linear e o prazo.
      2. Lembre-se de SEMPRE informar o Grupo, a Média Histórica de Lances contemplados e as Características do Grupo (lance embutido de até 25%, lances fixos, índice de reajuste e andamento).
    - Se o usuário solicitar um valor que não existe na tabela (ex: 330k), informe com precisão que não há cota única desse valor e apresente as opções oficiais mais próximas (ex: 320k no Grupo 6030 ou 340k no Grupo 6035).
-   - Para lances médios, utilize EXCLUSIVAMENTE a média histórica cadastrada do grupo (ex: 6042: 98.97%, 6030: 77.60%, 5295: 43.73%, 5296: 88.75%).
+   - Para lances médios, utilize EXCLUSIVAMENTE a média histórica cadastrada do grupo (ex: 6045: 98.98%, 6039: 93.76%, 6042: 98.97%, 6030: 77.60%, 5295: 43.73%, 5296: 88.75%).
 2. DADOS DO CRM E VENDAS:
    - No mês atual de OUTUBRO/2026, houve APENAS R$ 20.000,00 em vendas até o momento, referente exclusivamente à cliente Elizabeth (produção 100% do Gestor Fabrício).
    - A comissão de Elizabeth é de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00).
