@@ -38,7 +38,7 @@ export function setActiveBudgetMemory(memory: ActiveBudgetMemory) {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem("jarvis_active_budget_memory", JSON.stringify(memory));
-    } catch {}
+    } catch { }
   }
 }
 
@@ -51,7 +51,7 @@ export function getActiveBudgetMemory(): ActiveBudgetMemory | null {
         currentActiveBudgetMemory = JSON.parse(saved);
         return currentActiveBudgetMemory;
       }
-    } catch {}
+    } catch { }
   }
   return null;
 }
@@ -330,9 +330,9 @@ function getSegmentoByGrupo(gId: string): string {
 
 export function formatAuthoritativeGrupoReport(query: string): string | null {
   const lower = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
-  const isGroupQuery = 
-    (lower.includes("grupo") || lower.includes("grupos")) && 
+
+  const isGroupQuery =
+    (lower.includes("grupo") || lower.includes("grupos")) &&
     (lower.includes("relatorio") || lower.includes("relatório") || lower.includes("raspa") || lower.includes("tabela") || lower.includes("caracteristica") || lower.includes("detalhe") || lower.includes("completo") || lower.includes("quais os valores") || lower.includes("valores disponiveis") || lower.includes("portal") || lower.includes("magalu") || /\b\d{4}\b/.test(query) || lower.includes("imovel") || lower.includes("veiculo") || lower.includes("moto") || lower.includes("pesado") || lower.includes("eletro") || lower.includes("servico"));
 
   if (!isGroupQuery) return null;
@@ -497,15 +497,15 @@ async function callDirectGemini(
   history?: Array<{ role: string; text: string }>,
   imageBase64?: string
 ): Promise<string | null> {
-  if (!apiKey || apiKey.length < 10) {
+  if (!apiKey || apiKey.length < 15) {
     return null;
   }
 
   const models = [
     "gemini-2.5-flash-lite",
+    "gemini-flash-lite-latest",
     "gemini-flash-latest",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+    "gemini-3.8-flash"
   ];
 
   // Prepara histórico e conteúdo estruturado no padrão Google Gemini
@@ -533,7 +533,7 @@ async function callDirectGemini(
   for (const m of models) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
       const res = await fetch(url, {
         method: "POST",
@@ -563,26 +563,39 @@ async function callAI(
   history?: Array<{ role: string; text: string }>,
   imageBase64?: string
 ): Promise<{ text: string; error: any }> {
-  // 1. Prioridade Máxima: Conexão Direta com a chave do Gemini (localStorage ou env)
-  let directKey = "";
-  if (typeof window !== "undefined") {
-    directKey = localStorage.getItem("jarvis_gemini_api_key") || localStorage.getItem("gemini_api_key") || "";
+  // 1. Prioridade Máxima: Conexão Direta com a chave do Gemini (env ou localStorage)
+  const candidateKeys: string[] = [];
+
+  const envKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
+  if (envKey && typeof envKey === "string" && envKey.trim().length > 15) {
+    candidateKeys.push(envKey.trim());
   }
-  if (!directKey) {
-    const envKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
-    if (envKey && !envKey.startsWith("AQ.")) {
-      directKey = envKey;
+
+  if (typeof window !== "undefined") {
+    const local1 = localStorage.getItem("jarvis_gemini_api_key");
+    const local2 = localStorage.getItem("gemini_api_key");
+    if (local1 && local1.trim().length > 15 && !candidateKeys.includes(local1.trim())) {
+      candidateKeys.push(local1.trim());
+    }
+    if (local2 && local2.trim().length > 15 && !candidateKeys.includes(local2.trim())) {
+      candidateKeys.push(local2.trim());
     }
   }
 
-  if (directKey) {
-    const directText = await callDirectGemini(prompt, directKey, history, imageBase64);
+  // Tenta cada chave candidata com os modelos rápidos do Google Gemini
+  for (const k of candidateKeys) {
+    const directText = await callDirectGemini(prompt, k, history, imageBase64);
     if (directText) {
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("jarvis_gemini_api_key", k);
+        } catch (_) { }
+      }
       return { text: directText, error: null };
     }
   }
 
-  // 2. Tenta invocar a Edge Function do Supabase (jarvis-ai) com timeout rápido para não travar
+  // 2. Tenta invocar a Edge Function do Supabase (jarvis-ai)
   try {
     const { data, error } = await supabase.functions.invoke("jarvis-ai", {
       body: { prompt, maxTokens, history, imageBase64 },
@@ -594,10 +607,9 @@ async function callAI(
         return { text: data.text, error: null };
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
-  // 3. Motor Estratégico Local de Alta Inteligência baseado nos dados reais do CRM e Conhecimento Geral
-  return { text: await generateSmartLocalResponse(prompt), error: null };
+  return { text: "", error: new Error("IA externa indisponivel") };
 }
 
 export function getSimulatorAuthoritativeContext(): string {
@@ -679,24 +691,13 @@ export function getSystemAuthoritativeContext(): string {
 • Status / Ranking Elite Atual: Patente STONE (Vendas até 500k)
 • Próximo Nível (GOLD): Meta de R$ 500.000,00
 
---- SITUAÇÃO OFICIAL DE VENDAS E DESEMPENHO NO CRM (FATOS IMUTÁVEIS) ---
-• Total de Vendas Realizadas no Mês de Outubro/2026: R$ 20.000,00 (Venda exclusiva de Elizabeth do Gestor Fabrício).
-• Loja Paranaguá: R$ 0,00 em Outubro. Doroty foi venda de Setembro/2026.
+--- DIRETRIZES DE VENDAS, METAS E CRM (CONSULTA DINÂMICA) ---
+• Informações sobre vendas, comissões, faturamento e desempenho de lojas ou gestores devem se basear estritamente nos dados reais da base (leads cadastrados, status e valores).
+• Se não houver vendas ou clientes no banco de dados para a consulta solicitada, informe com transparência que não há registros cadastrados no momento, sem inventar nomes, números ou contratos fictícios.
 
---- AUDITORIA OFICIAL DE PARCELAS DA CARTEIRA MAGALU (NOVEMBRO/2026 - RASPAGEM OFICIAL NEWCON/PORTAL) ---
-• Data da Auditoria: 12 de Novembro de 2026. Vencimento oficial das parcelas de Novembro: 23/11/2026.
-• CLIENTE COM PARCELA DE NOVEMBRO JÁ PAGA / QUITADA ANTECIPADAMENTE:
-  - NICOLY FLORENCIO YASUDA (Grupo 006041 | Cota 0552) -> Parcela de Novembro/2026 JÁ PAGA e liquidada com sucesso no portal Magalu! Pendências de parcelas: ZERO. Cota 100% em dia.
-• CLIENTES EM DIA COM OUTUBRO (PARCELA DE NOVEMBRO VENCE EM 23/11/2026):
-  - LETICIA MULLER DA VEIGA (Grupo 005292 | Cota 2258): Outubro quitado. Parcela 010 (R$ 401,24) vence em 23/11.
-  - SUELI (Grupo 005294 | Cota 0565): Outubro quitado. Parcela 009 (R$ 369,98) vence em 23/11.
-  - EMILY OLIVEIRA DA LUZ (Grupo 006041 | Cota 0123): Outubro quitado. Parcela 008 (R$ 457,69) vence em 23/11.
-  - ANA ROBERTA ALVES CORDEIRO PINTO (Grupo 005296 | Cota 0747): Outubro quitado. Parcela 003 (R$ 191,00) vence em 23/11.
-• CLIENTES COM ATRASOS ANTERIORES PENDENTES DE REGULARIZAÇÃO:
-  - DOROTI KRAUSE (Grupo 005297 | Cotas 1541 e 1542): Atrasos de Setembro e Outubro (R$ 1.126,72 na cota 1541 e R$ 901,38 na cota 1542) + parcela de Novembro a vencer em 23/11.
-  - ANGELO LEONARDO BASSANI (Grupo 006043 | Cota 3221): Atraso de Outubro (R$ 364,80) + parcela de Novembro a vencer em 23/11 (R$ 354,86).
-  - MARLLON CORREA DA SILVA BELLO (Grupo 005292 | Cota 2010): Atrasos de Setembro e Outubro (R$ 835,14) + parcela de Novembro a vencer em 23/11 (R$ 404,29).
-*REGRA MANDATÓRIA: Se o usuário perguntar quem pagou a parcela de novembro ou pedir o relatório de pagamentos/inadimplência, informe objetiva e diretamente que apenas a Nicoly quitou antecipadamente até hoje (12/11); os demais clientes em dia têm vencimento em 23/11.*
+--- DIRETRIZES DA CARTEIRA E COBRANÇA ---
+• Dados de parcelas, adimplência e vencimentos são apurados nas tabelas oficiais do sistema ('inadimplentes' e 'carteira_consorcios').
+• Nunca deduza ou crie cobranças, atrasos ou quitações fictícias.
 
 ${simContext}
 `;
@@ -760,7 +761,7 @@ export async function getRealtimeFunnelSnapshot(): Promise<string> {
         const totalDivida = inads.reduce((acc, i: any) => acc + ((Number(i.valor_parcela) || 0) * (Number(i.parcelas_atrasadas) || 1)), 0);
         inadInfo = `• Inadimplência da Carteira: ${inads.length} cliente(s) - Total em atraso: ${totalDivida.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return `
 --- DADOS REAIS DO FUNIL DE CLIENTES DO CRM (CONSOLIDADOS EM TEMPO REAL) ---
@@ -799,7 +800,7 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
     .replace(/\s+/g, " ")
     .trim();
 
-  const isPureGreeting = 
+  const isPureGreeting =
     cleanGreetingText === "boa tarde" || cleanGreetingText === "bom dia" || cleanGreetingText === "boa noite" ||
     cleanGreetingText === "oi" || cleanGreetingText === "ola" || cleanGreetingText === "oi boa tarde" ||
     cleanGreetingText === "oi bom dia" || cleanGreetingText === "oi boa noite" || cleanGreetingText === "ola boa tarde" ||
@@ -845,7 +846,7 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
 
         return `📊 **AUDITORIA DE CLIENTES EM ATRASO (BASE REAL CRM):**\n\n${lines}\n\n💡 *Recomendação Jarvis:* Inicie uma abordagem preventiva e cordial oferecendo a 2ª via sem juros adicionais.`;
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return `📊 **AUDITORIA DE INADIMPLÊNCIA (TEMPO REAL):**
 Consultando o banco de dados oficial: **não há registros de clientes inadimplentes** cadastrados no momento. Todas as cotas monitoradas estão em dia.`;
@@ -862,7 +863,7 @@ Consultando o banco de dados oficial: **não há registros de clientes inadimple
   const isSimulationQuery =
     !isSimulatorSyncQuery &&
     (lower.includes("simula") || lower.includes("quanto fica") || lower.includes("orcamento") || lower.includes("orçamento") ||
-     ((lower.includes("credito") || lower.includes("crédito") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear")) && /\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b|\b\d+k\b|\b\d+\s*mil\b|\b\d+\s*mi\b/i.test(userQuery)));
+      ((lower.includes("credito") || lower.includes("crédito") || lower.includes("parcela") || lower.includes("50/50") || lower.includes("linear")) && /\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b|\b\d+k\b|\b\d+\s*mil\b|\b\d+\s*mi\b/i.test(userQuery)));
 
   if (isSimulationQuery) {
     const conciseQuote = formatConciseBudgetQuote(userQuery);
@@ -1047,7 +1048,7 @@ ${snapshot}
           const { data: cart } = await (supabase as any).from("carteira_consorcios").select("*").eq("lead_id", lead.id).maybeSingle();
           if (cart) carteiraData = cart;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (leadData) {
@@ -1166,12 +1167,12 @@ Para localizar o consorciado e orientar a 2ª via, por favor informe o **Nome Co
     }
 
     if (
-      lower.includes("transfer") || 
-      lower.includes("titularidade") || 
-      lower.includes("cessao") || 
-      lower.includes("cessão") || 
-      lower.includes("trocar de titular") || 
-      lower.includes("passar a cota") || 
+      lower.includes("transfer") ||
+      lower.includes("titularidade") ||
+      lower.includes("cessao") ||
+      lower.includes("cessão") ||
+      lower.includes("trocar de titular") ||
+      lower.includes("passar a cota") ||
       lower.includes("passar a carta")
     ) {
       return `📋 REGRAS OFICIAIS DE TRANSFERÊNCIA DE TITULARIDADE (CIRCULARES MAGALU #02, #10, #19, #23, #37 e #59):
@@ -1392,7 +1393,7 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
         const data = await res.json();
         localContext = data.context || "";
       }
-    } catch (e) {}
+    } catch (e) { }
 
     const authContext = getSystemAuthoritativeContext();
     const funnelSnapshot = await getRealtimeFunnelSnapshot();
@@ -1409,7 +1410,7 @@ Crie uma abordagem de WhatsApp highly consultiva usando o método SRV (Sonho, Re
           const r = parsedNews.rates || {};
           newsContext = `\n--- INDICADORES DE PREÇOS E PRINCIPAIS NOTÍCIAS DO DIA ---\nIndicadores: Selic ${r.selic || 10.75}%, IPCA ${r.ipca || 4.42}%, Dólar R$ ${r.dolar || 5.72}, Gasolina R$ ${r.gasolinaMedia || 6.14}/L, INCC ${r.incc || 4.25}%.\nManchetes:\n${headlines}\n-----------------------------------------------------------\n`;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const activeBudget = getActiveBudgetMemory();
@@ -1462,11 +1463,9 @@ ${consorcioKnowledge}
    - Se o usuário solicitar um valor que não existe na tabela (ex: 330k), informe com precisão que não há cota única desse valor e apresente as opções oficiais mais próximas (ex: 320k no Grupo 6030 ou 340k no Grupo 6035).
    - Para lances médios, utilize EXCLUSIVAMENTE a média histórica cadastrada do grupo (ex: 6045: 98.98%, 6039: 93.76%, 6042: 98.97%, 6030: 77.60%, 5295: 43.73%, 5296: 88.75%).
 2. DADOS DO CRM E VENDAS:
-   - No mês atual de OUTUBRO/2026, houve APENAS R$ 20.000,00 em vendas até o momento, referente exclusivamente à cliente Elizabeth (produção 100% do Gestor Fabrício).
-   - A comissão de Elizabeth é de 4% linear dividida em 10 parcelas mensais de R$ 80,00 (Total R$ 800,00).
-   - A Loja Paranaguá possui R$ 0,00 em vendas e 0% de taxa de conversão no mês de Outubro (zero fechamentos).
-   - A cliente Doroty foi venda do MÊS PASSADO (Setembro/2026), e foi da Loja Paranaguá. NUNCA diga que Doroty é venda de Outubro nem venda do Gestor.
-   - Nunca invente nomes de leads, vendas fantasiosas ou métricas inexistentes.
+   - Baseie-se estritamente nas informações reais do banco de dados (leads, vendas fechadas e inadimplentes) fornecidas no contexto dinâmico.
+   - Se não houver registros no banco para um cliente ou período, seja transparente e objetivo dizendo que não há registros ativos no momento.
+   - Nunca invente nomes de clientes, valores, comissões ou faturamentos fictícios.
 
 ${dynamicQuote ? `\n--- COTAÇÃO IDENTIFICADA DO SIMULADOR (INFORME SEMPRE PARCELAS, PRAZO, IDENTIFICAÇÃO DO GRUPO, MÉDIA DE LANCES E CARACTERÍSTICAS) ---\n${dynamicQuote}\n------------------------------------------------------------\n` : ""}
 
@@ -1481,7 +1480,7 @@ ${localContext ? `INSIGHTS ADICIONAIS: ${localContext}` : ""}`;
     const { text, error } = await callAI(prompt, 600, history, imageBase64);
 
     return {
-      answer: text || (await generateSmartLocalResponse(prompt, userName)),
+      answer: text || (await generateSmartLocalResponse(question, userName)),
       error: null,
     };
   },
@@ -1529,9 +1528,9 @@ ${localContext ? `INSIGHTS ADICIONAIS: ${localContext}` : ""}`;
             timestamp: new Date(),
           }));
           return { insights };
-        } catch (e) {}
+        } catch (e) { }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return {
       insights: [

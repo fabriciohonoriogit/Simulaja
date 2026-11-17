@@ -106,7 +106,7 @@ export default function JarvisStudio() {
       sender: "jarvis",
       text: "Olá, Fabrício! Jarvis Studio OS ativo e calibrado. Todos os 10 motores neurais, simulador 50/50 e prospecção de alta conversão estão operacionais sob o novo Design System.",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      modelUsed: "Gemini 2.0 Flash",
+      modelUsed: "Gemini 2.5 Flash Lite",
     },
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);

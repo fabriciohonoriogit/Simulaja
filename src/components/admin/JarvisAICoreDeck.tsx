@@ -35,17 +35,17 @@ export interface AICoreProvider {
 export const AI_CORE_PROVIDERS: AICoreProvider[] = [
   {
     id: "gemini",
-    name: "Gemini 2.0 Flash",
+    name: "Gemini 2.5 Flash Lite",
     provider: "Google AI Studio",
-    model: "gemini-2.0-flash",
-    speed: "120ms",
+    model: "gemini-2.5-flash-lite",
+    speed: "95ms",
     freeTier: "15 RPM / 1M Context",
     category: "llm",
     color: "text-purple-400",
     badgeBg: "bg-purple-950/70",
     borderColor: "border-purple-500/50",
     accentHex: "#A855F7",
-    description: "Multimodal nativo com janela de 1 milhão de tokens. Análise completa de PDFs e dados.",
+    description: "Multimodal nativo com latência ultra-rápida e raciocínio analítico em tempo real.",
     iconName: "gemini",
   },
   {

@@ -31,7 +31,7 @@ interface JarvisNodePipelineProps {
 
 export function JarvisNodePipeline({
   activeStep = "engine",
-  activeModelName = "Gemini 2.0 Flash",
+  activeModelName = "Gemini 2.5 Flash Lite",
   onSelectStep,
 }: JarvisNodePipelineProps) {
   const steps: PipelineStep[] = [
