@@ -792,16 +792,25 @@ async function generateSmartLocalResponse(fullInput: string, defaultName = "Fabr
 
   const lower = userQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  // 1. Saudações simples e diretas APENAS se a mensagem for puramente uma saudação (sem perguntas)
+  // 1. Saudações humanizadas, naturais e executivas (reconhece "oi jarvis boa tarde", "ola", "bom dia", etc.)
+  const cleanGreetingText = lower
+    .replace(/\b(jarvis|bela|bella|dewiar|assistente|amigo)\b/g, "")
+    .replace(/[!?,.]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
   const isPureGreeting = 
-    lower === "boa tarde" || lower === "boa tarde jarvis" ||
-    lower === "bom dia" || lower === "bom dia jarvis" ||
-    lower === "boa noite" || lower === "boa noite jarvis" ||
-    lower === "oi" || lower === "ola" || lower === "oi jarvis" || lower === "ola jarvis" ||
-    (lower.length <= 16 && (lower.startsWith("oi") || lower.startsWith("ola") || lower.startsWith("bom dia") || lower.startsWith("boa tarde") || lower.startsWith("boa noite")));
+    cleanGreetingText === "boa tarde" || cleanGreetingText === "bom dia" || cleanGreetingText === "boa noite" ||
+    cleanGreetingText === "oi" || cleanGreetingText === "ola" || cleanGreetingText === "oi boa tarde" ||
+    cleanGreetingText === "oi bom dia" || cleanGreetingText === "oi boa noite" || cleanGreetingText === "ola boa tarde" ||
+    cleanGreetingText === "ola bom dia" || cleanGreetingText === "ola boa noite" || cleanGreetingText === "opa" ||
+    cleanGreetingText === "fala" || cleanGreetingText === "e ai" || cleanGreetingText === "salve" ||
+    /^(oi|ola|bom dia|boa tarde|boa noite|opa|fala|e ai|salve)\s*(tudo bem|como vai|como esta|beleza|tranquilo)?$/i.test(cleanGreetingText);
 
   if (isPureGreeting) {
-    return `Oi ${firstName}, ${obterSaudacaoTempo()}! Como posso lhe ajudar hoje?`;
+    const hora = new Date().getHours();
+    const saudacao = hora >= 5 && hora < 12 ? "Bom dia" : hora >= 12 && hora < 18 ? "Boa tarde" : "Boa noite";
+    return `Olá, ${firstName}! ${saudacao}! Jarvis à sua disposição. Como posso te apoiar agora? Podemos rodar simulações 50/50, auditar o funil de leads, verificar clientes inadimplentes ou consultar regras e médias de lances das assembleias.`;
   }
 
   // 1.0 Comando Administrativo de Atualização / Sincronização do Simulador (Créditos, Grupos, Parcelas e Vagas)
@@ -1213,7 +1222,91 @@ Por favor, informe o CPF do consorciado para concluir a busca da 2ª via.`;
     }
   }
 
-  return `Olá, ${firstName}! Compreendi sua consulta sobre "${userQuery}". Como assistente executivo Jarvis, estou à disposição para aprofundar qualquer detalhe sobre simulações e parcelas 50/50, status do funil de vendas, circulares oficiais do Consórcio Magalu ou emissão de boletos. Como prefere prosseguir?`;
+  // 7. Explicações e Respostas Substantivas e Fundamentadas
+  if (
+    lower.includes("quem e voce") || lower.includes("quem e você") ||
+    lower.includes("o que voce faz") || lower.includes("o que você faz") ||
+    lower.includes("qual seu papel") || lower.includes("quais suas funcoes")
+  ) {
+    return `Olá, ${firstName}! Eu sou o Jarvis, seu co-piloto executivo e estrategista comercial no SimulaJá e Prospera Plan (Consórcio Magalu).
+
+Aqui está o que posso executar para você com total precisão:
+• 🎯 Simulações oficiais do Consórcio Magalu com cálculo de Meia Parcela (50/50) e Linear.
+• 📊 Diagnóstico em tempo real do Funil de Vendas (Kanban) e leads classificados.
+• ⚠️ Auditoria da Carteira e monitoramento preventivo de inadimplentes.
+• 🔍 Sentinela de vagas em grupos fechados (como o Grupo 6042 de 350k a 16%).
+• 📄 Emissão e consulta de 2ª via de boletos, extratos e circulares oficiais.
+• 👥 Orquestração do Jarvis Squad (subagentes especializados: SDR, Closer, Reativador, Copywriter).
+
+Como prefere direcionar agora?`;
+  }
+
+  if (lower.includes("como funciona") && (lower.includes("50/50") || lower.includes("meia parcela") || lower.includes("reduzida"))) {
+    return `📋 **COMO FUNCIONA O PLANO 50/50 (MEIA PARCELA) — CONSÓRCIO MAGALU:**
+
+1. **Até a Contemplação:**
+   - O consorciado paga apenas **50% da parcela integral** mensalmente.
+   - Ideal para quem já paga aluguel ou não quer descapitalizar o fluxo de caixa mensal.
+
+2. **Após a Contemplação:**
+   - O valor restante dos 50% não pagos é reincorporado ao saldo devedor restante, de forma suave e diluída no prazo, ou abatido no lance vencedor.
+   - O cliente pode ainda usar **25% de Lance Embutido** (descontado do próprio crédito) para antecipar a contemplação sem tirar dinheiro do bolso.
+
+3. **Vantagem Competitiva:**
+   - Custo financeiro médio de apenas 1,2% a 1,8% ao ano (sem juros compostos de bancos), economizando mais de 50% em comparação ao financiamento SAC.`;
+  }
+
+  if ((lower.includes("lance embutido") || lower.includes("como funciona o lance")) && !lower.includes("caucao")) {
+    return `🎯 **REGRAS DO LANCE EMBUTIDO (CONSÓRCIO MAGALU):**
+
+• **O que é:** Permite utilizar uma parte do próprio crédito contratado para pagar o lance vencedor na assembleia.
+• **Percentual Padrão:** **25% de Lance Embutido** na maioria dos grupos (imóveis, automóveis e motos).
+• **Como funciona na prática:**
+  - Exemplo com cota de R$ 200.000,00:
+    - Lance Embutido (25%): R$ 50.000,00
+    - Crédito líquido liberado para comprar o bem: R$ 150.000,00
+• **Lances Fixos:** Grupos Magalu também contam com opções de **Lance Fixo de 25%** e **Lance Fixo de 45%** (disputados apenas entre os consorciados que ofertaram o mesmo percentual).
+• **FGTS (para Imóveis):** O cliente pode somar o FGTS ao lance embutido para maximizar as chances de contemplação.`;
+  }
+
+  if (lower.includes("grupos ativos") || lower.includes("quais grupos") || lower.includes("melhores grupos") || lower.includes("grupos magalu")) {
+    return `📋 **PRINCIPAIS GRUPOS OFICIAIS ATIVOS — CONSÓRCIO MAGALU:**
+
+🏠 **IMÓVEIS:**
+• **Grupo 6039:** 222 meses | Créditos de R$ 350k a R$ 500k | Taxa 20% + 1% FR | Lance Médio: 93,76%
+• **Grupo 6045:** 240 meses | Créditos de R$ 400k a R$ 800k | Taxa 16% + 1% FR | 4.296 vagas ativas
+• **Grupo 6030:** 200 meses | Créditos de R$ 200k a R$ 320k | Taxa 16% | Lance Médio: 77,60%
+
+🚗 **VEÍCULOS & MOTOS:**
+• **Grupo 5298 / 5297:** 100 e 120 meses | Créditos de R$ 40k a R$ 120k | Média de Lance: ~43% a 55%
+• **Grupo 5296 (Motos):** 60 e 72 meses | Média de lance: ~88%
+
+🚛 **PESADOS:**
+• **Grupo 5996:** 120 meses | Lance embutido de até 30%
+
+Para simular qualquer um destes valores, basta me informar o valor desejado (ex: "simular 300 mil")!`;
+  }
+
+  const isAboutFinance = lower.includes("taxa") || lower.includes("juro") || lower.includes("custo") || lower.includes("renda") || lower.includes("financiamento");
+  if (isAboutFinance) {
+    return `💡 **ANÁLISE FINANCEIRA E COMPARATIVA (CONSÓRCIO MAGALU vs FINANCIAMENTO):**
+
+• **Custo Efetivo:** O consórcio não cobra juros (ao contrário da Tabela SAC/Price dos bancos que cobram 10% a 13% ao ano + TR). Incide apenas a taxa de administração diluída em todo o plano (~1,2% a 1,6% a.a.).
+• **Economia Total:** Em um crédito imobiliário de R$ 300 mil, o financiamento bancário gera um montante pago de mais de R$ 750 mil, enquanto o consórcio fica em cerca de R$ 354 mil (economia superior a R$ 390.000,00).
+• **Flexibilidade:** Opção de Meia Parcela 50/50 até a contemplação e uso de até 25% de Lance Embutido do próprio crédito.
+
+Deseja que eu monte um comparativo financeiro para um valor específico de crédito?`;
+  }
+
+  // Resposta padrão executiva fundamentada e orientativa (elimina respostas evasivas)
+  return `Olá, ${firstName}! Estou acompanhando suas operações no SimulaJá.
+
+Com base nos dados oficiais do sistema:
+• **Simulações Oficiais:** Temos cotas ativas de R$ 10.000 a R$ 800.000 com planos 50/50 (reduzido) e lineares. Se quiser uma cotação exata, me informe o valor (ex: *"simular 350 mil imóvel"*).
+• **CRM & Funil:** O Kanban de vendas está sincronizado com seus leads. Você pode me pedir: *"qual o status do funil"*, *"quem são os leads quentes"* ou *"clientes inadimplentes"*.
+• **Circulares & Regras:** Temos cadastradas todas as 64 circulares oficiais Magalu (Lance Caução, FGTS, Transferências e Reajustes).
+
+Como você quer direcionar agora?`;
 }
 
 export const aiService = {

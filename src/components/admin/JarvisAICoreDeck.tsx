@@ -154,6 +154,21 @@ export const AI_CORE_PROVIDERS: AICoreProvider[] = [
     iconName: "mistral",
   },
   {
+    id: "dewiar",
+    name: "Dewiar / Jarvis OS",
+    provider: "Dewiar Local / MCP",
+    model: "jarvis-squad-local",
+    speed: "15ms",
+    freeTier: "100% Ilimitado & Local",
+    category: "llm",
+    color: "text-cyan-400",
+    badgeBg: "bg-cyan-950/70",
+    borderColor: "border-cyan-500/50",
+    accentHex: "#06B6D4",
+    description: "Motor nativo local e integrado ao Dewiar App e MCP. Respostas instantâneas e sem custo de nuvem.",
+    iconName: "dewiar",
+  },
+  {
     id: "flux",
     name: "FLUX.1 Generator",
     provider: "Pollinations.ai",
@@ -233,8 +248,31 @@ export function JarvisAICoreDeck({
           </div>
         </div>
 
-        {/* Botão de Auto-Fallback e Recolher/Expandir */}
+        {/* Botão de Chave API, Auto-Fallback e Recolher/Expandir */}
         <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              const current = typeof window !== "undefined" ? localStorage.getItem("jarvis_gemini_api_key") || "" : "";
+              const input = window.prompt("Insira sua chave Google AI Studio (Gemini API):\nObtenha grátis em: https://aistudio.google.com/apikey\n(A chave oficial sempre começa com AIzaSy...)", current);
+              if (input !== null) {
+                const clean = input.trim();
+                if (clean) {
+                  localStorage.setItem("jarvis_gemini_api_key", clean);
+                  window.alert("Chave Gemini salva com sucesso no navegador!");
+                } else {
+                  localStorage.removeItem("jarvis_gemini_api_key");
+                  window.alert("Chave personalizada removida.");
+                }
+              }
+            }}
+            className="px-2 py-1 rounded-lg text-[9.5px] font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 hover:bg-amber-900/60 transition-all flex items-center gap-1 cursor-pointer"
+            title="Configurar ou alterar Chave Gemini API (Google AI Studio)"
+          >
+            <span>🔑</span>
+            <span className="hidden sm:inline">Chave</span> Gemini
+          </button>
+
           <button
             type="button"
             onClick={onToggleAutoFallback}
